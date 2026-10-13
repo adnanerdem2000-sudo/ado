@@ -185,6 +185,7 @@ game/parts/162_v128_gercek_kariyer_gecmisi_ve_boylar.js
 game/parts/163_v129_oyuncu_kimligi_ad_soyad_zorunlu.js
 game/parts/164_v130_klavye_kisayollari.js
 game/parts/165_v131_ozellikler_sahaya_yansir.js
+game/parts/166_v136_mac_sonuna_simule_et.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
