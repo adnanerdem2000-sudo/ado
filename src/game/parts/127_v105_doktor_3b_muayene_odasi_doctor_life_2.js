@@ -1,0 +1,1 @@
+function gi(n,s,cls){const d=GI[n];if(!d)return '';s=s||18;return `<svg class="gi ${cls||''}" viewBox="0 0 512 512" width="${s}" height="${s}" aria-hidden="true" focusable="false"><path fill="currentColor" d="${d}"/></svg>`;}

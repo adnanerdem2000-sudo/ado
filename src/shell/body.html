@@ -1,0 +1,43 @@
+</head>
+<body>
+
+
+<div id="start" class="start" hidden></div>
+<div id="app" class="app" hidden>
+  <header id="top" class="top"></header>
+  <main id="view" class="view"></main>
+</div>
+<nav id="tabs" class="tabs" hidden><div class="tabs-in" id="tabsIn"></div></nav>
+<div id="modal" class="modal" hidden><div class="modal-back" data-act="closeModal"></div><div class="modal-card" id="modalCard" role="dialog" aria-modal="true"></div></div>
+<section id="match" class="match" hidden>
+  <button class="fs-btn" type="button" data-act="fs" aria-label="Tam ekran"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button class="skip-btn" type="button" id="mvSkip" data-act="trSkip" hidden>Atla ›</button>
+  <div class="mv-board" id="mvBoard"></div>
+  <div class="mv-stage" id="mvStage" hidden>
+    <canvas id="pitch"></canvas>
+    <div class="mg-top"><span class="mg-face" id="mgFace"></span><div class="mg-tt"><b id="mgTitle"></b><i class="mg-time"><em id="mgTimer"></em></i><span class="mg-cond"><i><em id="mgCond"></em></i><small id="mgCondT"></small></span></div></div>
+    <div class="mg-hint" id="mgHint"></div>
+    <div id="mgFlash" class="mg-flash"></div>
+    <div class="pad">
+      <div class="joy-zone" id="joyZone"><div class="joy" id="joy"><span class="joy-lbl" id="joyLbl"></span><div class="joy-knob" id="joyKnob"></div></div></div>
+      <div class="btns">
+        <button type="button" class="pbtn b-c" data-b="c" id="btnC" data-key="L"></button>
+        <button type="button" class="pbtn b-b" data-b="b" id="btnB" data-key="J"></button>
+        <button type="button" class="pbtn b-a" data-b="a" id="btnA" data-key="K"></button>
+        <button type="button" class="pbtn b-d off" data-b="d" id="btnD" data-key="I"></button>
+      </div>
+    </div>
+    <div class="mg-tut" id="mgTut" hidden><div class="tut-card"><h3>Kontroller</h3><ul>
+      <li><b>SOL</b><span>Ekranın sol altına dokun ve sürükle: Cenk o yöne koşar.</span></li>
+      <li><b class="a">ŞUT</b><span>Basılı tut, güç dolsun, bırak. Joystick’i yana iterek köşe seç. Kırmızı bölge üstten gider.</span></li>
+      <li><b class="b">PAS</b><span>Dokun: beyaz okun gösterdiği arkadaşa pas. Basılı tut: koşu yoluna ara pası.</span></li>
+      <li><b class="c">KOŞ</b><span>Basılı tut: depar (mavi halka dayanıklılık). Kısa dokun: çalım.</span></li>
+      <li><b>SONRA</b><span>Pası verince top arkadaşının; kendi kararını verir. Sen koşmaya devam et ya da yerinde kal. Boşa çıkarsan pas sana gelir.</span></li>
+      <li><b>SAVUN</b><span>Savunmada MÜDAHALE ayakta, KAY kayarak top alır. Arkadan dalarsan kart görürsün.</span></li>
+    </ul><p>Klavyede: WASD veya oklar ile koş, K şut, J pas, L koş.</p><button class="cta sm" type="button" data-act="tutGo">Anladım, oyna</button></div></div>
+  </div>
+  <ol class="mv-feed" id="mvFeed"></ol>
+  <div class="mv-ctrl"><button id="mvSub" class="btn" type="button" data-act="askSub" hidden>Değişiklik iste</button><button id="mvFast" class="btn" type="button">Hızlandır</button><button id="mvDone" class="cta sm" type="button" hidden>Maç sonu</button></div>
+</section>
+<div id="toast" class="toast" hidden></div>
+

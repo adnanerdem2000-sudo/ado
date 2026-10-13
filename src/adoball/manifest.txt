@@ -1,0 +1,30 @@
+# Adoball maç motoru — oyunun içine <script type="text/x-abdoc" id="abdoc"> olarak gömülür
+# Derleme sırası. Her satır: bu klasöre göre bir dosya yolu, "| " ile başlayan düz satır ya da "@abdoc <manifest>".
+# Satırlar bayt bayt çıktıyı belirler; yeni parçayı doğru yere ekle ve dosyayı satır sonuyla bitir.
+head.html
+|     <style>
+style.css
+|     </style>
+body.html
+| <script>
+js/1_mac_motoru.js
+data/snd_data.js
+js/1_mac_motoru_2.js
+| </script>
+| <script>
+js/2_arayuz.js
+| </script>
+| <script>window.Ado3D = parent.Ado3D;</script>
+| <script>
+js/3_cekirdek_2d/000_adoball_2d_cekirdek_dom_suz_deterministik.js
+js/3_cekirdek_2d/001_adoball_2d_spiker.js
+js/3_cekirdek_2d/002_adoball_gercek_oyuncu_verisi_186_oyuncu.js
+js/3_cekirdek_2d/003_adoball_2d_veritabani_bagdastiricisi.js
+js/3_cekirdek_2d/004_adoball_2d_mac_reytingi_rating2d.js
+js/3_cekirdek_2d/005_adoball_canli_2d_mac_modu_ucuncu_betik.js
+| </script>
+| <script>
+js/4_kariyer_koprusu.js
+| </script>
+| </body>
+| </html>

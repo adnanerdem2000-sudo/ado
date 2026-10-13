@@ -1,0 +1,20 @@
+/* ================= v30: kadromuzla karşılaştırma (profil + gözlemci raporu) ================= */
+const CMP_KEY={FW:['Bitiricilik','Topsuz Alan','Soğukkanlılık','Kafa Vuruşu','Hız','Dripling'],KN:['Dripling','Hız','Hızlanma','Orta Yapma','Teknik','Bitiricilik'],OS:['Pas','Vizyon','Karar Alma','Teknik','Çalışkanlık','Dayanıklılık'],DF:['Markaj','Top Kapma','Pozisyon Alma','Kafa Vuruşu','Güç','Hız'],KL:['Refleks','Bire Bir','Hava Hakimiyeti','Elle Oyun','Ayakla Oyun','İletişim']};
+function fmCompareHTML(p,c){if(!G||!G.club||c.id===G.club)return '';const mine=squadOf(G.club).filter(q=>q.pos===p.pos&&q.k!==p.k).sort((a,b)=>b.ovr-a.ovr).slice(0,4);
+  const sc=scOn&&scOn(c),acc=sc?scAcc(p):5,unk=sc&&acc<3,keys=CMP_KEY[p.pos]||CMP_KEY.OS,cols=[p,...mine];
+  if(!mine.length)return `<section class="fmp-cpx"><p class="fmp-sec">Kadromuzla karşılaştırma</p><p class="muted">Kadronda ${POS_TR[p.pos].toLowerCase()} mevkisinde oyuncu yok; bu transfer doğrudan bir boşluğu doldurur.</p></section>`;
+  const A=cols.map(q=>fmAttrs(q)),avg=(a,L)=>Math.round(L.reduce((s,[,v])=>s+v,0)/L.length*10)/10;
+  const rows=[['Güç',cols.map((q,i)=>i===0&&sc&&acc<5?null:q.ovr),cols.map(q=>q.ovr)],['Yaş',cols.map(q=>q.age),cols.map(q=>-q.age)],['Piyasa değeri',cols.map(q=>eur(pValue(q))),cols.map(q=>pValue(q))],
+    ['Potansiyel',cols.map((q,i)=>{const r=pPot(q);return i===0&&unk?null:Math.round((r[0]+r[1])/2);}),cols.map(q=>{const r=pPot(q);return (r[0]+r[1])/2;})],
+    [p.pos==='KL'?'Kalecilik ort.':'Teknik ort.',A.map((a,i)=>i===0&&unk?null:avg(a,a.gk?a.G:a.T)),A.map(a=>avg(a,a.gk?a.G:a.T))],['Zihinsel ort.',A.map((a,i)=>i===0&&unk?null:avg(a,a.M)),A.map(a=>avg(a,a.M))],['Fiziksel ort.',A.map((a,i)=>i===0&&unk?null:avg(a,a.P)),A.map(a=>avg(a,a.P))],
+    ...keys.map(k=>[k,A.map((a,i)=>i===0&&unk?null:to20(a.raw[k]||40)),A.map(a=>to20(a.raw[k]||40))])];
+  const pa=pPot(p),tgtO=sc&&acc<5?scO(p,c):p.ovr;
+  const head=`<tr><th class="l"></th>${cols.map((q,i)=>`<th class="${i?'':'tg'}"><span class="plink" data-act="pcard" data-id="${i?G.club:c.id}" data-k="${q.k}">${esc(ksur(q.name))}</span><small>${i?esc(myClub().short):esc(c.short)}</small></th>`).join('')}</tr>`;
+  const body=rows.map(([l,vals,cmpv])=>{const known=cmpv.filter((_,i)=>vals[i]!=null),best=Math.max(...known);return `<tr><td class="l">${l}</td>${vals.map((v,i)=>{const isB=v!=null&&cmpv[i]===best&&known.length>1;const d=i===0||vals[0]==null||typeof cmpv[0]!=='number'?'':'';return `<td class="${i?'':'tg'}${isB?' best':''}">${v==null?(l==='Güç'?R200(tgtO):'?'):v}</td>`;}).join('')}</tr>`;}).join('');
+  const better=mine.filter(q=>q.ovr<p.ovr).length,verdict=sc&&acc<3?'Bilgi seviyen düşük; karşılaştırma için oyuncuyu daha çok izlemelisin.':better===mine.length?`${esc(ksur(p.name))}, kadrodaki tüm ${POS_TR[p.pos].toLowerCase()} oyuncularından daha güçlü: doğrudan ilk 11 adayı.`:better>0?`${esc(ksur(p.name))}, kadrodaki ${mine.length} ${POS_TR[p.pos].toLowerCase()} oyuncusundan ${better} tanesinden daha güçlü.`:`${esc(ksur(p.name))} şu an kadrodaki ${POS_TR[p.pos].toLowerCase()} oyuncularının gerisinde${pa[1]>mine[0].ovr?'; potansiyeli ise daha yüksek':''}.`;
+  return `<section class="fmp-cpx"><p class="fmp-sec">Kadromuzla karşılaştırma · ${POS_TR[p.pos]}</p><div class="cmp-wrap"><table class="cmp"><thead>${head}</thead><tbody>${body}</tbody></table></div><p class="cmp-v">${verdict}</p></section>`;}
+fmProfHTML=(old=>function(p,c,opt){let h=old(p,c,opt);if(!G||!G.club||c.id===G.club||(opt&&opt.acad))return h;const cp=fmCompareHTML(p,c);if(!cp)return h;
+  h=h.replace('<button data-act="fmpTab" data-k="po">Pozisyonlar</button>','<button data-act="fmpTab" data-k="po">Pozisyonlar</button><button data-act="fmpTab" data-k="cp">Karşılaştır</button>');
+  const i=h.indexOf('<p class="fmp-sec">');return i<0?h+cp:h.slice(0,i)+cp+h.slice(i);})(fmProfHTML);
+srModal=(old=>function(){old();const F=SRF,p=F&&pByKey(F.k),mc=$('#modalCard');if(!p||!mc)return;const cid=scCid(p),c=CLUBS[cid];const cp=fmCompareHTML(p,c);if(!cp)return;const btn=mc.querySelector('[data-act=srGo]');if(btn)btn.insertAdjacentHTML('beforebegin',cp.replace('fmp-cpx','fmp-cpx sr-cp'));})(srModal);
+

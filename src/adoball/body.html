@@ -1,0 +1,858 @@
+</head>
+<body>
+
+<!-- GOL OVERLAY ANIMATION -->
+<div id="gol-overlay" class="gol-effect">
+    <div class="gol-crest" id="gol-crest"></div>
+    <div class="gol-title">GOL!</div>
+    <div class="gol-scorer" id="gol-scorer-text">Kylian Mbappé (Real Madrid)</div>
+    <div class="gol-score" id="gol-score-text"></div>
+</div>
+
+<!-- DEVRE ARASI: yayın kartı (skor seridi + istatistik + eylemler) -->
+<div id="halftime-overlay" class="gol-effect bc-overlay">
+    <div class="bc-card" role="dialog" aria-modal="true" aria-labelledby="ht-tag">
+        <span class="bc-tag" id="ht-tag">Devre arası</span>
+        <div class="bc-score" id="ht-score"></div>
+        <div class="sr-only" id="halftime-score-text">0 - 0</div>
+        <div class="bc-stats" id="halftime-stats"></div>
+        <p class="bc-note">Takımlar soyunma odasında. Hazır olduğunda ikinci yarıyı başlat.</p>
+        <div class="bc-foot" id="ht-foot">
+            <button type="button" class="btn btn-primary btn-lg" onclick="startSecondHalf()">İkinci yarıyı başlat</button>
+        </div>
+    </div>
+</div>
+
+<!-- OYUNCU MAÇ İÇİ İSTATİSTİK POPUP'I -->
+<div id="player-match-stats-modal" class="modal-overlay" onclick="if(event.target===this) closeModal('player-match-stats-modal')">
+    <div class="modal-content" role="dialog" aria-modal="true" style="max-width: 420px;">
+        <div class="flex-between" style="align-items:flex-start;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div id="pms-player-crest"></div>
+                <div>
+                    <h3 id="pms-player-name" style="margin:0; font-size:1.25rem;">Oyuncu Adı</h3>
+                    <p id="pms-player-meta" style="margin:2px 0 0; color:var(--text-muted); font-size:0.85rem;">Mevki • Takım</p>
+                </div>
+            </div>
+            <button type="button" class="btn btn-ghost icon-btn modal-close" aria-label="Kapat" title="Kapat (Esc)" onclick="closeModal('player-match-stats-modal')"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button>
+        </div>
+
+        <div style="text-align:center; margin: 18px 0;">
+            <div class="pms-rating-big" id="pms-rating-value">6.5</div>
+            <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase; margin-top:2px;">Canlı Maç Reytingi</div>
+        </div>
+
+        <div class="pms-stats-grid" id="pms-stats-grid"></div>
+    </div>
+</div>
+
+<!-- TEHLİKELİ ATAK / VAR OLAY OVERLAY -->
+<div id="action-overlay" class="action-effect">
+    <div id="var-monitor-box" class="var-monitor" style="display:none;">
+        <div class="var-monitor-label"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-var"/></svg>VAR MONİTÖRÜ</div>
+        <div class="var-spinner" id="var-spinner"></div>
+    </div>
+    <div id="action-crest" style="margin-bottom:8px;"></div>
+    <div class="action-icon" id="action-icon"><svg class="ico emo-ic" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg></div>
+    <div class="action-title" id="action-title">TEHLİKELİ ATAK!</div>
+    <div class="action-subtitle" id="action-subtitle">Atak gelişiyor...</div>
+</div>
+
+<!-- DÖRDÜNCÜ HAKEM İLAVE SÜRE TABELASI -->
+<div id="injury-board-overlay" class="injury-board-overlay">
+    <div class="injury-board" id="injury-board">
+        <div class="injury-board-label" id="injury-board-label">İLAVE SÜRE</div>
+        <div class="injury-board-digits" id="injury-board-digits">+3</div>
+    </div>
+</div>
+
+<a class="skip-link" href="#main">İçeriğe geç</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="ab" viewBox="-50 -50 100 100">
+  <circle r="48" fill="#ffffff"/>
+  <g stroke="#0a1226" stroke-width="4" stroke-linecap="round"><line x1="0.00" y1="-17.00" x2="0.00" y2="-40.00"/><line x1="16.17" y1="-5.25" x2="38.04" y2="-12.36"/><line x1="9.99" y1="13.75" x2="23.51" y2="32.36"/><line x1="-9.99" y1="13.75" x2="-23.51" y2="32.36"/><line x1="-16.17" y1="-5.25" x2="-38.04" y2="-12.36"/></g>
+  <polygon points="0.00,-17.00 16.17,-5.25 9.99,13.75 -9.99,13.75 -16.17,-5.25" fill="#0a1226" stroke="#0a1226" stroke-width="3" stroke-linejoin="round"/>
+  <clipPath id="abc"><circle r="48"/></clipPath>
+  <g clip-path="url(#abc)"><polygon points="17.84,-50.08 34.61,-55.53 44.98,-41.26 34.61,-26.99 17.84,-32.44" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="53.14,1.49 63.50,15.76 53.14,30.03 36.37,24.58 36.37,6.94" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="15.00,51.00 4.64,65.27 -12.14,59.82 -12.14,42.18 4.64,36.73" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="-43.87,30.03 -60.64,24.58 -60.64,6.94 -43.87,1.49 -33.50,15.76" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="-42.11,-32.44 -42.11,-50.08 -25.34,-55.53 -14.98,-41.26 -25.34,-26.99" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/></g>
+  <circle r="47" fill="none" stroke="#0a1226" stroke-width="2" opacity=".35"/>
+</symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></symbol><symbol id="i-match" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H5a2 2 0 002 4M16 6h3a2 2 0 01-2 4"/><path d="M12 13v4M8 20h8M9.5 17h5"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3 3 0 010 5.6M18 14.8c1.8.7 3 2.4 3 5.2"/></symbol><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 19V8M7 13l5-5 5 5M5 4h14"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></symbol><symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3c3.5 0 5.5 10 9 10h5M3 17h3c1.5 0 2.7-1.4 3.8-3.3M14.2 10.3C15.3 8.4 16.5 7 18 7h2M17 4l3 3-3 3M17 14l3 3-3 3"/></symbol><symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.01"/></symbol><symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8.5 3L3 6l2 5 3-1.2V21h8V9.8l3 1.2 2-5-5.5-3c-.6 1.7-2 2.8-3.5 2.8S9.1 4.7 8.5 3z"/></symbol><symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></symbol><symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol><symbol id="i-var" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"/></symbol><symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol><symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="16" rx="1.5" fill="currentColor" stroke="none"/></symbol><symbol id="i-pitch" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.6"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.6l4.2 3-1.6 4.9H9.4l-1.6-4.9z"/><path d="M12 3v4.6M20.6 9.3l-4.4 1.3M17.4 19.3l-2.8-3.8M6.6 19.3l2.8-3.8M3.4 9.3l4.4 1.3"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4v.1"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M7.5 21v-4L5 12.6a1.6 1.6 0 012.6-1.8L9 12.5V5.2a1.5 1.5 0 013 0V11V4a1.5 1.5 0 013 0v7V5.5a1.5 1.5 0 013 0V15c0 3.4-2.2 6-5.5 6z"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol><symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol><symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9.5h4l5-4v13l-5-4H4z"/><path d="M16.5 9a4 4 0 010 6M19 6.5a7.5 7.5 0 010 11"/></symbol><symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h4l5-4v13l-5-4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18c1.4 0 2-1 1.6-2.2-.5-1.4.4-2.8 1.9-2.8H18a3 3 0 003-3c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10" cy="7" r="1.1"/><circle cx="14.5" cy="7" r="1.1"/></symbol><symbol id="i-crown" viewBox="0 0 24 24"><path d="M3.5 8l4.5 4 4-7 4 7 4.5-4-2 11h-13z"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M8 3l4 6 4-6"/><circle cx="12" cy="15" r="5.5"/><path d="M12 12.5v5"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><ellipse cx="12" cy="9" rx="9" ry="3.5"/><path d="M3 9v6c0 2 4 3.5 9 3.5s9-1.5 9-3.5V9"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.1"/><circle cx="15" cy="15" r="1.1"/><circle cx="15" cy="9" r="1.1"/><circle cx="9" cy="15" r="1.1"/></symbol><symbol id="i-board" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 10h7M8.5 14h7M8.5 18h4"/></symbol><symbol id="i-goal" viewBox="0 0 24 24"><path d="M3 19V6h18v13"/><path d="M3 10.3h18M3 14.6h18M7.5 6v13M12 6v13M16.5 6v13"/></symbol><symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol><symbol id="i-arrow-ur" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></symbol><symbol id="i-wall" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9.7h18M3 14.3h18M9 5v4.7M15 5v4.7M6 9.7v4.6M12 9.7v4.6M18 9.7v4.6M9 14.3V19M15 14.3V19"/></symbol><symbol id="i-assist" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.6 16.5L12 7.5l3.4 9M9.8 13.4h4.4"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5l11 6.5-11 6.5z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7 9h10M7 12.5h10M7 16h6"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M3.5 6.5l7.5 5.5-7.5 5.5z"/><path d="M11.5 6.5l7.5 5.5-7.5 5.5z"/><path d="M21 6v12"/></symbol></defs></svg>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<div class="app">
+    <aside class="sidebar" aria-label="Ana menü">
+        <div class="sb-brand">
+            <svg class="sb-ball" aria-hidden="true" focusable="false"><use href="#ab"/></svg>
+            <svg class="sb-word" role="img" aria-label="Adoball" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 358 80" width="150" height="34">
+<defs><symbol id="bC" viewBox="-50 -50 100 100">
+  <circle r="48" fill="#ffffff"/>
+  <g stroke="#0a1226" stroke-width="4" stroke-linecap="round"><line x1="0.00" y1="-17.00" x2="0.00" y2="-40.00"/><line x1="16.17" y1="-5.25" x2="38.04" y2="-12.36"/><line x1="9.99" y1="13.75" x2="23.51" y2="32.36"/><line x1="-9.99" y1="13.75" x2="-23.51" y2="32.36"/><line x1="-16.17" y1="-5.25" x2="-38.04" y2="-12.36"/></g>
+  <polygon points="0.00,-17.00 16.17,-5.25 9.99,13.75 -9.99,13.75 -16.17,-5.25" fill="#0a1226" stroke="#0a1226" stroke-width="3" stroke-linejoin="round"/>
+  <clipPath id="bCc"><circle r="48"/></clipPath>
+  <g clip-path="url(#bCc)"><polygon points="17.84,-50.08 34.61,-55.53 44.98,-41.26 34.61,-26.99 17.84,-32.44" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="53.14,1.49 63.50,15.76 53.14,30.03 36.37,24.58 36.37,6.94" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="15.00,51.00 4.64,65.27 -12.14,59.82 -12.14,42.18 4.64,36.73" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="-43.87,30.03 -60.64,24.58 -60.64,6.94 -43.87,1.49 -33.50,15.76" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/><polygon points="-42.11,-32.44 -42.11,-50.08 -25.34,-55.53 -14.98,-41.26 -25.34,-26.99" fill="#0a1226" stroke="#0a1226" stroke-width="2" stroke-linejoin="round"/></g>
+  <circle r="47" fill="none" stroke="#0a1226" stroke-width="2" opacity=".35"/>
+</symbol></defs>
+<g transform="translate(0 0)" fill="none" stroke="#ffffff" stroke-width="9" stroke-linejoin="bevel"><path d="M2 56 L22 3 L42 56"/><path d="M11 37.0 H33"/></g><g transform="translate(53 0)" fill="none" stroke="#ffffff" stroke-width="9" stroke-linejoin="miter"><path d="M4.5 4.5 H24 L37 17.5 V38.5 L24 51.5 H4.5 Z"/></g><use href="#bC" x="102" y="0" width="56" height="56"/><g transform="translate(167 0)" fill="none" stroke="#00a3ff" stroke-width="9" stroke-linejoin="miter"><path d="M4.5 4.5 H27 L36 13.5 V21.5 L28 28 L37 34.5 V42.5 L28 51.5 H4.5 Z M4.5 28 H28"/></g><g transform="translate(216 0)" fill="none" stroke="#00a3ff" stroke-width="9" stroke-linejoin="bevel"><path d="M2 56 L22 3 L42 56"/><path d="M11 37.0 H33"/></g><g transform="translate(269 0)" fill="none" stroke="#00a3ff" stroke-width="9" stroke-linejoin="miter"><path d="M4.5 0 V51.5 H34"/></g><g transform="translate(314 0)" fill="none" stroke="#00a3ff" stroke-width="9" stroke-linejoin="miter"><path d="M4.5 0 V51.5 H34"/></g>
+<path d="M0 68 H336 L350 68 L336 74 H0 Z" fill="#ffc93c"/>
+</svg>
+        </div>
+        <nav class="sb-nav" id="nav-buttons" aria-label="Bölümler">
+            <button class="btn nav-item" data-screen="home-screen" title="Ana Sayfa" onclick="showScreen('home-screen')"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg><span class="nav-label"><span class="l-full">Ana Sayfa</span><span class="l-short">Ana</span></span></button>
+            <button class="btn nav-item" data-screen="squad-screen" title="Takım Yönetimi" onclick="showScreen('squad-screen')"><svg class="ico" aria-hidden="true"><use href="#i-team"/></svg><span class="nav-label"><span class="l-full">Takım Yönetimi</span><span class="l-short">Takımlar</span></span></button>
+            <button class="btn nav-item" data-screen="quick-match-screen" title="Hızlı Maç" onclick="showScreen('quick-match-screen')"><svg class="ico" aria-hidden="true"><use href="#i-match"/></svg><span class="nav-label"><span class="l-full">Hızlı Maç</span><span class="l-short">Maç</span></span></button>
+            <button class="btn nav-item" data-screen="tournament-screen" title="Turnuva Modu" onclick="showScreen('tournament-screen')"><svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg><span class="nav-label"><span class="l-full">Turnuva Modu</span><span class="l-short">Turnuva</span></span></button>
+            <button class="btn nav-item" data-screen="player-edit-screen" title="Futbolcu Veritabanı" onclick="showScreen('player-edit-screen')"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span class="nav-label"><span class="l-full">Futbolcu Veritabanı</span><span class="l-short">Oyuncu</span></span></button>
+            <button class="btn nav-item" data-screen="settings-screen" title="Oyun Ayarları" onclick="showScreen('settings-screen')"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg><span class="nav-label"><span class="l-full">Oyun Ayarları</span><span class="l-short">Ayarlar</span></span></button>
+        </nav>
+        <div class="sb-foot">
+            <span class="sb-ver">Adoball · v1</span>
+            <button type="button" class="sb-collapse" id="sb-toggle" aria-label="Menüyü daralt" aria-expanded="true" onclick="ado.toggleSb()"><svg class="ico" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+        </div>
+    </aside>
+
+    <div class="app-main">
+        <header class="topbar">
+            <div class="tb-brand" aria-hidden="true">AD<svg class="tb-ball" focusable="false"><use href="#ab"/></svg><b>BALL</b></div>
+            <div class="tb-title">
+                <span class="kicker" id="tb-kicker">Adoball</span>
+                <h1 id="tb-title">Ana Sayfa</h1>
+            </div>
+            <div class="tb-chips" id="tb-chips"></div>
+        </header>
+
+        <div class="container" id="main" tabindex="-1">
+
+    <!-- ANA SAYFA (sadece gerçek oyun verisi gösterir) -->
+    <div id="home-screen" class="screen active">
+        <div class="home-grid">
+            <div class="hg-hero"><section class="hm" id="home-hero" aria-label="Sıradaki maç"></section></div>
+
+            <nav class="hg-tiles tiles" aria-label="Oyun modları">
+                <button type="button" class="tile" style="--tile-c: var(--primary)" onclick="showScreen('quick-match-screen')">
+                    <svg class="tile-bg" aria-hidden="true" focusable="false"><use href="#i-match"/></svg>
+                    <span class="tile-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-match"/></svg></span>
+                    <span class="tile-title">Hızlı Maç</span>
+                    <span class="tile-meta" id="home-quick-meta">İki takım seç, canlı izle</span>
+                    <span class="tile-go" aria-hidden="true"><svg class="ico" focusable="false"><use href="#i-arrow-r"/></svg></span>
+                </button>
+                <button type="button" class="tile" style="--tile-c: var(--gold)" onclick="showScreen('tournament-screen')">
+                    <svg class="tile-bg" aria-hidden="true" focusable="false"><use href="#i-trophy"/></svg>
+                    <span class="tile-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-trophy"/></svg></span>
+                    <span class="tile-title">Turnuva</span>
+                    <span class="tile-meta" id="home-tour"></span>
+                    <span class="tile-go" aria-hidden="true"><svg class="ico" focusable="false"><use href="#i-arrow-r"/></svg></span>
+                </button>
+                <button type="button" class="tile" style="--tile-c: var(--volt)" onclick="showScreen('squad-screen')">
+                    <svg class="tile-bg" aria-hidden="true" focusable="false"><use href="#i-team"/></svg>
+                    <span class="tile-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-team"/></svg></span>
+                    <span class="tile-title">Takımlarım</span>
+                    <span class="tile-meta"><b id="home-club-count">0</b> kayıtlı takım</span>
+                    <span class="tile-go" aria-hidden="true"><svg class="ico" focusable="false"><use href="#i-arrow-r"/></svg></span>
+                </button>
+                <button type="button" class="tile" style="--tile-c: var(--violet)" onclick="showScreen('player-edit-screen')">
+                    <svg class="tile-bg" aria-hidden="true" focusable="false"><use href="#i-users"/></svg>
+                    <span class="tile-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-users"/></svg></span>
+                    <span class="tile-title">Veritabanı</span>
+                    <span class="tile-meta"><b id="home-player-count">0</b> futbolcu</span>
+                    <span class="tile-go" aria-hidden="true"><svg class="ico" focusable="false"><use href="#i-arrow-r"/></svg></span>
+                </button>
+            </nav>
+
+            <section class="card hg-stars" aria-labelledby="h-stars">
+                <div class="card-head"><h3 class="sec-title" id="h-stars">Yıldız Futbolcular</h3><span class="card-note">En yüksek OVR</span></div>
+                <div class="pc-rail" id="home-stars"></div>
+            </section>
+
+            <section class="card hg-clubs" aria-labelledby="h-clubs">
+                <div class="card-head"><h3 class="sec-title" id="h-clubs" style="--sec-c: var(--volt)">Kulüplerim</h3></div>
+                <div id="home-clubs"></div>
+            </section>
+
+            <section class="card hg-feed" aria-labelledby="h-feed">
+                <div class="card-head"><h3 class="sec-title" id="h-feed" style="--sec-c: var(--magenta)">Son Gelişmeler</h3><span class="card-note">Bu oturum</span></div>
+                <div class="feed" id="home-feed"></div>
+            </section>
+
+            <section class="card hg-last" aria-labelledby="h-last">
+                <div class="card-head"><h3 class="sec-title" id="h-last" style="--sec-c: var(--gold)">Son Maç</h3></div>
+                <div id="home-last"></div>
+            </section>
+        </div>
+    </div>
+
+
+    <!-- SQUAD MANAGEMENT SCREEN -->
+    <div id="squad-screen" class="screen">
+        <div class="page-head flex-between" style="flex-wrap:wrap;">
+            <div>
+                <span class="kicker">Kulüp</span>
+                <h2>Kayıtlı Takımlar</h2>
+                <p class="page-sub">Kadro kur, taktik tahtasında dizilimi düzenle ve takımlarını kaydet.</p>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="openNewTeamForm()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>Yeni takım oluştur</button>
+        </div>
+        <div id="saved-teams-list" class="team-grid"></div>
+
+        <div id="team-builder" class="panel tb" style="display:none;">
+            <div class="tb-head">
+                <div class="tb-title"><span class="kicker">Takım kurucu</span><h3 id="team-builder-title">Yeni Takım Kur</h3></div>
+                <button type="button" class="btn btn-ghost icon-btn" aria-label="Kurucuyu kapat" title="Kapat" onclick="cancelTeamForm()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button>
+            </div>
+            <div id="team-form-alert" class="app-alert"></div>
+            <div class="tb-grid">
+                <section class="tb-col tb-ident" aria-labelledby="tb-sec-id">
+                    <h4 class="sec-title" id="tb-sec-id">Kimlik</h4>
+                    <div class="tb-preview" aria-hidden="true">
+                        <div id="tb-logo-preview"></div>
+                        <div class="tb-prev-txt"><b id="tb-prev-name">Takım adı</b><span class="tb-prev-kit"><span class="kit-jersey" id="tb-kit-jersey" style="background:#00ffcc;"></span><span class="kit-hex" id="tb-kit-hex">#00FFCC</span></span></div>
+                    </div>
+                    <div class="form-group tb-f-name">
+                        <label for="tb-name">Takım adı</label>
+                        <input type="text" id="tb-name" class="form-control" placeholder="Örn: Dream Team FC" maxlength="40" autocomplete="off" oninput="updateLogoPreview()">
+                    </div>
+                    <div class="tb-2col">
+                        <div class="form-group">
+                            <label for="tb-manager">Teknik direktör</label>
+                            <select id="tb-manager" class="form-control">
+                                <option value="90">Pep Guardiola (90)</option>
+                                <option value="84">Hansi Flick (84)</option>
+                                <option value="78">Okan Buruk (78)</option>
+                                <option value="60">Nuri Şahin (60)</option>
+                                <option value="64">Volkan Demirel (64)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tb-stadium">Stadyum</label>
+                            <select id="tb-stadium" class="form-control">
+                                <option value="100">Santiago Bernabéu (100)</option>
+                                <option value="90">Signal Iduna Park (90)</option>
+                                <option value="75">TÜPRAŞ Stadyumu (75)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group tb-f-color">
+                        <span class="field-label" id="tb-color-l">Forma rengi</span>
+                        <div class="tb-swatches">
+                            <div class="kit-swatch-grid" id="tb-color-swatches" role="group" aria-labelledby="tb-color-l"></div>
+                            <label class="kit-swatch kit-swatch-custom" title="Özel renk seç">
+                                <input type="color" id="tb-color" value="#00ffcc" aria-label="Özel renk seç" oninput="selectTeamColor(this.value)">
+                                <span><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-palette"/></svg></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group tb-f-logo">
+                        <span class="field-label" id="tb-logo-l">Arma biçimi</span>
+                        <input type="hidden" id="tb-logo" value="shield">
+                        <div class="logo-swatch-grid" id="tb-logo-swatches" role="group" aria-labelledby="tb-logo-l"></div>
+                    </div>
+                </section>
+                <section class="tb-col tb-squad" aria-labelledby="tb-sec-sq">
+                    <div class="tb-sq-head">
+                        <h4 class="sec-title" id="tb-sec-sq">Kadro <span class="tb-form">4-2-3-1</span></h4>
+                        <button type="button" class="btn btn-sm" onclick="randomizeSquad()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-shuffle"/></svg>Rastgele kadro kur</button>
+                    </div>
+                    <div id="squad-conflict" class="warn-box" role="alert" hidden></div>
+                    <div class="tactical-pitch">
+                        <svg class="tp-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="97" height="97"/><path d="M1.5 50h97"/><rect x="24" y="1.5" width="52" height="15"/><rect x="38" y="1.5" width="24" height="5.5"/><rect x="24" y="83.5" width="52" height="15"/><rect x="38" y="93" width="24" height="5.5"/></svg>
+                        <div class="pitch-center-circle"></div>
+                        <div class="pitch-slots-container">
+                            <div class="pitch-row"><div class="pitch-slot-item" data-g="st"><span class="ps-pos">SF</span><span class="ps-role">Santrafor</span><select id="slot-10" aria-label="Santrafor (SF)"></select></div></div>
+                            <div class="pitch-row"><div class="pitch-slot-item" data-g="wing"><span class="ps-pos">SLK</span><span class="ps-role">Sol kanat</span><select id="slot-8" aria-label="Sol kanat (SLK)"></select></div><div class="pitch-slot-item" data-g="mid"><span class="ps-pos">MOO</span><span class="ps-role">10 numara</span><select id="slot-7" aria-label="10 numara (MOO)"></select></div><div class="pitch-slot-item" data-g="wing"><span class="ps-pos">SĞK</span><span class="ps-role">Sağ kanat</span><select id="slot-9" aria-label="Sağ kanat (SĞK)"></select></div></div>
+                            <div class="pitch-row"><div class="pitch-slot-item" data-g="mid"><span class="ps-pos">MDO</span><span class="ps-role">6 numara</span><select id="slot-5" aria-label="6 numara (MDO)"></select></div><div class="pitch-slot-item" data-g="mid"><span class="ps-pos">MO</span><span class="ps-role">8 numara</span><select id="slot-6" aria-label="8 numara (MO)"></select></div></div>
+                            <div class="pitch-row"><div class="pitch-slot-item" data-g="def"><span class="ps-pos">SLB</span><span class="ps-role">Sol bek</span><select id="slot-1" aria-label="Sol bek (SLB)"></select></div><div class="pitch-slot-item" data-g="def"><span class="ps-pos">STP</span><span class="ps-role">Sol stoper</span><select id="slot-2" aria-label="Sol stoper (STP)"></select></div><div class="pitch-slot-item" data-g="def"><span class="ps-pos">STP</span><span class="ps-role">Sağ stoper</span><select id="slot-3" aria-label="Sağ stoper (STP)"></select></div><div class="pitch-slot-item" data-g="def"><span class="ps-pos">SĞB</span><span class="ps-role">Sağ bek</span><select id="slot-4" aria-label="Sağ bek (SĞB)"></select></div></div>
+                            <div class="pitch-row"><div class="pitch-slot-item" data-g="gk"><span class="ps-pos">KL</span><span class="ps-role">Kaleci</span><select id="slot-0" aria-label="Kaleci (KL)"></select></div></div>
+                        </div>
+                    </div>
+                    <div class="tb-roles">
+                        <h4 class="sec-title">Takım rolleri</h4>
+                        <p class="tb-hint">Yalnız ilk 11'den seçilir. Görevli oyuncu kırmızı kart görürse görevi takımdaki en iyi alternatif devralır.</p>
+                        <div class="tb-roles-grid"><div class="form-group"><label for="tb-captain">Kaptan</label><select id="tb-captain" class="form-control"></select></div><div class="form-group"><label for="tb-pen-taker">Penaltı</label><select id="tb-pen-taker" class="form-control"></select></div><div class="form-group"><label for="tb-fk-taker">Frikik</label><select id="tb-fk-taker" class="form-control"></select></div><div class="form-group"><label for="tb-cor-taker">Korner</label><select id="tb-cor-taker" class="form-control"></select></div></div>
+                    </div>
+                </section>
+            </div>
+            <div class="tb-foot">
+                <button type="button" class="btn btn-ghost" onclick="cancelTeamForm()">İptal</button>
+                <button type="button" class="btn btn-primary btn-lg" id="btn-save-team" onclick="saveTeam()">Takımı Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK MATCH SCREEN → MAÇ GÜNÜ -->
+    <div id="quick-match-screen" class="screen">
+        <div class="page-head">
+            <span class="kicker">Hızlı maç</span>
+            <h2>Maç Günü</h2>
+            <p class="page-sub">İki takım seç, güçlerini karşılaştır ve maça çık.</p>
+        </div>
+        <div id="qm-form-alert" class="app-alert" role="alert"></div>
+
+        <div class="matchday-card">
+            <div class="md-side home">
+                <label class="md-label" for="qm-home">Ev sahibi</label>
+                <select id="qm-home" class="form-control"></select>
+                <div class="md-preview" id="md-home"></div>
+            </div>
+            <div class="md-center" aria-hidden="true"><span class="md-vs">VS</span></div>
+            <div class="md-side away">
+                <label class="md-label" for="qm-away">Deplasman</label>
+                <select id="qm-away" class="form-control"></select>
+                <div class="md-preview" id="md-away"></div>
+            </div>
+        </div>
+
+        <div class="card md-compare" id="md-compare"></div>
+
+        <div class="md-actions">
+            <div class="md-len" title="1x hızda bir maçın kaç dakikada izleneceği. ½x / 2x / 4x bu sürenin katlarıdır; gol sevinci, tekrar ve devre arası sayılmaz."><span class="md-len-t"><b>Maç süresi</b><small>1x hızda izleme süresi</small></span><div class="seg mlen-seg" role="group" aria-label="Maç süresi"><button type="button" data-v="0" onclick="setMatchLen(0)" title="Motorun kendi temposu (Geniş özet ~8 dk, Kritik anlar ~4 dk, klasik ~2 dk)">Standart</button><button type="button" data-v="3" onclick="setMatchLen(3)">3 dk</button><button type="button" data-v="5" onclick="setMatchLen(5)">5 dk</button><button type="button" data-v="7" onclick="setMatchLen(7)">7 dk</button></div></div>
+            <label class="md-neutral">
+                <input type="checkbox" id="qm-neutral-venue">
+                <span class="switch" aria-hidden="true"></span>
+                <span class="md-neutral-t"><b>Tarafsız saha</b><small>Ev sahibi avantajı kaldırılır (final, kupa maçı gibi)</small></span>
+            </label>
+            <button type="button" class="btn btn-primary btn-lg md-go" onclick="prepareMatch()">Maç ekranına git<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow-r"/></svg></button>
+        </div>
+    </div>
+
+    <!-- MATCH SIMULATION SCREEN -->
+    <div id="match-screen" class="screen">
+        <div class="match-bar" id="match-bar">
+            <div class="mb-state">
+                <button type="button" class="btn btn-ghost icon-btn mb-exit" onclick="exitMatchToOrigin()" title="Maçtan ayrıl" aria-label="Maçtan ayrıl"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev-l"/></svg></button>
+                <span class="live-tag" id="live-tag"><span class="live-dot"></span><span class="lt">MAÇ ÖNCESİ</span></span>
+                <span id="neutral-venue-badge" class="badge badge-info" style="display:none;">Tarafsız Saha</span>
+                <div class="seg eng-seg" id="eng-seg" role="group" aria-label="Maç motoru">
+                    <button type="button" class="on" id="eng-classic" onclick="ado2d.setMode('classic')" title="Klasik: istatistiğe dayalı maç, kadro sahası görünümü">Klasik</button>
+                    <button type="button" id="eng-2d" onclick="ado2d.setMode('2d')" title="Canlı: her futbolcunun kendi kararını verdiği 2B / 3B maç">Canlı</button>
+                </div>
+            </div>
+            <div class="mb-ctl" role="group" aria-label="Maç kontrolleri">
+                <button type="button" class="btn btn-primary mb-play" id="btn-start-match" onclick="startMatch()">Maçı Başlat</button>
+                <button type="button" class="btn mb-play mb-pause" id="btn-pause-match" onclick="pauseMatch()" style="display:none;">Durdur</button>
+                <button type="button" class="btn mb-skip" id="v2d-skip" title="Bir sonraki kritik ana kadar ileri sar" aria-label="Kritik ana atla"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-ff"/></svg><span class="mb-t">Kritik ana atla</span></button>
+                <div class="speed-buttons" role="group" aria-label="Maç hızı">
+                    <span class="speed-label" aria-hidden="true">Hız</span>
+                    <button type="button" class="btn speed-btn" id="speed-half" onclick="setMatchSpeed(0.5)" title="Yavaş çekim: maçı yarı hızla izle">½x</button>
+                    <button type="button" class="btn speed-btn active-speed" id="speed-1x" onclick="setMatchSpeed(1)">1x</button>
+                    <button type="button" class="btn speed-btn" id="speed-2x" onclick="setMatchSpeed(2)">2x</button>
+                    <button type="button" class="btn speed-btn" id="speed-4x" onclick="setMatchSpeed(4)">4x</button>
+                </div>
+                <button type="button" class="btn icon-btn mb-sound" id="btn-sound-toggle" onclick="toggleSound()" title="Sesi aç / kapat" aria-label="Sesi aç veya kapat"><svg class="ico emo-ic" aria-hidden="true" focusable="false"><use href="#i-vol"/></svg></button>
+            </div>
+            <div class="mb-end">
+                <button type="button" class="btn mb-tac" id="btn-tactics" aria-haspopup="dialog" aria-label="Takım talimatları" hidden><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-board"/></svg><span class="mb-t">Talimatlar</span></button>
+                <div class="mb-menu">
+                    <button type="button" class="btn mb-menu-btn" id="v2d-menu-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="v2d-bar" aria-label="Görünüm" title="İzleme biçimi, kamera, analiz katmanları ve tempo"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sliders"/></svg><span class="mb-t">Görünüm</span></button>
+                    <div class="v2d-bar opt-menu" id="v2d-bar" role="dialog" aria-label="Görünüm ayarları" hidden>
+                        <div class="opt-head"><span class="opt-grip" aria-hidden="true"></span><h3 class="opt-title">Görünüm</h3><button type="button" class="opt-x" id="v2d-menu-x" aria-label="Kapat" title="Kapat"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div>
+                        <div class="opt-group">
+                            <h4>İzleme biçimi</h4>
+                            <div class="seg watch-seg" id="watch-seg" role="group" aria-label="İzleme biçimi">
+                                <button type="button" class="on" id="watch-wide" aria-pressed="true" onclick="ado2d.setWatch('wide')" title="Tüm maç akıcı tempoda izlenir; tehlikeli anlarda yavaşlar, ölü toplarda hızlanır">Geniş özet</button>
+                                <button type="button" id="watch-fm" aria-pressed="false" onclick="ado2d.setWatch('fm')" title="Football Manager gibi: yalnız goller, net gol fırsatları, penaltılar, kırmızı kartlar ve VAR; her an hazırlığıyla başlar, aralar gösterilmez (maç arası paneli)">FM tarzı</button>
+                                <button type="button" id="watch-key" aria-pressed="false" onclick="ado2d.setWatch('key')" title="Yalnızca pozisyonlar normal hızda izlenir; aradaki süre hızlı akar">Kritik anlar</button>
+                            </div>
+                            <p class="eng-hint" id="eng-hint" aria-live="polite"></p>
+                        </div>
+                        <div class="opt-group">
+                            <h4>Kamera ve görüntü</h4>
+                            <div class="opt-row" id="v2d-camstyle" role="group" aria-label="Kamera açısı" title="Yayın kamerasının açısı">
+                                <span class="opt-l">Kamera açısı</span>
+                                <span class="seg"><button type="button" data-v="std" aria-pressed="true" class="on">Yayın</button><button type="button" data-v="low" aria-pressed="false">Alçak</button><button type="button" data-v="high" aria-pressed="false">Geniş</button></span>
+                            </div>
+                            <button type="button" class="opt-btn" id="v2d-cam" aria-pressed="false" title="Kamera topu yakından takip eder"><span class="opt-l">Yakın kamera<span class="opt-d">Kamera topu yakından izler</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                            <div class="opt-row" id="v2d-gfx" role="group" aria-label="Görüntü kalitesi" title="3B görüntü kalitesi: Otomatik cihaza göre ayarlar; Yüksek en iyi görüntü (gölgeli oyuncular, yumuşak gölge, ışık hâlesi), Düşük en akıcı">
+                                <span class="opt-l">Görüntü kalitesi<span class="opt-v" id="v2d-gfx-now"></span></span>
+                                <span class="seg"><button type="button" data-v="auto" aria-pressed="true" class="on">Otomatik</button><button type="button" data-v="high" aria-pressed="false">Yüksek</button><button type="button" data-v="mid" aria-pressed="false">Orta</button><button type="button" data-v="low" aria-pressed="false">Düşük</button></span>
+                            </div>
+                        </div>
+                        <div class="opt-group">
+                            <h4>Analiz katmanları</h4>
+                            <button type="button" class="opt-btn" id="v2d-dec" aria-pressed="false"><span class="opt-l">Karar<span class="opt-d">Pas seçenekleri ve karar puanları</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                            <button type="button" class="opt-btn" id="v2d-ctl" aria-pressed="false"><span class="opt-l">Kontrol alanı<span class="opt-d">Hangi takımın nereye önce ulaşacağı</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                            <button type="button" class="opt-btn" id="v2d-trail" aria-pressed="false"><span class="opt-l">İz<span class="opt-d">Topun son birkaç saniyelik yolu</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                            <button type="button" class="opt-btn" id="v2d-names" aria-pressed="false"><span class="opt-l">İsimler<span class="opt-d">Bütün futbolcuların adları</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                            <p class="opt-note">Futbolcuya tıkla ya da dokun: maç kartı açılır.<span class="opt-hov"> Üzerine gelince özellikleri, son kararı ve reyting gerekçesi görünür.</span></p>
+                        </div>
+                        <div class="opt-group">
+                            <h4>Tempo ve tekrar</h4>
+                            <div class="opt-row" id="v2d-mlen" title="1x hızda maçın izleme süresi; ½x / 2x / 4x bunun katlarıdır. Gol sevinci, tekrar, VAR ve devre arası sayılmaz."><span class="opt-l">Maç süresi<span class="opt-v" id="v2d-mlen-now"></span></span><div class="seg mlen-seg" role="group" aria-label="Maç süresi"><button type="button" data-v="0" onclick="setMatchLen(0)" title="Motorun kendi temposu (Geniş özet ~8 dk, Kritik anlar ~4 dk, klasik ~2 dk)">Standart</button><button type="button" data-v="3" onclick="setMatchLen(3)">3 dk</button><button type="button" data-v="5" onclick="setMatchLen(5)">5 dk</button><button type="button" data-v="7" onclick="setMatchLen(7)">7 dk</button></div></div>
+                            <button type="button" class="opt-btn on" id="v2d-smart" aria-pressed="true" title="Tehlikeli anlarda yavaşlar, ölü toplarda ve sakin bölümlerde hızlanır"><span class="opt-l">Akıllı tempo<span class="opt-d">Tehlikede yavaşlar, ölü topta hızlanır</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                            <button type="button" class="opt-btn on" id="v2d-replay" aria-pressed="true" title="Gol olunca pozisyonu yavaş çekimde tekrar gösterir"><span class="opt-l">Gol tekrarı<span class="opt-d">Golden sonra yavaş çekim tekrar</span></span><i class="opt-sw" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scoreboard">
+            <div class="sb-side home" id="score-home-name">
+                <span class="sb-name" id="name-home-text">Ev Sahibi</span>
+                <div id="crest-home" class="sb-crest"></div>
+            </div>
+
+            <div class="sb-mid">
+                <div class="match-time-badge" id="match-time">00:00</div>
+                <div class="sb-score">
+                    <div class="team-score" id="score-home">0</div>
+                    <div class="sb-dash">-</div>
+                    <div class="team-score" id="score-away">0</div>
+                </div>
+                <div class="period-tag" id="period-tag">Başlamadı</div>
+            </div>
+
+            <div class="sb-side away" id="score-away-name">
+                <div id="crest-away" class="sb-crest"></div>
+                <span class="sb-name" id="name-away-text">Deplasman</span>
+            </div>
+        </div>
+
+        <div class="live-ticker" id="live-ticker-text" aria-live="polite">Maç hakemin ilk düdüğü ile başlamak üzere...</div>
+
+        <div class="match-grid">
+            <div class="mg-main">
+                <section class="card pitch-card" aria-label="Maç sahası">
+                    <div class="card-head">
+                        <h3><svg class="ico" aria-hidden="true"><use href="#i-pitch"/></svg><span id="pc-title">İlk 11</span></h3>
+                        <div class="seg" role="group" aria-label="Görünüm">
+                            <button type="button" class="on" id="vt-pitch" onclick="ado.view('pitch')">Saha</button>
+                            <button type="button" id="vt-list" onclick="ado.view('list')">Liste</button>
+                        </div>
+                    </div>
+                    <div id="view-pitch"><div class="pitch-view" id="pitch-view"></div></div>
+                    <div id="view-2d" hidden>
+                        <div class="v2d-wrap">
+                            <canvas id="cv3d" aria-hidden="true"></canvas>
+                            <canvas id="cv2d" role="img" aria-label="Canlı 2D maç sahası: iki takımın 22 oyuncusu, hakem ve top"></canvas>
+                            <div class="seg v2d-view" id="v2d-view" role="group" aria-label="Görünüm">
+                                <button type="button" id="v3-bcast" aria-pressed="false"><span class="v3-p">3B </span>Yayın</button>
+                                <button type="button" id="v3-full" aria-pressed="false"><span class="v3-p">3B </span>Taktik</button>
+                                <button type="button" id="v3-2d" class="on" aria-pressed="true">2B</button>
+                            </div>
+                            <div class="v2d-legend" id="v2d-legend" hidden></div>
+                            <div class="v2d-tip" id="v2d-tip" hidden></div>
+                            <button type="button" class="btn btn-sm v2d-rp-skip" id="v2d-rp-skip" hidden>Tekrarı geç<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow-r"/></svg></button>
+                        </div>
+                    </div>
+                    <div id="view-list" hidden>
+                        <div class="lineup-lists">
+                            <div class="lineup-box">
+                                <h3 id="lineup-home-title">Ev Sahibi Kadro</h3>
+                                <div class="lineup-list" id="home-lineup-list"></div>
+                            </div>
+                            <div class="lineup-box">
+                                <h3 id="lineup-away-title">Deplasman Kadro</h3>
+                                <div class="lineup-list" id="away-lineup-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="seg l2d-tabs" id="l2d-tabs" role="group" aria-label="Maç bilgisi">
+                    <button type="button" class="on" id="l2t-key" aria-pressed="true">Olaylar</button>
+                    <button type="button" id="l2t-cm" aria-pressed="false">Anlatım</button>
+                    <button type="button" id="l2t-xi" aria-pressed="false">Kadrolar</button>
+                    <button type="button" id="l2t-stats" aria-pressed="false">İstatistik</button>
+                </div>
+
+                <section class="card xi-card" id="xi-card" aria-label="İki takımın ilk 11'i">
+                    <div class="xi-cols">
+                        <div class="xi-col"><h4 class="xi-title" id="xi-title-h"><i></i><span>Ev Sahibi</span></h4><div class="xi-list" id="xi-home"></div></div>
+                        <div class="xi-col"><h4 class="xi-title" id="xi-title-a"><i></i><span>Deplasman</span></h4><div class="xi-list" id="xi-away"></div></div>
+                    </div>
+                </section>
+
+                <section class="card timeline-card" aria-label="Maç akışı">
+                    <div class="card-head">
+                        <div class="tabs" role="group" aria-label="Akış türü" style="margin:0; border:none;">
+                            <button type="button" class="tab active" id="tl-tab-key" onclick="ado.tl('key')">Olaylar</button>
+                            <button type="button" class="tab" id="tl-tab-cm" onclick="ado.tl('cm')">Anlatım</button>
+                            <button type="button" class="tab" id="tl-tab-st" onclick="ado.tl('st')">İstatistik</button>
+                        </div>
+                    </div>
+                    <div class="km-head" id="km-head" aria-hidden="true"><span class="km-hn"><i></i><b id="km-hname">Ev Sahibi</b></span><span class="km-hc">DK</span><span class="km-an"><b id="km-aname">Deplasman</b><i></i></span></div>
+                    <div class="fm-events-list km-list" id="fm-events-list" role="list" aria-label="Olaylar: goller, asistler, sarı ve kırmızı kartlar, VAR kararları"><div class="fm-event-empty">Maç henüz başlamadı...</div></div>
+                    <div class="commentary-list" id="commentary-list" hidden></div>
+                </section>
+            </div>
+
+            <aside class="mg-side" aria-label="Maç istatistikleri">
+                <div class="stats-container">
+                    <div class="stat-header-row"><span id="stat-home-title">Ev</span><span>İstatistikler</span><span id="stat-away-title">Dep</span></div>
+                    <div class="stat-row">
+                        <div class="stat-val home" id="stat-pos-home">%50</div>
+                        <div class="stat-mid">
+                            <div class="stat-label">Topa Sahip Olma</div>
+                            <div class="stat-bar-bg"><div class="stat-bar-home" id="bar-pos-home" style="width:50%"></div><div class="stat-bar-away" id="bar-pos-away" style="width:50%"></div></div>
+                        </div>
+                        <div class="stat-val away" id="stat-pos-away">%50</div>
+                    </div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-xg-home">0.00</div><div class="stat-mid"><div class="stat-label">Gol Beklentisi (xG)</div><div class="cmp-bar zero" data-k="xg"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-xg-away">0.00</div></div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-shots-home">0</div><div class="stat-mid"><div class="stat-label">Toplam Şut</div><div class="cmp-bar zero" data-k="shots"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-shots-away">0</div></div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-sot-home">0</div><div class="stat-mid"><div class="stat-label">İsabetli Şut</div><div class="cmp-bar zero" data-k="sot"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-sot-away">0</div></div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-pass-home">0</div><div class="stat-mid"><div class="stat-label">Pas Sayısı</div><div class="cmp-bar zero" data-k="pass"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-pass-away">0</div></div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-corners-home">0</div><div class="stat-mid"><div class="stat-label">Korner</div><div class="cmp-bar zero" data-k="corners"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-corners-away">0</div></div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-offside-home">0</div><div class="stat-mid"><div class="stat-label">Ofsayt</div><div class="cmp-bar zero" data-k="offsides"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-offside-away">0</div></div>
+                    <div class="stat-row"><div class="stat-val home" id="stat-fouls-home">0</div><div class="stat-mid"><div class="stat-label">Faul</div><div class="cmp-bar zero" data-k="fouls"><i class="h"></i><i class="a"></i></div></div><div class="stat-val away" id="stat-fouls-away">0</div></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- TOURNAMENT SCREEN -->
+    <div id="tournament-screen" class="screen">
+        <div class="tourney-hero">
+            <div class="tourney-hero-inner">
+                <div class="tourney-trophy-icon"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-trophy"/></svg></div>
+                <div class="th-txt">
+                    <span class="kicker">Turnuva modu</span>
+                    <h2 class="tourney-hero-title">Şampiyonlar Ligi</h2>
+                    <div class="tourney-hero-subtitle" id="tourney-hero-subtitle">Kendi turnuvanı kur, rakiplerini ez, kupayı kaldır.</div>
+                </div>
+                <div class="tourney-hero-badge" id="tourney-hero-badge">Kurulum Aşaması</div>
+            </div>
+        </div>
+
+        <div id="tourney-setup" class="panel ts">
+            <div id="tourney-form-alert" class="app-alert"></div>
+            <section class="ts-sec">
+                <h3 class="sec-title" id="ts-fmt-l">Format</h3>
+                <div class="format-card-grid" role="radiogroup" aria-labelledby="ts-fmt-l">
+                    <div class="format-card selected" id="format-card-3" onclick="selectTourneyFormat(3)" role="radio" tabindex="0" aria-checked="true"><span class="fc-num">3</span><span class="format-card-title">Takım</span><span class="format-card-desc">Çift devreli mini lig · 6 maç</span></div>
+                    <div class="format-card" id="format-card-4" onclick="selectTourneyFormat(4)" role="radio" tabindex="0" aria-checked="false"><span class="fc-num">4</span><span class="format-card-title">Takım</span><span class="format-card-desc">Çift devreli lig · 12 maç</span></div>
+                    <div class="format-card" id="format-card-6" onclick="selectTourneyFormat(6)" role="radio" tabindex="0" aria-checked="false"><span class="fc-num">6</span><span class="format-card-title">Takım</span><span class="format-card-desc">Çift devreli büyük lig · 30 maç</span></div>
+                </div>
+                <select id="tourney-size" class="form-control" onchange="generateTourneySlots()" style="display:none;" aria-hidden="true" tabindex="-1">
+                    <option value="3" selected>3 Takımlı Lig (Çift Devre)</option>
+                    <option value="4">4 Takımlı Lig (Çift Devre)</option>
+                    <option value="6">6 Takımlı Lig (Çift Devre)</option>
+                </select>
+            </section>
+            <section class="ts-sec">
+                <div class="ts-head">
+                    <h3 class="sec-title">Katılacak takımlar</h3>
+                    <button type="button" class="btn btn-sm" onclick="openTourneySquadEditor()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-edit"/></svg>Kadroları düzenle</button>
+                </div>
+                <div id="tourney-conflict" class="warn-box" role="alert" hidden></div>
+                <div id="tourney-team-slots"></div>
+            </section>
+            <div class="ts-foot">
+                <button type="button" class="btn btn-primary btn-lg" id="tourney-start-btn" onclick="startTournament()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-trophy"/></svg>Turnuvayı başlat ve fikstür çek</button>
+            </div>
+        </div>
+
+        <div id="tourney-active" style="display:none;">
+            <div class="ta-bar">
+                <div id="tourney-leader-strip" class="ta-leader"></div>
+                <div class="ta-actions">
+                    <button type="button" class="btn btn-sm" id="tourney-simall-btn" onclick="simulateAllRemainingInstant()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-ff"/></svg>Kalan maçları simüle et</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="endTournament()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-reset"/></svg>Turnuvayı sıfırla</button>
+                </div>
+            </div>
+
+            <div class="tourney-tabs" role="tablist" aria-label="Turnuva">
+                <button type="button" class="tourney-tab-btn active" data-tab="standings" role="tab" aria-selected="true" aria-controls="tourney-tab-standings" onclick="switchTourneyTab('standings')">Puan durumu</button>
+                <button type="button" class="tourney-tab-btn" data-tab="fixtures" role="tab" aria-selected="false" aria-controls="tourney-tab-fixtures" onclick="switchTourneyTab('fixtures')">Fikstür</button>
+                <button type="button" class="tourney-tab-btn" data-tab="awards" role="tab" aria-selected="false" aria-controls="tourney-tab-awards" onclick="switchTourneyTab('awards')">Ödüller</button>
+            </div>
+
+            <div class="tourney-tab-panel active" id="tourney-tab-standings" role="tabpanel">
+                <div class="panel ta-panel">
+                    <div class="table-scroll"><table class="standings-table-v2">
+                        <thead><tr><th scope="col" class="c-pos">#</th><th scope="col" class="c-team">Takım</th><th scope="col" title="Oynanan maç">O</th><th scope="col" title="Galibiyet">G</th><th scope="col" title="Beraberlik">B</th><th scope="col" title="Mağlubiyet">M</th><th scope="col" class="xs-hide" title="Atılan gol">A</th><th scope="col" class="xs-hide" title="Yenilen gol">Y</th><th scope="col" title="Averaj">AV</th><th scope="col" title="Puan">P</th><th scope="col" class="c-form" title="Son 5 maç">Form</th></tr></thead>
+                        <tbody id="tourney-standings-body"></tbody>
+                    </table></div>
+                </div>
+            </div>
+
+            <div class="tourney-tab-panel" id="tourney-tab-fixtures" role="tabpanel">
+                <div class="panel ta-panel">
+                    <div id="tourney-fixtures"></div>
+                </div>
+            </div>
+
+            <div class="tourney-tab-panel" id="tourney-tab-awards" role="tabpanel">
+                <div class="award-grid">
+                    <div class="panel ta-panel">
+                        <h3 class="sec-title">Gol krallığı</h3>
+                        <table class="mini-table">
+                            <thead><tr><th scope="col" class="c-rk">#</th><th scope="col">Oyuncu</th><th scope="col">Gol</th></tr></thead>
+                            <tbody id="tourney-topscorers-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="panel ta-panel">
+                        <h3 class="sec-title">Asist krallığı</h3>
+                        <table class="mini-table assist">
+                            <thead><tr><th scope="col" class="c-rk">#</th><th scope="col">Oyuncu</th><th scope="col">Asist</th></tr></thead>
+                            <tbody id="tourney-topassists-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLAYER EDIT DATABASE SCREEN -->
+    <div id="player-edit-screen" class="screen">
+        <div class="page-head db-head">
+            <div class="db-title">
+                <span class="kicker">Kadro havuzu</span>
+                <h2>Futbolcu Veritabanı</h2>
+                <p class="page-sub"><b id="player-count">0</b> futbolcu · sıralamak için sütun başlığına, düzenlemek için oyuncuya dokun.</p>
+            </div>
+            <div class="db-io">
+                <button type="button" class="btn btn-sm" onclick="downloadJSON()" title="Veritabanını .json dosyası olarak indir"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-download"/></svg>Dışa aktar</button>
+                <button type="button" class="btn btn-sm" onclick="document.getElementById('import-file').click()" title=".json dosyasından veritabanı yükle"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-upload"/></svg>İçe aktar</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="handleImport(event)">
+            </div>
+        </div>
+        <div class="db-bar">
+            <label class="db-search"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><span class="sr-only">Futbolcu ara</span><input type="search" id="player-search" class="form-control" placeholder="Futbolcu ara" autocomplete="off" oninput="renderPlayerTable()"></label>
+            <div class="db-chips" id="db-chips" role="group" aria-label="Mevki filtresi"></div>
+            <select id="player-pos-filter" class="form-control db-pos-sel" onchange="renderPlayerTable()" aria-label="Mevki filtresi">
+                <option value="">Tüm Mevkiler</option>
+                <option value="KL">Kaleci (KL)</option>
+                <option value="SLB">Sol Bek (SLB)</option>
+                <option value="STP">Stoper (STP)</option>
+                <option value="SĞB">Sağ Bek (SĞB)</option>
+                <option value="MDO">Defansif OS (MDO)</option>
+                <option value="MO">Orta Saha (MO)</option>
+                <option value="MOO">Ofansif OS (MOO)</option>
+                <option value="SLK">Sol Kanat (SLK)</option>
+                <option value="SĞK">Sağ Kanat (SĞK)</option>
+                <option value="SF">Santrafor (SF)</option>
+            </select>
+        </div>
+
+        <div class="panel players-table-container" id="db-wrap">
+            <table class="db-table">
+                <thead>
+                    <tr id="players-table-head">
+                        <th scope="col" onclick="sortPlayerTable('name')">Futbolcu</th>
+                        <th scope="col" onclick="sortPlayerTable('pos')">Mevki</th>
+                        <th scope="col" onclick="sortPlayerTable('ovr')">OVR</th>
+                        <th scope="col" onclick="sortPlayerTable('pac')" data-key="pac">Hız</th>
+                        <th scope="col" onclick="sortPlayerTable('str')" data-key="str">Güç</th>
+                        <th scope="col" onclick="sortPlayerTable('sta')" data-key="sta">Day</th>
+                        <th scope="col" onclick="sortPlayerTable('dri')" data-key="dri">Dri</th>
+                        <th scope="col" onclick="sortPlayerTable('pas')" data-key="pas">Pas</th>
+                        <th scope="col" onclick="sortPlayerTable('lon')" data-key="lon">U.Pas</th>
+                        <th scope="col" onclick="sortPlayerTable('fin')" data-key="fin">Bit</th>
+                        <th scope="col" onclick="sortPlayerTable('sho')" data-key="sho">Şut</th>
+                        <th scope="col" onclick="sortPlayerTable('hea')" data-key="hea">Kafa</th>
+                        <th scope="col" onclick="sortPlayerTable('tac')" data-key="tac">T.Kap</th>
+                        <th scope="col" onclick="sortPlayerTable('mar')" data-key="mar">Mrk</th>
+                        <th scope="col" onclick="sortPlayerTable('posi')" data-key="posi">Poz</th>
+                        <th scope="col" onclick="sortPlayerTable('pen')" data-key="pen">Pen</th>
+                        <th scope="col" onclick="sortPlayerTable('fk')" data-key="fk">Fri</th>
+                        <th scope="col" onclick="sortPlayerTable('cor')" data-key="cor">Kor</th>
+                        <th scope="col" onclick="sortPlayerTable('vis')" data-key="vis">Viz</th>
+                        <th scope="col" onclick="sortPlayerTable('bal')" data-key="bal">Den</th>
+                        <th scope="col" onclick="sortPlayerTable('agg')" data-key="agg">Faul</th>
+                        <th scope="col" onclick="sortPlayerTable('lead')" data-key="lead">Lider</th>
+                    </tr>
+                </thead>
+                <tbody id="players-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SETTINGS SCREEN -->
+    <div id="settings-screen" class="screen">
+        <div class="page-head">
+            <span class="kicker">Oyun ayarları</span>
+            <h2>Simülasyon Motoru</h2>
+            <p class="page-sub">Ağırlıklar, maç motorunun bir takımın gücünü hesaplarken her faktöre ne kadar önem vereceğini belirler. Toplam tam %100 olmalı.</p>
+        </div>
+        <div class="set-wrap">
+            <div class="set-list">
+            <div class="weight-slider-row" style="--wc:var(--primary)">
+                <div class="weight-slider-head">
+                    <span class="ws-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-users"/></svg></span>
+                    <label for="set-player">Oyuncu güçleri</label>
+                    <span class="weight-slider-value" id="set-player-val">%70</span>
+                </div>
+                <input type="range" min="0" max="100" id="set-player" class="weight-slider" value="70" style="--v:70" oninput="onWeightSliderInput()" aria-describedby="set-player-hint">
+                <p class="weight-hint" id="set-player-hint">İlk 11’in ortalama OVR’ının maç sonucuna etkisi. Yüksekse güçlü kadro neredeyse hep kazanır; düşükse sürprizler artar.</p>
+            </div>
+            <div class="weight-slider-row" style="--wc:var(--violet)">
+                <div class="weight-slider-head">
+                    <span class="ws-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-board"/></svg></span>
+                    <label for="set-manager">Teknik direktör</label>
+                    <span class="weight-slider-value" id="set-manager-val">%10</span>
+                </div>
+                <input type="range" min="0" max="100" id="set-manager" class="weight-slider" value="10" style="--v:10" oninput="onWeightSliderInput()" aria-describedby="set-manager-hint">
+                <p class="weight-hint" id="set-manager-hint">Teknik direktörün taktik ve tecrübe puanının etkisi. Yükseldikçe iyi bir hoca zayıf kadroyla farkı daha çok kapatır.</p>
+            </div>
+            <div class="weight-slider-row" style="--wc:var(--volt)">
+                <div class="weight-slider-head">
+                    <span class="ws-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-home"/></svg></span>
+                    <label for="set-home">İç saha avantajı</label>
+                    <span class="weight-slider-value" id="set-home-val">%8</span>
+                </div>
+                <input type="range" min="0" max="100" id="set-home" class="weight-slider" value="8" style="--v:8" oninput="onWeightSliderInput()" aria-describedby="set-home-hint">
+                <p class="weight-hint" id="set-home-hint">Yalnız ev sahibine eklenen sabit bonus. Yükseldikçe evinde oynamak başlı başına avantaj olur.</p>
+            </div>
+            <div class="weight-slider-row" style="--wc:var(--gold)">
+                <div class="weight-slider-head">
+                    <span class="ws-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-stadium"/></svg></span>
+                    <label for="set-stadium">Stadyum gücü</label>
+                    <span class="weight-slider-value" id="set-stadium-val">%7</span>
+                </div>
+                <input type="range" min="0" max="100" id="set-stadium" class="weight-slider" value="7" style="--v:7" oninput="onWeightSliderInput()" aria-describedby="set-stadium-hint">
+                <p class="weight-hint" id="set-stadium-hint">Takımın stadyum puanının (atmosfer, kapasite) etkisi. Büyük stadyumda oynayan takım küçük bir avantaj kazanır.</p>
+            </div>
+            <div class="weight-slider-row" style="--wc:var(--magenta)">
+                <div class="weight-slider-head">
+                    <span class="ws-ic"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-dice"/></svg></span>
+                    <label for="set-luck">Futbol şansı</label>
+                    <span class="weight-slider-value" id="set-luck-val">%5</span>
+                </div>
+                <input type="range" min="0" max="100" id="set-luck" class="weight-slider" value="5" style="--v:5" oninput="onWeightSliderInput()" aria-describedby="set-luck-hint">
+                <p class="weight-hint" id="set-luck-hint">Maç anındaki rastgele momentum payı. Yükseldikçe favorinin sürpriz kaybetme olasılığı artar: futbolun "her şey olabilir" tarafı.</p>
+            </div>
+            </div>
+            <aside class="set-sum" aria-label="Ağırlık özeti">
+                <div class="set-total">
+                    <div id="weight-total-gauge" class="weight-gauge" style="--tot:100"><div class="weight-gauge-value" id="weight-total-value">100</div><div class="weight-gauge-label">Toplam %</div></div>
+                    <div class="set-mix-wrap">
+                        <div class="set-mix" id="set-mix" aria-hidden="true"></div>
+                        <ul class="set-legend" id="set-legend"></ul>
+                        <span class="set-dirty" id="set-dirty"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-dot"/></svg>Kaydedilmemiş değişiklik</span>
+                    </div>
+                </div>
+                <div id="settings-form-alert" class="app-alert" role="status"></div>
+                <div class="set-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" id="set-reset" title="Varsayılana dön (70 / 10 / 8 / 7 / 5)" aria-label="Varsayılana dön"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-reset"/></svg><span class="set-reset-t">Varsayılana dön</span></button>
+                    <button type="button" class="btn btn-primary btn-lg" id="btn-save-settings" onclick="saveSettings()">Ayarları kaydet</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+        </div><!-- /container -->
+    </div><!-- /app-main -->
+</div><!-- /app -->
+
+<!-- EDIT PLAYER MODAL -->
+<div id="edit-modal" class="modal-overlay">
+    <div class="modal-content mc ed" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+        <div class="mc-head ed-head">
+            <div class="ed-id">
+                <span class="kicker">Oyuncu düzenle</span>
+                <h2 id="edit-title">Oyuncu Düzenle</h2>
+                <p class="mc-sub ed-meta" id="ed-meta"></p>
+            </div>
+            <button type="button" class="btn btn-ghost icon-btn modal-close" aria-label="Kapat" title="Kapat (Esc)" onclick="closeModal('edit-modal')"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="mc-body ed-body">
+            <aside class="ed-side" aria-label="Oyuncu kartı">
+                <div class="pcard ed-card" id="ed-card" data-tier="gold">
+                    <div class="pcard-in">
+                        <div class="pc-top"><span class="pc-ovr"><b id="ed-ovr">0</b><span class="pc-pos" id="ed-pos">-</span></span><span class="ed-team" id="ed-team"></span></div>
+                        <div class="ed-pv" id="ed-pv"></div>
+                        <span class="pc-name" id="ed-name"></span>
+                        <span class="pc-stats" id="ed-stats"></span>
+                    </div>
+                </div>
+                <div class="live-ovr-container ed-ovr">
+                    <label for="edit-live-ovr" title="1-99 sınırı yüzünden uç değerlerde birkaç puan sapabilir.">OVR hedefi<small>Tüm nitelikleri orantılı ölçekler</small></label>
+                    <input type="number" id="edit-live-ovr" class="live-ovr-input" value="0" min="1" max="99" inputmode="numeric" onchange="applyOverallToStats()">
+                </div>
+            </aside>
+            <div class="ed-main">
+                <div class="tabs ed-tabs" role="tablist" aria-label="Düzenleme bölümleri">
+                    <button type="button" class="tab active" role="tab" id="ed-tab-attr" data-ed="attr" aria-selected="true" aria-controls="ed-pane-attr">Nitelikler</button>
+                    <button type="button" class="tab" role="tab" id="ed-tab-look" data-ed="look" aria-selected="false" aria-controls="ed-pane-look">Görünüm ve ayak</button>
+                </div>
+                <div class="ed-pane" id="ed-pane-attr" role="tabpanel" aria-labelledby="ed-tab-attr">
+                    <p class="ed-legend"><i class="ed-dot" aria-hidden="true"></i><span>Yeşil noktalı nitelikler <b id="edit-pos-label"></b> mevkisinde maç motorunda ekstra etkilidir.</span></p>
+                    <input type="hidden" id="edit-id">
+                    <input type="hidden" id="edit-pos-val">
+                    <div class="modal-grid" id="edit-inputs"></div>
+                </div>
+                <div class="ed-pane" id="ed-pane-look" role="tabpanel" aria-labelledby="ed-tab-look" hidden></div>
+            </div>
+        </div>
+        <div class="mc-foot">
+            <button type="button" class="btn btn-ghost" onclick="closeModal('edit-modal')">İptal</button>
+            <button type="button" class="btn btn-primary" id="ed-save" onclick="savePlayerEdit()">Değişiklikleri kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- TURNUVA KADRO DÜZENLEME MODALI -->
+<div id="tourney-squad-modal" class="modal-overlay">
+    <div class="modal-content mc mc-wide" role="dialog" aria-modal="true" aria-labelledby="tsm-title">
+        <div class="mc-head">
+            <div><span class="kicker">Turnuva</span><h2 id="tsm-title">Takımlar ve kadrolar</h2><p class="mc-sub">Turnuvaya katılacak takımların adını, rengini, armasını, ilk 11'ini ve rollerini buradan düzenleyebilirsin.</p></div>
+            <button type="button" class="btn btn-ghost icon-btn modal-close" aria-label="Kapat" title="Kapat (Esc)" onclick="closeModal('tourney-squad-modal')"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="mc-body">
+            <div id="tourney-squad-alert" class="app-alert" role="alert"></div>
+            <div id="tourney-squad-container"></div>
+        </div>
+        <div class="mc-foot"><button type="button" class="btn btn-primary" onclick="closeModal('tourney-squad-modal')">Kadro değişikliklerini uygula</button></div>
+    </div>
+</div>
+
+<!-- FİKSTÜR ÇEKİLİŞİ MODALI -->
+<div id="tourney-fixture-modal" class="modal-overlay">
+    <div class="modal-content mc" role="dialog" aria-modal="true" aria-labelledby="fxm-title">
+        <div class="mc-head">
+            <div><span class="kicker">Turnuva</span><h2 id="fxm-title">Fikstür çekildi</h2><p class="mc-sub">Çift devreli lig: her takım her rakibiyle bir kez kendi sahasında, bir kez deplasmanda oynar.</p></div>
+        </div>
+        <div class="mc-body"><div id="tourney-fixture-preview"></div></div>
+        <div class="mc-foot">
+            <button type="button" class="btn btn-ghost" onclick="closeModal('tourney-fixture-modal')">Vazgeç</button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="confirmTournamentStart()">Turnuvaya başla<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-arrow-r"/></svg></button>
+        </div>
+    </div>
+</div>
+
+<!-- MAÇ SONU ÖZETİ / MAÇIN ADAMI -->
+<div id="match-summary-modal" class="modal-overlay">
+    <div class="modal-content bc-card" role="dialog" aria-modal="true" aria-labelledby="sum-title">
+        <span class="bc-tag" id="sum-title">Maç sonu</span>
+        <div class="bc-score">
+            <div class="bc-team h"><span class="bc-crest" id="sum-crest-h"></span><b id="summary-home-name">Ev</b></div>
+            <div class="bc-num"><span id="summary-home-score">0</span><i>-</i><span id="summary-away-score">0</span></div>
+            <div class="bc-team a"><b id="summary-away-name">Dep</b><span class="bc-crest" id="sum-crest-a"></span></div>
+            <div class="bc-sc h" id="sum-sc-h"></div><div class="bc-sc a" id="sum-sc-a"></div>
+        </div>
+        <p class="bc-headline" id="summary-headline"><span class="bc-hk">Manşet</span><span id="summary-headline-text">Manşet yükleniyor...</span></p>
+        <div class="bc-stats" id="summary-stats-rows"></div>
+        <div class="bc-motm"><span class="bc-motm-l">Maçın oyuncusu</span><b id="summary-motm-name">-</b><span id="summary-motm-team">-</span><span class="bc-motm-r" id="summary-motm-rating">-</span></div>
+        <div class="bc-foot"><button type="button" class="btn btn-primary btn-lg" id="summary-continue-btn">Kapat</button></div>
+    </div>
+</div>
+
+<!-- ŞAMPİYONLUK KUTLAMASI -->
+<div id="champion-overlay" class="gol-effect bc-overlay champ-ov">
+    <div class="bc-card champ" role="dialog" aria-modal="true" aria-labelledby="champion-name-text">
+        <div class="champ-hero">
+            <span class="champ-k"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-trophy"/></svg>Şampiyon</span>
+            <span class="champ-crest" id="champ-crest" aria-hidden="true"></span>
+            <h2 class="champ-name" id="champion-name-text">Takım Adı</h2>
+            <p class="champ-sub" id="champ-sub"></p>
+        </div>
+        <div id="champion-awards" class="champ-awards">
+            <div class="award-card">
+                <div class="award-icon"><svg class="ico emo-ic" aria-hidden="true" focusable="false"><use href="#i-ball"/></svg></div>
+                <div class="award-label">Gol kralı</div>
+                <div class="award-name" id="award-topscorer-name">-</div>
+                <div class="award-value" id="award-topscorer-value">-</div>
+            </div>
+            <div class="award-card">
+                <div class="award-icon"><svg class="ico emo-ic" aria-hidden="true" focusable="false"><use href="#i-assist"/></svg></div>
+                <div class="award-label">Asist kralı</div>
+                <div class="award-name" id="award-topassist-name">-</div>
+                <div class="award-value" id="award-topassist-value">-</div>
+            </div>
+            <div class="award-card">
+                <div class="award-icon"><svg class="ico emo-ic" aria-hidden="true" focusable="false"><use href="#i-star"/></svg></div>
+                <div class="award-label">Sezonun oyuncusu</div>
+                <div class="award-name" id="award-motm-name">-</div>
+                <div class="award-value" id="award-motm-value">-</div>
+            </div>
+        </div>
+        <div class="bc-foot"><button type="button" class="btn btn-primary btn-lg" id="champ-close" onclick="document.getElementById('champion-overlay').classList.remove('active')">Puan durumuna dön</button></div>
+    </div>
+</div>
+
