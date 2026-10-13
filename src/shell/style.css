@@ -2051,3 +2051,10 @@ html.dro-on,html.dro-on body{overflow:hidden}
 /* v127: bahis */
 .bet-susp{display:flex;justify-content:space-between;align-items:center;gap:8px;border-left:3px solid #ff5a5a}.bet-susp span{color:var(--chalk-3);font-size:13px}
 .bet-hist{margin-top:10px}
+/* v128: gerçek kariyer geçmişi */
+.kr2 .kr-none{margin:8px 0 2px;font-size:13px}
+/* v129: ad soyad zorunlu */
+.wz-names input.wz-need{outline:2px solid var(--red);outline-offset:1px}
+/* v134: mevki sırası renkleri — ana koyu yeşil → ikincil yeşil → sarı → turuncu → kırmızı → renksiz */
+.fmpd.p6{background:#1fb35a;color:#04170a;box-shadow:0 0 0 2px rgba(31,179,90,.35)}.fmpd.p5{background:#7fd96a;color:#0c2108}.fmpd.p1{background:#ef4b45;color:#2a0505}
+.fmpos-l .p6{background:#1fb35a}.fmpos-l .p5{background:#7fd96a}.fmpos-l .p3{background:#ffd23f}.fmpos-l .p2{background:#ff9f4a}.fmpos-l .p1{background:#ef4b45}

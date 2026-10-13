@@ -7,7 +7,7 @@ const PROF={oyuncu:{n:'Futbolcu',d:'12 yaşında seçmelerle başla, altyapıdan
   yrd:{n:'Yardımcı antrenör',d:'Altyapı antrenörü olarak başla, idman hazırla, rakip analiz et; as hocalığa ve teknik direktörlüğe yüksel.',ic:'🧢'},
   scout:{n:'Gözlemci',d:'Kulübün için yetenek avla: ülke ülke gez, raporla, keşfettiğin oyuncular yıldız olsun.',ic:'🔭'},
   dr:{n:'Takım doktoru',d:'Fizyoterapistlikten sağlık şefliğine: teşhis koy, tedavi seç, oyuncuları sahaya döndür.',ic:'🩺'}};
-function slotMeta(){const c=CLUBS[G.club];return {id:G.sid,name:G.p.name||'Cenk Kuşku',prof:G.prof||(G.mode==='mgr'?'td':'oyuncu'),mode:G.mode||'player',club:G.club,year:G.s?G.s.year:2026,age:G.p.age,apps:G.totals?G.totals.apps:0,t:Date.now(),phase:G.phase,title:staffTitle()};}
+function slotMeta(){const c=CLUBS[G.club];return {id:G.sid,name:meN(),prof:G.prof||(G.mode==='mgr'?'td':'oyuncu'),mode:G.mode||'player',club:G.club,year:G.s?G.s.year:2026,age:G.p.age,apps:G.totals?G.totals.apps:0,t:Date.now(),phase:G.phase,title:staffTitle()};}
 function staffTitle(){if(!G)return '';if(G.mode==='mgr')return 'Teknik direktör';if(G.mode==='staff'&&G.job)return G.job.title;return G.phase==='retired'?'Emekli futbolcu':'Futbolcu';}
 function slotSave(){if(!G||!G.p)return;if(!G.sid)G.sid='s'+Date.now().toString(36)+rint(10,99);try{localStorage.setItem(SLOT_PRE+G.sid,JSON.stringify(G));localStorage.setItem(SLOT_LAST,G.sid);}catch(e){try{toast('Kayıt alanı doldu: eski bir kariyeri silmelisin');}catch(_){}return;}
   const a=slotsList().filter(x=>x.id!==G.sid);a.unshift(slotMeta());slotsWrite(a);}

@@ -42,7 +42,7 @@ function tryoutEnd(avg,skipped){const cl=leagueClubs('u14').sort((a,b)=>b.str-a.
 function signTryout(i){const o=G.tryout&&G.tryout.offers[i];if(!o)return;const avg=G.tryout.avg,p=G.p;
   G.club=o.club;G.contract={years:2,wage:o.wage,role:o.role};p.trust=clamp((ROLE_TRUST[o.role]||55)+(avg-0.5)*10,30,85);p.fame=Math.round(avg*4);
   G.inbox=[];G.tryout=null;G.phase='season';newSeason(2026);
-  msg('coach','Hoş geldin Cenk!',`${CLUBS[o.club].name} altyapısına imza attın. Hocan: “Seçmelerde seni izledim. Burada herkes yerini sahada kazanır. Hazırlık kampı bugün başlıyor, ilk lig maçımız ${fmtDate(dateOf(ROUND_DAY(1)),true)}.”`);
+  msg('coach',('Hoş geldin '+meF()+'!'),`${CLUBS[o.club].name} altyapısına imza attın. Hocan: “Seçmelerde seni izledim. Burada herkes yerini sahada kazanır. Hazırlık kampı bugün başlıyor, ilk lig maçımız ${fmtDate(dateOf(ROUND_DAY(1)),true)}.”`);
   if(avg>=0.75){const c=pick(leagueClubs('u16'));if(c){G.watch[c.id]={i:22,lv:0};msg('gundem',`${c.name} gözlemcisi seçmelerdeydi`,`Seçmelerdeki performansın ${c.name} gözlemcisinin de dikkatini çekti. İlk sezonunu yakından takip edecekler.`);}}
   save();TAB='hub';render();window.scrollTo(0,0);}
 function viewTryout(){const p=G.p,T=G.tryout;

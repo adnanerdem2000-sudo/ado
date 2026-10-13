@@ -11,7 +11,7 @@ function playerCardHTML(){const p=G.p,c=myClub(),L=LEAGUES[c.league],mv=marketVa
   const tier=L.tier>=5?'gold':L.tier>=3?'silver':'bronze';
   const st=Object.keys(ATTR).map(k=>`<div><b>${Math.floor(p.a[k])}</b><span>${ATTR_S[k]}</span></div>`).join('');
   return `<section class="pcard ${tier}"><div class="pc-top"><div class="pc-ovr"><b>${R200(OVR())}</b><span>${POS_S[p.pos]}</span><em class="pc-pot">POT ${(r=>potTxt(r[0],r[1]))(myPot())}</em>${flagImg('TUR','fl-card')}${crestSVG(c,28)}</div><div class="pc-photo">${avatarSVG(c.c1,c.c2,p.num,p.age)}</div></div>
-  ${roleRib(cenkRole())}<div class="pc-name">Cenk Kuşku</div><div class="pc-stats">${st}</div>
+  ${roleRib(meRole())}<div class="pc-name">${meN()}</div><div class="pc-stats">${st}</div>
   <div class="pc-mv"><span>Piyasa değeri</span><b>${eur(mv)}</b>${last?`<small class="${d>=0?'up':'down'}">${d>=0?'▲':'▼'} ${eur(Math.abs(d))} · ${last.y} sonu</small>`:`<small>${L.youth?'Altyapı oyuncusu, değeri düşük':'İlk değerleme'}</small>`}</div>
   <div class="pc-foot"><span>${p.age} yaş · ${dec(heightAt(p.age),2)} m · ${p.foot} ayak</span><span>${esc(c.short)} · ${G.contract.years} yıl</span></div></section>`;}
 

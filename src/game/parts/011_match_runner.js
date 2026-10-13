@@ -7,8 +7,8 @@ const CH_HINT={
   kontra:'Önün açık! KOŞ’u basılı tutup depar at. Kaleciyle karşı karşıya kalınca vur ya da koşan arkadaşına pas ver.',
   serbest:'Joystick ile nişangâhı oynat. ŞUT’u basılı tutarken joystick’i yana çekersen falso verirsin; noktalı çizgi topun yolunu gösterir.',
   penalti:'Joystick ile köşeyi seç, ŞUT’u basılı tut ve bırak. Güç çubuğu kırmızıya girerse top üstten gider.',
-  savunma:'Rakip kalemize koşuyor! Önüne geç. MÜDAHALE ile ayakta, KAY ile kayarak topu al. Arkadan dalarsan faul ve kart riski var. PRES’i basılı tutarsan Cenk topu süren rakibi otomatik takip eder.',
-  savunma_geri:'Rakip kontraya çıktı, sen geride kaldın! KOŞ’u basılı tutup geri dön, adamı yakala ve doğru anda MÜDAHALE et. Yetişince PRES’i basılı tutarsan Cenk onu otomatik takip eder.',
+  savunma:'Rakip kalemize koşuyor! Önüne geç. MÜDAHALE ile ayakta, KAY ile kayarak topu al. Arkadan dalarsan faul ve kart riski var. PRES’i basılı tutarsan oyuncun topu süren rakibi otomatik takip eder.',
+  savunma_geri:'Rakip kontraya çıktı, sen geride kaldın! KOŞ’u basılı tutup geri dön, adamı yakala ve doğru anda MÜDAHALE et. Yetişince PRES’i basılı tutarsan oyuncun onu otomatik takip eder.',
   korner_take:'Korneri sen kullanıyorsun. Joystick ile sarı halkayı ortalamak istediğin yere taşı, ORTA’yı basılı tut ve yeşil İDEAL bölgede bırak. Basılı tutarken yana çekersen falso verirsin.',
   korner_box:'Ceza sahasındasın. Marköründen sıyrılmak için hareket et, KOŞ ile ani çıkış yap. Top sarı halkaya düşerken KAFA’ya bas; joystick ile köşe seç.',
   dkorner:'Rakip korner kullanıyor. “ADAMIN” yazan oyuncuyu bırakma. Top sarı halkaya düşerken KAFA ile uzaklaştır.',
@@ -22,12 +22,12 @@ function startMatch(cfg){
   const ord={in:0,ht:1,us:2,opp:2,ch:3,inj:4};ev.sort((a,b)=>a.m-b.m||ord[a.k]-ord[b.k]);MR.events=ev;
   openMatchView();$('#tabs').hidden=true;$('#mvStage').hidden=true;$('#mvFeed').innerHTML='';$('#mvDone').hidden=true;$('#mvFast').hidden=false;$('#mvFast').textContent='Hızlandır';
   renderBoard();
-  const c0=Math.round(MR.cond);feed(0,(cfg.role==='start'?`Hakem başlama düdüğünü çaldı. Cenk Kuşku ilk 11’de, ${G.p.num} numaralı formayla sahada.`:'Hakem başlama düdüğünü çaldı. Cenk Kuşku yedek kulübesinde, ısınmaya hazır.')+` Kondisyonu %${c0}.${c0<50?' Yorgun başlıyor, depar ve sert şut zorlaşacak.':''}`+({yagmur:' Yağmur yağıyor: zemin kaygan, top hızlı kayıyor.',kar:' Kar yağıyor: top ağır, ayakta durmak zor.',ruzgar:' Sert rüzgâr var: havadan gelen toplar sapıyor.'}[MR.wx]||''),c0<50?'opp':'');
+  const c0=Math.round(MR.cond);feed(0,(cfg.role==='start'?`Hakem başlama düdüğünü çaldı. ${meN()} ilk 11’de, ${G.p.num} numaralı formayla sahada.`:('Hakem başlama düdüğünü çaldı. '+meN()+' yedek kulübesinde, ısınmaya hazır.'))+` Kondisyonu %${c0}.${c0<50?' Yorgun başlıyor, depar ve sert şut zorlaşacak.':''}`+({yagmur:' Yağmur yağıyor: zemin kaygan, top hızlı kayıyor.',kar:' Kar yağıyor: top ağır, ayakta durmak zor.',ruzgar:' Sert rüzgâr var: havadan gelen toplar sapıyor.'}[MR.wx]||''),c0<50?'opp':'');
   MR.timer=setTimeout(mrStep,500);
 }
 const condCls=c=>c>=60?'':c>=30?'mid':'low';
 function renderBoard(){const h=MR.home,a=MR.away,hs=MR.usHome?MR.gu:MR.go,as=MR.usHome?MR.go:MR.gu,cd=Math.round(MR.cond);
-  $('#mvBoard').innerHTML=`<div class="team ${MR.usHome?'me':''}">${crestSVG(h,30)}<b>${esc(h.name)}</b></div><div class="mv-mid"><div class="mv-score">${hs}-${as}</div><div class="mv-min">${Math.min(MR.min,90)}’${MR.min>90?'+'+(MR.min-90):''}</div><div class="mv-comp">${esc(MR.comp)}</div></div><div class="team ${MR.usHome?'':'me'}">${crestSVG(a,30)}<b>${esc(a.name)}</b></div><div class="mv-cond"><span>Cenk · kondisyon</span><i><em class="${condCls(cd)}" style="width:${cd}%"></em></i><b>${MR.out?'Oyun dışı':MR.knock?cd+' · AĞRILI':cd<25?cd+' · YORGUN':cd}</b></div><div class="mv-mom"><span>Baskı</span><i>${[-3,-2,-1,0,1,2,3].map(v=>`<em class="${v===0?'z':''} ${(MR.mom||0)>0&&v>0&&v<=MR.mom?'u':''} ${(MR.mom||0)<0&&v<0&&v>=MR.mom?'d':''}"></em>`).join('')}</i><b>${{acik:'☀',yagmur:'🌧',kar:'❄',ruzgar:'💨'}[MR.wx]||''}</b></div>`;subBtn();}
+  $('#mvBoard').innerHTML=`<div class="team ${MR.usHome?'me':''}">${crestSVG(h,30)}<b>${esc(h.name)}</b></div><div class="mv-mid"><div class="mv-score">${hs}-${as}</div><div class="mv-min">${Math.min(MR.min,90)}’${MR.min>90?'+'+(MR.min-90):''}</div><div class="mv-comp">${esc(MR.comp)}</div></div><div class="team ${MR.usHome?'':'me'}">${crestSVG(a,30)}<b>${esc(a.name)}</b></div><div class="mv-cond"><span>${meF()} · kondisyon</span><i><em class="${condCls(cd)}" style="width:${cd}%"></em></i><b>${MR.out?'Oyun dışı':MR.knock?cd+' · AĞRILI':cd<25?cd+' · YORGUN':cd}</b></div><div class="mv-mom"><span>Baskı</span><i>${[-3,-2,-1,0,1,2,3].map(v=>`<em class="${v===0?'z':''} ${(MR.mom||0)>0&&v>0&&v<=MR.mom?'u':''} ${(MR.mom||0)<0&&v<0&&v>=MR.mom?'d':''}"></em>`).join('')}</i><b>${{acik:'☀',yagmur:'🌧',kar:'❄',ruzgar:'💨'}[MR.wx]||''}</b></div>`;subBtn();}
 function feed(m,txt,cls){const li=document.createElement('li');li.className=cls||'';li.innerHTML=`<i>${m?m+'’':'—'}</i><span>${txt}</span>`;const f=$('#mvFeed');f.prepend(li);}
 const onPitch=()=>!MR.out&&(MR.role==='start'||MR.min>=MR.entry);
 function mrStep(){
@@ -37,17 +37,17 @@ function mrStep(){
     if(e.k==='opp'&&(MR.mom||0)>=2&&Math.random()<0.3){feed(e.m,`${esc(MR.opp.name)} tehlikeli geldi, savunma son anda kapattı.`,'');continue;}
     if(e.k==='us'){MR.gu++;feed(e.m,`GOL! ${esc(MR.us.name)} — ${tmName()} ağları buldu.`,'us');renderBoard();}
     else if(e.k==='opp'){MR.go++;feed(e.m,`Gol. ${esc(MR.opp.name)} — ${esc(CLUBS[MR.opp.id]?teamScorer(MR.opp.id):'rakip forvet')} skoru değiştirdi.`,'opp');renderBoard();}
-    else if(e.k==='ht'){MR.cond=Math.min(100,MR.cond+4);feed(45,`İlk yarı sona erdi. Cenk’in kondisyonu %${Math.round(MR.cond)}.`,'');}
-    else if(e.k==='in'){if(!MR.out)feed(e.m,'Cenk Kuşku oyuna girdi! Hoca kenardan son talimatları verdi.','me');}
-    else if(e.k==='inj'){if(onPitch()){MR.injured=true;MR.out=true;MR.outMin=e.m;feed(e.m,'Cenk Kuşku yerde kaldı… Sağlık ekibi sahada. Oyuna devam edemiyor.','opp me');}}
+    else if(e.k==='ht'){MR.cond=Math.min(100,MR.cond+4);feed(45,`İlk yarı sona erdi. ${meFs('gen')} kondisyonu %${Math.round(MR.cond)}.`,'');}
+    else if(e.k==='in'){if(!MR.out)feed(e.m,(meN()+' oyuna girdi! Hoca kenardan son talimatları verdi.'),'me');}
+    else if(e.k==='inj'){if(onPitch()){MR.injured=true;MR.out=true;MR.outMin=e.m;feed(e.m,(meN()+' yerde kaldı… Sağlık ekibi sahada. Oyuna devam edemiyor.'),'opp me');}}
     else if(e.k==='ch'){if(!onPitch())continue;runChance(e);return;}
   }
   if(MR.min>=MR.end)return mrFinish();
   if(onPitch()){const p=G.p;MR.cond=Math.max(0,MR.cond-0.42*(1.25-p.a.fiz/200)*(p.up.diyet?0.9:1)*(p.age>=31?1.15:1)*(MR.knock?1.25:1));
-    if(MR.knock&&Math.random()<0.0035*proneF()){MR.injured=true;MR.injKind='kas';MR.injSerious=true;MR.out=true;MR.outMin=MR.min;feed(MR.min,'Cenk’in ağrısı arttı, yere yığıldı. Sedyeyle oyundan çıkıyor; sakatlık ciddi görünüyor.','opp me');}
-    else if(MR.cond<25&&Math.random()<0.0022*(25-MR.cond)/25*proneF()){MR.injured=true;MR.injKind='kas';MR.out=true;MR.outMin=MR.min;feed(MR.min,'Cenk Kuşku yorgunluktan arka adalesini tuttu. Oyuna devam edemiyor.','opp me');}
-    else if(MR.min<88&&((MR.cond<14&&MR.min>=46)||MR.cond<6||(MR.knock&&MR.cond<30&&MR.min>=60))){MR.out=true;MR.outMin=MR.min;MR.subbed=true;feed(MR.min,MR.knock?'Hoca, topallayan Cenk’i oyundan aldı.':'Hoca, kondisyonu biten Cenk’i oyundan aldı.','me');}
-    else if(!MR.knock&&MR.min>3&&Math.random()<0.0011*proneF()&&knockHit(MR.min,'Cenk ikili mücadelede sert bir darbe aldı.'))return;}
+    if(MR.knock&&Math.random()<0.0035*proneF()){MR.injured=true;MR.injKind='kas';MR.injSerious=true;MR.out=true;MR.outMin=MR.min;feed(MR.min,(meFs('gen')+' ağrısı arttı, yere yığıldı. Sedyeyle oyundan çıkıyor; sakatlık ciddi görünüyor.'),'opp me');}
+    else if(MR.cond<25&&Math.random()<0.0022*(25-MR.cond)/25*proneF()){MR.injured=true;MR.injKind='kas';MR.out=true;MR.outMin=MR.min;feed(MR.min,(meN()+' yorgunluktan arka adalesini tuttu. Oyuna devam edemiyor.'),'opp me');}
+    else if(MR.min<88&&((MR.cond<14&&MR.min>=46)||MR.cond<6||(MR.knock&&MR.cond<30&&MR.min>=60))){MR.out=true;MR.outMin=MR.min;MR.subbed=true;feed(MR.min,MR.knock?('Hoca, topallayan '+meFs('acc')+' oyundan aldı.'):('Hoca, kondisyonu biten '+meFs('acc')+' oyundan aldı.'),'me');}
+    else if(!MR.knock&&MR.min>3&&Math.random()<0.0011*proneF()&&knockHit(MR.min,(meF()+' ikili mücadelede sert bir darbe aldı.')))return;}
   MR.min++;renderBoard();MR.timer=setTimeout(mrStep,MR.fast?14:65);
 }
 const RES={
@@ -63,18 +63,18 @@ const RES={
   cleared:{t:'UZAKLAŞTIRDILAR',adj:-0.05},gkClaim:{t:'KALECİ TOPLADI',adj:-0.05},clear:{t:'KAFAYLA UZAKLAŞTIRDI!',adj:0.35,cls:'ok'},
   trDone:{t:'PARKUR TAMAM!',adj:0,cls:'ok'},trMiss:{t:'KAPI KAÇTI',adj:0,cls:'bad'}};
 const FEED_TXT={
-  injury:()=>'Cenk Kuşku yerde kaldı; sağlık ekibi sahada.',
-  goal:()=>pick(['Cenk Kuşku ağları havalandırdı!','Cenk Kuşku köşeye bıraktı, GOL!','Cenk Kuşku’dan müthiş bitiriş!']),
-  assist:()=>`Cenk’in pasında ${tmName()} golü attı! ASİST.`,tmGoal:()=>`${tmName()} golü attı.`,
-  tmMiss:()=>`${tmName()} vurdu ama gol olmadı.`,saved:()=>'Cenk’in şutunda kaleci gole izin vermedi.',wide:()=>'Cenk’in şutu az farkla auta gitti.',
-  over:()=>'Cenk’in şutu üstten auta çıktı.',post:()=>'Cenk’in şutu direkten döndü!',blocked:()=>'Cenk’in vuruşu savunmadan döndü.',lost:()=>'Cenk topu kaptırdı.',
-  timeout:()=>'Atak sonuçsuz kaldı.',offside:()=>'Yan hakem bayrağı kaldırdı: ofsayt.',fouled:()=>'Cenk’e faul yapıldı, serbest vuruş kazandık.',
-  penWon:()=>'Ceza sahasında faul! Hakem penaltı noktasını gösterdi.',tackle:()=>'Cenk zamanlamasıyla topu kaptı, harika müdahale!',
-  intercept:()=>'Cenk pas arasına girdi, topu kazandı!',shotBlock:()=>'Cenk şutun önüne attı kendini, harika blok!',defOk:()=>'Atak savuşturuldu.',
-  oppMiss:()=>'Rakibin vuruşu hedefi bulmadı.',oppOff:()=>'Rakip forvet ofsayta düştü.',foul:()=>'Cenk faul yaptı.',
-  penConceded:()=>'Cenk’in faulünde verilen penaltıdan gol çıktı.',penSaved:()=>'Cenk penaltıya sebep oldu ama kalecimiz kurtardı!',
+  injury:()=>(meN()+' yerde kaldı; sağlık ekibi sahada.'),
+  goal:()=>pick([(meN()+' ağları havalandırdı!'),(meN()+' köşeye bıraktı, GOL!'),(meNs('abl')+' müthiş bitiriş!')]),
+  assist:()=>`${meFs('gen')} pasında ${tmName()} golü attı! ASİST.`,tmGoal:()=>`${tmName()} golü attı.`,
+  tmMiss:()=>`${tmName()} vurdu ama gol olmadı.`,saved:()=>(meFs('gen')+' şutunda kaleci gole izin vermedi.'),wide:()=>(meFs('gen')+' şutu az farkla auta gitti.'),
+  over:()=>(meFs('gen')+' şutu üstten auta çıktı.'),post:()=>(meFs('gen')+' şutu direkten döndü!'),blocked:()=>(meFs('gen')+' vuruşu savunmadan döndü.'),lost:()=>(meF()+' topu kaptırdı.'),
+  timeout:()=>'Atak sonuçsuz kaldı.',offside:()=>'Yan hakem bayrağı kaldırdı: ofsayt.',fouled:()=>(meFs('dat')+' faul yapıldı, serbest vuruş kazandık.'),
+  penWon:()=>'Ceza sahasında faul! Hakem penaltı noktasını gösterdi.',tackle:()=>(meF()+' zamanlamasıyla topu kaptı, harika müdahale!'),
+  intercept:()=>(meF()+' pas arasına girdi, topu kazandı!'),shotBlock:()=>(meF()+' şutun önüne attı kendini, harika blok!'),defOk:()=>'Atak savuşturuldu.',
+  oppMiss:()=>'Rakibin vuruşu hedefi bulmadı.',oppOff:()=>'Rakip forvet ofsayta düştü.',foul:()=>(meF()+' faul yaptı.'),
+  penConceded:()=>(meFs('gen')+' faulünde verilen penaltıdan gol çıktı.'),penSaved:()=>(meF()+' penaltıya sebep oldu ama kalecimiz kurtardı!'),
   conceded:()=>'Rakip golü buldu.',gkSave:()=>'Kalecimiz rakibin vuruşunu kurtardı.',
-  cleared:()=>'Rakip savunma topu uzaklaştırdı.',gkClaim:()=>'Kaleci havadan gelen topu rahat topladı.',clear:()=>'Cenk yükseldi, kafayla uzaklaştırdı!',
+  cleared:()=>'Rakip savunma topu uzaklaştırdı.',gkClaim:()=>'Kaleci havadan gelen topu rahat topladı.',clear:()=>(meF()+' yükseldi, kafayla uzaklaştırdı!'),
   trDone:()=>'Parkur tamamlandı.',trMiss:()=>'Parkurda kapı kaçtı.'};
 const fsOK=()=>!!(document.fullscreenEnabled&&document.documentElement.requestFullscreen);
 function enterFS(){if(!fsOK()||document.fullscreenElement)return;try{document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{});}catch(_){}}
@@ -87,7 +87,7 @@ function startMoment(type,C,title,done){
   const p=G.p;resetInput();
   MG.S=makeChance(type,C);mgSetup();MG.crowd=C.drill?[]:genCrowd(C);
   const t=camTarget();MG.cam.x=t.x;MG.cam.y=t.y;MG.shake=0;MG.padK=null;padCtx();
-  $('#mgFace').innerHTML=avatarSVG(MG.S.cenk.kit.shirt,MG.S.cenk.kit.trim,p.num,p.age);
+  $('#mgFace').innerHTML=avatarSVG(MG.S.hero.kit.shirt,MG.S.hero.kit.trim,p.num,p.age);
   const h=$('#mgHint');h.textContent=CH_HINT[type+'_'+(C.sub||'')]||CH_HINT[type];h.classList.remove('fade');void h.offsetWidth;h.classList.add('fade');
   mgFlash(CH_NAME[type].toUpperCase(),'',0);
   if(!G.tutSeen){MG.S.paused=true;$('#mgTut').hidden=false;}
@@ -96,25 +96,25 @@ function startMoment(type,C,title,done){
 }
 function runChance(e){const p=G.p;if(e.pre)feed(e.m,e.pre,'');
   let sub=e.sub||null;if(!sub){if(e.type==='savunma'&&(p.pos==='FW'||p.pos==='KN')&&Math.random()<0.6)sub='geri';if(e.type==='korner')sub=(p.pos==='KN'||p.pos==='OS')?(Math.random()<0.75?'take':'box'):(Math.random()<0.15?'take':'box');}
-  startMoment(e.type,{capt:cenkRole()==='Kaptan',wx:MR.wx,wind:MR.wind,sub,knock:!!MR.knock,cond:MR.cond,us:MR.us,opp:MR.opp,a:MR.knock?halfA(p.a):p.a,energy:p.energy,morale:p.morale,up:p.up,pos:p.pos,num:p.num,hurt:!!(p.injury&&p.playHurt)||!!MR.knock},`${e.m}’ · ${CH_NAME[e.type]}`,
+  startMoment(e.type,{capt:meRole()==='Kaptan',wx:MR.wx,wind:MR.wind,sub,knock:!!MR.knock,cond:MR.cond,us:MR.us,opp:MR.opp,a:MR.knock?halfA(p.a):p.a,energy:p.energy,morale:p.morale,up:p.up,pos:p.pos,num:p.num,hurt:!!(p.injury&&p.playHurt)||!!MR.knock},`${e.m}’ · ${CH_NAME[e.type]}`,
     res=>{$('#mvFast').hidden=false;applyChance(res,e.m);if(!MR.pendKnock)MR.timer=setTimeout(mrStep,300);});}
 function applyChance(res,m){
-  const R=RES[res.code];MR.adj+=R.adj+(res.bonus||0)+(res.code==='tmMiss'&&res.fromCenk?0.1:0);
+  const R=RES[res.code];MR.adj+=R.adj+(res.bonus||0)+(res.code==='tmMiss'&&res.fromMe?0.1:0);
   {const c=res.code,up=['goal','assist','tmGoal','tackle','intercept','shotBlock','clear','penWon','fouled','gkSave'].includes(c),dn=['lost','conceded','foul','penConceded','offside','wide','over'].includes(c);MR.mom=clamp((MR.mom||0)+(up?1:dn?-1:0),-3,3);}if(res.cond!=null)MR.cond=res.cond;if(res.injured){MR.injured=true;MR.injKind=res.injKind||'darbe';}
   if(R.us)MR.gu++;if(R.opp)MR.go++;if(R.cg)MR.goals++;if(R.as)MR.assists++;if(res.code==='tackle'){MR.tackles++;if(Math.random()<0.015){MR.injured=true;}}
-  let txt=res.code==='goal'&&res.hdr?pick(['Cenk Kuşku yükseldi, kafayla GOL!','Ortaya Cenk Kuşku’nun kafası değdi: GOL!']):FEED_TXT[res.code]();
+  let txt=res.code==='goal'&&res.hdr?pick([(meN()+' yükseldi, kafayla GOL!'),('Ortaya '+meNs('gen')+' kafası değdi: GOL!')]):FEED_TXT[res.code]();
   if(res.card==='Y'){MR.yc++;MR.adj-=0.3;if(MR.yc>=2){res.card='R';txt+=' İkinci sarıdan kırmızı kart!';}else txt+=' Sarı kart.';}
   if(res.card==='R'){MR.rc=1;MR.out=true;MR.outMin=m;MR.adj-=1;if(!/kırmızı/.test(txt))txt+=' Direkt kırmızı kart! Oyundan atıldı.';}
-  if(MR.injured&&!MR.out){MR.out=true;MR.outMin=m;txt+=' Müdahale sonrası Cenk sakatlandı, kenara geldi.';}
+  if(MR.injured&&!MR.out){MR.out=true;MR.outMin=m;txt+=(' Müdahale sonrası '+meF()+' sakatlandı, kenara geldi.');}
   const kn=!MR.out&&!MR.knock&&((res.code==='fouled'||res.code==='penWon')&&Math.random()<0.18);
   feed(m,txt,(R.us?'us ':R.opp?'opp ':'')+'me');renderBoard();
-  if(kn)knockHit(m,'Faulden sonra Cenk yerde kaldı.');
+  if(kn)knockHit(m,('Faulden sonra '+meF()+' yerde kaldı.'));
   if(MR.out&&res.code==='penWon'){if(Math.random()<0.76){MR.gu++;feed(m,`Penaltıyı ${tmName()} kullandı: GOL!`,'us');}else feed(m,'Penaltıyı kaleci kurtardı.','');renderBoard();}
   if(!MR.out){
     if(res.code==='penWon')MR.events.splice(MR.ei,0,{m,k:'ch',type:'penalti'});
     else if(res.code==='fouled'&&res.fkY!=null&&res.fkY<31)MR.events.splice(MR.ei,0,{m,k:'ch',type:'serbest'});
     else{const ch=MR.chain||0,c=res.code;let nx=null;
-      if(ch<3){if(c==='lost'&&Math.random()<0.5)nx={type:'savunma',sub:'geri',pre:'Rakip topu kaptı ve hızla çıktı! Cenk geri koşuyor.'};
+      if(ch<3){if(c==='lost'&&Math.random()<0.5)nx={type:'savunma',sub:'geri',pre:('Rakip topu kaptı ve hızla çıktı! '+meF()+' geri koşuyor.')};
         else if((c==='tackle'||c==='intercept')&&Math.random()<0.35)nx={type:'kontra',pre:'Top kazanıldı, hızlı hücum!'};
         else if((c==='saved'||c==='blocked'||c==='tmMiss')&&Math.random()<0.3)nx={type:'korner',pre:'Top kornere çıktı.'};
         else if((c==='gkSave'||c==='shotBlock'||c==='defOk')&&Math.random()<0.22)nx={type:'dkorner',pre:'Rakip korner kazandı.'};}

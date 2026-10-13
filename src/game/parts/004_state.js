@@ -1,6 +1,6 @@
 /* ================= STATE ================= */
 let G=null,TAB='hub',SEL={pos:'FW',foot:'Sağ',club:null,int:'normal'},afterModal=null,confirmNew=false,INF='all',DR=null;
-const SAVE_KEY='cenk-kusku-kariyer-v3';
+const SAVE_KEY='futbol-kariyer-v3';(function(){try{for(const k of Object.keys(localStorage)){if(k!==SAVE_KEY&&/^[a-z]+-[a-z]+-kariyer-v3$/.test(k)){if(localStorage.getItem(SAVE_KEY)==null)localStorage.setItem(SAVE_KEY,localStorage.getItem(k));localStorage.removeItem(k);}}}catch(e){}})();/* eski sürümün kayıt anahtarından taşı */
 function save(){try{msSync();}catch(e){}try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
 function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;return g&&g.v===4?g:null;}catch(e){return null;}}
 const myClub=()=>CLUBS[G.club];
@@ -64,12 +64,12 @@ function lambdas(hs,as){const d=(hs-as)/18;return [clamp(1.3*Math.exp(d*0.9)+0.1
 function simScore(h,a){const [lh,la]=lambdas(CLUBS[h].str,CLUBS[a].str);return [poisson(lh),poisson(la)];}
 const PS_ROLES=[['FW',0.36,0.14],['KN',0.2,0.26],['OS',0.16,0.28],['OS',0.1,0.18],['DF',0.08,0.08],['FW',0.1,0.06]];
 function genPS(L){const ps={};for(const c of leagueClubs(L))for(const p of squadOf(c.id)){if(p.pos==='KL')continue;const q=Math.max(0.25,(p.ovr-c.str+12)/12);ps[p.k]={n:p.name,c:c.id,gw:GWP[p.pos]*q,aw:AWP[p.pos]*q,g:0,a:0};}return ps;}
-/* Lig istatistikleri: her golün atanı ve asistçisi kulüp kadrosundan seçilir; Cenk’in golleri ve asistleri gerçek maçtan gelir. */
+/* Lig istatistikleri: her golün atanı ve asistçisi kulüp kadrosundan seçilir; oyuncunun kendi golleri ve asistleri gerçek maçtan gelir. */
 function creditGoals(cid,n,me){const pl=Object.values(G.s.ps).filter(p=>p.c===cid);if(!pl.length)return;let cg=me?Math.min(me.g,n):0,ca=me?me.a:0;
   for(let i=0;i<n;i++){if(cg>0){cg--;if(Math.random()<0.7)wpick(pl.map(p=>[p,p.aw])).a++;continue;}
     const sc=wpick(pl.map(p=>[p,p.gw]));sc.g++;if(ca>0){ca--;continue;}if(Math.random()<0.72){const o=pl.filter(p=>p!==sc);wpick(o.map(p=>[p,p.aw])).a++;}}}
 function creditRound(rd,me){for(const [h,a,hg,ag] of rd){creditGoals(h,hg,h===G.club?me:null);creditGoals(a,ag,a===G.club?me:null);}}
-function leaders(k){const arr=Object.values(G.s.ps||{}).map(p=>({n:p.n,c:p.c,v:p[k]}));if(isPl())arr.push({n:'Cenk Kuşku',c:G.club,v:G.s.stats[k==='g'?'goals':'assists'],me:true});return arr.sort((x,y)=>y.v-x.v||(y.me?1:0)-(x.me?1:0));}
+function leaders(k){const arr=Object.values(G.s.ps||{}).map(p=>({n:p.n,c:p.c,v:p[k]}));if(isPl())arr.push({n:(meN()),c:G.club,v:G.s.stats[k==='g'?'goals':'assists'],me:true});return arr.sort((x,y)=>y.v-x.v||(y.me?1:0)-(x.me?1:0));}
 function newSeason(year){const L=myClub().league;G.s={year,week:1,day:0,league:L,cal:buildCal(L,year),win:{open:dayOfDate(year,0,2),close:dayOfDate(year,0,31)},fixtures:makeFixtures(shuffle(leagueClubs(L).map(c=>c.id))),results:[],stats:blankStats(),nat:null,squad:null,sacked:{},ps:genPS(L),mon:null,mrs:[],totw:0};G.slot=false;G.slotText='';}
 function switchLeague(L){G.s.league=L;G.s.cal=buildCal(L,G.s.year);const wk=G.s.cal.filter(d=>d<G.s.day).length+1;G.s.week=wk;G.s.ps=genPS(L);G.s.fixtures=makeFixtures(shuffle(leagueClubs(L).map(c=>c.id)));G.s.results=[];for(let w=0;w<wk-1;w++){const rd=G.s.fixtures[w].map(([h,a])=>{const [x,y]=simScore(h,a);return [h,a,x,y];});G.s.results.push(rd);creditRound(rd,null);}}
 const ourFixture=()=>G.s.fixtures[G.s.week-1]&&G.s.fixtures[G.s.week-1].find(f=>f.includes(G.club));
@@ -83,11 +83,11 @@ function newGame(pos,foot,clubId){
   const P=POS[pos],a={},pot={};
   for(const k in ATTR){a[k]=P.base[k]+rnd(-2,2);pot[k]=clamp(Math.round(P.base[k]+50+rnd(-3,4)),58,95);}
   const focus=Object.entries(P.w).sort((x,y)=>y[1]-x[1])[0][0];
-  G={v:4,phase:'season',p:{name:'Cenk Kuşku',pos,foot,num:P.num,age:12,a,pot,energy:100,morale:70,trust:58,fame:0,money:500,form:[],injury:null,ban:0,yellows:0,up:{},caps:0,natGoals:0,playHurt:false,lic:`34-14-${rint(1000,9999)}`},
+  G={v:4,phase:'season',p:{name:(typeof wizName==='function'?wizName():''),pos,foot,num:P.num,age:12,a,pot,energy:100,morale:70,trust:58,fame:0,money:500,form:[],injury:null,ban:0,yellows:0,up:{},caps:0,natGoals:0,playHurt:false,lic:`34-14-${rint(1000,9999)}`},
      club:clubId,contract:{years:2,wage:LEAGUES.u14.wage,role:'Altyapı'},s:null,history:[],trophies:[],inbox:[],next:null,mustMove:false,totals:{apps:0,goals:0,assists:0},summary:null,
      watch:{},plan:{focus,int:'normal'},slot:false,slotText:'',tutSeen:false};
   newSeason(2026);
-  msg('coach','Hoş geldin Cenk!',`${CLUBS[clubId].name} altyapısına imza attın. Hocan: “Burada herkes yerini sahada kazanır. Hazırlık kampı bugün başlıyor, ilk lig maçımız ${fmtDate(dateOf(ROUND_DAY(1)),true)}.” Gözlemciler maçları izliyor; iyi oynarsan üst liglerden bile kapın çalınabilir.`);
+  msg('coach',('Hoş geldin '+meF()+'!'),`${CLUBS[clubId].name} altyapısına imza attın. Hocan: “Burada herkes yerini sahada kazanır. Hazırlık kampı bugün başlıyor, ilk lig maçımız ${fmtDate(dateOf(ROUND_DAY(1)),true)}.” Gözlemciler maçları izliyor; iyi oynarsan üst liglerden bile kapın çalınabilir.`);
   save();
 }
 

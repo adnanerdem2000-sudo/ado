@@ -46,7 +46,7 @@ nextDay=(old=>function(){const out=old.apply(this,arguments);try{if(G&&G.mode===
 function plHier(){const M=tmMates(),c=myClub();if(!M.length||!c)return null;const avg=M.reduce((a,x)=>a+tmRel(x.k),0)/M.length;let yrs=1;try{yrs=clubYears();}catch(e){}
   const s=(yrs-1)*12+(avg-50)*0.6+(OVR()-c.str)*2+G.p.fame*0.2+(G.p.age>=27?5:0);const capt=G.capt===G.club;
   const lv=capt?4:s>=55?3:s>=35?2:s>=15?1:0;const N=['Yeni gelen','Takımın parçası','Etkili oyuncu','Lider','Kaptan'];
-  const groups=hierGroups(M.concat([{k:'cenk',name:G.p.name,nat:'TUR',age:G.p.age,ovr:OVR(),home:null}]),p=>p.k==='cenk'?20:tmRel(p.k)-50);
+  const groups=hierGroups(M.concat([{k:'me',name:G.p.name,nat:'TUR',age:G.p.age,ovr:OVR(),home:null}]),p=>p.k==='me'?20:tmRel(p.k)-50);
   const mentor=G.p.age<=21?M.filter(x=>x.age>=29&&(x.pos===G.p.pos||x.pos==='OS')&&tmRel(x.k)>=50).sort((a,b)=>tmRel(b.k)-tmRel(a.k))[0]:null;
   const mentee=G.p.age>=29?M.filter(x=>x.age<=20&&(x.pos===G.p.pos||x.pos==='OS')).sort((a,b)=>b.ovr-a.ovr)[0]:null;
   const myW=U2E((G.contract&&G.contract.wage)||0),peers=M.filter(x=>Math.abs(x.ovr-OVR())<=4).map(x=>pWage(x,G.club)),pw=peers.length?peers.reduce((a,b)=>a+b,0)/peers.length:myW;
@@ -54,7 +54,7 @@ function plHier(){const M=tmMates(),c=myClub();if(!M.length||!c)return null;cons
 function plHierPanel(){const H=plHier();if(!H)return '';const N=['Yeni gelen','Takımın parçası','Etkili oyuncu','Lider','Kaptan'];
   return `<section class="panel hrc"><p class="sub-h"><span>Soyunma odasındaki yerin</span><span>${esc(H.n)}</span></p><div class="hier-steps">${N.map((n,i)=>`<span class="${i<=H.lv?'on':''}">${n}</span>`).join('')}</div>
    <p class="muted" style="margin:8px 0">Takımda geçirdiğin süre, arkadaşlarınla ilişkilerin, sahadaki etkin ve şöhretin seni hiyerarşide yükseltir. Lider ve kaptanlar hocanın güvenini daha kolay kazanır, takım uyumu da maçlara yansır (takım uyumu ${H.coh}/100).</p>
-   <div class="hier-g">${H.groups.map(g=>`<div class="hg ${g.mood<-15?'bad':g.mood>15?'ok':''}"><b>${esc(g.n)}${g.L.some(p=>p.k==='cenk')?' · senin grubun':''}</b><small>${g.L.length} oyuncu · lider ${esc(ksur(g.lead.name))} · seninle ${g.mood>15?'çok iyi':g.mood>0?'iyi':g.mood>-15?'mesafeli':'gergin'}</small></div>`).join('')}</div>
+   <div class="hier-g">${H.groups.map(g=>`<div class="hg ${g.mood<-15?'bad':g.mood>15?'ok':''}"><b>${esc(g.n)}${g.L.some(p=>p.k==='me')?' · senin grubun':''}</b><small>${g.L.length} oyuncu · lider ${esc(ksur(g.lead.name))} · seninle ${g.mood>15?'çok iyi':g.mood>0?'iyi':g.mood>-15?'mesafeli':'gergin'}</small></div>`).join('')}</div>
    ${H.mentor?`<p class="hier-note">🎓 Mentorun: <b>${esc(H.mentor.name)}</b> (${H.mentor.age} yaş). Her hafta tecrübesini aktarıyor; gelişimin biraz hızlı.</p>`:''}
    ${H.mentee?`<p class="hier-note">🎓 Genç ${esc(H.mentee.name)} sana bakıyor. Ona mentorluk ettiğin her hafta takımdaki saygınlığın ve şöhretin artar.</p>`:''}
    ${H.jeal?`<p class="hier-note warn">😒 Maaşın benzer seviyedeki takım arkadaşlarından çok yüksek; bazıları kıskanıyor. Sahada fark yaratmazsan ilişkiler bozulabilir.</p>`:''}</section>`;}

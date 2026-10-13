@@ -76,7 +76,7 @@ Object.assign(EVENTS,{
        ['Bu sefer olmaz',()=>{bump('morale',-3);return 'Kardeşin üzüldü.';}]]},
   dugun:{c:()=>isPl()&&G.p.age>=18,title:'Kuzeninin düğünü',body:()=>`Kuzeninin düğünü maç haftasına denk geldi. Tüm aile seni bekliyor.`,
     o:[['Git, erken ayrıl',()=>{bump('energy',-6);bump('morale',6);return 'Aileyle güzel bir gece geçirdin.';}],
-       ['Sabaha kadar eğlen',()=>{bump('energy',-16);bump('morale',10);if(Math.random()<0.4){const im=imInit();im.v=clamp(im.v-4,0,100);msg('gundem','Düğünde dans videosu',`${G.p.name}’in düğünde sabaha kadar eğlendiği video sosyal medyada yayıldı.`);return 'Video yayıldı, hoca pek hoş karşılamadı.';}return 'Unutulmaz bir geceydi.';}],
+       ['Sabaha kadar eğlen',()=>{bump('energy',-16);bump('morale',10);if(Math.random()<0.4){const im=imInit();im.v=clamp(im.v-4,0,100);msg('gundem','Düğünde dans videosu',`${meNs('gen')} düğünde sabaha kadar eğlendiği video sosyal medyada yayıldı.`);return 'Video yayıldı, hoca pek hoş karşılamadı.';}return 'Unutulmaz bir geceydi.';}],
        ['Gitme',()=>{bump('morale',-5);return 'Ailen kırıldı ama dinlenmiş olarak maça çıkacaksın.';}]]},
   aileEv:{c:()=>isPl()&&G.p.age>=19&&G.p.money>E2U(60000),title:'Ailene ev',body:()=>`Ailen daha büyük bir eve taşınmak istiyor. Yardım etmek ister misin? (yaklaşık ${eur(50000)})`,
     o:[['Evi al',()=>{G.p.money-=E2U(50000);bump('morale',10);const im=imInit();im.v=clamp(im.v+3,0,100);return 'Ailen yeni evine taşındı. Basın da bu jesti övdü.';}],

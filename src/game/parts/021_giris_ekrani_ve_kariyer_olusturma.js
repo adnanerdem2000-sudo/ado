@@ -32,8 +32,9 @@ document.addEventListener('input',e=>{const el=e.target.closest('[data-in]');if(
   if(k==='fn'||k==='ln'){W[k]=el.value.replace(/[<>"]/g,'').trimStart();const n=$('#wzName');if(n)n.innerHTML=`${esc(W.fn||'—')}<br>${esc(W.ln||'')}`;}
   else if(k==='h'){W.h=+el.value;const n=$('#wzH');if(n)n.textContent=dec(W.h,2)+' m';}
   else if(k==='age'){W.age=+el.value;const n=$('#wzA');if(n)n.textContent=W.age;}});
-function wizName(){let fn=(W.fn||'').trim(),ln=(W.ln||'').trim();if(!fn){const r=Math.random,P=NAMEP.TR;fn=P.f[Math.floor(r()*P.f.length)];ln=ln||P.l[Math.floor(r()*P.l.length)];W.fn=fn;W.ln=ln;}return (fn+' '+ln).trim();}
-function wizApply(){const nm=wizName();G.p.name=nm;const L=wizLook();G.p.look=(nm==='Cenk Kuşku'&&L.sk==='#a8704a'&&L.hs==='curly'&&L.hc==='#140d09'&&!L.bd)?null:Object.assign(L,{cenk:false});G.p.h=W.h;G.prof=W.prof;G.cid=null;G.ms=[];G.msS=null;}
+function wizName(){const cl=x=>String(x||'').replace(/[<>&"`]/g,'').replace(/\s+/g,' ').trim();return (cl(W.fn)+' '+cl(W.ln)).trim();}
+function wizNameOk(){return String(W.fn||'').trim().length>=2&&String(W.ln||'').trim().length>=2;}
+function wizApply(){const nm=wizName();G.p.name=nm;const L=wizLook();G.p.look=Object.assign({},L);G.p.h=W.h;G.prof=W.prof;G.cid=null;G.ms=[];G.msS=null;}
 function wizGo(){if(W.prof==='oyuncu'){newGame(SEL.pos,SEL.foot,'ferikoy');wizApply();applyBoosts();G.phase='tryout';G.inbox=[];G.tryout=null;G.mode='player';save();TAB='hub';W.step='list';render();window.scrollTo(0,0);return;}
   newGame('OS','Sağ','ferikoy');wizApply();G.p.age=W.age;G.inbox=[];G.history=[];G.totals={apps:0,goals:0,assists:0};
   if(W.prof==='td')startManagerCareer();else startStaffCareer(W.prof);W.step='list';}

@@ -19,12 +19,12 @@ function tourSetup(){if(!isPl()||G.phase==='retired')return;const Y=G.s.year+1,T
   const r=(G.natq||{})[T.nl?'NL'+Y:T.k+Y]||{w:0,d:0,l:0};let pq=T.host?1:T.nl?0.22+r.w*0.14-r.l*0.06:0.62+r.w*0.09-r.l*0.08;pq=clamp(pq,0.08,0.97);
   const qual=Math.random()<pq,called=G.p.age>=17&&(OVR()>=NAT_LEVELS[0].req-2||(G.p.caps>=3&&OVR()>=70))&&!(G.p.injury&&G.p.injury.days>30);
   if(!qual){msg('nat',`${T.name}: Türkiye yok`,T.nl?'Türkiye Uluslar Ligi grubunu lider bitiremedi, finallere katılamıyor.':`Türkiye ${T.name} biletini alamadı. Elemelerdeki karne: ${r.w}G ${r.d}B ${r.l}M.`);tourNews(T,Y,false);return;}
-  if(!called){msg('nat',`${T.name} kadrosu açıklandı`,`Türkiye ${T.name}’na katılıyor ama Cenk Kuşku kadroda yer almadı. Daha iyi bir sezonla milli formaya göz dikebilirsin.`);tourNews(T,Y,true);return;}
+  if(!called){msg('nat',`${T.name} kadrosu açıklandı`,`Türkiye ${T.name}’na katılıyor ama ${meN()} kadroda yer almadı. Daha iyi bir sezonla milli formaya göz dikebilirsin.`);tourNews(T,Y,true);return;}
   const pool=(T.pool==='w'?NATIONS.concat(NAT_X,NAT_W):NATIONS.concat(NAT_X)).filter(n=>n[1]!=='TUR'),srt=pool.slice().sort((a,b)=>b[4]-a[4]);
   const grp=T.nl?[]:[srt[Math.floor(Math.random()*6)],srt[8+Math.floor(Math.random()*8)],srt[srt.length-1-Math.floor(Math.random()*6)]].map(natObj);
   G.tour={k:T.k,name:T.name,tr:T.tr,y:Y,ko:T.ko,nl:!!T.nl,pool:pool.map(n=>n[1]),grp,gi:0,gp:{tr:{p:0,gf:0,ga:0}},si:0,res:[],alive:true,done:false,g:0};
   grp.forEach(o=>G.tour.gp[o.short]={p:0,gf:0,ga:0});G.tour.opp=T.nl?natObj(srt[Math.floor(Math.random()*4)]):grp[0];
-  msg('nat',`${T.name} kadrosundasın!`,`Teknik direktör Cenk Kuşku’yu ${T.name} kadrosuna aldı. ${T.nl?'Yarı finalde rakip '+G.tour.opp.name+'.':'Grup rakipleri: '+grp.map(o=>o.name).join(', ')+'.'}`);}
+  msg('nat',`${T.name} kadrosundasın!`,`Teknik direktör ${meNs('acc')} ${T.name} kadrosuna aldı. ${T.nl?'Yarı finalde rakip '+G.tour.opp.name+'.':'Grup rakipleri: '+grp.map(o=>o.name).join(', ')+'.'}`);}
 function tourStage(t){return t.nl?t.ko[t.si]:t.gi<3?`Grup · ${t.gi+1}. maç`:t.ko[t.si];}
 function tourPlay(sim){const t=G.tour;if(!t||!t.alive)return;const tr=TRnat({off:0}),opp=t.opp,r=OVR()>=tr.str-6?'start':'sub';const cfg=buildMatch(tr,opp,true,r,`${t.name} · ${tourStage(t)}`,true);
   const m=(cfg.lamUs+cfg.lamOpp)/2;cfg.lamUs=m+(cfg.lamUs-m)*0.8;cfg.lamOpp=m+(cfg.lamOpp-m)*0.8;cfg.onEnd=res=>tourFinish(res,cfg);(sim?simMatch:startMatch)(cfg);}
@@ -52,7 +52,7 @@ function tourPanelOff(){const t=G.tour;if(!t||t.done)return t&&t.done?`<section 
   <button class="cta big" data-act="tourPlay"><span>Turnuva maçına çık</span><small>${esc(tourStage(t))} · ${esc(t.opp.name)}</small></button><button class="btn" data-act="tourSim">Maçı simüle et</button><button class="btn ghost" data-act="tourSimAll">Kalan turnuvayı simüle et</button></section>`;}
 
 /* ---------- Pres: topu süren rakibi otomatik takip ---------- */
-function pressDir(max,dt){const S=MG.S,ce=S.cenk,b=S.ball;S.pressing=false;S.pressT=null;
+function pressDir(max,dt){const S=MG.S,ce=S.hero,b=S.ball;S.pressing=false;S.pressT=null;
   if(!IN.btn.d||!(S.mode==='def'||S.mode==='cp')||S.phase!=='play')return [IN.jx,IN.jy];
   const o=b.owner&&b.owner.side==='opp'?b.owner:null;let tx,ty;
   if(o){if(S.mode==='def'){const gx=34-o.x,gy=-o.y,gl=Math.hypot(gx,gy)||1;tx=o.x+gx/gl*1.15;ty=o.y+gy/gl*1.15;}

@@ -85,7 +85,7 @@ function dhRec(D,us){const L=(G.dh&&G.dh[D.key])||[];let w=0,d=0,l=0;for(const [
 /* zihinsel güç: soğukkanlılık, kararlılık, konsantrasyon, cesaret (1-20) */
 function mentalOf(p){try{const v=['Soğukkanlılık','Kararlılık','Konsantrasyon','Cesaret'].map(n=>fmA(p,n)).filter(x=>x!=null&&!isNaN(x));if(v.length)return v.reduce((a,b)=>a+b,0)/v.length;}catch(e){}return 11;}
 function teamMental(id){const sq=squadOf(id).slice().sort((a,b)=>b.ovr-a.ovr).slice(0,11);if(!sq.length)return 11;return sq.reduce((a,p)=>a+mentalOf(p),0)/sq.length;}
-function cenkMental(){const p=G.p;let m=10+((p.morale||50)-50)/12+Math.min(3,((G.totals&&G.totals.apps)||0)/70)+Math.min(1.5,Math.max(0,(p.age||20)-20)*0.15);
+function meMental(){const p=G.p;let m=10+((p.morale||50)-50)/12+Math.min(3,((G.totals&&G.totals.apps)||0)/70)+Math.min(1.5,Math.max(0,(p.age||20)-20)*0.15);
   if(typeof hasPk==='function'){if(hasPk('sogukkanli'))m+=2;if(hasPk('buyuk'))m+=2.5;if(hasPk('lider'))m+=1;if(hasPk('savasci'))m+=1;}return clamp(m,4,20);}
 function derbyBadge(D,us){if(!D)return '';const R=us?dhRec(D,us):null;
   return `<div class="derby-band lv${D.lv}"><span class="db-fire">🔥</span><div><b>${esc(D.n)}</b><small>${derbyLvN(D.lv)} · ${esc(D.t)}</small>${R&&R.L.length?`<em>Son ${R.L.length} derbi: ${R.w}G ${R.d}B ${R.l}M</em>`:''}</div></div>`;}
@@ -96,14 +96,14 @@ ticketHTML=(old=>function(label,side,h,a,status){let html=old.apply(this,argumen
 /* futbolcu modu: derbide zihinsel güç belirleyici */
 buildMatch=(old=>function(us,opp,usHome,role,comp,national){const cfg=old.apply(this,arguments);try{if(national||!us||!opp)return cfg;const D=derbyOf(us.id,opp.id),P=primNow();
     cfg.pkq=Object.assign({},cfg.pkq||{});const mul=(f)=>{for(const k of ['atak','kontra','serbest','korner','penalti','savunma','dkorner']){if(k==='savunma'||k==='dkorner')cfg.pkq[k]=(cfg.pkq[k]||0)+(f-1)*0.5;else cfg.pkq[k]=(cfg.pkq[k]||1)*f;}};
-    if(D){const mU=teamMental(us.id),mO=teamMental(opp.id),me=cenkMental(),k=D.lv/3;cfg.derby=D;cfg.dMent=me;
+    if(D){const mU=teamMental(us.id),mO=teamMental(opp.id),me=meMental(),k=D.lv/3;cfg.derby=D;cfg.dMent=me;
       cfg.lamUs=Math.max(0.15,cfg.lamUs*(1+(mU-mO)*0.03*k));cfg.lamOpp=Math.max(0.15,cfg.lamOpp*(1+(mO-mU)*0.03*k));
       /* derbiler daha çekişmeli: güç farkı biraz erir */const avg=(cfg.lamUs+cfg.lamOpp)/2;cfg.lamUs=avg+(cfg.lamUs-avg)*(1-0.15*k);cfg.lamOpp=avg+(cfg.lamOpp-avg)*(1-0.15*k);
       mul(1+(me-11)*0.025*(0.6+k*0.6));}
     if(P){cfg.prim=P;cfg.lamUs*=1+0.06*P.mot;cfg.lamOpp*=1-0.03*P.mot;mul(1+0.07*P.mot);}}catch(e){console.warn(e);}return cfg;})(buildMatch);
 /* canlı anlarda derbi baskısı: soğukkanlı oyuncu özelliklerini kullanır, gergin olan kaybeder */
 startMoment=(old=>function(type,C,title,done){try{if(isPl()&&typeof MR!=='undefined'&&MR&&(MR.derby||MR.prim)&&C&&C.a&&!C.drill){const a=Object.assign({},C.a);let d=0;
-      if(MR.derby){d+=Math.round((cenkMental()-11)*0.9*(0.5+MR.derby.lv/3));}if(MR.prim)d+=Math.round(2*MR.prim.mot);
+      if(MR.derby){d+=Math.round((meMental()-11)*0.9*(0.5+MR.derby.lv/3));}if(MR.prim)d+=Math.round(2*MR.prim.mot);
       if(d){for(const k in a)a[k]=clamp((a[k]||0)+d,1,99);C=Object.assign({},C,{a});}}}catch(e){console.warn(e);}return old.call(this,type,C,title,done);})(startMoment);
 /* derbi sonrası: moral, şöhret, taraftar */
 finishLeague=(old=>function(res,f,role){let D=null;try{D=derbyOf(f[0],f[1]);}catch(e){}const r=old.apply(this,arguments);

@@ -33,7 +33,7 @@ function scnWins(){try{return JSON.parse(localStorage.getItem('scnWins')||'{}');
 function scnBadStart(n){const S=G.s,m=G.m;for(let w=S.results.length;w<n&&w<S.fixtures.length;w++){let pts=0;const rd=S.fixtures[w].map(([h,a])=>{let [x,y]=simScore(h,a);if(h===G.club||a===G.club){const us=h===G.club;let gu=us?x:y,go=us?y:x;if(w===2||w===6){go=gu;}else if(gu>=go){go=gu+1;}if(us){x=gu;y=go;}else{x=go;y=gu;}m.st.gf+=gu;m.st.ga+=go;if(gu>go)m.st.w++;else if(gu===go)m.st.d++;else m.st.l++;}return [h,a,x,y];});S.results.push(rd);creditRound(rd,null);S.week++;}
   S.day=Math.max(S.day,(S.cal[S.week-1]||S.day+7)-4);}
 function scnStart(id){const sc=scnById(id);if(!sc)return;G=null;
-  if(sc.m==='td'){W.prof='td';W.fn=W.fn||'Cenk';W.ln=W.ln||'Kuşku';W.age=W.age||38;wizGo();G.lic={lv:'P',exp:6};G.m.rep=Math.max(G.m.rep||0,sc.dif>=3?62:45);mgrSign(sc.club);}
+  if(sc.m==='td'){W.prof='td';W.age=W.age||38;wizGo();G.lic={lv:'P',exp:6};G.m.rep=Math.max(G.m.rep||0,sc.dif>=3?62:45);mgrSign(sc.club);}
   else{newGame(sc.pos,'Sağ',sc.club);G.mode='player';const p=G.p,w=POS[sc.pos].w,sw=Object.values(w).reduce((a,b)=>a+b,0)||1;p.age=sc.age;
     for(const k in ATTR){const imp=(w[k]||0)/sw;p.a[k]=clamp(Math.round(sc.ovr+(imp>0.22?3:imp<0.08?-6:0)),30,96);p.pot[k]=clamp(p.a[k]+sc.pa,p.a[k],99);}
     let g=0;while(OVR()<sc.ovr&&g++<40)for(const k in ATTR)p.a[k]=Math.min(99,p.a[k]+0.5);g=0;while(OVR()>sc.ovr&&g++<40)for(const k in ATTR)p.a[k]=Math.max(30,p.a[k]-0.5);

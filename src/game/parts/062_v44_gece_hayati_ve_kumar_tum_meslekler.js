@@ -11,8 +11,8 @@ function gbWin(eurAmt){G.p.money+=E2U(eurAmt);}
 function gbHeat(x){const g=gbInit();g.heat=clamp(g.heat+x,0,100);g.n++;}
 /* basına düşme: sıklıkla oynanırsa */
 function gbPressCheck(){const g=gbInit();if(g.heat<25||Math.random()>g.heat/260)return;g.heat=Math.max(0,g.heat-30);const nm=(G.p&&G.p.name)||'Oyuncu';
-  const head=pick([`${nm} gece yarısı kumarhanede görüntülendi`,`${nm}’in kumar tutkusu gündemde`,`Gece hayatı skandalı: ${nm} masadan kalkmıyor`]);
-  msg('gundem',head,`Magazin basını, ${gbProfName()} ${nm}’in sık sık kumarhaneye gittiğini yazdı. Kulüp yönetimi rahatsız.`);if(typeof feedAdd==='function')feedAdd({src:'Magazin Manşet',h:'@magazinmanset',cat:'gen',txt:`${head}. Taraftarlar tepkili.`});
+  const head=pick([`${nm} gece yarısı kumarhanede görüntülendi`,`${adEk(nm,'gen')} kumar tutkusu gündemde`,`Gece hayatı skandalı: ${nm} masadan kalkmıyor`]);
+  msg('gundem',head,`Magazin basını, ${gbProfName()} ${adEk(nm,'gen')} sık sık kumarhaneye gittiğini yazdı. Kulüp yönetimi rahatsız.`);if(typeof feedAdd==='function')feedAdd({src:'Magazin Manşet',h:'@magazinmanset',cat:'gen',txt:`${head}. Taraftarlar tepkili.`});
   if(isPl()){G.p.fame=Math.max(0,G.p.fame-4);G.p.trust=clamp(G.p.trust-6,0,100);}else if(G.mode==='mgr'&&G.m){G.m.rep=clamp((G.m.rep||40)-4,5,95);G.m.conf=clamp((G.m.conf||50)-6,0,100);if(G.m.fans!=null)G.m.fans=clamp(G.m.fans-4,0,100);}else if(isStaff()&&G.job){G.job.rep=clamp(G.job.rep-5,0,100);}
   toast('Basına yakalandın! İtibarın düştü.');}
 /* ---------- blackjack ---------- */
@@ -57,7 +57,7 @@ function betPlace(i,sel,amt){const F=betFixtures()[+i];if(!F)return;const o=betO
 function betSettle(){const g=gbInit(),S=G.s;if(!g.bets.length||!S)return;const keep=[];for(const b of g.bets){let res=null;if(b.lid===S.league){const rd=S.results[b.w];if(rd)res=rd.find(x=>x[0]===b.h&&x[1]===b.a);}else{const o=LEAGUES[b.lid]&&olSync(b.lid);const rd=o&&o.res[b.w];if(rd)res=rd.find(x=>x[0]===b.h&&x[1]===b.a);}
     if(!res){if(G.phase==='off')continue;keep.push(b);continue;}const r=res[2]>res[3]?0:res[2]===res[3]?1:2;if(r===b.sel){const p=b.amt*b.o;gbWin(p);g.won+=p-b.amt;msg('event','Bahis kazandı',`${CLUBS[b.h].short} ${res[2]}-${res[3]} ${CLUBS[b.a].short}: ${eur(b.amt)} bahsin ${eur(p)} kazandırdı.`);}else{g.lost+=b.amt;}}g.bets=keep;}
 function betCaught(own){const g=gbInit(),nm=G.p.name;g.caught++;g.bets=[];
-  const head=`BAHİS SKANDALI: ${nm} yasa dışı bahiste yakalandı`;msg('gundem',head,`Federasyon soruşturması, ${gbProfName()} ${nm}’in${own?' kendi takımının maçına':''} bahis oynadığını ortaya çıkardı.`);if(typeof feedAdd==='function')feedAdd({src:'Son Dakika',h:'@sondakikaspor',cat:'gen',txt:head+'. Kariyeri tehlikede!'});
+  const head=`BAHİS SKANDALI: ${nm} yasa dışı bahiste yakalandı`;msg('gundem',head,`Federasyon soruşturması, ${gbProfName()} ${adEk(nm,'gen')}${own?' kendi takımının maçına':''} bahis oynadığını ortaya çıkardı.`);if(typeof feedAdd==='function')feedAdd({src:'Son Dakika',h:'@sondakikaspor',cat:'gen',txt:head+'. Kariyeri tehlikede!'});
   const W=own?8:5;G.unemp={w:W,why:'bahis'};
   if(isPl()){G.p.ban=Math.max(G.p.ban,own?20:10);G.p.fame=Math.max(0,G.p.fame-15);G.p.trust=clamp(G.p.trust-30,0,100);G.mustMove=true;msg('board','Sözleşmen feshedildi',`Kulüp, bahis skandalı nedeniyle sözleşmeni sezon sonunda feshedecek. Federasyon ${G.p.ban} maç men cezası verdi.`);}
   else if(G.mode==='mgr'&&G.m){G.m.rep=clamp((G.m.rep||40)-25,5,95);if(G.phase==='season'){mgrSacked();}G.m.offers=[];msg('board','Görevden alındın',`Yönetim, bahis skandalı nedeniyle sözleşmeni derhal feshetti. Kimse seninle çalışmak istemiyor.`);}

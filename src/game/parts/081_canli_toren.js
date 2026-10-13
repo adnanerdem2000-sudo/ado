@@ -35,7 +35,7 @@ function bdcConfetti(){const cv=$('#bdcConf');if(!cv||!BDC)return;const st=$('#b
   const t0=performance.now();const fr=now=>{if(!BDC)return;c.clearRect(0,0,W,H);for(const p of P){p.x+=p.vx*BDC.spd;p.y+=p.vy*BDC.spd;p.r+=0.1;c.save();c.translate(p.x,p.y);c.rotate(p.r);c.fillStyle=p.col;c.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);c.restore();}if(now-t0<9000)BDC.raf=requestAnimationFrame(fr);else c.clearRect(0,0,W,H);};BDC.raf=requestAnimationFrame(fr);}
 /* senaryo */
 function bdcScript(R){const H=R.hosts||BDO_HOSTS[0],S=[],me=R.top.findIndex(x=>x.me),cl=id=>CLUBS[id]?CLUBS[id].name:'';const say=(w,t,d)=>S.push({d:d||Math.max(2400,t.length*48),f:()=>bdcSay(w,t)});
-  const pl=isPl(),meName=pl&&G.p?(G.p.name||'Cenk Kuşku'):(G&&G.p&&G.p.name)||'';
+  const pl=isPl(),meName=pl&&G.p?(meN()):(G&&G.p&&G.p.name)||'';
   S.push({d:2600,f:()=>{bdcScreen(`<div class="bdc-logo">${BDO_BALL}<b>BALLON D'OR</b><small>${R.no}. TÖREN · PARİS · THÉÂTRE DU CHÂTELET</small></div>`,'logo');bdcClap(3);}});
   say(H[0],`İyi akşamlar Paris, iyi akşamlar dünya! ${R.no}. Ballon d’Or törenine hoş geldiniz.`);
   say(H[1],`Bu gece ${R.season} sezonunun en iyilerini ödüllendireceğiz. Salonda futbolun bütün yıldızları var.`);

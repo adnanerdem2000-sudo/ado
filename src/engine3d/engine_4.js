@@ -14,7 +14,7 @@
     var GAIT_SP = [0, 1.6, 4.2, 8.3];
     /* [fiz] adim kadansi (adim/sn): yuruyus ~1.7-2.2, kosu ~2.6-3.3, depar ~3.6-4.3 (kosu biyomekanigi verisi); top surerken %12 sik. Adim evresi metre basina
        pi * kadans / hiz ilerler (iki adim = 2pi). Kopru esi: crGaitK (ayni tablo). */
-    var GAIT_CX = [0, 1, 1.6, 2.5, 3.5, 4.2, 5, 6, 7, 8.3, 9.5], GAIT_CY = [1.2, 1.7, 2.0, 2.6, 2.85, 2.95, 3.1, 3.3, 3.55, 4.0, 4.3];
+    var GAIT_CX = [0, 1, 1.6, 2.5, 3.5, 4.2, 5, 6, 7, 8.3, 9.5, 10.5], GAIT_CY = [1.2, 1.7, 2.0, 2.6, 2.85, 2.95, 3.1, 3.3, 3.55, 4.0, 4.3, 4.6];      // [v133] cok hizli oyuncu (10.5 m/sn) daha sik adim
     function gaitCad(sp) { if (!(sp > 0)) return GAIT_CY[0]; for (var i = 1; i < GAIT_CX.length; i++) if (sp <= GAIT_CX[i]) return GAIT_CY[i - 1] + (GAIT_CY[i] - GAIT_CY[i - 1]) * (sp - GAIT_CX[i - 1]) / (GAIT_CX[i] - GAIT_CX[i - 1]); return GAIT_CY[GAIT_CY.length - 1]; }
     function gaitPhK(sp, ck) { return Math.PI * gaitCad(sp) * (1 + .12 * (ck || 0)) / Math.max(.35, sp || 0); }                                                       // hız çapaları: dur/yürüyüş/koşu/sprint (motorun gerçek maks hızı 8.21 m/s)
     function plerp(sp, ys) {                                                                 // hız-çapalı parçalı-doğrusal enterpolasyon
@@ -1167,10 +1167,48 @@
         }
         return { root: build(glb.byName.Player), map: map };
     }
+    /* [top] beyaz maç topu: FIFA 5 numara (çap 22 cm, yarıçap 0.11 m). İkosfer (5 kez bölünmüş, 20 480 üçgen) üzerinde klasik 32 panelli
+       (12 beşgen + 20 altıgen) dikiş deseni: panel sınırları açık gri ve 1.2 mm gömük, böylece dönüş ve ışık okunur; panellerin kendisi beyaz. */
+    function proceduralBall(R) {
+        var t = (1 + Math.sqrt(5)) / 2, nrm = function (v) { var l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; };
+        var P = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]].map(nrm);
+        var F = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
+        var C = P.slice(); F.forEach(function (f) { C.push(nrm([P[f[0]][0] + P[f[1]][0] + P[f[2]][0], P[f[0]][1] + P[f[1]][1] + P[f[2]][1], P[f[0]][2] + P[f[1]][2] + P[f[2]][2]])); });
+        var V = P.slice(), cache = {}, k, i;
+        function mid(a, b) { var key = a < b ? a + '_' + b : b + '_' + a; if (cache[key] != null) return cache[key]; V.push(nrm([V[a][0] + V[b][0], V[a][1] + V[b][1], V[a][2] + V[b][2]])); return cache[key] = V.length - 1; }
+        for (k = 0; k < 5; k++) { var F2 = []; F.forEach(function (f) { var a = mid(f[0], f[1]), b = mid(f[1], f[2]), c = mid(f[2], f[0]); F2.push([f[0], a, c], [f[1], b, a], [f[2], c, b], [a, b, c]); }); F = F2; }
+        var nv = V.length, pos = new Float32Array(nv * 3), col = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), W = .042;
+        for (i = 0; i < nv; i++) {
+            var d = V[i], m1 = -2, m2 = -2;
+            for (k = 0; k < C.length; k++) { var dt = d[0] * C[k][0] + d[1] * C[k][1] + d[2] * C[k][2]; if (dt > m1) { m2 = m1; m1 = dt; } else if (dt > m2) m2 = dt; }
+            var gap = Math.acos(Math.max(-1, Math.min(1, m2))) - Math.acos(Math.max(-1, Math.min(1, m1))), s = gap >= W ? 0 : 1 - gap / W; s = s * s * (3 - 2 * s);
+            var r = R * (1 - .011 * s), w = .965 - .3 * s;
+            pos[i * 3] = d[0] * r; pos[i * 3 + 1] = d[1] * r; pos[i * 3 + 2] = d[2] * r;
+            col[i * 3] = w; col[i * 3 + 1] = w + .01 * s; col[i * 3 + 2] = w + .025 * s;
+        }
+        var idx = new Uint16Array(F.length * 3);
+        F.forEach(function (f, j) {
+            idx[j * 3] = f[0]; idx[j * 3 + 1] = f[1]; idx[j * 3 + 2] = f[2];
+            var a = f[0] * 3, b = f[1] * 3, c = f[2] * 3, ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+            var nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+            for (var q = 0; q < 3; q++) { var o = f[q] * 3; nor[o] += nx; nor[o + 1] += ny; nor[o + 2] += nz; }
+        });
+        var vb = new Float32Array(nv * 9);
+        for (i = 0; i < nv; i++) {
+            var o3 = i * 3, l = Math.hypot(nor[o3], nor[o3 + 1], nor[o3 + 2]) || 1;
+            if (nor[o3] * pos[o3] + nor[o3 + 1] * pos[o3 + 1] + nor[o3 + 2] * pos[o3 + 2] < 0) l = -l;
+            vb.set([pos[o3], pos[o3 + 1], pos[o3 + 2], nor[o3] / l, nor[o3 + 1] / l, nor[o3 + 2] / l, col[o3], col[o3 + 1], col[o3 + 2]], i * 9);
+        }
+        return { vb: vb, idx: idx };
+    }
     function buildBall(gl, glb) {
-        /* Meshy top modeli (ADO3D_BALL): 590 bin üçgenlik modelden dikiş/panel kabartısı korunarak 6000 üçgene indirildi; renk
-           deseni oyunun kendi topundan (12 koyu beşgen + 20 beyaz üçgen, yarıçap 0.11) yüzeye aktarıldı - köşe rengi (aCol) olarak.
-           Kapatmak için sayfa yüklenmeden önce: window.ADO3D_BALL_ON = false (eski düşük çokgenli top). */
+        if (G.ADO3D_BALL_ON !== false) {
+            try {
+                var PB = proceduralBall(.11), vv0 = makeVBO(gl, PB.vb, 9, [[3, 0], [3, 3], [3, 6]]), ib0 = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib0); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, PB.idx, gl.STATIC_DRAW); gl.bindVertexArray(null);
+                return [{ vao: vv0.vao, count: PB.idx.length, c: [1, 1, 1] }];
+            } catch (e) { if (G.console && console.warn) console.warn('Ado3D: top üretilemedi:', e && e.message); }
+        }
         var BD = G.ADO3D_BALL;
         if (BD && BD.b && G.ADO3D_BALL_ON !== false) {
             try {
@@ -2040,7 +2078,8 @@
                 dX: 0, dZ: 0, dYaw: 0, rY: 0, gkC: NaN, readyK: 0, holdK: 0, needHand: false, acW: 0, gW: 0, gDt: 0, gX: NaN, gZ: NaN, gWp: 0, gSp: NaN,
                 cP: null, acP: null, ac: null, hR: null, hL: null, rOx: 0, rOz: 0,
                 kickKind: null, kickDur: 0, kickCf: 0, kickLg0: 0, kickLg1: 0, kickKn0: 0, kickArm: 0, kickTorso: 0, kickFoot: null,
-                ok: 0, vM: 0, vS: 0, sN: 0, sF: 0, dS: 1, dW: 1, mK: 0, mC: 0, rM: null, dqc: null };
+                ok: 0, vM: 0, vS: 0, sN: 0, sF: 0, dS: 1, dW: 1, mK: 0, mC: 0, rM: null, dqc: null,
+                spX: 0, spZ: 0, uX: 0, uZ: 0, uOk: 0, gaW: 0, gaP: 0, gaC: 0, gaD: 0, gaRX: 0, gaRZ: 0, gaRT: -1, kickC: 0 };      // [v133] sayisal alanlar bastan (kutulanmis sayi tahsisi yok)
         }
         R.setMatch = function (o) {
             S.team = [hex2rgb(o.cols[0]), hex2rgb(o.cols[1])];
@@ -2283,6 +2322,7 @@
             }
             return fitCache[k] = L;
         }
+        function camSd(c, k, g, w, dt) { var kv = k + 'V', v = c[kv] || 0, x = c[k] - g, e = Math.exp(-w * dt), t = (v + w * x) * dt; c[k] = g + (x + t) * e; c[kv] = (v - w * t) * e; }      // [v133]
         function camUpdate(st, bx, bz, dt, cel0, v) {
             if (R._camOverride || R.varCam || R.cutCam) {                                       // test/geliştirme sabit göz/hedefi ya da [var3d] VAR tekrar kamerası (2B köprüden, yalnız inceleme izlenirken)
                 var co = R._camOverride || R.varCam || R.cutCam; eye[0] = co.eye[0]; eye[1] = co.eye[1]; eye[2] = co.eye[2]; CAM_FD = Math.hypot(co.at[0] - eye[0], co.at[1] - eye[1], co.at[2] - eye[2]); CAM_AX = co.at[0]; CAM_AZ = co.at[2];
@@ -2290,8 +2330,8 @@
             }
             var mode = st.mode === 'full' || st.vs ? 'full' : 'bcast', g = camGoal(mode, st, bx, bz, cel0, v), c = S.cam;
             if (!c) { c = S.cam = { tx: g.tx, tz: g.tz, dist: g.dist, elev: g.elev, az: g.az }; }
-            var kp = 1 - Math.exp(-dt / (mode === 'full' ? .5 : .55)), kd = 1 - Math.exp(-dt / .5);
-            c.tx += (g.tx - c.tx) * kp; c.tz += (g.tz - c.tz) * kp; c.dist += (g.dist - c.dist) * kd; c.elev += (g.elev - c.elev) * kd; c.az += (g.az - c.az) * kd;
+            var wp = mode === 'full' ? 4 : 3.6;      // [v133] kritik sonumlu yay: hiz surekli (canli/olu top kadraj gecisinde ve vuruslarda sarsinti yok)
+            camSd(c, 'tx', g.tx, wp, dt); camSd(c, 'tz', g.tz, wp, dt); camSd(c, 'dist', g.dist, 4, dt); camSd(c, 'elev', g.elev, 4, dt); camSd(c, 'az', g.az, 4, dt);
             eye[0] = c.tx + Math.sin(c.az) * Math.cos(c.elev) * c.dist; eye[1] = Math.sin(c.elev) * c.dist; eye[2] = c.tz + Math.cos(c.az) * Math.cos(c.elev) * c.dist;
             curFov = FOVY; CAM_FD = c.dist; CAM_AX = c.tx; CAM_AZ = c.tz; mlook(VIEW, eye[0], eye[1], eye[2], c.tx, 0, c.tz); mpersp(PROJ, FOVY, asp, 1.5, 900); mmul(VP, PROJ, VIEW);
         }
@@ -2333,7 +2373,8 @@
         }
         /* poz: pivot başına [ax, ay, az] (Hips için ay = dikey sıçrama). Model +Z'ye bakar; bir sarkan uzvun +ax dönüşü onu geriye (−Z) savurur, yani ileri = negatif ax */
         var PK = { Hips: 0, Torso: 3, Head: 6, ArmL: 9, ForeL: 12, ArmR: 15, ForeR: 18, LegL: 21, ShinL: 24, FootL: 27, LegR: 30, ShinR: 33, FootR: 36 };
-        function P(n, ax, ay, az) { var k = PK[n]; if (ax != null) pose[k] = ax; if (ay != null) pose[k + 1] = ay; if (az != null) pose[k + 2] = az; }
+        var KW_ = 1;      // [v133] P agirligi (1 = eski davranis: dogrudan yazma); yedek vurus giris/cikista karisir
+        function P(n, ax, ay, az) { var k = PK[n], w = KW_; if (ax != null) pose[k] += (ax - pose[k]) * w; if (ay != null) pose[k + 1] += (ay - pose[k + 1]) * w; if (az != null) pose[k + 2] += (az - pose[k + 2]) * w; }
         // [oa] hız çapalı genlik tabloları (derece / m) - modül sabitleri: poseFor her çağrıda dizi üretmesin
         var PL_HA = [3, 25, 30, 43], PL_HB = [0, 3, 8, 14], PL_KA = [8, 60, 125, 147], PL_AA = [4, 16, 24, 30], PL_TL = [0, 3, 9, 15], PL_TT = [0, 2, 9, 13], PL_HBM = [0, .018, .032, .034], PL_FB = [12, 85, 90, 106], PL_FO = [3, 10, 14, 62], PL_AR = [4, 22, 33, 50];
         function poseFor(a, sp, t, mods) {
@@ -2445,7 +2486,7 @@
             if (CLKOK && (a.readyK > .002 || a.holdK > .002 || a.ac || a.acP)) gkPose(a);      // [gk] kaleci: hazır duruş / topu elde tutuş / kurtarış-alma-oyuna sokma aksiyonu
             if (!mods) return;
             if (mods.kick > 0) {
-                var q = mods.kick;
+                var q = mods.kick; KW_ = smooth01(q / .12) * (1 - smooth01((q - .82) / .18));      // [v133] yedek vurus: pozdan yumusak giris/cikis (pop yok)
                 if (a.kickKind === 'head') {                                                                    // kafa vuruşu: bacak sallanmaz - gövde/kafa geriye gerilip fırlama + hafif sıçrama (leg-kick modifiyeriyle karıştırılması eski bir hataydı: SHOT olayı HEAD etiketliyken de aynı bacak animasyonu oynuyordu)
                     var cfh = .30, hq;
                     if (q < cfh) { hq = smooth01(q / cfh); P('Torso', -.30 * (1 - hq) + .55 * hq, twist, 0); P('Head', -.20 * (1 - hq) + .30 * hq, 0, 0); pose[1] += hq * .11; }
@@ -2463,6 +2504,7 @@
                     if (a.kickTorso) { var lean = clamp(-lg / 1.6, -.3, 1) * a.kickTorso; P('Torso', torsoAx + lean * .20, twist + tw * lean * .22, 0); }   // işaret düzeltmesi: takipte (lean>0) gövde topun ÜZERİNE öne katlanır, geri savurmada hafif geriye   // gövde/kalça katılımı (X-factor): yalnızca şut/uzaklaştırmada belirgin (kickTorso>0), kısa paslarda yok
                 }
             }
+            KW_ = 1;
             if (mods.celeb) { var sw = Math.sin(t * 9); P('ArmL', -2.9, 0, -(.45 + .25 * sw)); P('ArmR', -2.9, 0, .45 + .25 * sw); P('ForeL', -.2, 0, 0); P('ForeR', -.2, 0, 0); pose[1] += Math.abs(Math.sin(t * 8)) * .12; }
             // hakem hareketleri ANATOMİK SAĞ kolla (iskelette 'ArmL'/'ForeL' - bkz vuruş ayağı notu): kart sağ elde kaldırılır
             if (mods.ref === 'card') {      /* [hakem] kart: cebe uzanma -> kolu dumduz kaldirma -> bekletme -> indirme (anatomik sag kol 'ArmL') */
@@ -3313,15 +3355,19 @@
             if (dl < .005) return; var k = Math.min(1, .35 / dl) * w;
             fkLeg(lf ? 0 : 1, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [CT_A[0] + dx * k, CT_A[1] + dy * k, CT_A[2] + dz * k]), fkR(mF));
         }
-        function fkR(m) { return [m[0], m[4], m[8], m[1], m[5], m[9], m[2], m[6], m[10]]; }      // sutun-oncelikli 4x4 -> satir-oncelikli 3x3
-        function fkT(m) { return [m[12], m[13], m[14]]; }
-        function fkS(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; } function fkA(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; } function fkK(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
-        function fkD(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; } function fkX(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
-        function fkL(a) { return Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]); } function fkN(a) { var l = fkL(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; } function fkP(a, n) { return fkS(a, fkK(n, fkD(a, n))); }
-        function fkC(X, Y, Z) { return [X[0], Y[0], Z[0], X[1], Y[1], Z[1], X[2], Y[2], Z[2]]; } function fkTr(m) { return [m[0], m[3], m[6], m[1], m[4], m[7], m[2], m[5], m[8]]; }
-        function fkMM(a, b) { var o = new Array(9), r, c; for (r = 0; r < 3; r++) for (c = 0; c < 3; c++) o[r * 3 + c] = a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c]; return o; }
-        function fkRx(ax, ay, az) { var cx = Math.cos(ax), sx = Math.sin(ax), cy = Math.cos(ay), sy = Math.sin(ay), cz = Math.cos(az), sz = Math.sin(az); return [cy * cz, -cy * sz, sy, sx * sy * cz + cx * sz, -sx * sy * sz + cx * cz, -sx * cy, -cx * sy * cz + sx * sz, cx * sy * sz + sx * cz, cx * cy]; }
-        function fkE(m) { var ay = Math.asin(Math.max(-1, Math.min(1, m[2]))); return [Math.atan2(-m[5], m[8]), ay, Math.atan2(-m[1], m[0])]; }
+        /* [v133] fk yardimcilari halka havuzundan doner (kare basina binlerce kucuk dizi tahsisi yok); sonuc kisa omurlu - kalici tutulacaksa kopyalanir */
+        var FK3 = [], FK9 = [], FK3i = 0, FK9i = 0; for (var fki = 0; fki < 1024; fki++) FK3.push(new Float64Array(3)); for (fki = 0; fki < 256; fki++) FK9.push(new Float64Array(9));
+        function f3(x, y, z) { var o = FK3[FK3i = (FK3i + 1) & 1023]; o[0] = x; o[1] = y; o[2] = z; return o; }
+        function f9() { return FK9[FK9i = (FK9i + 1) & 255]; }
+        function fkR(m) { var o = f9(); o[0] = m[0]; o[1] = m[4]; o[2] = m[8]; o[3] = m[1]; o[4] = m[5]; o[5] = m[9]; o[6] = m[2]; o[7] = m[6]; o[8] = m[10]; return o; }      // sutun-oncelikli 4x4 -> satir-oncelikli 3x3
+        function fkT(m) { return f3(m[12], m[13], m[14]); }
+        function fkS(a, b) { return f3(a[0] - b[0], a[1] - b[1], a[2] - b[2]); } function fkA(a, b) { return f3(a[0] + b[0], a[1] + b[1], a[2] + b[2]); } function fkK(a, k) { return f3(a[0] * k, a[1] * k, a[2] * k); }
+        function fkD(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; } function fkX(a, b) { return f3(a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]); }
+        function fkL(a) { return Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]); } function fkN(a) { var l = fkL(a) || 1; return f3(a[0] / l, a[1] / l, a[2] / l); } function fkP(a, n) { return fkS(a, fkK(n, fkD(a, n))); }
+        function fkC(X, Y, Z) { var o = f9(); o[0] = X[0]; o[1] = Y[0]; o[2] = Z[0]; o[3] = X[1]; o[4] = Y[1]; o[5] = Z[1]; o[6] = X[2]; o[7] = Y[2]; o[8] = Z[2]; return o; } function fkTr(m) { var o = f9(); o[0] = m[0]; o[1] = m[3]; o[2] = m[6]; o[3] = m[1]; o[4] = m[4]; o[5] = m[7]; o[6] = m[2]; o[7] = m[5]; o[8] = m[8]; return o; }
+        function fkMM(a, b) { var o = f9(), r, c; for (r = 0; r < 3; r++) for (c = 0; c < 3; c++) o[r * 3 + c] = a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c]; return o; }
+        function fkRx(ax, ay, az) { var cx = Math.cos(ax), sx = Math.sin(ax), cy = Math.cos(ay), sy = Math.sin(ay), cz = Math.cos(az), sz = Math.sin(az), o = f9(); o[0] = cy * cz; o[1] = -cy * sz; o[2] = sy; o[3] = sx * sy * cz + cx * sz; o[4] = -sx * sy * sz + cx * cz; o[5] = -sx * cy; o[6] = -cx * sy * cz + sx * sz; o[7] = cx * sy * sz + sx * cz; o[8] = cx * cy; return o; }
+        function fkE(m) { var ay = Math.asin(Math.max(-1, Math.min(1, m[2]))); return f3(Math.atan2(-m[5], m[8]), ay, Math.atan2(-m[1], m[0])); }
         function fkFY(Y, Zh) { Y = fkN(Y); var Z = fkP(Zh, Y); if (fkL(Z) < 1e-4) Z = fkP([0, 0, 1], Y); Z = fkN(Z); return fkC(fkX(Y, Z), Y, Z); }
         function fkW2M(root, p) {      // dunya -> model (kok: oteleme * yaw * olcek)
             var ws = Math.sqrt(root[0] * root[0] + root[2] * root[2]) || 1, c = root[0] / ws, s = root[8] / ws, dx = p[0] - root[12], dz = p[2] - root[14];
@@ -3355,7 +3401,7 @@
             if (mR > .002) fkLeg(1, BB.LegR, BB.ShinR, BB.FootR, Wh, [AR[0] + sx[0] * mR, AR[1], AR[2] + sx[2] * mR], mFR);
         }
         function footIK(a, root) {
-            var dt = Math.max(1e-3, FRM[2]), sd, q;
+            var dt = Math.max(1e-3, FRM[5] || FRM[2]), sd, q;      // [v133] kilit esikleri sim saatiyle (hizli oynatmada da ayak kayamaz)
             if (!a.fk) a.fk = [{ lk: 0, w: 0, t: 0 }, { lk: 0, w: 0, t: 0 }];
             var ack = a.ac && a.ac.init ? a.ac.k : 0, act = (!(a.acW < .3) && !((ack === 16 && a.ac.mode === 3 && !OA3_FULL) || ack === 18)) || (a.rY || 0) > .05;      // tek bacakli karsilama (16 mod 3) ve vurusta destek ayagi kilitlenir
             if (!FK_DQ) FK_DQ = new Float32Array(BODY_BONES.length * 8);
@@ -3376,7 +3422,7 @@
                         st.lk = 0; st.w = 0; fkLeg(sd, iL, iS, iF, Wh, tgm, fkR(mF)); any = true; continue;
                     }
                 }
-                if (!st.lk && tY < .04 && v < .9) { st.lk = 1; st.x = Aw[0]; st.y = Aw[1]; st.z = Aw[2]; st.t = 0; st.fw = fkR(mF); st.yw = a.dYaw; }
+                if (!st.lk && tY < .04 && v < .9) { st.lk = 1; st.x = Aw[0]; st.y = Aw[1]; st.z = Aw[2]; st.t = 0; st.fw = Float64Array.from(fkR(mF)); st.yw = a.dYaw; }      // [v133] havuzdan kopya (kalici)
                 else if (st.lk) { var hW = fkT(_bw[iL]); xform(root, hW, FK_M); var sup = !!(a.ac && a.ac.init && a.ac.k === 16 && a.ac.mode === 3); if (tY > .07 || Math.hypot(Aw[0] - st.x, Aw[2] - st.z) > (sup ? .28 : .2) || Math.hypot(FK_M[0] - st.x, FK_M[2] - st.z) > (sup ? .55 : .48) || st.t > (sup ? 1.2 : .9)) st.lk = 0; }      /* [ayak] bacak acilmadan birak */
                 st.t += dt; st.w += ((st.lk ? 1 : 0) - st.w) * (1 - Math.exp(-dt / .05));
                 if (st.w < .01) continue;
@@ -3521,7 +3567,7 @@
             if (w0 < .01 || !(a.gSp >= 0)) a.gSp = a.spd;                  // [oa] ilk karede (temizlemeden sonra) başlatılmamış kalmasın
             var dx = a.dX - px, dz = a.dZ - pz, d = Math.sqrt(dx * dx + dz * dz), dts = a.gDt || 0;
             if (d > 3) return;
-            if (dts > 1e-4) a.gSp += (Math.min(9.5, d / dts) - a.gSp) * (1 - Math.exp(-dts / .07));
+            if (dts > 1e-4) a.gSp += (Math.min(10.5, d / dts) - a.gSp) * (1 - Math.exp(-dts / .07));
             a.spd += (a.gSp - a.spd) * w;
             var bk = d > 1e-4 && (dx * Math.sin(a.dYaw) + dz * Math.cos(a.dYaw)) < -.35 * d ? -1 : 1;    // geri geri yürüyüş: adım döngüsü ters
             a.ph += w * bk * d * gaitPhK(a.spd, 0);
@@ -4459,15 +4505,16 @@
         var OA3_FULL = 0;      // [duzgun] 1: eski ayakla karsilama (kok ofseti + yon + tum vucut pozu)
         var FLAG_GEO = null, MOD_A = [{ ref: null, fl: 0, fp: 0, fw: 0, fa: 1 }, { ref: null, fl: 0, fp: 0, fw: 0, fa: 1 }, { ref: null, fl: 0, fp: 0, fw: 0, fa: 1 }], FL_M = new Float32Array(16);      // [yan]
         var MOD_D = { kick: 0, celeb: false }, MOD_M = { kick: 0, celeb: false }, MOD_R = { ref: null }, U_SKYT = new Float32Array([.03, .07, .15]), U_SKYB = new Float32Array([.13, .2, .32]);
-        var U_ONE4 = new Float32Array([1, 1, 1, 1]), U_BRD4 = new Float32Array([1.15, 1.15, 1.15, 1]), BL_T = [0, 0, 0], BL_Q = [0, 0, 0, 1], BL_S = [1.45, 1.45, 1.45], CRC0 = [1, .86, .35], CRC1 = [.55, .85, 1], CRC2 = [1, .93, .7], CARD_BOX = null;
+        var U_ONE4 = new Float32Array([1, 1, 1, 1]), U_BRD4 = new Float32Array([1.15, 1.15, 1.15, 1]), BL_T = [0, 0, 0], BL_Q = [0, 0, 0, 1], BL_S = [1.2, 1.2, 1.2], CRC0 = [1, .86, .35], CRC1 = [.55, .85, 1], CRC2 = [1, .93, .7], CARD_BOX = null;
         function light(p) { gl.uniform3fv(p.u.uCam, eye); if (p._lc) return; p._lc = 1; gl.uniform3fv(p.u.uSun, LIGHTS.sun);   /* [opt] sabit ışıklar program başına bir kez (değer programda kalır) */ gl.uniform3fv(p.u.uAmbS, LIGHTS.ambS); gl.uniform3fv(p.u.uAmbG, LIGHTS.ambG); gl.uniform3fv(p.u.uFogC, LIGHTS.fogC); gl.uniform1f(p.u.uFog, LIGHTS.fog); gl.uniform3fv(p.u.uLdir, LIGHTS.ldir); }
         /* [vq] top boyu: ekranda en az ~7.5 px kalacak kadar büyütülür (en fazla eski 1.45 kat - yayın kamerası değişmez), yakın planda gerçek
            22 cm; elde tutulurken de aynı (yakın planda avuçlar gerçek boydaki topu kavrar; uzakta büyütülmüş topun merkezi avuçların önüne kayar,
            bkz gkBall). Geçiş yumuşak. Yerdeki topun alt noktası zeminde kalır. */
-        var BSC = 1.45, BMB = { n: 0, x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0, a: 0 };      // BMB: [vq] top hareket bulanıklığı (bu kare)
+        /* [top] gerçek boy önceliği: uzak yayın planında yalnız ekranda ~6 px'in altına düşerse en fazla 1.2 kat büyütülür */
+        var BSC = 1.2, BMB = { n: 0, x: 0, y: 0, z: 0, dx: 0, dy: 0, dz: 0, a: 0 };      // BMB: [vq] top hareket bulanıklığı (bu kare)
         function ballScale(x, y, z, dt) {
-            if (!VQ.mat) { BSC = 1.45; return; }
-            var ex = x - eye[0], ey = y - eye[1], ez = z - eye[2], dd = Math.max(.5, Math.sqrt(ex * ex + ey * ey + ez * ez)), dpx = .22 * H / (2 * Math.tan(curFov / 2) * dd), tg = CT2_ON && GB.held ? 1 : clamp(7.5 / dpx, 1, 1.45);
+            if (!VQ.mat) { BSC = 1.2; return; }
+            var ex = x - eye[0], ey = y - eye[1], ez = z - eye[2], dd = Math.max(.5, Math.sqrt(ex * ex + ey * ey + ez * ez)), dpx = .22 * H / (2 * Math.tan(curFov / 2) * dd), tg = CT2_ON && GB.held ? 1 : clamp(6 / dpx, 1, 1.2);
             BSC += (tg - BSC) * (1 - Math.exp(-dt / .25)); BL_S[0] = BL_S[1] = BL_S[2] = BSC;
         }
         function ballY(y) { return VQ.mat ? y - (.16 - .11 * BSC) * clamp(1 - (y - .17) / .5, 0, 1) : y; }
@@ -4492,7 +4539,7 @@
         R.render = function (st) {
             if (R.lost || !SC || !S.st) return false;
             if (PEND.length && !progsReady()) return false;                  // [opt] programlar henüz hazır değil
-            if (SKN && SKN.job) bodyJobStep(4);
+            if (SKN && SKN.job && !(st.clock != null && !st.noAct)) bodyJobStep(4);      // [v133] yakin cekim agi canli oyunda karede uretilmez (bosta / mac oncesi _bodyReady)
             var v = st.v, now = st.now, dt = clamp((now - lastNow) / 1000, .001, .1); lastNow = now;
             var t = now / 1000, i, bx = v.bx, bz = v.by;
             FRM[0] = bx; FRM[1] = bz; FRM[2] = dt; FRM[3] = t;                    // [opt] kare değerleri (aktör işlevleri kutulanmış sayı argümanı almaz)
@@ -4512,7 +4559,7 @@
             frustumSet();                                                    // [opt] görüş konisi düzlemleri (aktör ayıklama)
             /* [opt] aktör güncellemesi + poz/DQ: karede BİR kez, gölge ve ana geçişten ÖNCE. İki geçiş aynı DQ'yu ve kök matrisini kullanır
                (gölge artık bir kare geride kalmaz); görüş konisi ve gölge kademeleri dışındaki aktörün pozu hiç hesaplanmaz. */
-            var cel = st.celeb ? st.celeb.ids : null, ts = Math.max(.05, st.tscale || 1);
+            var cel = st.celeb ? st.celeb.ids : null, ts = Math.max(.05, st.tscale || 1); FRM[5] = dt * ts;      // [v133] FRM[5]: kare suresi (sim sn) - ayak kilidi
             var VO = CLKOK && st.voff ? st.voff : null;
             if (SP_ON) {      /* [govde] ic ice gecmeyi onleyen cizim ofseti (onceki karenin ayrilmamis cizim konumlarindan) */
                 var spN = S.n, spi, spj, spK = 1 - Math.exp(-dt / .08);
@@ -4538,16 +4585,17 @@
                 if (!(a.px > -1e9)) { a.px = x; a.pz = z; a.yaw = Math.atan2(v.fx[i], v.fy[i]); }
                 if (!(a.spd >= 0)) a.spd = 0; if (!(a.accS > -99 && a.accS < 99)) a.accS = 0;      // [oa] NaN koruması (görünmez oyuncu olmasın)
                 var ddx = x - a.px, ddz = z - a.pz, d = Math.sqrt(ddx * ddx + ddz * ddz), sp = d / (dt * ts), sp0 = a.spd; if (d > 5) { sp = 0; d = 0; }
-                a.spd += (Math.max(0, Math.min(9.5, sp)) - a.spd) * (1 - Math.exp(-dt * ts / .12));      // [fiz] sim saatiyle
-                a.accS = (a.accS || 0) + (Math.max(-12, Math.min(12, (a.spd - sp0) / (dt * ts))) - (a.accS || 0)) * (1 - Math.exp(-dt / .2));      // [oa] ivme (m/sn²): öne / geriye eğilme
+                if (a.cutN > 0) { a.cutN--; if (!a.cutN) { a.spd = Math.max(0, Math.min(10.5, sp)); sp0 = a.spd; } }      // [v132] kurgu kesmesi: hız süzgeçsiz yeni kareden (ayakta başlama yok)
+                else a.spd += (Math.max(0, Math.min(10.5, sp)) - a.spd) * (1 - Math.exp(-dt * ts / .12));      // [fiz] sim saatiyle
+                a.accS = (a.accS || 0) + (Math.max(-12, Math.min(12, (a.spd - sp0) / (dt * ts))) - (a.accS || 0)) * (1 - Math.exp(-dt * ts / .2));      // [v133] süzgeçler sim saatiyle      // [oa] ivme (m/sn²): öne / geriye eğilme
                 var cTarget = (st.carry && st.carry.id === i) ? 1 : 0, tTarget = (st.carry && st.carry.id === i && st.carry.type === 'takeon') ? 1 : 0;   // top sürme karışımı: canlı top sahipliğine yumuşak geçiş (pop yok)
-                a.carryK = (a.carryK || 0) + (cTarget - (a.carryK || 0)) * (1 - Math.exp(-dt / .18));
-                a.takeonK = (a.takeonK || 0) + (tTarget - (a.takeonK || 0)) * (1 - Math.exp(-dt / .15));
-                var lv0 = d > 1e-5 ? ((x - a.px) * Math.cos(a.yaw) - (z - a.pz) * Math.sin(a.yaw)) / (dt * ts) : 0; a.latV = (a.latV || 0) + (Math.max(-9, Math.min(9, lv0)) - (a.latV || 0)) * (1 - Math.exp(-dt / .15));   // [gk] gövdeye göre yanal hız (+ = sol): yan adım
-                var lo0 = d > 1e-5 ? ((x - a.px) * Math.sin(a.yaw) + (z - a.pz) * Math.cos(a.yaw)) / (dt * ts) : 0; a.lonV = (a.lonV || 0) + (Math.max(-9.5, Math.min(9.5, lo0)) - (a.lonV || 0)) * (1 - Math.exp(-dt / .15));   // [oa] ileri hız (geri koşu)
+                a.carryK = (a.carryK || 0) + (cTarget - (a.carryK || 0)) * (1 - Math.exp(-dt * ts / .18));
+                a.takeonK = (a.takeonK || 0) + (tTarget - (a.takeonK || 0)) * (1 - Math.exp(-dt * ts / .15));
+                var lv0 = d > 1e-5 ? ((x - a.px) * Math.cos(a.yaw) - (z - a.pz) * Math.sin(a.yaw)) / (dt * ts) : 0; a.latV = (a.latV || 0) + (Math.max(-9, Math.min(9, lv0)) - (a.latV || 0)) * (1 - Math.exp(-dt * ts / .15));   // [gk] gövdeye göre yanal hız (+ = sol): yan adım
+                var lo0 = d > 1e-5 ? ((x - a.px) * Math.sin(a.yaw) + (z - a.pz) * Math.cos(a.yaw)) / (dt * ts) : 0; a.lonV = (a.lonV || 0) + (Math.max(-10.5, Math.min(10.5, lo0)) - (a.lonV || 0)) * (1 - Math.exp(-dt * ts / .15));   // [oa] ileri hız (geri koşu)
                 var bkS = d > 1e-4 && ((x - a.px) * Math.sin(a.yaw) + (z - a.pz) * Math.cos(a.yaw)) < -.35 * d ? -1 : 1;      // geri geri koşu: adım döngüsü ters
                 if (GA_ON) { var gOn = (!cTarget || (GA_OWN && v.gpOn && v.gp)) && !(S.roles && S.roles[i]) ? 1 : 0;
-                    if (cTarget && GA_OWN && v.gpOn && v.gp) { var gpu = v.gp[i] / (2 * Math.PI); a.gaC = Math.floor(gpu); a.gaP = gpu - a.gaC; a.gaD = 0; }      /* [gasp] top sahibi: evre motordan */ a.gaW = (a.gaW || 0) + (gOn - (a.gaW || 0)) * (1 - Math.exp(-dt / .15)); if (a.gaD > .01) { a.gaP = (a.gaP || 0) + d / a.gaD; if (a.gaP >= 1) { var gfl = Math.floor(a.gaP); a.gaP -= gfl; a.gaC = (a.gaC || 0) + gfl; } } }      // [gasp]
+                    if (cTarget && GA_OWN && v.gpOn && v.gp) { var gpu = v.gp[i] / (2 * Math.PI); a.gaC = Math.floor(gpu); a.gaP = gpu - a.gaC; a.gaD = 0; }      /* [gasp] top sahibi: evre motordan */ a.gaW = (a.gaW || 0) + (gOn - (a.gaW || 0)) * (1 - Math.exp(-dt * ts / .15)); if (a.gaD > .01) { a.gaP = (a.gaP || 0) + d / a.gaD; if (a.gaP >= 1) { var gfl = Math.floor(a.gaP); a.gaP -= gfl; a.gaC = (a.gaC || 0) + gfl; } } }      // [gasp]
                 a.ph += bkS * d * gaitPhK(a.spd, a.carryK); if (cTarget && v.gpOn && v.gp && !R._noLock) { var gpe = v.gp[i] - a.ph; gpe -= Math.round(gpe / (2 * Math.PI)) * 2 * Math.PI; a.ph += gpe * (1 - Math.exp(-dt * ts / .05)); }      // [motor] evre motora kilitli
                 else if (cTarget && v.dOn && bkS > 0 && !R._noLock) carrySync(a, d, dt * ts, v); a.px = x; a.pz = z;      // [carry] adımlar dokunuşla eş                      // top sürerken kadans artar (aynı hızda daha kısa/sık adım - araştırma dayanaklı)
                 var ty = Math.atan2(v.fx[i], v.fy[i]), dy = ty - a.yaw, kyw = 1 - Math.exp(-dt * ts / .09);
@@ -4558,11 +4606,12 @@
                     dy = ty - a.yaw;
                 }
                 dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.yaw += dy * kyw;      // [fiz] sim saatiyle (kopru YAW ile es)
-                a.yawR = (a.yawR || 0) + (Math.max(-8, Math.min(8, dy * kyw / (dt * ts))) - (a.yawR || 0)) * (1 - Math.exp(-dt / .15));   // [oa] dönüş hızı (rad/sn): viraj yatışı
+                a.yawR = (a.yawR || 0) + (Math.max(-8, Math.min(8, dy * kyw / (dt * ts))) - (a.yawR || 0)) * (1 - Math.exp(-dt * ts / .15));   // [oa] dönüş hızı (rad/sn): viraj yatışı
                 idleState(a, true);                                          // [opt] konum a.px/a.pz, kare değerleri FRM
                 gkUpdate(a, i); a.uX = a.dX; a.uZ = a.dZ; a.uOk = 1; if (SP_ON) { a.dX += a.spX || 0; a.dZ += a.spZ || 0; }      /* [govde] ayirma son cizim konumunda */                                    // [gk] hazır duruş / elde tutuş / aksiyon kökü → a.dX, a.dZ, a.dYaw, a.rY
                 spGait(a);                                                   // [sp] kök kendi yolunda yürüyor/koşuyorsa adım evresi ve hız ondan
-                var kq = (t - a.kickT) / (a.kickDur || .42), mk = kq >= 0 && kq < 1 ? kq : 0, mc = !!(cel && cel.indexOf(i) >= 0);
+                var kq = ((a.kickC && CLKOK ? CLK : t) - a.kickT) / (a.kickDur || .42)      // [v133] yedek vurus sim saatiyle
+                   , mk = kq >= 0 && kq < 1 ? kq : 0, mc = !!(cel && cel.indexOf(i) >= 0);
                 if (mc) a.spd *= .3;
                 MOD_M.kick = mk; MOD_M.celeb = mc;                               // [oa] yeniden kullanılan nesne
                 FRM[4] = a.hScale != null ? a.hScale : .98; actPrep(a, mk || mc ? MOD_M : null, SHD);
@@ -4861,7 +4910,7 @@
         // foot: motorun seçtiği vuruş ayağı ('L'/'R', anatomik); verilmezse oyuncunun güçlü ayağı (S.ft, veritabanından)
         R.kick = function (id, kind, power, foot) {
             var a = S.st && S.st[id]; if (!a) return;
-            a.kickT = lastNow / 1000;
+            a.kickC = CLKOK ? 1 : 0; a.kickT = CLKOK ? CLK : lastNow / 1000;      // [v133] sim saati (top ayni saatle ucar)
             var pr = kickProfile(kind, power);
             a.kickKind = pr.kind; a.kickDur = pr.dur; a.kickCf = pr.cf; a.kickLg0 = pr.lg0; a.kickLg1 = pr.lg1; a.kickKn0 = pr.kn0; a.kickArm = pr.arm; a.kickTorso = pr.torso;
             a.kickFoot = foot === 'L' || foot === 'R' ? foot : (S.ft && S.ft[id]) || 'R';
@@ -4901,7 +4950,14 @@
             var ac = a.ac; if (ac.k !== 1 && ac.k !== 2) return;
             if (!ac.init && t < ac.t0) { a.ac = a.acP; a.acP = null; } else if (!ac.out) ac.out = 3;
         };
-        R.cutBall = function () { if (S.ball) S.ball.gx = null; BJ.on = 0; BJ.sc = 1; GB.cut = 1; };      // [fm] kurgu kesmesi: gorunen top yeni kareye suzulmeden gecer (isinlanma suzmesi yok)
+        R.cutBall = function () { if (S.ball) S.ball.gx = null; BJ.on = 0; BJ.sc = 1; GB.cut = 1; };
+        /* [v132] kurgu kesmesi (tekrar başı/sonu, döngü, önemli an, VAR görüntüsü): aktör süzgeçleri yeni kareden başlar (dönme/hız rampası yok), kamera hedefe atlar */
+        R.cutActors = function () {
+            if (S.st) for (var i = 0; i < S.st.length; i++) { var a = S.st[i]; if (!a) continue; a.px = NaN; a.pz = NaN; a.latV = 0; a.lonV = 0; a.accS = 0; a.yawR = 0; a.spX = 0; a.spZ = 0; a.cutN = 2; }
+            if (S.ref) { S.ref.px = NaN; S.ref.spd = 0; }
+            if (S.arA) for (var j = 0; j < S.arA.length; j++) { S.arA[j].px = NaN; S.arA[j].spd = 0; S.arA[j].latV = 0; S.arA[j].lonV = 0; }
+            S.cam = null;
+        };      // [fm] kurgu kesmesi: gorunen top yeni kareye suzulmeden gecer (isinlanma suzmesi yok)
         R.gkClear = function () { if (S.st) for (var i = 0; i < S.st.length; i++) { var q = S.st[i]; q.ac = null; q.acP = null; q.rOx = 0; q.rOz = 0; q.gkC = NaN; q.gX = NaN; } GB.rel = 0; GB.held = false; GB.lh = -1; SPB.on = 0; OAB.on = 0; OAB.hc = null; OAB.pr = null; OAB.lt = -1e9; OAB.mt = 0; };
         /* [sp] duran top aksiyonu güncelle: tc yeni temas/bırakış anı, d türüne göre (8: d[10] = 1 ise olay - gerçek vuruş yönü d[2..3], tür d[5], güç d[6];
            değilse plan (kurulmadan önce); 9: hedef d[2..3], mesafe d[4], yay süresi d[5], atıldı d[6]; 10: sıçrama d[2]); tU: güncelleme anı */
@@ -5030,6 +5086,6 @@
         R.dispose = function () { try { var e = gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (er) { } };
         return R;
     }
-    G.Ado3D = { supported: supported, hw: function () { supported(); return !!supported._hw; }, create: create, SKIN: SKIN, HAIR: HAIR, gkPredict: gkPredict, ballPhys: ballPhys, _m: { m4: m4, mmul: mmul, mlook: mlook, mpersp: mpersp, mtrs: mtrs, parseGLB: parseGLB, fitEllipseR: fitEllipseR, ringsFromMesh: ringsFromMesh, revolvePart: revolvePart, upgradePlayerMeshes: upgradePlayerMeshes, PLAYER_HD_SEGS: PLAYER_HD_SEGS, JOINT_MARGIN: JOINT_MARGIN }, _body: { buildBody: buildBody, bodyDQ: bodyDQ, dqsPoint: dqsPoint, BONES: BODY_BONES, BIND: BODY_BIND, SLOT_N: SLOT_N, HAIR_STYLES: HAIR_STYLES, headPoint: headPoint } };
+    G.Ado3D = { supported: supported, hw: function () { supported(); return !!supported._hw; }, create: create, SKIN: SKIN, HAIR: HAIR, gkPredict: gkPredict, ballPhys: ballPhys, _m: { proceduralBall: proceduralBall, m4: m4, mmul: mmul, mlook: mlook, mpersp: mpersp, mtrs: mtrs, parseGLB: parseGLB, fitEllipseR: fitEllipseR, ringsFromMesh: ringsFromMesh, revolvePart: revolvePart, upgradePlayerMeshes: upgradePlayerMeshes, PLAYER_HD_SEGS: PLAYER_HD_SEGS, JOINT_MARGIN: JOINT_MARGIN }, _body: { buildBody: buildBody, bodyDQ: bodyDQ, dqsPoint: dqsPoint, BONES: BODY_BONES, BIND: BODY_BIND, SLOT_N: SLOT_N, HAIR_STYLES: HAIR_STYLES, headPoint: headPoint } };
 })();
 

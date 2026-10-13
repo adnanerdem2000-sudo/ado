@@ -110,13 +110,13 @@ function hierType(c){const v=clubVision(c),h=hash(c.id+'hy')%10;if(v==='sampiyon
   if(v==='altyapi'||v==='genc')return h<5?'kidem':h<8?'kolektif':'yildiz';if(v==='tutumlu'||v==='savunma')return h<5?'kolektif':h<8?'kidem':'yildiz';return h<4?'yildiz':h<7?'kidem':'kolektif';}
 function capScore(p,id){return p.ovr*0.6+Math.min(p.age,33)*1.1+(p.home===id?6:0)+(p.regen?0:1);}
 function squadRoles(id){const sq=squadOf(id),c=CLUBS[id],R={};if(!sq.length||!c)return R;const xiK=new Set(G&&G.mode==='mgr'&&id===G.club?mgrXI():autoXI(sq));
-  const cc=sq.filter(p=>xiK.has(p.k)&&p.age>=20).sort((a,b)=>capScore(b,id)-capScore(a,id)),cenkC=G&&isPl()&&G.capt===id&&G.club===id;
-  const capt=cenkC?null:cc[0],vice=cenkC?cc[0]:cc[1],stars=new Set(sq.filter(p=>p.ovr>=c.str+3).sort((a,b)=>b.ovr-a.ovr).slice(0,2).map(p=>p.k));
+  const cc=sq.filter(p=>xiK.has(p.k)&&p.age>=20).sort((a,b)=>capScore(b,id)-capScore(a,id)),meC=G&&isPl()&&G.capt===id&&G.club===id;
+  const capt=meC?null:cc[0],vice=meC?cc[0]:cc[1],stars=new Set(sq.filter(p=>p.ovr>=c.str+3).sort((a,b)=>b.ovr-a.ovr).slice(0,2).map(p=>p.k));
   const rot=new Set(sq.filter(p=>!xiK.has(p.k)).sort((a,b)=>b.ovr-a.ovr).slice(0,3).map(p=>p.k));
   for(const p of sq)R[p.k]=p===capt?'Kaptan':stars.has(p.k)?'Yıldız':p===vice?'Takım lideri':xiK.has(p.k)?'İlk 11':p.age<=21?'Genç yetenek':rot.has(p.k)?'Rotasyon':'Yedek';
   return R;}
 function clubYears(){let n=1;for(let i=G.history.length-1;i>=0;i--){const h=G.history[i];if(h.club!==G.club||h.pos==='TD')break;n++;}return n;}
-function cenkRole(){if(!G||!isPl()||G.phase==='retired'||G.phase==='tryout')return null;const c=myClub();if(!c)return null;if(G.capt===c.id)return 'Kaptan';
+function meRole(){if(!G||!isPl()||G.phase==='retired'||G.phase==='tryout')return null;const c=myClub();if(!c)return null;if(G.capt===c.id)return 'Kaptan';
   const o=OVR(),sq=squadOf(c.id).filter(p=>p.pos!=='KL'),better=sq.filter(p=>p.ovr>o).length,yrs=clubYears(),L=LEAGUES[c.league];
   if(better<=1&&o>=c.str+3&&!L.youth)return 'Yıldız';
   if(yrs>=3&&better<=5&&G.p.age>=23)return 'Takım lideri';
@@ -124,12 +124,12 @@ function cenkRole(){if(!G||!isPl()||G.phase==='retired'||G.phase==='tryout')retu
   if((better<=7&&(sr==null||sr>=0.5))||(sr!=null&&sr>=0.7))return 'İlk 11';
   if(G.p.age<=21)return 'Genç yetenek';
   if(better<=11||(sr!=null&&sr>=0.3))return 'Rotasyon';return 'Yedek';}
-function cenkCapScore(){return OVR()*0.6+Math.min(G.p.age,33)*1.1+clubYears()*3+G.p.fame*0.08+(G.p.trust-50)*0.1;}
+function meCapScore(){return OVR()*0.6+Math.min(G.p.age,33)*1.1+clubYears()*3+G.p.fame*0.08+(G.p.trust-50)*0.1;}
 function capCheck(){if(!G||!isPl())return;if(G.capt&&G.capt!==G.club)G.capt=null;if(G.capt||G.p.age<19||G.loan)return;const c=myClub();
   const top=Math.max(0,...squadOf(c.id).filter(p=>p.age>=20).map(p=>capScore(p,c.id)));
-  if(cenkCapScore()>top+1&&clubYears()>=2){G.capt=c.id;msg('coach','Kol bandı artık sende',`${coachOf(c.id).n}: “Bu sezon takımın kaptanı sensin. Soyunma odası sana bakacak.”`);}}
+  if(meCapScore()>top+1&&clubYears()>=2){G.capt=c.id;msg('coach','Kol bandı artık sende',`${coachOf(c.id).n}: “Bu sezon takımın kaptanı sensin. Soyunma odası sana bakacak.”`);}}
 function hbOf(cs,id){if(cs.hb==null)cs.hb=52+hash(id+'hb')%22;return cs.hb;}
-function hierAdj(){const c=myClub(),t=hierType(c),role=cenkRole()||'İlk 11',yrs=clubYears(),cs=cstate(c.id);let w=ROLES[role].w;
+function hierAdj(){const c=myClub(),t=hierType(c),role=meRole()||'İlk 11',yrs=clubYears(),cs=cstate(c.id);let w=ROLES[role].w;
   if(t==='yildiz')w*=(role==='Yıldız'||role==='Kaptan')?1.6:w<0?1.4:1;
   else if(t==='kidem'){w*=(role==='Kaptan'||role==='Takım lideri')?1.5:1;w+=yrs<=1?-0.08:yrs>=4?0.06:0;}
   else w=w*0.5-0.05;
@@ -138,16 +138,16 @@ function roleRib(role){return role?`<div class="pc-role r-${ROLES[role].c}">${ro
 function rtag(role){return role?`<u class="rt r-${ROLES[role].c}">${role==='Kaptan'?'C · Kaptan':role}</u>`:'';}
 
 /* ---------- Yönetim talepleri: hiyerarşiye göre kabul ---------- */
-function reqP(k){const cs=cstate(G.club),c=myClub(),L=curLeague(),p=G.p,v=clubVision(c),perf=(seasonAvg()||formAvg())-6.5,h=hierAdj(),role=cenkRole()||'İlk 11';
+function reqP(k){const cs=cstate(G.club),c=myClub(),L=curLeague(),p=G.p,v=clubVision(c),perf=(seasonAvg()||formAvg())-6.5,h=hierAdj(),role=meRole()||'İlk 11';
   if(k==='maas'){const ratio=marketValue()*40/Math.max(1,G.contract.wage*52);return clamp(0.22+perf*0.18+(cs.board-50)/150+(p.trust-55)/200+clamp(Math.log10(ratio+0.01)*0.15,-0.2,0.25)+(v==='tutumlu'?-0.15:v==='sampiyon'?0.08:0)+h,0.04,0.88);}
   if(k==='tesis')return clamp(0.18+(cs.board-50)/120+(v==='altyapi'?0.25:v==='tutumlu'?-0.12:0)+(L.tier>=5?0.1:0)+p.fame/300+h*0.8,0.04,0.85);
   if(k==='takviye')return clamp(0.2+(cs.board-50)/120+(v==='sampiyon'?0.2:v==='tutumlu'?-0.15:0)+perf*0.08+h*0.9,0.04,0.8);
-  if(k==='kaptan'){if(role==='Kaptan')return 0;const top=Math.max(0,...squadOf(c.id).filter(q=>q.age>=20).map(q=>capScore(q,c.id)));let pp=0.12+(cenkCapScore()-top)/14+h*0.8+perf*0.1;if(hierType(c)==='kidem'&&clubYears()<2)pp-=0.25;if(p.age<20)pp-=0.15;if(G.loan)pp=0;return clamp(pp,0.02,0.85);}
+  if(k==='kaptan'){if(role==='Kaptan')return 0;const top=Math.max(0,...squadOf(c.id).filter(q=>q.age>=20).map(q=>capScore(q,c.id)));let pp=0.12+(meCapScore()-top)/14+h*0.8+perf*0.1;if(hierType(c)==='kidem'&&clubYears()<2)pp-=0.25;if(p.age<20)pp-=0.15;if(G.loan)pp=0;return clamp(pp,0.02,0.85);}
   if(k==='kiralik')return clamp(({Kaptan:0.05,'Yıldız':0.1,'Takım lideri':0.2,'İlk 11':0.42,'Rotasyon':0.8,'Genç yetenek':0.85,'Yedek':0.95}[role])+(cs.board-50)/200,0.03,0.97);
   if(k==='liste'){let pp={Kaptan:0.25,'Yıldız':0.3,'Takım lideri':0.45,'İlk 11':0.7,'Rotasyon':0.9,'Genç yetenek':0.75,'Yedek':0.98}[role];if(hierType(c)==='yildiz'&&role==='Yıldız')pp-=0.12;if(G.contract.years<=1)pp+=0.25;return clamp(pp,0.05,0.98);}
   return 0.5;}
 function chanceLbl(p){return p>=0.65?['Yüksek','hi']:p>=0.4?['Orta','mid']:p>=0.2?['Düşük','lo']:['Çok düşük','lo'];}
-function boardReq(k){if(G.phase!=='season')return toast('Yaz arasında yönetim toplanmıyor');const cs=cstate(G.club),c=myClub(),p=G.p,v=clubVision(c),role=cenkRole()||'İlk 11';
+function boardReq(k){if(G.phase!=='season')return toast('Yaz arasında yönetim toplanmıyor');const cs=cstate(G.club),c=myClub(),p=G.p,v=clubVision(c),role=meRole()||'İlk 11';
   const unlist=k==='liste'&&G.tl;if(reqLeft(k)&&!unlist)return toast(`Bu talep için ${reqLeft(k)} gün beklemelisin`);
   if(k==='kiralik'&&G.loan)return toast('Zaten kiralık oynuyorsun');
   if(k==='kaptan'&&role==='Kaptan')return toast('Zaten takımın kaptanısın');
@@ -167,13 +167,13 @@ function boardReq(k){if(G.phase!=='season')return toast('Yaz arasında yönetim 
   else if(k==='liste'){if(unlist){G.tl=false;cs.board=clamp(cs.board+4,0,100);txt='Transfer listesinden çıkarıldın. Yönetim memnun.';}
     else if(ok){G.tl=true;cs.board=clamp(cs.board-6,0,100);p.trust=clamp(p.trust-5,0,100);txt='Yönetim seni transfer listesine koydu. Kulüplerin ilgisi daha hızlı artacak; transfer döneminde teklifler gelir.';if(inWindow())genOffers('mid');}
     else{p.trust=clamp(p.trust-2,0,100);txt=`Yönetim talebini reddetti: “${role==='Kaptan'?'Kaptanımızı satmayı düşünmüyoruz.':role==='Yıldız'?'Takımın yıldızı satılık değil.':'Seni kadroda tutmak istiyoruz.'} Sözleşmen devam ediyor.”`;}}
-  else if(k==='kaptan'){if(ok){G.capt=G.club;cs.hb=clamp((cs.hb??60)-6,0,100);txt=`${coachOf(G.club).n} ve yönetim talebini onayladı. Kol bandı artık sende: ${c.name} kaptanı Cenk Kuşku!`;}
+  else if(k==='kaptan'){if(ok){G.capt=G.club;cs.hb=clamp((cs.hb??60)-6,0,100);txt=`${coachOf(G.club).n} ve yönetim talebini onayladı. Kol bandı artık sende: ${c.name} kaptanı ${meN()}!`;}
     else{cs.board=clamp(cs.board-3,0,100);p.trust=clamp(p.trust-2,0,100);const cp=Object.entries(squadRoles(G.club)).find(([,r])=>r==='Kaptan'),nm=cp?(squadOf(G.club).find(q=>q.k===cp[0])||{}).name:null;
       txt=hierType(c)==='kidem'&&clubYears()<2?'Yönetim: “Bu kulüpte kaptanlık kıdemle kazanılır. Önce burada zaman geçirmelisin.”':`Teknik direktör kararını verdi: kol bandı ${nm?nm+'’de':'mevcut kaptanda'} kalacak.`;}}
   if(ok&&!unlist&&(k==='maas'||k==='tesis'||k==='takviye'))cs.hb=clamp((cs.hb??60)-rint(6,11),0,100);
   msg('board','Yönetim: '+(unlist?'Listeden çıkma':REQ[k].n),txt);save();render();
   openModal(`<h3>Yönetimin cevabı</h3><p>${esc(txt)}</p>${unlist?'':`<p class="muted">Rolün: ${role} · ${HIER[hierType(c)].n} · Kabul ihtimali %${Math.round(P*100)}</p>`}<button class="cta" data-act="closeModal">Tamam</button>`);}
-function hierPanel(){const c=myClub(),t=hierType(c),role=cenkRole()||'İlk 11',cs=cstate(c.id),hb=Math.round(hbOf(cs,c.id)),o=OVR(),rank=squadOf(c.id).filter(p=>p.pos!=='KL'&&p.ovr>o).length+1;
+function hierPanel(){const c=myClub(),t=hierType(c),role=meRole()||'İlk 11',cs=cstate(c.id),hb=Math.round(hbOf(cs,c.id)),o=OVR(),rank=squadOf(c.id).filter(p=>p.pos!=='KL'&&p.ovr>o).length+1;
   return `<section class="panel"><p class="sub-h"><span>Takımdaki yerin</span><span>${HIER[t].n}</span></p>
   <div class="hier"><b class="role-b r-${ROLES[role].c}">${role}</b><p>${ROLES[role].d}</p></div>
   <p class="muted" style="margin:8px 0 10px">${HIER[t].d}</p>
@@ -190,9 +190,9 @@ function coachRaw(id){if(G&&G.co&&G.co[id])return G.co[id];const r=COACH_REAL[id
   const n=P.f[Math.floor(R()*P.f.length)]+' '+P.l[Math.floor(R()*P.l.length)],by=L.youth?1966+Math.floor(R()*26):1958+Math.floor(R()*30),tr=[];
   if(!L.youth&&R()<0.3)tr.push([`${L.short} Şampiyonluğu`,1]);if(L.tier>=7&&R()<0.25)tr.push([cc==='TR'?'Türkiye Kupası':'Ulusal Kupa',1]);
   return {n,nat:CC3[cc],by,f:FORMS[Math.floor(R()*FORMS.length)],since:2022+Math.floor(R()*5),tr,real:false};}
-function cenkCoach(){const m=G.m||{},tr={};G.trophies.filter(t=>/\(TD\)/.test(t.name)).forEach(t=>{const n=t.name.replace(' (TD)','');tr[n]=(tr[n]||0)+1;});
+function meCoach(){const m=G.m||{},tr={};G.trophies.filter(t=>/\(TD\)/.test(t.name)).forEach(t=>{const n=t.name.replace(' (TD)','');tr[n]=(tr[n]||0)+1;});
   return {n:PN(),nat:(G.p&&G.p.nat)||'TUR',by:(G.s?G.s.year:2026)-G.p.age,f:TAC[m.tac||'dengeli'].n,since:m.since||(G.s?G.s.year:2026),tr:Object.entries(tr),me:true};}
-function coachOf(id){let b;if(G&&G.mode==='mgr'&&id===G.club)b=cenkCoach();else b=coachRaw(id);const add=(!b.me&&G&&G.coT&&G.coT[b.n])||{},tr=b.tr.map(x=>x.slice());
+function coachOf(id){let b;if(G&&G.mode==='mgr'&&id===G.club)b=meCoach();else b=coachRaw(id);const add=(!b.me&&G&&G.coT&&G.coT[b.n])||{},tr=b.tr.map(x=>x.slice());
   for(const [k,v] of Object.entries(add)){const e=tr.find(x=>x[0]===k);if(e)e[1]+=v;else tr.push([k,v]);}
   tr.sort((a,b)=>trophyRank(b[0])-trophyRank(a[0])||b[1]-a[1]);return Object.assign({},b,{tr,age:(G&&G.s?G.s.year:2026)-b.by,club:id});}
 function newCoachFor(id){const L=LEAGUES[CLUBS[id].league],Y=G.s.year+1;G.coFree=G.coFree||[];
@@ -212,7 +212,7 @@ function coachSeasonEnd(){if(!G||!G.s||G.coY===G.s.year)return;G.coY=G.s.year;G.
   if(news.length)msg('gundem',`Teknik direktör gündemi · ${yl}`,news.slice(0,14).join(' '));}
 function trophyListHTML(tr){return tr.length?`<ul class="ctr">${tr.map(([n,k])=>`<li><i>${k}×</i><span>${esc(n)}</span></li>`).join('')}</ul>`:'<p class="ctr-none">Henüz büyük bir kupa kazanmadı.</p>';}
 function coachCardHTML(id){const co=coachOf(id),c=CLUBS[id],tc=co.tr.reduce((a,x)=>a+x[1],0),yrs=Math.max(1,(G&&G.s?G.s.year:2026)-co.since+1);
-  const lk=co.me?Object.assign({},lookOf('cenk','TUR',co.age,true),{sk:'#a8704a',hs:'curly',hc:mixC('#140d09','#d9d9d9',clamp((co.age-40)/30,0,0.9)),bd:'stub',fw:19,gl:false}):lookOf('co:'+co.n,co.nat,co.age,true);
+  const lk=co.me?(()=>{const L=lookNow(co.age);return Object.assign({},lookOf('me','TUR',co.age,true),L,{hc:mixC(L.hc||'#140d09','#d9d9d9',clamp((co.age-40)/30,0,0.9)),gl:false});})():lookOf('co:'+co.n,co.nat,co.age,true);
   return `<section class="pcard coachc"><div class="pc-top"><div class="pc-ovr"><b>TD</b><span>${esc(co.f)}</span>${flagImg(co.nat,'fl-card')}${crestSVG(c,28)}</div><div class="pc-photo">${faceSVG(lk,{coach:true,c1:c.c1,c2:c.c2,age:co.age})}</div></div>
   <div class="pc-name">${esc(co.n)}</div><div class="pc-stars">${starsHTML(abStars(coachAb(id)),abStars(coachAb(id)),true)}</div><div class="pc-stats co4"><div><b>${co.age}</b><span>YAŞ</span></div><div class="nat">${flagImg(co.nat,'fl-stat')}<span>${esc(natName(co.nat)).toLocaleUpperCase('tr-TR')}</span></div><div><b>${yrs}</b><span>SEZON</span></div><div><b>${tc}</b><span>KUPA</span></div></div>
   <div class="pc-tr"><span>Kupa başarıları</span>${trophyListHTML(co.tr)}</div>
@@ -222,7 +222,7 @@ function coachRowHTML(id){const co=coachOf(id),tc=co.tr.reduce((a,x)=>a+x[1],0);
   return `<p class="sub-h" style="margin:12px 0 6px"><span>Teknik direktör</span></p><button class="sqrow coach" data-act="ccard" data-id="${id}"><i>TD</i><b>${esc(co.n)}</b><span>${flagImg(co.nat,'fl-row')} ${co.age} · ${esc(co.f)}</span><em class="tc">${tc?'🏆 '+tc:'—'}</em></button><div class="co-st">${starsHTML(abStars(coachAb(id)),abStars(coachAb(id)))}</div><p class="sub-h" style="margin:12px 0 6px"><span>Teknik ekip</span><span>${STK.length} kişi</span></p><div class="stf-list">${stfRowsHTML(id)}</div>`;}
 
 /* ---------- Kariyer anları ve arşiv ---------- */
-const ARC_KEY='cenk-kusku-arsiv';
+const ARC_KEY='futbol-kariyer-arsiv';(function(){try{for(const k of Object.keys(localStorage)){if(k!==ARC_KEY&&/^[a-z]+-[a-z]+-arsiv$/.test(k)){if(localStorage.getItem(ARC_KEY)==null)localStorage.setItem(ARC_KEY,localStorage.getItem(k));localStorage.removeItem(k);}}}catch(e){}})();/* eski sürümün kayıt anahtarından taşı */
 function msAdd(t,ic,y,a){(G.ms=G.ms||[]).push({y:y||(G.s?seasonLabel(G.s.year):''),a:a??G.p.age,t,ic});}
 function msSync(){if(!G||!G.p||!G.totals||G.phase==='tryout'||G.tryout)return;if(!G.cid)G.cid='c'+Date.now().toString(36)+rint(100,999);
   if(isPl())G.peak=Math.max(G.peak||0,OVR());const cl=id=>CLUBS[id]?CLUBS[id].name:'?';let m=G.msS;
@@ -246,7 +246,7 @@ function msSync(){if(!G||!G.p||!G.totals||G.phase==='tryout'||G.tryout)return;if
   const inj=G.p.injury;if(inj&&inj.serious){const key=inj.name+'|'+inj.total;if(m.inj!==key){msAdd(`Ciddi sakatlık: ${inj.name} (${inj.total} gün)`,'inj');m.inj=key;}}else m.inj=null;
   if(G.phase==='retired'&&!m.ret){msAdd(G.mode==='mgr'?'Teknik direktörlüğü bıraktı':'Futbolu bıraktı','end');m.ret=true;}}
 function careerSnap(){const seasons=G.history.map(h=>({y:h.year,a:h.age,c:h.club,l:h.league,td:h.pos==='TD',ap:h.apps,g:h.goals,as:h.assists,r:h.apps&&h.pos!=='TD'?Math.round(h.rsum/h.apps*10)/10:0}));
-  const first=G.history[0];return {id:G.cid,name:'Cenk Kuşku',pos:G.p.pos,from:first?first.year:(G.s?seasonLabel(G.s.year):''),to:G.s?seasonLabel(G.s.year):'',age:G.p.age,
+  const first=G.history[0];return {id:G.cid,name:(meN()),pos:G.p.pos,from:first?first.year:(G.s?seasonLabel(G.s.year):''),to:G.s?seasonLabel(G.s.year):'',age:G.p.age,
     status:G.phase==='retired'?(G.mode==='mgr'?'Emekli teknik direktör':'Emekli'):G.mode==='mgr'?'Teknik direktör':isStaff()?(G.job?G.job.title:'Personel'):'Aktif futbolcu',club:G.club,totals:Object.assign({},G.totals),caps:G.p.caps,natGoals:G.p.natGoals,peak:G.peak||0,
     trophies:G.trophies.map(t=>({y:t.year,n:t.name,c:t.club})),seasons,ms:(G.ms||[]).slice(),mt:G.mt?Object.assign({},G.mt):null,saved:Date.now()};}
 function archList(){try{const a=JSON.parse(localStorage.getItem(ARC_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}

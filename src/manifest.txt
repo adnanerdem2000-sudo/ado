@@ -180,6 +180,11 @@ game/parts/146_v124_kariyer_sekmesi_meslek_kariyerleri.js
 game/parts/147_v125_hakem_hata_turune_gore_farkli_eksi.js
 game/parts/148_v126_hakem_modu_var_cagrisinda_3b_sahne.js
 game/parts/149_v127_yasa_disi_bahis_her_yakalanis.js
+game/data/fm_kariyer.js
+game/parts/162_v128_gercek_kariyer_gecmisi_ve_boylar.js
+game/parts/163_v129_oyuncu_kimligi_ad_soyad_zorunlu.js
+game/parts/164_v130_klavye_kisayollari.js
+game/parts/165_v131_ozellikler_sahaya_yansir.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
@@ -201,7 +206,6 @@ engine3d/data/ado3d_glb_b64.js
 engine3d/data/ado_stad_data.js
 engine3d/stadium_loader.js
 engine3d/data/ado3d_meshy.js
-engine3d/data/ado3d_ball.js
 engine3d/data/ado3d_buzz.js
 engine3d/data/ado3d_hair.js
 engine3d/data/ado3d_scalp.js

@@ -64,7 +64,7 @@ smPost=function(k,capI){const S=smInit(),T=(isPl()?SMP:SMM)[k];if(!T)return;cons
   post.nc=Math.max(post.com.length,Math.round(likes*(0.008+Math.abs(mood)*0.004)));
   S.posts.unshift(post);if(S.posts.length>40)S.posts.length=40;
   smNote(`Yeni gönderin yayında: “${cap}”`,0);
-  try{feedAdd({src:isPl()?(G.p.name||'Cenk Kuşku'):coachOf(G.club).n,h:smHandle(),cat:'fan',mood:cr?-1:mood>0?1:mood<-0.5?-1:0,txt:`${T.ic} ${cap}`});}catch(e){}
+  try{feedAdd({src:isPl()?(meN()):coachOf(G.club).n,h:smHandle(),cat:'fan',mood:cr?-1:mood>0?1:mood<-0.5?-1:0,txt:`${T.ic} ${cap}`});}catch(e){}
   SM2.k=null;save();render();smOpen(post.id,true);if(cr)toast('Paylaşımın kriz çıkardı!');else if(vir)toast(`Viral oldu! +${smK(gain)} takipçi`);else if(txt)toast(txt.trim());};
 /* yorumlar: ruh hâline göre olumlu / olumsuz; takım arkadaşları ve kulüp hesabı da yazar */
 const SMC={

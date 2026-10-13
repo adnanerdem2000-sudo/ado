@@ -28,7 +28,7 @@ function varPost(opp,against,list,us,th){const W=G;if(!against&&Math.random()<0.
   if(against&&!isStaff()&&!isRef()){G.vp={opp,d:G.s.day,txt,us,th};}}
 function vpBand(){const V=G&&G.vp;if(!V||!G.s||G.s.day-V.d>3)return '';const c=CLUBS[V.opp];
   return `<section class="panel pw-band vp-band"><span style="font-size:26px">📺</span><div><small>Maç sonrası · ${c?esc(c.name):''} maçı</small><b>Hakem kararları aleyhine oldu. Basın senden açıklama bekliyor.</b><p class="muted" style="margin:0 0 8px;font-size:12.5px">${esc(V.txt)}</p><div class="offer-btns"><button class="cta sm" data-act="vpR" data-k="sert">🔥 Hakemi eleştir</button><button class="btn sm" data-act="vpR" data-k="sakin">🤝 Saygılı ol</button><button class="btn sm ghost" data-act="vpR" data-k="yok">Yorum yapma</button></div></div></section>`;}
-ACTX.vpR=el=>{const V=G.vp;if(!V)return;const k=el.dataset.k;G.vp=null;const me=isPl()?(G.p.name||'Cenk Kuşku'):(G.mode==='mgr'?coachOf(G.club).n:'');
+ACTX.vpR=el=>{const V=G.vp;if(!V)return;const k=el.dataset.k;G.vp=null;const me=isPl()?(meN()):(G.mode==='mgr'?coachOf(G.club).n:'');
   if(k==='sert'){const q=pick(['Bu kararlar maçın sonucunu değiştirdi. VAR odasında ne izlediklerini merak ediyorum.','Emeğimiz çalındı. Federasyon bu hakemleri açıklamalı.','Her hafta aynı şey oluyor; artık susmayacağız.']);
     msg('press',`${me}: “${q}”`,'Sert açıklaman taraftarı arkana aldı ama Disiplin Kurulu inceleme başlattı.');
     if(G.mode==='mgr'&&G.m){const m=trInit();m.fans=clamp(m.fans+3,0,100);m.media=clamp((m.media||50)-3,0,100);const fine=Math.round(clamp(myClub().str*800,10000,80000)/1000)*1000;m.budget-=fine*EUR_TL;
@@ -42,7 +42,7 @@ mgrFinish=(old=>function(gu,go,f,sc){const S=FX&&FX.varN?FX:null,list=S?S.varN.s
     else if(!S&&Math.random()<0.06){const ag=Math.random()<0.5,t=pick(ag?[`${myClub().short} lehine verilmeyen net bir penaltı`,`${myClub().short} golü tartışmalı ofsaytla iptal edildi`,'Rakibe verilen tartışmalı penaltı']:['Rakibin iptal edilen golü','Rakip lehine verilmeyen penaltı']);varPost(opp,ag,[{m:rint(10,88),t}],gu,go);}}catch(e){console.warn(e);}return r;})(mgrFinish);
 /* futbolcu modu: maç sonrası tartışmalı kararlar */
 finishLeague=(old=>function(res,f,role){const r=old.apply(this,arguments);try{if(isPl()&&res&&res.played!==false&&Math.random()<0.07){const opp=f[0]===G.club?f[1]:f[0],ag=Math.random()<0.55;
-    const t=pick(ag?['Takımımızın golü VAR’dan döndü','Lehimize verilmeyen net bir penaltı','Rakibe verilen tartışmalı penaltı',`${G.p.name||'Cenk'}’in düşürüldüğü pozisyonda faul çalınmadı`]:['Rakibin iptal edilen golü','Rakip lehine verilmeyen penaltı']);
+    const t=pick(ag?['Takımımızın golü VAR’dan döndü','Lehimize verilmeyen net bir penaltı','Rakibe verilen tartışmalı penaltı',`${meNs('gen')} düşürüldüğü pozisyonda faul çalınmadı`]:['Rakibin iptal edilen golü','Rakip lehine verilmeyen penaltı']);
     varPost(opp,ag,[{m:rint(10,88),t}],res.us,res.opp);}}catch(e){console.warn(e);}return r;})(finishLeague);
 /* saha kenarı cezası: bir maç tribünden */
 fxStart=(old=>function(o){const r=old.apply(this,arguments);try{if(G.mode==='mgr'&&G.m&&G.m.tlBan>0&&FX&&!FX.watch){G.m.tlBan--;FX.tlBan=1;fxEv(0,'🚫 Saha kenarı cezalısın: maçı tribünden izliyorsun. Değişiklikleri yardımcın uygulayacak.','red');}}catch(e){}return r;})(fxStart);

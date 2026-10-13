@@ -39,14 +39,15 @@
         return x < 1 ? 1 : x > 99 ? 99 : x;
     }
     // Oyun kaydı → motor özellikleri (kayıt yoksa null: motor o yuvada jenerik oyuncu kullanır)
+    function clampN(v, a, b) { return Math.max(a, Math.min(b, v)); }
     function toEngine(rec) {
         if (!rec || typeof rec !== 'object') return null;
         var a, pos = rec.pos, agg = num(rec.agg, AGG[pos] != null ? AGG[pos] : 40);
         if (pos === 'KL') {
             var ref = num(rec.gk_ref, 50), div = num(rec.gk_div, 50), gps = num(rec.gk_pos, 50), kic = num(rec.gk_kic, 50), o1 = num(rec.gk_1v1, 50);
             var g = ref * .30 + div * .28 + gps * .26 + o1 * .16;
-            a = { gk: g, gk_ref: ref, gk_div: div, gk_pos: gps, gk_1v1: o1, gk_kic: kic,
-                  pac: 58, str: 70, sta: 75, dri: 45, pas: kic, sho: 30, fin: 30, tac: 30, hea: 40, vis: gps, mar: 30, posi: gps, lon: 30, bal: 60, agg: agg, pen: 40, fk: 40, cor: 40 };
+            a = { gk: g, gk_ref: ref, gk_div: div, gk_pos: gps, gk_1v1: o1, gk_kic: kic, gk_air: num(rec.gk_air, 70), gk_han: num(rec.gk_han, 70),
+                  pac: rec.gk_spd != null ? clampN(num(rec.gk_spd, 58) - 6, 40, 75) : 58, str: 70, sta: 75, dri: 45, pas: kic, sho: 30, fin: 30, tac: 30, hea: 40, vis: gps, mar: 30, posi: gps, lon: 30, bal: 60, agg: agg, pen: 40, fk: 40, cor: 40 };
         } else {
             var v = {}; KEYS.forEach(function (k) { v[k] = num(rec[k], 50); });
             // vis / bal kayıtta yoksa (ya da geçersizse) oyunun kendi türetme formülüyle (jitter'sız) hesaplanır
@@ -58,6 +59,8 @@
         }
         // güçlü ayak / zayıf ayak yıldızı: oyuncu profilinden (fm_appearance_v1; gerçek oyuncuda FC 27 verisi) - 2D/3D motoru kullanır
         var ap = getAppearance(rec), ft = ap && ap.ft === 'L' ? 'L' : 'R', wf = ap && ap.wf >= 1 && ap.wf <= 5 ? ap.wf : 3;
+        /* [v131] boy (cm) hava topu erişimine, ayrı hızlanma kalkışa girer */
+        a.h = ap && ap.h >= 150 && ap.h <= 210 ? ap.h : 180; if (pos !== 'KL') a.acc = num(rec.acc, a.pac);
         return { name: rec.name != null && rec.name !== '' ? String(rec.name) : 'Oyuncu', short: shortName(rec.name), pos: pos, a: a, db: rec, ft: ft, wf: wf };
     }
     // ---- JSON içe aktarma temizleyicisi ("Veritabanını Yükle"den önce çalışır) ----

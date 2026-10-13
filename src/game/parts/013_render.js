@@ -199,7 +199,7 @@ function healthHTML(){const p=G.p,h=G.injHist||[];
 function licenseHTML(free){const p=G.p,c=free?{name:'Kulüpsüz',c1:'#2a8c4a',c2:'#ffffff',short:'—',id:'free'}:myClub();
   return `<section class="license">${p.injury?'<span class="lic-stamp">SAKAT</span>':''}<div class="lic-top"><span>Futbolcu lisansı</span><span>No ${p.lic}</span></div>
   <div class="lic-body"><div class="lic-photo">${avatarSVG(c.c1,c.c2,p.num,p.age)}</div>
-  <div class="lic-info"><div class="lic-name">Cenk<br>Kuşku</div><dl><div><dt>Yaş</dt><dd>${p.age}</dd></div><div><dt>Boy</dt><dd>${dec(heightAt(p.age),2)} m</dd></div><div><dt>Mevki</dt><dd>${POS[p.pos].name}</dd></div><div><dt>Ayak</dt><dd>${p.foot}</dd></div></dl></div>
+  <div class="lic-info"><div class="lic-name">${esc(meF())}<br>${esc(meS())}</div><dl><div><dt>Yaş</dt><dd>${p.age}</dd></div><div><dt>Boy</dt><dd>${dec(heightAt(p.age),2)} m</dd></div><div><dt>Mevki</dt><dd>${POS[p.pos].name}</dd></div><div><dt>Ayak</dt><dd>${p.foot}</dd></div></dl></div>
   <div class="lic-ovr"><b>${R200(OVR())}</b><span>GENEL</span></div></div>
   <div class="lic-foot">${free?'<span class="grow">Seçmelerde · kulüp arıyor</span>':`${crestSVG(c,18)}<span class="grow">${esc(c.name)} · ${G.contract.role} · ${G.contract.years} yıl</span>`}<b>${money(p.money)}</b></div></section>`;}
 function ticketHTML(label,side,h,a,status){const me=id=>id===G.club||id==='tr';
@@ -303,7 +303,7 @@ function viewLife(){const p=G.p;
   <ul class="shop">${UPGRADES.map(([k,n,d,c])=>`<li class="${p.up[k]?'own':''}"><b>${n}</b><p>${d}</p>${p.up[k]?'<span class="pill good">Sahipsin</span>':`<button class="btn" data-act="buy" data-k="${k}" ${p.money<c?'disabled':''}>${money(c)}</button>`}</li>`).join('')}</ul>`;}
 function viewRetired(){const t=G.totals,p=G.p;
   const best=G.history.filter(h=>h.apps>=5).sort((a,b)=>LEAGUES[b.league].tier-LEAGUES[a.league].tier||(b.rsum/b.apps)-(a.rsum/a.apps))[0];
-  return `<section class="panel"><p class="sub-h"><span>Kariyer sonu</span><span>${p.age} yaşında</span></p><h2 class="h" style="font-size:40px">Cenk Kuşku<br><span style="color:var(--led)">futbolu bıraktı</span></h2>
+  return `<section class="panel"><p class="sub-h"><span>Kariyer sonu</span><span>${p.age} yaşında</span></p><h2 class="h" style="font-size:40px">${meN()}<br><span style="color:var(--led)">futbolu bıraktı</span></h2>
   <p style="color:var(--chalk-2)">${esc(CLUBS[(G.history[0]||{club:G.club}).club].name)} altyapısının tozlu sahalarında başlayan yolculuk burada bitti. ${best?`En parlak sezonu ${best.year}’de ${esc(CLUBS[best.club].name)} formasıyla geçirdi.`:''}</p>
   <div class="strip"><div><b>${t.apps}</b><span>Maç</span></div><div><b>${t.goals}</b><span>Gol</span></div><div><b>${t.assists}</b><span>Asist</span></div><div><b>${p.caps}</b><span>Milli</span></div><div><b>${G.trophies.length}</b><span>Ödül</span></div></div></section>
   ${G.trophies.length?`<section class="panel"><p class="sub-h"><span>Kupalar</span></p><ul class="trophies">${G.trophies.map(x=>`<li><i>${x.year}</i>${esc(x.name)}</li>`).join('')}</ul></section>`:''}

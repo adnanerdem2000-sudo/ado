@@ -26,7 +26,7 @@ function bdoPool(){const S=G.s,rows=[],rt=x=>x.ap?x.rt/x.ap:0;let euW=null,euF=n
         rows.push({k:p.k,n:p.name,c:c.id,nat:p.nat,pos:p.pos,age:p.age,g:x.g,a:x.a,ap:x.ap,r:+r.toFixed(2),cs:x.cs||0,ovr:p.ovr,sc});}}}
   if(isPl()&&G.p&&S.stats&&S.stats.apps>=10){const st=S.stats,pm=posMap[G.club]||[10,20],r=st.apps?st.rsum/st.apps:6.5,c=CLUBS[G.club],L=LEAGUES[c.league],big=['pl','ll','it1','de1','fr1'].includes(c.league)?6:L.tier>=8?0:-10;
     const sc=OVR()*1.15+st.goals*(G.p.pos==='FW'?0.85:1.05)+st.assists*0.6+r*12+(pm[0]===1?12:pm[0]===2?6:pm[0]<=4?3:0)+(euW===G.club?16:0)+big+c.str*0.15+(L.tier<8?-12:0);
-    if(OVR()>=72||st.goals>=18)rows.push({k:'cenk',n:G.p.name||'Cenk Kuşku',c:G.club,nat:'TUR',pos:G.p.pos,age:G.p.age,g:st.goals,a:st.assists,ap:st.apps,r:+r.toFixed(2),cs:0,ovr:OVR(),sc,me:1});}
+    if(OVR()>=72||st.goals>=18)rows.push({k:'me',n:meN(),c:G.club,nat:'TUR',pos:G.p.pos,age:G.p.age,g:st.goals,a:st.assists,ap:st.apps,r:+r.toFixed(2),cs:0,ovr:OVR(),sc,me:1});}
   return {rows:rows.sort((a,b)=>b.sc-a.sc),posMap,euW};}
 function bdoCompute(){const S=G.s;if(!S||S.bdoDone)return null;S.bdoDone=1;const yl=seasonLabel(S.year),Y=S.year+1;G.bdo=G.bdo||{};const P=bdoPool(),rows=P.rows;if(rows.length<5)return null;
   const top=rows.slice(0,30),hi=top[0].sc,lo=top[top.length-1].sc,span=Math.max(1,hi-lo);
@@ -54,7 +54,7 @@ function bdoCompute(){const S=G.s;if(!S||S.bdoDone)return null;S.bdoDone=1;const
 seasonAwards=(old=>function(){const r=old.apply(this,arguments);try{bdoCompute();}catch(e){console.warn(e);}return r;})(seasonAwards);
 /* ---------- Ballon d'Or sayfası ---------- */
 let BDT='son';ACTX.bdTab=el=>{BDT=el.dataset.k;render();};
-function bdoFace(x,size){try{if(x.me&&x.k==='cenk'){const age=G.p.age;const lk=Object.assign({},lookOf('cenk','TUR',age,true),{sk:'#a8704a',hs:'curly',hc:'#140d09',bd:age>=19?'stub':null,gl:false});return faceSVG(lk,{coach:true,c1:'#c9a227',c2:'#111',age});}
+function bdoFace(x,size){try{if(x.me){const age=G.p.age;const lk=Object.assign({},lookOf('me','TUR',age,true),lookNow(age),{gl:false});return faceSVG(lk,{coach:true,c1:'#c9a227',c2:'#111',age});}
   const lk=lookOf(x.k||('co:'+x.n),x.nat||'TUR',x.age||30,true);return faceSVG(lk,{coach:true,c1:'#c9a227',c2:'#111',age:x.age||30});}catch(e){return '';}}
 function viewBdo(){const all=Object.values(bdoAll()).sort((a,b)=>b.y-a.y),cur=all[0];
   const tabs=`<div class="stabs">${[['son','Son tören'],['kaz','Kazananlar'],['cok','En çok kazananlar']].map(([k,l])=>`<button data-act="bdTab" data-k="${k}" class="${BDT===k?'on':''}">${l}</button>`).join('')}</div>`;
@@ -63,7 +63,7 @@ function viewBdo(){const all=Object.values(bdoAll()).sort((a,b)=>b.y-a.y),cur=al
     else{const side=(t,L,f)=>`<div class="bd-side"><p class="fmh">${t}</p>${L.map((x,i)=>`<div class="bd-sr ${i===0?'w':''}"><i>${i===0?'🏆':i+1}</i><b>${esc(x.n)}</b><small>${x.c?cl(x.c):''} ${f?f(x):''}</small></div>`).join('')}</div>`;
       body=`<section class="panel bd-hero"><div class="bd-ball">${BDO_BALL}</div><div><p class="sub-h" style="margin:0"><span>${cur.no}. Ballon d’Or · ${cur.y}</span><span>${cur.season} sezonu</span></p><h3 class="bd-win">${esc(cur.top[0].n)}</h3><p class="muted">${cl(cur.top[0].c)} · ${cur.top[0].pts} puan</p>
         <button class="cta" data-act="bdoWatch" data-y="${esc(cur.season)}">${cur.seen?'🎬 Töreni tekrar izle':'🎟 Törene katıl · canlı izle'}</button></div></section>
-       <div class="bd-grid"><section class="panel"><p class="sub-h"><span>Sıralama · 30 aday</span><span>puan</span></p><ol class="bd-rank">${cur.top.map((x,i)=>`<li class="${x.me?'me':''} ${i<3?'pod':''}"><i>${i+1}</i><b>${x.me?'⭐ ':''}${x.k&&x.k!=='cenk'?`<span class="plink" data-act="pcard" data-id="${(G.tx&&G.tx[x.k])||x.c}" data-k="${x.k}">${esc(x.n)}</span>`:esc(x.n)}</b><small>${cl(x.c)} · ${x.pos==='KL'?`kaleci · ${x.ap} maç`:`${x.g} gol, ${x.a} asist`} · ${x.r}</small><em>${x.pts}</em></li>`).join('')}</ol></section>
+       <div class="bd-grid"><section class="panel"><p class="sub-h"><span>Sıralama · 30 aday</span><span>puan</span></p><ol class="bd-rank">${cur.top.map((x,i)=>`<li class="${x.me?'me':''} ${i<3?'pod':''}"><i>${i+1}</i><b>${x.me?'⭐ ':''}${x.k&&!x.me?`<span class="plink" data-act="pcard" data-id="${(G.tx&&G.tx[x.k])||x.c}" data-k="${x.k}">${esc(x.n)}</span>`:esc(x.n)}</b><small>${cl(x.c)} · ${x.pos==='KL'?`kaleci · ${x.ap} maç`:`${x.g} gol, ${x.a} asist`} · ${x.r}</small><em>${x.pts}</em></li>`).join('')}</ol></section>
        <section class="panel">${side('Kopa Trophy · en iyi genç',cur.kopa,x=>`${x.age} yaş`)}${side('Yashin Trophy · en iyi kaleci',cur.yashin,x=>`${x.r} ort.`)}${side('Gerd Müller Trophy · gol kralı',cur.muller,x=>`${x.g} gol`)}${side('Johan Cruyff Trophy · teknik direktör',cur.cruyff,null)}
         <div class="bd-side"><p class="fmh">Yılın kulübü</p><div class="bd-sr w"><i>🏆</i><b>${CLUBS[cur.club]?esc(CLUBS[cur.club].name):'—'}</b></div></div></section></div>`;}}
   else if(BDT==='kaz'){const rows=BDO_HIST.map(([y,n,c,nat])=>({y,n,c,nat,real:1})).concat(all.map(x=>({y:x.y,n:x.top[0].n,c:CLUBS[x.top[0].c]?CLUBS[x.top[0].c].name:'',nat:x.top[0].nat,s:x.season}))).sort((a,b)=>b.y-a.y);

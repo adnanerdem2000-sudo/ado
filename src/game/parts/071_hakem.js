@@ -32,8 +32,8 @@ function refScore(I,ok,viaVar){const R=REF;if(ok){R.rt+=viaVar?-0.15:0.18;R.log.
 function refNext(){const R=REF;R.i++;if(R.i<R.inc.length)return refModal();refFinish();}
 function refFinish(){const R=REF,j=refJob(),F=R.F;const rt=Math.round(clamp(R.rt+gauss()*0.12,5,9.6)*10)/10;REF=null;j.rn++;if(rt>=8.3)j.rgood++;if(rt<7)j.rbad++;stGrow(rt>=8.3?0.6:rt<7?-0.3:0.2);
   const fee=REF_FEE[j.lvl]||150;G.p.money+=E2U(fee);j.rlog.unshift({y:seasonLabel(G.s.year),d:G.s.day,h:F.h,a:F.a,lid:F.lid,uefa:F.uefa||0,rt,log:R.log});if(j.rlog.length>40)j.rlog.length=40;
-  if(rt<7){j.rep=clamp(j.rep-2,0,100);msg('gundem',`Hakem ${PN()}’e tepki`,`${CLUBS[F.h].name} – ${CLUBS[F.a].name} maçındaki kararlar tartışılıyor. MHK maç notunu ${dec(rt,1)} olarak verdi.`);}
-  else if(rt>=8.8){j.rep=clamp(j.rep+1,0,100);msg('gundem',`${PN()}’e tam not`,`${CLUBS[F.h].name} – ${CLUBS[F.a].name} maçında hatasız bir yönetim. Gözlemci notu ${dec(rt,1)}.`);}
+  if(rt<7){j.rep=clamp(j.rep-2,0,100);msg('gundem',`Hakem ${meNs('dat')} tepki`,`${CLUBS[F.h].name} – ${CLUBS[F.a].name} maçındaki kararlar tartışılıyor. MHK maç notunu ${dec(rt,1)} olarak verdi.`);}
+  else if(rt>=8.8){j.rep=clamp(j.rep+1,0,100);msg('gundem',`${meNs('dat')} tam not`,`${CLUBS[F.h].name} – ${CLUBS[F.a].name} maçında hatasız bir yönetim. Gözlemci notu ${dec(rt,1)}.`);}
   refAfter({F,rt,fee,log:R.log});}
 function refAfter(info){try{staffMatch();}catch(e){console.warn(e);}closeModal();if(!info){save();render();return;}const {F,rt,fee,log}=info;
   openModal(`<div class="refm"><h3>Maç sonu raporu</h3><div class="res-rate"><b class="${rt>=8.3?'g':rt>=7?'m':'b'}">${dec(rt,1)}</b><div><span>${esc(CLUBS[F.h].name)} – ${esc(CLUBS[F.a].name)}</span><div>${F.uefa?'UEFA görevi · ':''}Maç ücreti ${eur(fee)}</div></div></div><ul class="notes">${log.map(([m,t,r])=>`<li>${m}’ ${({pen:'Penaltı pozisyonu',kart:'Sert müdahale',ofs:'Ofsayt şüphesi',el:'Elle oynama',itiraz:'İtiraz',avantaj:'Avantaj kararı'})[t]}: <b class="${r==='hatalı'?'neg':'pos'}">${r}</b></li>`).join('')}</ul><button class="cta" data-act="closeModal">Tamam</button></div>`);save();render();}

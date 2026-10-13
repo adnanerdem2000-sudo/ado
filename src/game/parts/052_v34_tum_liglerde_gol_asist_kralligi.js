@@ -12,7 +12,7 @@ function clubSeasonEst(cid){const S=G.s,c=CLUBS[cid];if(!S||!c)return {};let pla
   if(cid===G.club)for(const k in M){try{const t=seasonStats(M[k].p,cid);if(t&&t.tracked)M[k]=Object.assign({p:M[k].p},t);}catch(e){}}
   CSE_C[cid]={key,M};return M;}
 function lgLeaders(lid,k){const out=[];for(const c of leagueClubs(lid)){const M=clubSeasonEst(c.id);for(const x of Object.values(M))if(x.ap)out.push(Object.assign({c:c.id},x));}
-  if(isPl()&&lid===G.s.league){const st=G.s.stats||{};out.push({me:true,c:G.club,p:{k:'me',name:(G.p&&G.p.name)||'Cenk Kuşku',pos:(G.p&&G.p.pos)||'FW'},ap:st.apps||0,g:st.goals||0,a:st.assists||0,rt:(st.rsum||0)});}
+  if(isPl()&&lid===G.s.league){const st=G.s.stats||{};out.push({me:true,c:G.club,p:{k:'me',name:(G.p&&G.p.name)||(meN()),pos:(G.p&&G.p.pos)||'FW'},ap:st.apps||0,g:st.goals||0,a:st.assists||0,rt:(st.rsum||0)});}
   const key=k==='g'?'g':'a',alt=k==='g'?'a':'g';return out.sort((x,y)=>y[key]-x[key]||y[alt]-x[alt]||x.ap-y.ap);}
 function leadersViewHTML(lid,k){const L=lgLeaders(lid,k),top=L.slice(0,25),mi=L.findIndex(x=>x.me);if(mi>=25)top.push(L[mi]);const S=G.s,o=lid===S.league?null:olSync(lid);
   const wk=lid===S.league?(S.results||[]).length:o.res.length,tot=lid===S.league?(S.fixtures||[]).length:o.fx.length;

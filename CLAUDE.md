@@ -4,7 +4,10 @@ Kullanıcıyla her zaman Türkçe konuş. Oyun Türkçe; arayüz metinleri, yoru
 
 ## Derle ve test et
 - `bash build.sh` → `dist/futbol-kariyeri.html` (13 MB, tek dosya). Son satır `SYNTAX_OK` değilse hata mesajı kaynak dosya:satır verir.
+- `node tools/mac3b.js <klasör> [--prof td|ref|oyuncu] [--sure sn] [--kare n]` ilk maçı 3B yayında açıp ekran görüntüsü ve kare süresi verir (yazılım WebGL: kare hızı düşük).
+- `node tools/kariyer_sim.js <profil> --sezon 2 --dk 25 [--rapor x.json]` çok sezonluk kariyer simülasyonu (maçlar klasik motorla görüntüsüz); son satır SIM_OK.
 - `node tools/smoke.js [profil...]` → Playwright ile td, oyuncu, yrd, scout, dr, sd, bsk, ref kariyerlerini başlatıp `fmCont()` ile ilerletir. Son satır `SMOKE_OK` olmalı. Komutları 118 saniyenin altında tut (tüm profiller ~65 sn).
+- Klavye: Space = Devam (gün atla), Esc = pencere/katman kapat, sihirbazda geri, önceki sekme (v130).
 - Başlangıç noktası: v127 (md5 `521d2ea0f6ae9dd076f37ecd562f9bbe`, Ekim 2026 yüklemesi). `tools/split.js` başka yerde düzenlenmiş tek dosyayı yeniden parçalar.
 
 ## Yapı
@@ -14,8 +17,17 @@ Kullanıcıyla her zaman Türkçe konuş. Oyun Türkçe; arayüz metinleri, yoru
 - `src/adoball/` gömülü Adoball maç motorudur (iframe `srcdoc` ile açılır). Derleyici içindeki `<!--`, `<script`, `</script` dizilerini `<\x07` ile kaçırır; kaynakta normal yaz.
 - `src/engine3d/engine*.js` 3B motor (`window.Ado3D`); Adoball iframe'i `parent.Ado3D`'yi kullanır.
 
+## Gerçek oyuncu verisi (v128, FotMob)
+- `src/game/data/fm_kariyer.js` (`FMK_Z`): sıkıştırılmış kariyer + boy + milli maç verisi; oyunda `FMK` olarak açılır, `fmkRec(p)` ile okunur. Elle düzenleme; yeniden üret.
+- Üretim hattı `tools/veri/` (ağ gerekir, ~45 dk; önbellek scratchpad'de tutulabilir):
+  `bash build.sh` → `node tools/veri/0_disa_aktar.js oyun.json` → `1_kulup_esle.js oyun.json önbellek kulupler.json` → `2_oyuncu_cek.js oyun.json kulupler.json önbellek oyuncular.json` → `4_bonservis.js oyun.json oyuncular.json önbellek bonservis.json` (SofaScore, curl) → `5_boy_sofascore.js oyun.json oyuncular.json bonservis.json önbellek boy_ss.json` → `6_mevki.js oyun.json kulupler.json oyuncular.json önbellek mevki.json` → `3_veri_uret.js oyun.json kulupler.json oyuncular.json önbellek --bon bonservis.json --boy boy_ss.json --mevki mevki.json` → `bash build.sh`.
+- Uzun işleri `setsid nohup … &` ile başlat; FotMob'a Node fetch, SofaScore'a curl ile gidilir (SofaScore Node fetch'ini engelliyor).
+- Kulüpler kadro örtüşmesiyle, oyuncular ad + yaş (+ takım ya da uyruk) ile eşlenir. Kadro verisi değişirse hattı yeniden çalıştır.
+- `node tools/kariyer_kontrol.js [--shot x.png] "Oyuncu Adı"` oyuncunun oyundaki geçmişini, boyunu ve milli maçını yazdırır.
+- Verisi olmayan oyuncuya oyun öncesi geçmiş uydurulmaz; boyu tahminse ekranda "tahmini" yazar.
+
 ## Kod kuralları (mevcut koda uy)
-- Yeni özellik = yeni sürüm parçası: `src/game/parts/NNN_vXXX_kisa_ad.js`, başında `/* ================= vXXX: açıklama ================= */`. Manifestte son `vNNN` parçasından sonra, `150_takvim_…` satırından önce ekle. CSS'i `src/shell/style.css` sonuna `/* vXXX: … */` başlığıyla ekle.
+- Yeni özellik = yeni sürüm parçası: `src/game/parts/NNN_vXXX_kisa_ad.js`, başında `/* ================= vXXX: açıklama ================= */`. Manifestte son `vNNN` parçasından sonra, `150_takvim_…` satırından önce ekle; dosya numarası 162'den devam eder (162 = v128). CSS'i `src/shell/style.css` sonuna `/* vXXX: … */` başlığıyla ekle.
 - Mevcut fonksiyonlar çoğunlukla sarmalanarak değiştirilir: `fn=(old=>function(){const r=old.apply(this,arguments);try{…}catch(e){}return r;})(fn);`. Küçük düzeltmeleri doğrudan ilgili parçada yapabilirsin.
 - Durum: `G` (kayıt; `save()` ile localStorage'a), `W` (kariyer sihirbazı), `TAB`, `render()`. Görünümler HTML dizesi döndürür (`viewHub` vb.). Tıklamalar `data-act="ad"` → `ACTX.ad(el)` (161_events.js'deki tek dinleyici).
 - Yardımcılar: `$`, `esc`, `clamp`, `rnd`, `rint`, `pick`, `money`/`eur`, `msg(tür,başlık,metin)` gelen kutusu, `toast()`, `closeModal()`.

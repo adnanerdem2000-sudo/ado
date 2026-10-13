@@ -32,8 +32,8 @@ betCaught=(old=>function(own,amt){const g=gbInit(),nm=G.p.name,prev=g.caught||0,
       if(G.stig){G.stig.rep0=Math.max(rep0,G.stig.rep0||0);G.stig.fired=1;}
       if(G.mode==='mgr'&&G.m)G.m.rep=clamp(G.m.rep-5,5,95);else if(isStaff()&&G.job)G.job.rep=clamp(G.job.rep-5,0,100);else G.p.fame=Math.max(0,G.p.fame-5);save();}catch(e){}return r2;}
   g.caught=prev+1;g.bets=[];const fine=Math.round(Math.max(2500,amt*4)/100)*100;try{G.p.money=Math.max(0,G.p.money-E2U(fine));}catch(e){}
-  const head=lvl===2?`${nm}, bahis soruşturması nedeniyle görevden uzaklaştırıldı`:`${nm}’e bahis uyarısı`;
-  try{msg('gundem',head,`Federasyon disiplin kurulu, ${gbProfName()} ${nm}’in${own?' kendi takımının maçına':''} bahis oynadığını tespit etti.`);if(typeof feedAdd==='function')feedAdd({src:'Son Dakika',h:'@sondakikaspor',cat:'gen',txt:head+'.'});}catch(e){}
+  const head=lvl===2?`${nm}, bahis soruşturması nedeniyle görevden uzaklaştırıldı`:`${adEk(nm,'dat')} bahis uyarısı`;
+  try{msg('gundem',head,`Federasyon disiplin kurulu, ${gbProfName()} ${adEk(nm,'gen')}${own?' kendi takımının maçına':''} bahis oynadığını tespit etti.`);if(typeof feedAdd==='function')feedAdd({src:'Son Dakika',h:'@sondakikaspor',cat:'gen',txt:head+'.'});}catch(e){}
   if(lvl===2){const w=own?6:3+Math.floor(Math.random()*3);
     if(isPl()){G.p.ban=Math.max(G.p.ban||0,w);G.p.fame=Math.max(0,G.p.fame-8);G.p.trust=clamp((G.p.trust||50)-15,0,100);msg('board','Men cezası ve para cezası',`Federasyon ${w} maç men ve ${eur(fine)} para cezası verdi. Kulüp şimdilik sözleşmeni feshetmiyor ama güven sarsıldı.`);}
     else if(G.mode==='mgr'&&G.m){G.m.rep=clamp((G.m.rep||40)-12,5,95);G.m.conf=clamp((G.m.conf||50)-20,0,100);if(G.susp&&G.susp.w>0){G.susp.w+=w;}else{G.susp={w,why:'bahis',w0:G.contract&&G.contract.wage};if(G.contract)G.contract.wage=Math.round(G.contract.wage/2/50)*50;}msg('board','Görevden uzaklaştırıldın',`Soruşturma süresince ${w} hafta açığa alındın: maaşının yarısı kesiliyor ve yönetimin güveni her hafta biraz daha azalıyor. ${eur(fine)} para cezası kesildi.`);}

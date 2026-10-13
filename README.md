@@ -5,7 +5,7 @@ Tek HTML dosyasında çalışan, Türkçe futbol kariyeri oyunu. Telefonda ve bi
 ## Oyunda neler var
 
 - **8 meslek:** futbolcu (12 yaşında seçmelerle başlar), teknik direktör, yardımcı antrenör, gözlemci, takım doktoru, sportif direktör, kulüp başkanı, hakem. Başlangıç seviyesi: sıfırdan, orta, zirve.
-- **Gerçek dünya (2026-27):** Süper Lig'den Bölgesel Amatör Lig'e kadar Türkiye ligleri; 5 büyük lig, Portekiz, İskoçya, Arjantin, MLS, Meksika, Rusya, Japonya, Norveç ve diğerleri. Gerçek kadrolar, piyasa değerleri, boy-kilo, tercih edilen ayak, teknik direktörler, kulüp bilgileri.
+- **Gerçek dünya (2026-27):** Süper Lig'den Bölgesel Amatör Lig'e kadar Türkiye ligleri; 5 büyük lig, Portekiz, İskoçya, Arjantin, MLS, Meksika, Rusya, Japonya, Norveç ve diğerleri. Gerçek kadrolar, piyasa değerleri, gerçek kariyer geçmişi (sezon sezon kulüp, maç, gol, asist; FotMob), boy-kilo, milli maçlar, tercih edilen ayak, teknik direktörler, kulüp bilgileri.
 - **Maç:** FM tarzı 2B maç motoru, Adoball 2B/3B canlı maç ekranı (WebGL2, kütüphanesiz), futbolcu modunda "Pro" (tek oyuncunu yönet), hakem modunda canlı kararlar ve VAR.
 - **Kariyer derinliği:** transfer ve sözleşme pazarlığı, kiralık, soyunma odası hiyerarşisi, yaşayan rakip hocalar, sosyal medya, basın, kupalar, Avrupa, milli takım, Ballon d'Or töreni, efsaneler, sezon özeti, kumarhane ve yasa dışı bahis.
 
@@ -22,6 +22,8 @@ src/adoball/             gömülü Adoball maç motoru (ayrı bir HTML belgesi; 
 tools/build.js           derleyici + sözdizimi denetimi
 tools/split.js           tek dosyalık HTML'i yeniden parçalara ayırır
 tools/smoke.js           duman testi (Playwright): her meslekte kariyer başlatır, günleri ilerletir
+tools/kariyer_kontrol.js bir oyuncunun oyundaki kariyer geçmişini, boyunu, milli maçını yazdırır
+tools/veri/              FotMob'dan gerçek kariyer, boy ve milli maç verisi çeken hat (bkz. CLAUDE.md)
 ```
 
 ## Geliştirme

@@ -21,7 +21,7 @@ function doFree(kind,o,quiet){const p=G.p;if(G.slot){if(!quiet)toast('Bugünün 
     else if(r<0.88)t='Paylaşımın pek ilgi görmedi';
     else{bump('trust',-6);bump('morale',-5);msg('coach','Hocadan uyarı','Sosyal medyadaki paylaşımın tepki çekti. Hoca: “Konuşmayı sahada yap.”');t='Paylaşımın tepki çekti, hoca kızdı';}}
   else if(kind==='family'){if(p.age<18){bump('morale',6);bump('energy',4);t='Ailenle ve okul arkadaşlarınla vakit geçirdin: moral +6';}
-    else{bump('morale',7);bump('energy',-4);t='Arkadaşlarınla dışarı çıktın: moral +7';if(Math.random()<0.1){bump('trust',-3);msg('gundem','Gece hayatı haberi','Bir magazin sitesi Cenk Kuşku’yu gece saatlerinde bir mekânda görüntüledi. Kulüp yönetimi rahatsız.');t+=' (magazine yakalandın)';}}}
+    else{bump('morale',7);bump('energy',-4);t='Arkadaşlarınla dışarı çıktın: moral +7';if(Math.random()<0.1){bump('trust',-3);msg('gundem','Gece hayatı haberi',('Bir magazin sitesi '+meNs('acc')+' gece saatlerinde bir mekânda görüntüledi. Kulüp yönetimi rahatsız.'));t+=' (magazine yakalandın)';}}}
   else if(kind==='rehab'){if(!p.injury)return;const d=p.up.fizyo?rint(1,3):rint(0,2);p.injury.days-=d;bump('energy',4);
     if(p.injury.days<=0){p.injury=null;msg('injury','Erken dönüş','Rehabilitasyon programı işe yaradı, tamamen iyileştin.');t='Rehabilitasyon: tamamen iyileştin!';}
     else t=d?`Rehabilitasyon: iyileşme ${d} gün öne çekildi`:'Bu seans belirgin bir ilerleme sağlamadı';}
@@ -39,8 +39,8 @@ function nextDay(){const p=G.p,prevT=dayType(G.s.day);G.s.day++;G.slot=false;G.s
   const mon=today().getUTCMonth();if(G.s.mon==null)G.s.mon=mon;
   if(mon!==G.s.mon){const rs=G.s.mrs||[],pm=G.s.mon;G.s.mon=mon;G.s.mrs=[];
     if(rs.length>=2){const avg=rs.reduce((a,b)=>a+b,0)/rs.length;
-      if(avg>=7.6){G.trophies.push({year:seasonLabel(G.s.year),name:`Ayın Oyuncusu (${TR_MONTHS_L[pm]})`,club:G.club});bump('fame',2);msg('news',`Ayın Oyuncusu: Cenk Kuşku!`,`${curLeague().name} ${TR_MONTHS_L[pm]} ayının oyuncusu seçildin. Ortalaman ${dec(avg)}.`);}
-      else{const x=pick(Object.values(G.s.ps||{}));if(x)msg('gundem',`${TR_MONTHS_L[pm]} ayının oyuncusu belli oldu`,`${curLeague().name} ${TR_MONTHS_L[pm]} ayının oyuncusu: ${x.n} (${CLUBS[x.c].name}). Cenk’in ortalaması ${dec(avg)}.`);}}}
+      if(avg>=7.6){G.trophies.push({year:seasonLabel(G.s.year),name:`Ayın Oyuncusu (${TR_MONTHS_L[pm]})`,club:G.club});bump('fame',2);msg('news',`Ayın Oyuncusu: ${meN()}!`,`${curLeague().name} ${TR_MONTHS_L[pm]} ayının oyuncusu seçildin. Ortalaman ${dec(avg)}.`);}
+      else{const x=pick(Object.values(G.s.ps||{}));if(x)msg('gundem',`${TR_MONTHS_L[pm]} ayının oyuncusu belli oldu`,`${curLeague().name} ${TR_MONTHS_L[pm]} ayının oyuncusu: ${x.n} (${CLUBS[x.c].name}). ${meFs('gen')} ortalaması ${dec(avg)}.`);}}}
   const t=dayType(G.s.day);
   if(t==='hazirlik'&&isPl())squadNews();
   boardTick();cupTick();
@@ -66,7 +66,7 @@ function natCheck(){
 const TRnat=nat=>({id:'tr',name:'Türkiye',short:'TÜR',c1:'#e30a17',c2:'#ffffff',str:82-nat.off,flag:'TR',shape:0});
 function afterMatch(res,played,home,away,hg,ag){
   G.p.playHurt=false;scoutUpdate(res.rating||0,played);
-  if(played&&res.rating>=8){G.s.totw=(G.s.totw||0)+1;bump('fame',1);msg('gundem','Haftanın 11’i açıklandı',`${curLeague().name} haftanın 11’inde Cenk Kuşku da var. Bu sezon ${G.s.totw}. kez seçildi.`);}
+  if(played&&res.rating>=8){G.s.totw=(G.s.totw||0)+1;bump('fame',1);msg('gundem','Haftanın 11’i açıklandı',`${curLeague().name} haftanın 11’inde ${meN()} da var. Bu sezon ${G.s.totw}. kez seçildi.`);}
   msg('report',`Maç raporu: ${home.name} ${hg}-${ag} ${away.name}`,played?`Puanın ${dec(res.rating)} · ${res.goals} gol, ${res.assists} asist, ${res.mins} dakika.${res.rating>=7.5?' Tribündeki gözlemciler not aldı.':''}`:'Bu maçta forma giymedin.');
   if(played&&res.rating){const cs=cstate(G.club);cs.board=clamp(cs.board+(res.rating>=7.5?1.5:res.rating<6?-1:0.2),0,100);}
   G.s.week++;G.s.squad=null;

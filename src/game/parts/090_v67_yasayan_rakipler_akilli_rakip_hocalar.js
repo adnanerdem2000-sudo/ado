@@ -143,24 +143,24 @@ tacT=(old=>function(opp){const T=old.apply(this,arguments);try{if(!opp||!CLUBS[o
     return Object.assign({},T,{f:T.f*f,a:T.a*a});}catch(e){return T;}})(tacT);
 /* diğer maçlar: yeni hoca etkisi, kriz, seri */
 simScore=(old=>function(h,a){const bh=wdMod(h),ba=wdMod(a);if(!bh&&!ba)return old.apply(this,arguments);const H=CLUBS[h],A=CLUBS[a],sh=H.str,sa=A.str;H.str=sh+bh;A.str=sa+ba;try{return old.apply(this,arguments);}finally{H.str=sh;A.str=sa;}})(simScore);
-/* futbolcu modu: rakip hoca Cenk'e özel önlem alır */
+/* futbolcu modu: rakip hoca oyuncuya özel önlem alır */
 buildMatch=(old=>function(us,opp,usHome,role,comp,national){const cfg=old.apply(this,arguments);try{if(!isPl()||national||!opp||!CLUBS[opp.id])return cfg;const p=G.p,fa=(p.form||[]),fav=fa.length?fa.reduce((a,b)=>a+b,0)/fa.length:6.5,thr=fav>=7.2||(G.s.stats&&G.s.stats.goals>=8)||p.fame>=60;
     const ab=oaiAb(opp.id);if(thr&&ab>=45&&Math.random()<0.3){const atk=cfg.chances.filter(c=>!['savunma','dkorner'].includes(c.type));if(atk.length>=3){cfg.chances.splice(cfg.chances.indexOf(atk[atk.length-1]),1);}cfg.mk=1;
-      msg('coach',`${opp.short} hocası: “Cenk’e özel önlem aldık”`,`${oaiCoachN(opp.id)} maç öncesi Cenk Kuşku için adam adama markaj uygulayacaklarını açıkladı. Bugün pozisyon bulmak daha zor olacak; boş alana sarkan koşular önemli.`);}
+      msg('coach',`${opp.short} hocası: “${meFs('dat')} özel önlem aldık”`,`${oaiCoachN(opp.id)} maç öncesi ${meN()} için adam adama markaj uygulayacaklarını açıkladı. Bugün pozisyon bulmak daha zor olacak; boş alana sarkan koşular önemli.`);}
     const P=(()=>{try{return oaiPlan(opp.id,usHome);}catch(e){return null;}})();if(P&&(P.sty==='blok'||P.tac==='savunma')){cfg.lamUs*=0.92;cfg.lamOpp*=0.9;}if(P&&P.sty==='pres'){cfg.lamUs*=1.04;cfg.lamOpp*=1.04;}cfg.lamOpp*=1+wdMod(opp.id)*0.025;}catch(e){console.warn(e);}return cfg;})(buildMatch);
 
 /* ---------- 5) Basında söz düellosu ---------- */
 const PW_Q=['Cumartesi sahada kimin büyük olduğunu herkes görecek.','Onların baskısından korkmuyoruz, deplasman bizim için sorun değil.','Şampiyonluk yarışını bu maç belirleyecek; biz hazırız.','Rakibin kadrosu pahalı ama futbol kâğıt üstünde oynanmıyor.','Taraftarımıza söz veriyoruz: bu maçı kazanacağız.','Hakemlerin bu maçta adil olmasını bekliyoruz, geçen sefer olanları unutmadık.'];
-const PW_QC=['Cenk Kuşku iyi oyuncu ama bizim savunmamız onu durdurur.','Cenk’i abartıyorlar; bizim maçta sesi çıkmayacak.'];
+const PW_QC=[()=>meN()+' iyi oyuncu ama bizim savunmamız onu durdurur.',()=>meFs('acc')+' abartıyorlar; bizim maçta sesi çıkmayacak.'];
 function wdPress(){const W=wdInit(),f=ourFixture();if(!f||G.phase!=='season'||isStaff()||isRef())return;const md=nextMatchDay(G.s.day);if(md==null||md-G.s.day!==2)return;if(W.pw&&W.pw.md===md)return;
   const opp=f[0]===G.club?f[1]:f[0],c=CLUBS[opp];if(!c)return;const D=derbyOf(G.club,opp);let top=false;try{const tb=table();const i=tb.findIndex(r=>r.id===opp),j=tb.findIndex(r=>r.id===G.club);top=(G.s.results||[]).length>=5&&i<4&&j<4;}catch(e){}
   if(!(D&&D.lv>=2&&Math.random()<0.75)&&!(top&&Math.random()<0.5))return;
-  const said=isPl()&&G.p.fame>=45&&Math.random()<0.5?pick(PW_QC):pick(PW_Q);W.pw={md,opp,co:oaiCoachN(opp),said,resp:null,d:G.s.day};
+  const said=isPl()&&G.p.fame>=45&&Math.random()<0.5?pick(PW_QC)():pick(PW_Q);W.pw={md,opp,co:oaiCoachN(opp),said,resp:null,d:G.s.day};
   msg('press',`${c.short} hocası ${W.pw.co}: “${said}”`,`${D?D.n+' öncesi':'Zirve maçı öncesi'} ${c.name} teknik direktörü ${W.pw.co} basına konuştu. Ana sayfadan cevap verebilirsin.`);
   try{feedAdd({src:'Spor Gündemi',h:'@sporgundemi',cat:'gen',txt:`${c.short} hocası ${W.pw.co}: “${said}”`});}catch(e){}wdEv('🎙',`${c.name} hocası ${W.pw.co}: “${said}”`,opp);}
 function pwBand(){const W=G&&G.wd;if(!W||!W.pw||W.pw.resp||W.pw.md<G.s.day||G.phase!=='season')return '';const c=CLUBS[W.pw.opp];if(!c)return '';
   return `<section class="panel pw-band">${crestSVG(c,34)}<div><small>${esc(c.name)} · ${esc(W.pw.co)}</small><b>“${esc(W.pw.said)}”</b><div class="offer-btns"><button class="cta sm" data-act="pwR" data-k="sert">🔥 Sert cevap ver</button><button class="btn sm" data-act="pwR" data-k="sakin">🤝 Sakin ve saygılı</button><button class="btn sm ghost" data-act="pwR" data-k="yok">Yorum yapma</button></div></div></section>`;}
-ACTX.pwR=el=>{const W=G.wd;if(!W||!W.pw)return;const k=el.dataset.k,c=CLUBS[W.pw.opp];W.pw.resp=k;const me=isPl()?'Cenk Kuşku':(G.mode==='mgr'?coachOf(G.club).n:'Biz');
+ACTX.pwR=el=>{const W=G.wd;if(!W||!W.pw)return;const k=el.dataset.k,c=CLUBS[W.pw.opp];W.pw.resp=k;const me=isPl()?(meN()):(G.mode==='mgr'?coachOf(G.club).n:'Biz');
   const T={sert:pick(['Sahada konuşuruz. Maçtan sonra kimin ne dediğini hatırlatırız.','Bu sözler soyunma odamıza asılacak; oyuncularım cevabı sahada verecek.','Bizi tanımıyorlar galiba. Pazartesi konuşalım.']),sakin:pick(['Rakibimize saygı duyuyoruz, biz sadece kendi işimize bakıyoruz.','Güzel bir futbol maçı olsun, en iyi takım kazansın.']),yok:''}[k];
   if(G.mode==='mgr'&&G.m){const m=trInit();if(k==='sert'){m.fans=clamp(m.fans+3,0,100);m.media=clamp((m.media||50)-2,0,100);}else if(k==='sakin'){m.media=clamp((m.media||50)+3,0,100);m.conf=clamp((m.conf||50)+1,0,100);}}
   if(isPl()){if(k==='sert'){G.p.morale=clamp(G.p.morale+5,0,100);G.p.fame=clamp(G.p.fame+1,0,100);}else if(k==='sakin')G.p.trust=clamp(G.p.trust+2,0,100);}
@@ -229,15 +229,15 @@ txNote=(old=>function(k,to,fee){let from=null;try{const L=G&&G.txh&&G.txh[k];con
     if(G.mode==='mgr'&&G.m&&from===G.club){const m=trInit();m.fans=clamp(m.fans-4*D.lv,0,100);m.conf=clamp((m.conf||50)-D.lv,0,100);msg('board',`Taraftar öfkeli: ${p.name} ezeli rakibe gitti`,`${p.name} transferi (alıcı: ezeli rakip ${CLUBS[to].name}) tribünlerde büyük tepki gördü. Taraftar memnuniyeti ciddi düştü; yönetim de rahatsız.`);}
     else if(G.mode==='mgr'&&G.m&&to===G.club){const m=trInit();m.fans=clamp(m.fans+D.lv,0,100);}
     wdEv('😡',`Olay transfer: ${p.name}, ${CLUBS[from].name} formasını çıkarıp ezeli rakip ${CLUBS[to].name} ile imzaladı.`,to,1);try{feedAdd({src:`${CLUBS[from].short} Taraftarı`,h:'@tribun_'+CLUBS[from].short.toLowerCase().replace(/[^a-z]/g,''),cat:'fan',mood:-1,txt:`${p.name} artık bizim için yok. Ezeli rakibe giden hain ilan edilir!`});}catch(e){}}catch(e){}return r;})(txNote);
-/* futbolcu modu: Cenk için artırma savaşı ve ezeli rakibe geçiş */
+/* futbolcu modu: oyuncu için artırma savaşı ve ezeli rakibe geçiş */
 let PO_WAR=0;
 pushOffer=(old=>function(o){const r=old.apply(this,arguments);try{if(PO_WAR||!isPl()||!o||o.renew||o.loan||o.role==='A Takıma Yükselme'||o.status!=='open')return r;if(Math.random()>0.28)return r;
     const c=CLUBS[o.club];const cs=Object.values(CLUBS).filter(x=>x.id!==o.club&&x.id!==G.club&&!LEAGUES[x.league].youth&&LEAGUES[x.league].tier>=LEAGUES[c.league].tier-1&&Math.abs(x.str-c.str)<=5&&(!eligible||eligible(LEAGUES[x.league],G.p.age)));if(!cs.length)return r;
     const rv=wpick(cs.map(x=>[x,derbyOf(x.id,o.club)?5:x.league===c.league?2:1])),o2=makeOffer(rv,(o.interest||0)+1,o.kind,o.role);o2.wage=Math.max(o2.wage,Math.round(o.wage*rnd(1.08,1.25)/50)*50);o2.bonus=Math.max(o2.bonus,o.bonus);
     PO_WAR=1;try{old(o2);}finally{PO_WAR=0;}const im=G.inbox[0];if(im&&im.offer===o2){im.title=`Artırma savaşı: ${rv.name}`;im.body=`${c.name} teklifini duyan ${rv.name}${derbyOf(rv.id,o.club)?' (ezeli rakibi)':''} araya girdi ve daha yüksek maaş önerdi: haftalık ${money(o2.wage)}. `+im.body;}
-    wdInit();wdEv('⚔',`${rv.name} ve ${c.name}, Cenk Kuşku için yarışıyor.`,rv.id);}catch(e){console.warn(e);}return r;})(pushOffer);
+    wdInit();wdEv('⚔',`${rv.name} ve ${c.name}, ${meN()} için yarışıyor.`,rv.id);}catch(e){console.warn(e);}return r;})(pushOffer);
 acceptOffer=(old=>function(o){const from=G.club,D=o&&!o.renew?derbyOf(from,o.club):null;const r=old.apply(this,arguments);try{if(D&&D.lv>=2&&isPl()){G.p.fame=clamp(G.p.fame+2,0,100);G.p.morale=clamp(G.p.morale-4,0,100);G.hate={c:from,y:G.s.year};
-    msg('news',`Olay transfer: Cenk ezeli rakibe geçti`,`${CLUBS[from].name} taraftarı, Cenk Kuşku’nun ezeli rakip ${CLUBS[o.club].name} ile imzalamasına çok öfkeli. Eski takımına karşı oynayacağın maçlarda ıslıklanacaksın.`);wdInit();wdEv('😡',`Olay transfer: Cenk Kuşku, ${CLUBS[from].name} formasını çıkarıp ezeli rakip ${CLUBS[o.club].name} ile imzaladı.`,o.club,1);}}catch(e){}return r;})(acceptOffer);
+    msg('news',`Olay transfer: ${meF()} ezeli rakibe geçti`,`${CLUBS[from].name} taraftarı, ${meNs('gen')} ezeli rakip ${CLUBS[o.club].name} ile imzalamasına çok öfkeli. Eski takımına karşı oynayacağın maçlarda ıslıklanacaksın.`);wdInit();wdEv('😡',`Olay transfer: ${meN()}, ${CLUBS[from].name} formasını çıkarıp ezeli rakip ${CLUBS[o.club].name} ile imzaladı.`,o.club,1);}}catch(e){}return r;})(acceptOffer);
 
 /* ---------- 7) Rakip analizinde hocanın planı ---------- */
 oppAnalysis=(old=>function(){let h=old.apply(this,arguments);try{const f=ourFixture();if(!f||!h)return h;const id=f[0]===G.club?f[1]:f[0],P=oaiPlan(id,f[0]===G.club);if(!P)return h;

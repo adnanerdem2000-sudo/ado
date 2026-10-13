@@ -373,7 +373,7 @@
             var ft = ro && (ro.ft === 'L' || ro.ft === 'R') ? ro.ft : (RF() < (LEFT_ROLE[role] != null ? LEFT_ROLE[role] : .2) ? 'L' : 'R');
             var wf = ro && ro.wf >= 1 && ro.wf <= 5 ? Math.round(ro.wf) : wfPick(RF());
             var p = { id: tm * 11 + i, team: tm, role: role, num: i + 1, ft: ft, wf: wf, name: ro ? ro.name : NAMES[tm][i], short: ro && ro.short ? ro.short : (ro ? ro.name : NAMES[tm][i]), db: ro ? ro.db : null, a: a, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sf: .6, fx: tm === 0 ? 1 : -1, fy: 0,
-                maxV: CURVE ? 6.2 + .0395 * a.pac : 5.6 + 0.032 * a.pac, acc: CURVE ? 4.8 + .028 * a.pac : 6.5, stam: 1, think: 0, cd: 0, tcd: 0, stunT: -9, run: null, runCd: 0, boxT: null, ix: 0, iy: 0, tInt: 99, mark: null, off: false, yc: 0, nf: 0, rx: R() * .25 - (CURVE && /B$|CB|DM/.test(role) ? clamp((a.mar * .7 + a.tac * .3 - 70) * .006, -.1, .14) : 0) };
+                maxV: CURVE ? 6.2 + .0395 * a.pac : 5.6 + 0.032 * a.pac, acc: CURVE ? 4.8 + .028 * (a.acc != null ? a.acc : a.pac) : 6.5, stam: 1, think: 0, cd: 0, tcd: 0, stunT: -9, run: null, runCd: 0, boxT: null, ix: 0, iy: 0, tInt: 99, mark: null, off: false, yc: 0, nf: 0, rx: R() * .25 - (CURVE && /B$|CB|DM/.test(role) ? clamp((a.mar * .7 + a.tac * .3 - 70) * .006, -.1, .14) : 0) };
             p.br = makeBrain(a, role, !!(ro && ro.db), BR_ON, opts.brainBase); trApply(p, ro); var hm = opts.homes && opts.homes[tm] && opts.homes[tm][i]; p.home = hm ? [role, hm[0], hm[1]] : null; /* [port] diziliş ev konumu */ p.n = { dec: 0, pass: 0, fwd: 0, long: 0, sw: 0, drib: 0, take: 0, shot: 0, clear: 0, ovl: 0, run: 0, kick: 0, weak: 0 }; p.dec = null;
             if (FATIGUE) { p.stamCap = 1; p.ana = 1; p.staK = clamp(1 - FT_STA * ((a.sta != null ? a.sta : 80) - 80) / 15, .5, 1.6) * Math.pow(FT_EM / (FT_ROLE[role] || FT_EM), FT_RN); p.anaD = 0; }      // [fatigue] dayanıklılık: yüksek sta yavaş yorulur; kondisyon rolün yüküne göre
             S.players.push(p);
@@ -747,7 +747,8 @@
             return clamp(pr, .02, .985);
         }
         // [aical] hava topu ağırlığı (resolveAerial ile aynı formül, uzaklık cezası dahil)
-        function aerW(q, dd) { return (CURVE ? Math.exp(.028 * ((q.role === 'GK' ? 90 : q.a.hea * .55 + q.a.str * .3 + q.a.pac * .15) - 70)) * 60 : (q.a.hea * .5 + q.a.str * .3 + q.a.pac * .1 + (q.role === 'GK' ? 40 : 0))) / (1 + dd * .55); }
+        function hgtK(q) { return clamp(((q.a.h || 180) - 180) * .6, -12, 14); }      // [v131] boy farkı hava topu gücüne
+        function aerW(q, dd) { return (CURVE ? Math.exp(.028 * ((q.role === 'GK' ? 90 + ((q.a.gk_air || 70) - 70) * .6 : q.a.hea * .55 + q.a.str * .3 + q.a.pac * .15 + hgtK(q)) - 70)) * 60 : (q.a.hea * .5 + q.a.str * .3 + q.a.pac * .1 + (q.role === 'GK' ? 40 : 0))) / (1 + dd * .55); }
         // [aical] kalecinin çıkış bölgesi: kendi ceza sahasına, kale çizgisine AC_GKD m'ye kadar (pozisyon alma ±) inen yüksek top
         function gkZone(g, lx, ly) { var gp = g.a.gk_pos != null ? g.a.gk_pos : g.a.gk; return inBox(lx, ly, 1 - g.team) && Math.abs(lx - ownGoalX(g.team)) <= AC_GKD + .12 * (gp - 75); }
         // [aical] orta başarısı: düelloya alıcı (ortayı bekler, inişe koşar), savunmanın topa en erken varan oyuncusu (AC_XRX sn geç tepkiyle) ve iniş noktasının zaten yakınındakiler (markajcılar) girer; kaleci bölgesine inen topa yetişebiliyorsa çıkar
@@ -802,7 +803,7 @@
                     else pr *= PP_CROSS;
                     pr *= 1 + WD_CROSS * tacOf(p.team).width;
                 }
-                if (q.run && q.run.until > S.t) pr *= PP_RUN;
+                if (q.run && q.run.until > S.t) pr *= PP_RUN * clamp(1 + .015 * (q.a.pac - 70), .75, 1.35);      // [v131] hızlı koşucuya ara pas daha cazip
                 var off = AICAL ? offSeen(q, p) : isOffside(q, p.x);      // [aical] gecikmeli algı
                 if (off && (noNoise || R() > OFFS_MISS * (1.5 - p.a.vis / 100))) pr = .03;     // paslaşmaz (nadiren yanlış görür → ofsayt kararı)
                 var vq = posValue(lx, ly, p.team) * (.55 + .45 * Math.min(free, 6) / 6);
@@ -1070,7 +1071,7 @@
             if (opp) react = Math.max(0, (AICAL && p.role === 'GK' && B.high && gkZone(p, B.high.x, B.high.y) ? gkReact(p) : INT_REACT + p.rx + (FATIGUE ? FT_RX * (1 - p.stam) : 0)) - (S.t - S.pass.t0));      // [aical] kaleci yüksek topu kaleci tepkisiyle okur      // [fatigue] yorgun oyuncu geç tepki verir
             // havadaki top yere inmeden alınamaz: yalnızca iniş anından sonraki noktalar hedef olabilir
             var i0 = B.high ? Math.min(trajEnd, Math.ceil(Math.max(0, B.high.tLand - S.t) / .2)) : 0;
-            var spd = opp ? INT_SPEED : .82, slack = opp ? INT_SLACK : .9, vI = FATIGUE ? p.maxV * (.82 + .18 * p.stam) * (1 - FT_AV * p.anaD) : p.maxV;      // [fatigue] varış tahmini oyuncunun o anki azami hızıyla
+            var spd = opp ? INT_SPEED : .82, slack = opp ? INT_SLACK : .9, vI = FATIGUE ? p.maxV * (.74 + .26 * p.stam) * (1 - FT_AV * p.anaD) : p.maxV;      // [fatigue] varış tahmini oyuncunun o anki azami hızıyla
             if (AIR_TGT && B.high) {      // [air] yüksek top: inişe yetişebilen tam iniş noktasına, iniş anına koşar (yetişemeyen inişten sonraki yörüngeye bakar)
                 var tL = Math.max(0, B.high.tLand - S.t), dxh = B.high.x - p.x, dyh = B.high.y - p.y, dh = hyp(dxh, dyh) || .001, awh = Math.max(0, -(p.vx * dxh + p.vy * dyh) / dh);
                 if (dh + awh * awh / p.acc <= vI * spd * Math.max(0, tL - react) + slack) { p.tInt = tL; p.ix = B.high.x; p.iy = B.high.y; return; }
@@ -1234,7 +1235,7 @@
                     if (!(q.role === 'ST' || q.role === 'LW' || q.role === 'RW' || q.role === 'AM')) return;
                     if ((q.run && q.run.until > S.t) || q.runCd > S.t) return;
                     var dq = Math.abs(gx - q.x); if (dq < lastLine - 3.5 || dq < 14) return;      // hâlâ hat gerisinde (ofsayta yakın) ve kaleye çok yakın değil
-                    var pr0 = (q.trRun || 1) * RUN_RATE * (q.role === 'ST' ? 1.25 : q.role === 'AM' ? .5 : .8) * clamp(.55 + .012 * (q.a.posi - 60), .3, 1.5) * (BR_ON ? clamp(1 + BR_RUNP * q.br.pc + .5 * BR_RUNP * q.br.po, .5, 1.7) : 1) * (1 + TP_RUN * tacOf(q.team).tempo + MT_RUN * tacOf(q.team).ment + LN_RUN * tacOf(1 - q.team).line + (S.ctr && S.ctr.team === q.team ? PRM.CT_RUN * S.ctr.k : 0)) * (FATIGUE ? clamp(1 - FT_RUN * (1 - q.stam), .3, 1) * Math.max(.3, 1 - 1.5 * q.anaD) : 1);      // [fatigue] yorgun / soluklanan oyuncu daha az koşu atar
+                    var pr0 = (q.trRun || 1) * RUN_RATE * (q.role === 'ST' ? 1.25 : q.role === 'AM' ? .5 : .8) * clamp(.55 + .012 * (q.a.posi - 60), .3, 1.5) * clamp(1 + .01 * (q.a.pac - 70), .75, 1.3) * (BR_ON ? clamp(1 + BR_RUNP * q.br.pc + .5 * BR_RUNP * q.br.po, .5, 1.7) : 1) * (1 + TP_RUN * tacOf(q.team).tempo + MT_RUN * tacOf(q.team).ment + LN_RUN * tacOf(1 - q.team).line + (S.ctr && S.ctr.team === q.team ? PRM.CT_RUN * S.ctr.k : 0)) * (FATIGUE ? clamp(1 - FT_RUN * (1 - q.stam), .3, 1) * Math.max(.3, 1 - 1.5 * q.anaD) : 1);      // [fatigue] yorgun / soluklanan oyuncu daha az koşu atar
                     if (R() > pr0) return;
                     var bestG = null, bs = -1e9;
                     gaps.forEach(function (g) { var w = g[1] - g[0]; if (w < 5) return; var cy = (g[0] + g[1]) / 2, sc = w - .25 * Math.abs(cy - q.y); if (sc > bs) { bs = sc; bestG = cy; } });
@@ -1483,7 +1484,7 @@
                 var p = S.players[i];
                 if (p.off) continue;
                 var dx = p.tx - p.x, dy = p.ty - p.y, d = hyp(dx, dy);
-                var sp0 = hyp(p.vx, p.vy), maxV = p.maxV * (.82 + .18 * p.stam) * (FATIGUE ? 1 - FT_AV * p.anaD : 1), want = Math.min(maxV * p.sf * (p.stunT > S.t ? .35 : 1), d / .3);
+                var sp0 = hyp(p.vx, p.vy), maxV = p.maxV * (.74 + .26 * p.stam) * (FATIGUE ? 1 - FT_AV * p.anaD : 1), want = Math.min(maxV * p.sf * (p.stunT > S.t ? .35 : 1), d / .3);
                 var vdx = 0, vdy = 0; if (d > .05) { vdx = dx / d * want; vdy = dy / d * want; }
                 var ax = vdx - p.vx, ay = vdy - p.vy, al = hyp(ax, ay), lim = p.acc * DT; if (al > lim) { ax *= lim / al; ay *= lim / al; }
                 p.vx += ax; p.vy += ay;
@@ -1506,7 +1507,7 @@
                 p = S.players[i];
                 if (p.off) continue;
                 if (p.fa == null) p.fa = Math.atan2(p.fy, p.fx);
-                var sp = hyp(p.vx, p.vy), maxV = p.maxV * (.82 + .18 * p.stam) * (FATIGUE ? 1 - FT_AV * p.anaD : 1), own = B.owner === p;      // [fatigue] anaerobik depo boşaldıkça azami hız düşer
+                var sp = hyp(p.vx, p.vy), maxV = p.maxV * (.74 + .26 * p.stam) * (FATIGUE ? 1 - FT_AV * p.anaD : 1), own = B.owner === p;      // [fatigue] anaerobik depo boşaldıkça azami hız düşer
                 // topsuz hedef yumuşatma: hedef her adımda yeniden hesaplanır; küçük sıçramalar oyuncunun "yeniden okuma" süresiyle yumuşar (acil işler - top, baskı, geri koşu - anında)
                 var urgent = !live || own || p.sf >= .9 || (S.pass && S.pass.to === p);
                 var gkSet = GK_SET && !urgent && p.role === 'GK' && hyp(B.x - ownGoalX(p.team), B.y - CY) < GK_SETD;      // [gk] GK_SET: kalesine yakın topta kalecinin yer tutması
@@ -1618,13 +1619,13 @@
         // [gk] GK_BOX: kaleci elle yalnız kendi ceza sahasında oynar (dışarıda saha oyuncusu gibi)
         function gkHands(q) { return q.role === 'GK' && (!GK_BOX || inBox(q.x, q.y, 1 - q.team)); }
         function resolveAerial(hi) {
-            var cands = S.players.filter(function (q) { return !q.off && hyp(q.x - hi.x, q.y - hi.y) < (AIR_TGT && !(q.role === 'GK' && inBox(q.x, q.y, 1 - q.team)) ? AIR_R : 3.4); });      // [air] saha oyuncusu yalnız baş + sıçrama erişiminde
+            var cands = S.players.filter(function (q) { return !q.off && hyp(q.x - hi.x, q.y - hi.y) < (AIR_TGT && !(q.role === 'GK' && inBox(q.x, q.y, 1 - q.team)) ? AIR_R + clamp(((q.a.h || 180) - 180) * .012, -.15, .2) : 3.4); });      // [air] saha oyuncusu yalnız baş + sıçrama erişiminde
             hdZ = B.z;
             B.x = hi.x; B.y = hi.y; B.high = null;
             var shooterTeam = S.pass ? S.pass.team : S.lastTeam;
             if (!cands.length) { if (!BALL3D) { B.vx *= .12; B.vy *= .12; } return; }      // [ball] 3B: kimse yoksa top düşmeye devam eder ve seker
             var best = null, bw = -1;
-            cands.forEach(function (q) { var gkH = gkHands(q); var w = (CURVE ? Math.exp(.028 * ((gkH ? 90 : q.a.hea * .55 + q.a.str * .3 + q.a.pac * .15) - 70)) * 60 : (q.a.hea * .5 + q.a.str * .3 + q.a.pac * .1 + (gkH ? 40 : 0))) / (1 + hyp(q.x - hi.x, q.y - hi.y) * .55) * (.6 + .8 * R()); if (AICAL && gkH && inBox(q.x, q.y, 1 - q.team)) w *= AC_GKW; /* [aical] kaleci elleriyle */ if (KF_GKW && gkH && hyp(q.x - hi.x, q.y - hi.y) < 2) w *= KF_GKW; /* [kafa] topun altindaki kaleci elleriyle */ if (gkH && hyp(q.x - hi.x, q.y - hi.y) > 8) w = 0; if (w > bw) { bw = w; best = q; } });
+            cands.forEach(function (q) { var gkH = gkHands(q); var w = (CURVE ? Math.exp(.028 * ((gkH ? 90 + ((q.a.gk_air || 70) - 70) * .6 : q.a.hea * .55 + q.a.str * .3 + q.a.pac * .15 + hgtK(q)) - 70)) * 60 : (q.a.hea * .5 + q.a.str * .3 + q.a.pac * .1 + (gkH ? 40 : 0))) / (1 + hyp(q.x - hi.x, q.y - hi.y) * .55) * (.6 + .8 * R()); if (AICAL && gkH && inBox(q.x, q.y, 1 - q.team)) w *= AC_GKW; /* [aical] kaleci elleriyle */ if (KF_GKW && gkH && hyp(q.x - hi.x, q.y - hi.y) < 2) w *= KF_GKW; /* [kafa] topun altindaki kaleci elleriyle */ if (gkH && hyp(q.x - hi.x, q.y - hi.y) > 8) w = 0; if (w > bw) { bw = w; best = q; } });
             if (!best) { if (!BALL3D) { B.vx *= .12; B.vy *= .12; } return; }
             var q = best, pass = S.pass;
             if (OFFS_AIR && airOffside(q, hi)) return;      // [offs] ofsayt konumundaki hücumcu düelloya girdi
@@ -2090,7 +2091,7 @@
                             var psP = clamp(GK_S0 + GK_S1 * (1 - distP / reachP) + .008 * (gk.a.gk - 75) - .012 * Math.max(0, v - 24) - (sh.hd ? KF_GKS : 0), .05, .97); if (sh.ng) psP = 1;      /* [kafa] */
                             if (R() < psP) {
                                 S.teams[gk.team].st.saves++;
-                                var catchP = v < 22 && zb < 2.2 && distP < reachP * .6 && R() < .7;
+                                var catchP = v < 22 && zb < 2.2 && distP < reachP * .6 && R() < clamp(.7 + .006 * ((gk.a.gk_han || 70) - 70), .5, .85);      // [v131] elle oyun
                                 emit('SAVE', { team: gk.team, p: gk.id, p2: sh.shooter.id, meta: { xg: sh.xg, parry: !catchP, gkDist: distP, reach: reachP, speed: v, z: zb } });
                                 if (catchP) { B.owner = gk; B.vx = B.vy = 0; B.z = 0; B.vz = 0; B.shotFlag = false; S.shot = null; S.pass = null; S.lastTeam = gk.team; B.last = gk; gk.think = .6; gk.dribble = false; return; }
                                 // çelme: top kaleciden seker - çoğu kenara/dışarı (korner), bir kısmı öne (dönen top)
@@ -2262,7 +2263,7 @@
         // ---------- top sahibi mücadelesi ----------
         // savunmacı d, top sürücü o: topu kapma olasılığı (elit eğri: savunma özelliği − sürücü özelliği farkına üstel)
         function tackleP(d, o, base) {
-            return CURVE ? clamp(base * Math.exp(.045 * ((d.a.tac * .6 + d.a.mar * .25 + d.a.str * .15) - (o.a.dri * .6 + o.a.bal * .2 + o.a.pac * .2))), .05, .65) : clamp(base + .0065 * (d.a.tac - o.a.dri), .08, .5);
+            return CURVE ? clamp(base * Math.exp(.045 * ((d.a.tac * .6 + d.a.mar * .25 + d.a.str * .15) - (o.a.dri * .55 + o.a.bal * .2 + o.a.pac * .1 + o.a.str * .15))), .05, .8) : clamp(base + .0065 * (d.a.tac - o.a.dri), .08, .5);
         }
         // tek bir çekişmeyi çöz: 'tackle' | 'foul' | 'beaten' (savunmacı geçildi)
         // [tackle] çekişme geometrisi. ca: savunmacının topçuya göre yeri, topçunun hareket (yavaşken bakış) yönüne göre: +1 önden, 0 yandan, −1 arkadan · cf: savunmacının gövdesi topa dönük mü (+1 tam)

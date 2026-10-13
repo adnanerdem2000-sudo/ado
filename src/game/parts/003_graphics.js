@@ -15,7 +15,7 @@ function crestSVG(c,size=40){
   const star=((c.star||h%6===0)&&c.flag!=='TR')?`<polygon points="${starPts(50,24,7,3)}" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>`:'';
   return `<svg class="crest" viewBox="0 0 100 120" width="${size}" height="${Math.round(size*1.2)}" aria-hidden="true" style="flex-shrink:0"><defs><clipPath id="${id}">${el}</clipPath></defs><g clip-path="url(#${id})">${body}</g>${star}${label}<g fill="none" stroke="rgba(255,255,255,.9)" stroke-width="3">${el}</g><g fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.2">${el}</g></svg>`;
 }
-/* Cenk: esmer, kısa siyah saç, 1,74 boy */
+/* varsayılan oyuncu görünüşü: esmer, kısa siyah saç, 1,74 boy */
 function avatarSVG(c1,c2,num,age){
   const skin='#a8704a',sh='#8e5b39',hair='#140d09';
   const curls=[[30,37,6],[30.5,29,6.5],[34.5,21.5,7],[41.5,16.5,7],[50,14.5,7.5],[58.5,16.5,7],[65.5,21.5,7],[69.5,29,6.5],[70,37,6],[38,25,6],[46,21,6.5],[54,21,6.5],[62,25,6],[43.5,28,5],[56.5,28,5],[50,26,5.5]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}"/>`).join('');

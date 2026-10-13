@@ -14,7 +14,7 @@ document.addEventListener('click',e=>{
     case 'squad':showSquad(el.dataset.id);break;
     case 'ccard':showCoach(el.dataset.id);break;
     case 'wz':W.step=el.dataset.k;W.del=null;showStart();break;
-    case 'wzProf':W.prof=el.dataset.k;if(W.prof==='oyuncu'&&W.fn==='')W.fn='Cenk';showStart();break;
+    case 'wzProf':W.prof=el.dataset.k;showStart();break;
     case 'wzL':{const f=el.dataset.f,v=el.dataset.v;W.look[f]=f==='bd'?(v||null):v;showStart();break;}
     case 'wzGo':wizGo();break;
     case 'startGame':W.prof='oyuncu';wizGo();break;

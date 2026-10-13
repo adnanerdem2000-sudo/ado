@@ -13,7 +13,7 @@ const SMM={tes:{n:'Taraftara teşekkür',ic:'🙏',d:'Taraftar memnuniyeti artar
 function smOn(){return G&&G.s&&(isPl()||G.mode==='mgr');}
 function smInit(){if(!G.sm){const f=isPl()?G.p.fame:(G.m&&G.m.rep)||30;G.sm={fol:Math.round(smTarget(f)*0.8),love:55,eng:0.05,posts:[],last:-9,ban:0,inc:0,n:{}};}return G.sm;}
 function smTarget(f){return Math.round(800*Math.exp(f/9));}
-function smHandle(){const n=(isPl()?(G.p.name||'cenk'):coachOf(G.club).n)||'futbol';return '@'+n.toLocaleLowerCase('tr-TR').replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u').replace(/[^a-z0-9]/g,'')+(isPl()?'':'_official');}
+function smHandle(){const n=(isPl()?(G.p.name||'oyuncu'):coachOf(G.club).n)||'futbol';return '@'+n.toLocaleLowerCase('tr-TR').replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u').replace(/[^a-z0-9]/g,'')+(isPl()?'':'_official');}
 const smK=n=>n>=1e6?`${(n/1e6).toFixed(1).replace('.',',')} Mn`:n>=1e3?`${String(Math.round(n/100)/10).replace('.',',')} bin`:String(n);
 const SM_COM={pos:['Kralsın! 👑','Bu forma sana yakışıyor','Seninle gurur duyuyoruz','Efsane yolunda 🔥','Her maç böyle oyna!'],neg:['Önce sahada göster','Bunu paylaşma vakti mi?','Takıma odaklan artık','Hayal kırıklığı…'],vir:['Bu paylaşım her yerde! 😂','Tarih yazdın','Gündem oldun yine']};
 function smPost(k){const S=smInit(),T=(isPl()?SMP:SMM)[k];if(!T)return;if(S.ban>G.s.day)return toast(`Kulüp sosyal medya yasağı koydu (${S.ban-G.s.day} gün)`);if(S.last===G.s.day)return toast('Bugün zaten paylaşım yaptın');
@@ -26,7 +26,7 @@ function smPost(k){const S=smInit(),T=(isPl()?SMP:SMM)[k];if(!T)return;if(S.ban>
     if(crisis)cr=smCrisisPl(k);}
   else{const m=trInit();if(k==='tes')m.fans=clamp(m.fans+2,0,100);if(k==='idman')m.media=clamp((m.media||50)+1,0,100);if(k==='laf'||k==='hakem')m.fans=clamp(m.fans+2,0,100);if(crisis)cr=smCrisisMgr(k);}
   const com=pick(vir?SM_COM.vir:cr?SM_COM.neg:SM_COM.pos);S.posts.unshift({d:G.s.day,k,likes,gain,vir:vir?1:0,cr:cr?1:0,com});if(S.posts.length>30)S.posts.length=30;
-  try{feedAdd({src:isPl()?(G.p.name||'Cenk Kuşku'):coachOf(G.club).n,h:smHandle(),cat:'fan',mood:cr?-1:1,txt:`${T.ic} ${T.n}${cr?'':' · '+smK(likes)+' beğeni'}`});}catch(e){}
+  try{feedAdd({src:isPl()?(meN()):coachOf(G.club).n,h:smHandle(),cat:'fan',mood:cr?-1:1,txt:`${T.ic} ${T.n}${cr?'':' · '+smK(likes)+' beğeni'}`});}catch(e){}
   toast(cr?'Paylaşımın kriz çıkardı!':vir?`Viral oldu! +${smK(gain)} takipçi`:`${smK(likes)} beğeni · +${smK(gain)} takipçi`+txt);save();render();}
 function smCrisisPl(k){const S=G.sm,fine=Math.round(clamp(OVR()*150,1000,60000)/500)*500;G.p.money-=E2U(fine);S.ban=G.s.day+7;imHit(k==='hoca'?8:5);
   const t={gece:['Gece hayatı paylaşımı olay oldu',`Maç haftası gece kulübünde çekilen fotoğrafın gündem oldu. Hoca: “Profesyonellik bunu gerektirmez.”`,()=>{G.p.trust=clamp(G.p.trust-6,0,100);}],

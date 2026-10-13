@@ -3,7 +3,7 @@
    MR'de atılan goller 3B'de canlandırılır, motorun kendi golleri bastırılır: iki taraf her zaman aynı skoru gösterir. */
 const PL3={on:false,had:null,cfg:null,me:null,mom:false,end:false,gu:0,go:0,g:0,a:0,knockT:0};
 function pl3Pref(){try{const v=localStorage.getItem('pl3d');if(v==='0')return false;if(v==='1')return f3Sup();}catch(e){}return f3Sup();}
-function pl3MeObj(){const p=G.p;return {k:'ME',name:p.name||((typeof PN==='function')?PN():'Cenk Kuşku'),pos:p.pos,ovr:Math.round(OVR()),age:p.age,age0:p.age,ovr0:Math.round(OVR()),nat:p.nat||'TUR',num:p.num||9,home:G.club,club:G.club,i:99,me:1};}
+function pl3MeObj(){const p=G.p;return {k:'ME',name:p.name||((typeof PN==='function')?PN():(meN())),pos:p.pos,ovr:Math.round(OVR()),age:p.age,age0:p.age,ovr0:Math.round(OVR()),nat:p.nat||'TUR',num:p.num||9,home:G.club,club:G.club,i:99,me:1};}
 /* maç sürerken kulüp kadrosunda "ben" de var */
 squadOf=(old=>function(id){const r=old.apply(this,arguments);try{if(PL3.on&&id===G.club&&!r.some(p=>p.k==='ME'))r.push(pl3MeObj());}catch(e){}return r;})(squadOf);
 /* 3B'de oyuncunun kendi görünüşü */
@@ -24,7 +24,7 @@ function pl3Start(cfg){if(!MR)return;PL3.mid=(PL3.mid||0)+1;PL3.closed=false;MR.
   const S=FX;if(!S)throw new Error('fx yok');S.pl3=1;S.end=Math.max(91,MR.end)*60;S.forceG=[0,0];
   if(cfg.role!=='start'&&!S.U.bench.some(b=>b.k==='ME'))S.U.bench.unshift(pl3MeObj());
   const fx=$('#fx');if(fx)fx.classList.add('pl3');try{if(f3Sup()&&!F3.on)f3Toggle(true);}catch(e){}
-  fxEv(0,cfg.role==='start'?`${G.p.name||'Cenk Kuşku'} ilk 11’de, ${G.p.num} numaralı formayla sahada.`:`${G.p.name||'Cenk Kuşku'} yedek kulübesinde, ısınmaya hazır.`,'bold');pl3Hud();}
+  fxEv(0,cfg.role==='start'?`${meN()} ilk 11’de, ${G.p.num} numaralı formayla sahada.`:`${meN()} yedek kulübesinde, ısınmaya hazır.`,'bold');pl3Hud();}
 function pl3Abort(){try{if(FX&&FX.pl3){FX.pl3=0;cancelAnimationFrame(FX.raf);$('#fx').hidden=true;FX=null;$('#tabs').hidden=true;}}catch(e){}try{if(PL3.sh){PL3.sh=false;yrShadowOff(PL3.had);}}catch(e){}PL3.on=false;PL3.had=null;try{$('#match').classList.remove('pl3-hide');}catch(e){}if(MR)MR.f3=0;}
 /* MR dakikaları yalnızca 3B saat ilerledikçe işlenir */
 mrStep=(old=>function(){if(!MR)return;if(MR.f3&&!MR.f3go)return;return old.apply(this,arguments);})(mrStep);
@@ -78,7 +78,7 @@ function pl3Knock(){const S=FX;if(!S||PL3.mom)return;PL3.mom=true;S.pl3ph='play'
   const iv=setInterval(()=>{if(!MR||!MR.pendKnock){clearInterval(iv);pl3Resume();}},250);}
 /* üst bilgi: oyuncumuzun durumu */
 function pl3Hud(){try{const S=FX;if(!S||!S.pl3||!MR)return;let h=$('#pl3Hud');const host=document.querySelector('#fx .fx-pw')||$('#fx');if(!host)return;if(!h){h=document.createElement('div');h.id='pl3Hud';host.appendChild(h);}
-  const cd=Math.round(MR.cond),me=pl3Me();h.innerHTML=`<b>${esc(G.p.name||'Cenk Kuşku')}</b><span>${MR.out?'oyun dışı':me?'sahada':'yedekte'}</span><i><em style="width:${clamp(cd,0,100)}%" class="${cd<30?'low':cd<60?'mid':''}"></em></i><small>${MR.goals?`⚽ ${MR.goals} `:''}${MR.assists?`🅰 ${MR.assists} `:''}${MR.yc?'🟨 ':''}${MR.rc?'🟥':''}</small>`;}catch(e){}}
+  const cd=Math.round(MR.cond),me=pl3Me();h.innerHTML=`<b>${esc(meN())}</b><span>${MR.out?'oyun dışı':me?'sahada':'yedekte'}</span><i><em style="width:${clamp(cd,0,100)}%" class="${cd<30?'low':cd<60?'mid':''}"></em></i><small>${MR.goals?`⚽ ${MR.goals} `:''}${MR.assists?`🅰 ${MR.assists} `:''}${MR.yc?'🟨 ':''}${MR.rc?'🟥':''}</small>`;}catch(e){}}
 /* ayarlar: futbolcu maçlarında 3B */
 ACTX.pl3Tog=()=>{const on=!pl3Pref();try{localStorage.setItem('pl3d',on?'1':'0');}catch(e){}toast(on?'Maçların 3B görünümde oynanacak':'Maçlar klasik ekranda oynanacak');try{const b=$('[data-act=pl3Tog]');if(b)b.textContent=on?'Açık':'Kapalı';}catch(e){}};
 openSettings=(old=>function(){const r=old.apply(this,arguments);try{const mc=$('#modalCard');if(!mc||mc.querySelector('.pl3-set')||!f3Sup())return r;

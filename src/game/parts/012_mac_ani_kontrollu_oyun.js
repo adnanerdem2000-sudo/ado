@@ -33,7 +33,7 @@ function makeChance(type,C){
   const gkA={shirt:'#ff8a1f',trim:'#3a1d00',pat:0,shorts:'#2a1505',socks:'#ff8a1f',num:'#2a1505'},gkB={shirt:'#19c2a6',trim:'#03302a',pat:0,shorts:'#06231f',socks:'#19c2a6',num:'#03302a'};
   const U=(x,y,o)=>{const e=mkP('us',x,y,Object.assign({kit:kUs,q:clamp(C.us.str+rnd(-8,8),20,95)},o));S.mates.push(e);return e;};
   const O=(x,y,o)=>{const e=mkP('opp',x,y,Object.assign({kit:kOpp},o));S.opps.push(e);return e;};
-  const ce=S.cenk=mkP('us',34,30,{kit:kUs,isC:true,skin:PL().sk,hair:PL().hc,hs:PL().hs,bd:G.p.age>=18?PL().bd:null,hgt:clamp(1+((G.p.h||1.74)-1.8)*1.2,0.85,1.15),num:C.num,capt:!!C.capt,boot:G.p.up.kt>=4?'#ffd400':G.p.up.kt>=3?'#ff4f9a':'#f4f4f4'});
+  const ce=S.hero=mkP('us',34,30,{kit:kUs,isC:true,skin:PL().sk,hair:PL().hc,hs:PL().hs,bd:G.p.age>=18?PL().bd:null,hgt:clamp(1+((G.p.h||1.74)-1.8)*1.2,0.85,1.15),num:C.num,capt:!!C.capt,boot:G.p.up.kt>=4?'#ffd400':G.p.up.kt>=3?'#ff4f9a':'#f4f4f4'});
   S.ball={x:0,y:0,z:0,vx:0,vy:0,vz:0,om:0,owner:null,held:null,last:null,lastT:-9,kind:null,rot:0,px:0,py:0,pz:0,target:null,gkChecked:false,ign:null};
   if(type==='atak'){
     let cx=34+side*rnd(3,10),cy=rnd(24,29);
@@ -161,7 +161,7 @@ function minDist(p,list){let m=99;for(const e of list){const d=Math.hypot(e.x-p.
 function laneClear(a,b,foes){let m=99;const dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy||1;for(const e of foes){const u=((e.x-a.x)*dx+(e.y-a.y)*dy)/L2;if(u<0.05||u>1.05)continue;const q=Math.hypot(e.x-(a.x+dx*u),e.y-(a.y+dy*u));if(q<m)m=q;}return m;}
 const actOpps=()=>MG.S.opps.filter(d=>!d.wall&&d.role!=='idle');
 const actMates=()=>MG.S.mates.filter(t=>t.role!=='idle');
-const usField=()=>[MG.S.cenk,...actMates()];
+const usField=()=>[MG.S.hero,...actMates()];
 function defLineNow(){let m=99;for(const d of actOpps())if(d.y<m)m=d.y;return m;}
 const spdOpp=()=>4.9+MG.S.C.opp.str*0.03;
 function predictPath(){const S=MG.S,b=S.ball;if(S.pathAt===S.t&&S.path)return S.path;let x=b.x,y=b.y,vx=b.vx,vy=b.vy,z=b.z,vz=b.vz,o=b.om;const out=[],dt=0.05;
@@ -231,7 +231,7 @@ function tackleOn(d,o,exposed){const S=MG.S,C=S.C,b=S.ball,iq=S.iqOpp;d.cd=0.55;
   d.stag=0.28+(1-iq)*0.55;if(o.isC)o.stag=Math.max(o.stag,0.1*iq);}
 
 /* Takım arkadaşı beyni: boş alan arama, pas koridoru, ofsayt bilinci, zamanlı derin koşu */
-function brainSupport(){const S=MG.S,b=S.ball,ce=S.cenk,iq=S.iqUs,foes=[...actOpps(),S.gk],car=b.owner,M=actMates(),line=defLineNow();
+function brainSupport(){const S=MG.S,b=S.ball,ce=S.hero,iq=S.iqUs,foes=[...actOpps(),S.gk],car=b.owner,M=actMates(),line=defLineNow();
   for(const t of M){if(car===t)continue;if(b.target===t&&!car)continue;if((t.runT||0)>S.t)continue;
     if(car===ce&&t.role!=='support'&&ce.fy<-0.4&&minDist(ce,actOpps())>2.2&&S.t>(t.nextRun||0)&&t.y<line+3&&Math.random()<0.3+iq*0.4){
       t.runT=S.t+1.5;t.nextRun=S.t+3.5;t.tx=clamp(t.x+(34-t.x)*0.35,8,60);t.ty=Math.max(4,line-7);t.tsp=7;continue;}
@@ -248,29 +248,29 @@ function mateAtkAI(t,dt){const S=MG.S,b=S.ball;
   if(b.owner===t)return mateWithBall(t,dt);
   if(!b.owner&&!b.held&&b.kind!=='shot'&&(b.target===t||(dist(t,b)<5&&b.z<2))){const sp=5.2+(t.q||S.C.us.str)*0.028;const pl=interceptPath(predictPath(),t,sp,0)||b;steer(t,pl.x,pl.y,sp,dt);return;}
   steer(t,t.tx,t.ty,(t.runT||0)>S.t?7:t.tsp,dt);}
-function mateWithBall(t,dt){const S=MG.S,ce=S.cenk,O=actOpps(),foes=[...O,S.gk],iq=iqOf(t.q||S.C.us.str);
+function mateWithBall(t,dt){const S=MG.S,ce=S.hero,O=actOpps(),foes=[...O,S.gk],iq=iqOf(t.q||S.C.us.str);
   t.hold-=dt;t.think-=dt;
   const ahead={x:t.x+(34-t.x)*0.15,y:t.y-3};steer(t,ahead.x,ahead.y,minDist(ahead,O)>2.5?3.8+iq:1.5,dt);
   if(t.hold>0||t.think>0)return;t.think=0.16+(1-iq)*0.14;
   const pressed=minDist(t,O)<1.6,line=defLineNow(),U={};
   U.shoot=xg(t.x,t.y,foes)*(pressed?0.75:1)*(0.85+iq*0.4);
   const lead={x:ce.x+ce.vx*0.6,y:ce.y+ce.vy*0.6},cOn=ce.y>=Math.min(line,t.y)-0.4||Math.random()>iq;
-  U.cenk=cOn&&laneSlack(t,lead,O,clamp(8+dist(t,lead)*0.7,10,22),false)>0.1?xg(lead.x,lead.y,foes)*1.05+0.015:-1;
+  U.hero=cOn&&laneSlack(t,lead,O,clamp(8+dist(t,lead)*0.7,10,22),false)>0.1?xg(lead.x,lead.y,foes)*1.05+0.015:-1;
   let other=null;U.other=-1;
   for(const m of actMates()){if(m===t||laneSlack(t,m,O,clamp(8+dist(t,m)*0.7,10,22),false)<0.1)continue;if(m.y<Math.min(line,t.y)-0.4&&Math.random()<iq)continue;const v=xg(m.x,m.y,foes)*0.95;if(v>U.other){U.other=v;other=m;}}
   U.keep=pressed||t.hold<-0.9?-1:0.03+(t.y>20?0.02:0);
   for(const k in U)if(U[k]>0)U[k]*=Math.max(0.2,1+gauss()*(0.45-iq*0.35));
   let best='keep';for(const k in U)if(U[k]>U[best])best=k;
-  if(best==='shoot')tmShoot(t);else if(best==='cenk')tmGive(t);else if(best==='other')tmPassTo(t,other);}
+  if(best==='shoot')tmShoot(t);else if(best==='hero')tmGive(t);else if(best==='other')tmPassTo(t,other);}
 function tmShoot(t){const S=MG.S,q=t.q||S.C.us.str;kick(t,34+(S.gk.x<34?1:-1)*rnd(1.8,3.2),0,rnd(0.25,1.7),rnd(18,24)*(0.85+q*0.0035),0,0.05-q*0.0003,0.35,'shot');}
 function tmPassTo(t,m){const S=MG.S,b=S.ball,d=dist(t,m),loft=false,v=loft?clamp(12+d*0.3,15,22):clamp(8+d*0.7,10,22),tt=d/(v*0.8),line=defLineNow();
   kick(t,m.x+m.vx*tt,m.y+m.vy*tt,loft?0.35:0,v,0,0.035-(t.q||S.C.us.str)*0.00015,0,'pass');b.target=m;S.ofs=m.y<Math.min(line,b.y)-0.4?m:null;}
-function tmGive(t){const S=MG.S,ce=S.cenk,b=S.ball,d=dist(ce,b),loft=false,v=loft?clamp(12+d*0.3,15,22):clamp(8+d*0.7,10,22),tt=d/(v*0.8);
+function tmGive(t){const S=MG.S,ce=S.hero,b=S.ball,d=dist(ce,b),loft=false,v=loft?clamp(12+d*0.3,15,22):clamp(8+d*0.7,10,22),tt=d/(v*0.8);
   const tx=ce.x+ce.vx*tt+ce.fx*1.2,ty=ce.y+ce.vy*tt+ce.fy*1.2,line=defLineNow();
   kick(t,tx,ty,loft?0.35:0,v,0,0.03,loft?0.25:0,'pass');b.target=ce;S.ofs=ce.y<Math.min(line,b.y)-0.4?ce:null;}
 
 /* Rakip hücum beyni (savunma anı): şut / pas / sürme kararı, koşucunun boş alan araması */
-function brainAttack(){const S=MG.S,b=S.ball,ce=S.cenk,iq=S.iqOpp,us=[ce,...actMates(),S.gk];
+function brainAttack(){const S=MG.S,b=S.ball,ce=S.hero,iq=S.iqOpp,us=[ce,...actMates(),S.gk];
   const car=b.owner&&b.owner.side==='opp'?b.owner:null,runs=S.opps.filter(o=>o!==car&&o.role!=='idle'&&!o.wall);
   const ourLine=Math.min(...[ce,...actMates()].map(e=>e.y));
   const covers=S.mates.filter(t=>t.role==='cover'),free=runs.slice();for(const t of covers){let m=null,md=99;for(const r of free){const q=dist(t,r);if(q<md){md=q;m=r;}}t.mark=m;if(m)free.splice(free.indexOf(m),1);}
@@ -286,7 +286,7 @@ function brainAttack(){const S=MG.S,b=S.ball,ce=S.cenk,iq=S.iqOpp,us=[ce,...actM
     for(let k=-4;k<=4;k++){const a=base+k*0.32,px=car.x+Math.cos(a)*3,py=car.y+Math.sin(a)*3;const sc=(car.y-py)*0.6+Math.min(4,minDist({x:px,y:py},us))*0.9-Math.abs(px-34)*0.04;if(sc>bsa){bsa=sc;bestA=a;}}
     car.da=bestA;const shootT=0.1+(1-iq)*0.06-(pressed?0.03:0);
     car.plan=(myXG>shootT||car.y<9)?'shoot':(passU>myXG*1.15&&passU>0.06&&(pressed||Math.random()<0.25+iq*0.3))?'pass':'drive';}}
-function attAI(a,dt){const S=MG.S,C=S.C,b=S.ball,ce=S.cenk;
+function attAI(a,dt){const S=MG.S,C=S.C,b=S.ball,ce=S.hero;
   if(a.role==='idle'){drift(a,dt);return;}if(busy(a,dt))return;if(a.cd>0)a.cd-=dt;
   const spd=(5.0+C.opp.str*0.026)*(S.live<0.6?0.45:1);
   if(b.owner===a){
@@ -301,9 +301,9 @@ function attAI(a,dt){const S=MG.S,C=S.C,b=S.ball,ce=S.cenk;
   steer(a,a.tx,a.ty,spd*0.85,dt);}
 function oppShoot(a){const S=MG.S,C=S.C;kick(a,34+(S.gk.x<34?1:-1)*rnd(1.5,3.3),0,rnd(0.2,1.9),rnd(18,24)+C.opp.str*0.04,0,0.024+(100-C.opp.str)*0.0007,0.4,'shot');}
 function oppPass(a,r){const S=MG.S,b=S.ball,d=dist(a,r),v=clamp(9+d*0.7,11,21),tt=d/(v*0.8);
-  const ourLine=Math.min(...[S.cenk,...actMates()].map(e=>e.y));
+  const ourLine=Math.min(...[S.hero,...actMates()].map(e=>e.y));
   kick(a,r.x+r.vx*tt,r.y+r.vy*tt,0,v,0,0.04,0,'pass');b.target=r;S.ofs=r.y<Math.min(ourLine,b.y)-0.4?r:null;}
-function coverAI(t,dt){const S=MG.S,C=S.C,b=S.ball,ce=S.cenk,iq=S.iqUs;if(busy(t,dt))return;
+function coverAI(t,dt){const S=MG.S,C=S.C,b=S.ball,ce=S.hero,iq=S.iqUs;if(busy(t,dt))return;
   const spd=4.6+C.us.str*0.022,car=b.owner&&b.owner.side==='opp'?b.owner:null,run=t.mark&&t.mark!==car&&t.mark.role!=='idle'?t.mark:null;
   if(!b.owner&&b.kind==='pass'){const pl=interceptPath(predictPath(),t,spd,0.3-iq*0.2);if(pl){steer(t,pl.x,pl.y,spd,dt);return;}}
   if(car&&S.engager===t){steer(t,car.x+(34-car.x)*0.1,car.y-1.2,spd*0.95,dt);
@@ -336,8 +336,8 @@ function gkAI(g,dt){const S=MG.S,b=S.ball,str=g.str;
   if(!o&&!b.held&&b.y<7&&Math.abs(b.x-34)<10&&sp<9&&b.kind!=='shot'){steer(g,b.x,b.y,5.5,dt);return;}
   const k=clamp(0.7+dd*0.065,0.7,3.6);steer(g,34+(b.x-34)/(dd||1)*k,Math.max(0.4,b.y/(dd||1)*k),4.2,dt);}
 
-/* ---------- Cenk: oyuncu kontrolü ---------- */
-function moveCenk(dt){const S=MG.S,C=S.C,ce=S.cenk,b=S.ball;
+/* ---------- oyuncu kontrolü ---------- */
+function moveMe(dt){const S=MG.S,C=S.C,ce=S.hero,b=S.ball;
   if(ce.slide>0){ce.slide-=dt;ce.x+=ce.vx*dt;ce.y+=ce.vy*dt;const k=Math.pow(0.25,dt);ce.vx*=k;ce.vy*=k;if((S.mode==='def'||S.mode==='cp')&&!S.slideHit)slideContact();if(ce.slide<=0)ce.down=0.7;return;}
   if(ce.down>0){ce.down-=dt;drift(ce,dt,0.01);return;}
   if(ce.dash>0){ce.dash-=dt;ce.x+=ce.vx*dt;ce.y+=ce.vy*dt;faceAnim(ce,dt);return;}
@@ -349,19 +349,19 @@ function moveCenk(dt){const S=MG.S,C=S.C,ce=S.cenk,b=S.ball;
   ce.x=clamp(ce.x+ce.vx*dt,0.3,67.7);ce.y=clamp(ce.y+ce.vy*dt,0.4,66);faceAnim(ce,dt);}
 function procInput(){const S=MG.S;while(IN.q.length&&S.phase==='play'){const ev=IN.q.shift();if(ev.type==='d')onDown(ev.b);else onUp(ev.b,ev.hold);}}
 function onDown(k){const S=MG.S;S.dn[k]=true;if(k==='c')S.cDown=S.t;
-  if(S.mode==='air'){if((k==='a'||k==='b')&&S.ck!=='take'&&S.cenk.jumpT==null&&S.cenk.down<=0)S.cenk.jumpT=S.t;return;}
+  if(S.mode==='air'){if((k==='a'||k==='b')&&S.ck!=='take'&&S.hero.jumpT==null&&S.hero.down<=0)S.hero.jumpT=S.t;return;}
   if(S.mode==='def'||S.mode==='cp'){if(k==='a')slideTackle();else if(k==='b')standTackle();return;}
   if(S.mode==='set'){if(k==='a'&&!S.kicked)S.charge=0;return;}
   if(k==='a')S.charge=0;}
 function onUp(k,hold){const S=MG.S;if(!S.dn[k])return;S.dn[k]=false;
   if(S.mode==='def'||S.mode==='cp'||S.mode==='air')return;
   if(S.mode==='set'){if(k==='a'&&S.charge>=0&&!S.kicked)setKick();return;}
-  const b=S.ball,ce=S.cenk,o=b.owner;
+  const b=S.ball,ce=S.hero,o=b.owner;
   if(k==='a'){const p=S.charge;S.charge=-1;if(p<0)return;
-    if(o===ce)cenkShoot(p,false);else if(!o&&!b.held&&dist(ce,b)<1.6&&b.z<1.7&&ce.stag<=0&&ce.down<=0)cenkShoot(p,true);}
-  else if(k==='b'){if(o===ce)cenkPass(hold>=0.25);}
+    if(o===ce)heroShoot(p,false);else if(!o&&!b.held&&dist(ce,b)<1.6&&b.z<1.7&&ce.stag<=0&&ce.down<=0)heroShoot(p,true);}
+  else if(k==='b'){if(o===ce)heroPass(hold>=0.25);}
   else if(k==='c'&&hold<0.2&&o===ce)skillMove();}
-function cenkShoot(p,volley){const S=MG.S,C=S.C,ce=S.cenk;p=clamp(p,0.05,1);
+function heroShoot(p,volley){const S=MG.S,C=S.C,ce=S.hero;p=clamp(p,0.05,1);
   const ax=Math.abs(IN.jx)>0.25?clamp(IN.jx,-1,1):(S.gk.x<34?0.5:-0.5);
   const press=actOpps().some(d=>d.stag<=0&&dist(d,ce)<1.7);
   const sdA=(0.011+(100-C.a.sut)*0.0006)*(1+p*0.45)*(press?1.35:1)*(volley?1.45:1)*(S.sprint?1.15:1)*(S.cond<40?1+(40-S.cond)/60:1)*(C.morale<35?1.1:1)*(C.up.krampon?1-0.035*(1+(C.up.kt||1)):1)*(C.hurt?1.2:1);S.cond=Math.max(0,S.cond-0.8);
@@ -375,13 +375,13 @@ function cenkShoot(p,volley){const S=MG.S,C=S.C,ce=S.cenk;p=clamp(p,0.05,1);
 function laneSlack(a,t,foes,v,lofted){let m=9;const dx=t.x-a.x,dy=t.y-a.y,L=Math.hypot(dx,dy)||1,sp=spdOpp();
   for(const e of foes){const u=((e.x-a.x)*dx+(e.y-a.y)*dy)/(L*L);if(u<0.05||u>1.05)continue;if(lofted&&u>0.15&&u<0.85)continue;
     const q=Math.hypot(e.x-(a.x+dx*u),e.y-(a.y+dy*u)),tb=u*L/(v*0.85),td=Math.max(0,q-0.9)/sp+0.3;m=Math.min(m,td-tb);}return m;}
-function passPick(){const S=MG.S,b=S.ball,ce=S.cenk;let dx=IN.jx,dy=IN.jy,m=Math.hypot(dx,dy);if(m<0.3){dx=ce.fx;dy=ce.fy;m=Math.hypot(dx,dy)||1;}dx/=m;dy/=m;
+function passPick(){const S=MG.S,b=S.ball,ce=S.hero;let dx=IN.jx,dy=IN.jy,m=Math.hypot(dx,dy);if(m<0.3){dx=ce.fx;dy=ce.fy;m=Math.hypot(dx,dy)||1;}dx/=m;dy/=m;
   const foes=actOpps();let best=null,bs=-1e9;
   for(const t of actMates()){const rx=t.x-b.x,ry=t.y-b.y,d=Math.hypot(rx,ry);if(d<2.5||d>42)continue;const cs=(rx*dx+ry*dy)/d;if(cs<0.25)continue;
     const v=clamp(7.5+d*0.72,10,23)*(0.86+S.C.a.pas*0.0045),sl=laneSlack(b,t,foes,v,false);
     const sc=cs*8-d*0.08-(sl<0.15?(0.15-sl)*10:0);if(sc>bs){bs=sc;best=t;}}
   return best;}
-function cenkPass(through){const S=MG.S,C=S.C,b=S.ball,ce=S.cenk,t=passPick(),press=actOpps().some(d=>d.stag<=0&&dist(d,ce)<1.8);let tx,ty,v,d;
+function heroPass(through){const S=MG.S,C=S.C,b=S.ball,ce=S.hero,t=passPick(),press=actOpps().some(d=>d.stag<=0&&dist(d,ce)<1.8);let tx,ty,v,d;
   let loft=false;
   if(t){d=dist(t,b);loft=false;v=loft?clamp(12+d*0.3,15,22)*(0.9+C.a.pas*0.002):(clamp(7.5+d*0.72,10,23)+(through?2:0))*(0.86+C.a.pas*0.0045);const tt=d/(v*0.78);tx=t.x+t.vx*tt;ty=t.y+t.vy*tt;
     if(through){const gx=34-t.x,gy=6-t.y,gl=Math.hypot(gx,gy)||1;tx+=gx/gl*5;ty+=gy/gl*5;}}
@@ -390,13 +390,13 @@ function cenkPass(through){const S=MG.S,C=S.C,b=S.ball,ce=S.cenk,t=passPick(),pr
   const sdA=(0.006+(100-C.a.pas)*0.00045)*(1+d/28)*(press?1.3:1)*(C.up.krampon?1-0.025*(1+(C.up.kt||1)):1)*(C.hurt?1.15:1)*(S.cond<35?1.15:1);
   const line=defLineNow();kick(ce,tx,ty,through?0.1:loft?0.35:0,v,0,sdA*(loft?1.2:1),through||loft?0.25:0,'pass');
   if(t){b.target=t;S.ofs=t.y<Math.min(line,b.y)-0.4?t:null;}}
-function skillMove(){const S=MG.S,C=S.C,ce=S.cenk;if(S.t<S.skillCd)return;S.skillCd=S.t+1.3;
+function skillMove(){const S=MG.S,C=S.C,ce=S.hero;if(S.t<S.skillCd)return;S.skillCd=S.t+1.3;
   let dx=IN.jx,dy=IN.jy,m=Math.hypot(dx,dy),nd=null,ndd=99;for(const d of actOpps()){const q=dist(d,ce);if(q<ndd){ndd=q;nd=d;}}
   if(m<0.3){if(nd){const s=ce.x<nd.x?-1:1;dx=s*0.8;dy=-0.6;}else{dx=ce.fx;dy=ce.fy;}m=Math.hypot(dx,dy)||1;}
   dx/=m;dy/=m;const v=9+C.a.dri*0.03;ce.vx=dx*v;ce.vy=dy*v;ce.fx=dx;ce.fy=dy;ce.dash=0.24;vib(15);
   if(nd&&ndd<2.6){const p=clamp(0.3+(1-S.iqOpp)*0.18+C.a.dri*0.006-C.opp.str*0.0035-(C.hurt?0.1:0)-(S.cond<30?0.08:0),0.14,0.86);
     if(Math.random()<p){nd.stag=0.4+(1-S.iqOpp)*0.3;nd.cd=0.8;mgFlash('ÇALIM!','ok',600);}else{nd.cd=0;nd.read=true;mgFlash('OKUNDU','bad',500);}}}
-function standTackle(){const S=MG.S,C=S.C,ce=S.cenk,b=S.ball;if(ce.down>0||ce.slide>0||ce.stag>0||S.t<S.tkCd)return;S.tkCd=S.t+0.6;ce.kickT=0.3;
+function standTackle(){const S=MG.S,C=S.C,ce=S.hero,b=S.ball;if(ce.down>0||ce.slide>0||ce.stag>0||S.t<S.tkCd)return;S.tkCd=S.t+0.6;ce.kickT=0.3;
   const a=b.owner,d=dist(ce,b),cp=S.mode==='cp';
   if(!a){if(d<1.4&&b.z<1.2&&!b.held){if(cp)return regain(ce);return endChance('intercept');}return;}
   if(d>1.65){ce.stag=0.25;return;}
@@ -404,13 +404,13 @@ function standTackle(){const S=MG.S,C=S.C,ce=S.cenk,b=S.ball;if(ce.down>0||ce.sl
   if(Math.random()<p){b.owner=null;vib(30);if(cp)return regain(ce);return endChance('tackle');}
   if(Math.random()<(behind?0.4:0.12))return defFoul(a);
   ce.stag=0.5;a.vx+=(a.x>=ce.x?1:-1)*2.5;mgFlash('BOŞA ÇIKTI','bad',500);}
-function slideTackle(){const S=MG.S,C=S.C,ce=S.cenk,b=S.ball;if(ce.down>0||ce.slide>0||S.t<S.tkCd)return;S.tkCd=S.t+0.6;
+function slideTackle(){const S=MG.S,C=S.C,ce=S.hero,b=S.ball;if(ce.down>0||ce.slide>0||S.t<S.tkCd)return;S.tkCd=S.t+0.6;
   let dx=IN.jx,dy=IN.jy,m=Math.hypot(dx,dy);if(m<0.3){dx=b.x-ce.x;dy=b.y-ce.y;m=Math.hypot(dx,dy)||1;}dx/=m;dy/=m;
   const v=(8.5+C.a.hiz*0.02)*condSpeed(S.cond);S.cond=Math.max(0,S.cond-1.5);ce.vx=dx*v;ce.vy=dy*v;ce.fx=dx;ce.fy=dy;ce.slide=0.5;S.slideHit=false;partsGrass(ce.x,ce.y,6);vib(20);}
-function slideContact(){const S=MG.S,C=S.C,ce=S.cenk,b=S.ball,a=b.owner;
+function slideContact(){const S=MG.S,C=S.C,ce=S.hero,b=S.ball,a=b.owner;
   if(dist(ce,b)<0.9&&b.z<0.8&&!b.held){S.slideHit=true;if(Math.random()<clamp(0.5+C.a.def*0.004,0.5,0.9)){b.owner=null;b.vx=ce.vx*0.6;b.vy=ce.vy*0.6;partsGrass(b.x,b.y,10);vib(40);if(S.mode==='cp'){b.last=ce;b.lastT=S.t;b.kind='loose';mgFlash('TOPA KAYDI!','ok',500);return;}return endChance('tackle');}if(a&&Math.random()<0.4)return defFoul(a);mgFlash('KAÇIRDI','bad',500);return;}
   else if(a&&dist(ce,b)>1.1&&dist(ce,a)<0.7){S.slideHit=true;return defFoul(a);}}
-function defFoul(a){const S=MG.S,ce=S.cenk,behind=ce.y>a.y+0.4,r=Math.random();let card=null;
+function defFoul(a){const S=MG.S,ce=S.hero,behind=ce.y>a.y+0.4,r=Math.random();let card=null;
   if(S.mode==='cp'){a.stag=0.8;vib(50);return endChance('foul',{card:r<0.25?'Y':null});}
   if(behind&&a.y<25&&Math.abs(a.x-34)<12&&r<0.12)card='R';else if(r<(behind?0.5:0.2))card='Y';
   const inBox=a.y<16.5&&Math.abs(a.x-34)<20.16;a.stag=0.8;vib(50);
@@ -421,21 +421,21 @@ function setParams(p){const S=MG.S,C=S.C,pen=S.type==='penalti';
   const v=pen?(15+p*(10+C.a.sut*0.12)):(14+p*(9+C.a.sut*0.12)),tz=S.aim.z+(p>0.82?(p-0.82)*4:0)-(p<0.3?(0.3-p)*1.5:0);
   return {v,tz:Math.max(0.1,tz),om:pen?0:S.spin*(0.45+C.a.sut*0.004)};}
 function setKick(){const S=MG.S,C=S.C,p=clamp(S.charge,0.05,1),pen=S.type==='penalti',g=S.gk;S.charge=-1;S.kicked=true;S.kickAt=S.live;S.wallT=0;
-  if(S.type==='korner'){S.cenk.kickT=0.3;cornerKick(S.cenk,S.aim.x,S.aim.y,p,S.spin,C.a.pas);S.mode='air';S.live=0;S.limit=7;vib(25);MG.padK=null;return;}
+  if(S.type==='korner'){S.hero.kickT=0.3;cornerKick(S.hero,S.aim.x,S.aim.y,p,S.spin,C.a.pas);S.mode='air';S.live=0;S.limit=7;vib(25);MG.padK=null;return;}
   const {v,tz,om}=setParams(p),sdA=((pen?0.006:0.014)+(100-C.a.sut)*(pen?0.00035:0.0006))*(1+p*0.4)*(C.morale<35?1.2:1)*(C.hurt?1.2:1);
-  kick(S.cenk,S.aim.x,0,tz,v,om,sdA,0.12+(100-C.a.sut)/400,'shot');MG.shake=2;vib(30);
+  kick(S.hero,S.aim.x,0,tz,v,om,sdA,0.12+(100-C.a.sut)/400,'shot');MG.shake=2;vib(30);
   if(pen){const side=Math.random()<0.28?Math.sign(S.aim.x-34):wpick([[-1,42],[0,16],[1,42]]);g.dive={tx:34+side*2.7,t:0,x0:g.x};}}
 function stepSet(dt){const S=MG.S,b=S.ball,g=S.gk;
   if(!S.kicked){S.live+=dt;
     if(S.type==='korner'){if(S.charge>=0&&IN.btn.a){S.charge=Math.min(Math.max(0.75,condPow(S.cond)),S.charge+dt/1.0);S.spin=clamp(S.spin+IN.jx*2.4*dt,-1,1);}
       else{S.aim.x=clamp(S.aim.x+IN.jx*7*dt,GL-9,GR+9);S.aim.y=clamp(S.aim.y+IN.jy*6*dt,2.5,15);}
-      const ce=S.cenk,dx=S.aim.x-ce.x,dy=S.aim.y-ce.y,dl=Math.hypot(dx,dy)||1;ce.fx=dx/dl;ce.fy=dy/dl;
+      const ce=S.hero,dx=S.aim.x-ce.x,dy=S.aim.y-ce.y,dl=Math.hypot(dx,dy)||1;ce.fx=dx/dl;ce.fy=dy/dl;
       for(const e of S.all)if(e!==ce&&!e.isGK)airAI(e,dt);
       if(S.live>16&&S.charge<0){S.charge=0.66;setKick();}return;}
     if(S.charge>=0&&IN.btn.a){S.charge=Math.min(Math.max(0.75,condPow(S.cond)),S.charge+dt/0.9);if(S.type==='serbest')S.spin=clamp(S.spin+IN.jx*2.4*dt,-1,1);}
     else{S.aim.x=clamp(S.aim.x+IN.jx*3.4*dt,GL-1.8,GR+1.8);S.aim.z=clamp(S.aim.z-IN.jy*2.4*dt,0.1,3.2);}
     if(S.type==='penalti')g.x=34+Math.sin(S.t*1.9)*0.45;
-    const ce=S.cenk,dx=S.aim.x-ce.x,dy=-ce.y,dl=Math.hypot(dx,dy);ce.fx=dx/dl;ce.fy=dy/dl;
+    const ce=S.hero,dx=S.aim.x-ce.x,dy=-ce.y,dl=Math.hypot(dx,dy);ce.fx=dx/dl;ce.fy=dy/dl;
     if(S.live>16&&S.charge<0){S.charge=0.55;setKick();}
     return;}
   S.live+=dt;S.wallT+=dt;
@@ -457,10 +457,10 @@ function startCP(d){const S=MG.S,b=S.ball;S.mode='cp';S.cpUsed=true;S.cpT=0;S.cp
 function regain(by){const S=MG.S,b=S.ball;S.mode='atk';b.owner=by;b.kind=null;b.target=null;b.om=0;S.ofs=null;S.limit=Math.max(S.limit,S.live+6);S.bonus=(S.bonus||0)+(by.isC?0.25:0.1);
   for(const e of S.opps){e.outlet=null;if(dist(e,by)<2.2)e.stag=Math.max(e.stag,0.45);}if(!by.isC){by.hold=rnd(0.25,0.4);by.think=0;}
   mgFlash(by.isC?'GERİ KAZANDIN!':'TOP GERİ BİZDE','ok',800);MG.padK=null;vib(30);}
-function stepCP(dt){const S=MG.S,b=S.ball,ce=S.cenk;S.live+=dt;S.cpT+=dt;
+function stepCP(dt){const S=MG.S,b=S.ball,ce=S.hero;S.live+=dt;S.cpT+=dt;
   const car=b.owner&&b.owner.side==='opp'?b.owner:null;
   if(S.cpT>S.cpLim||b.y>S.cpY+20)return endChance('lost');
-  moveCenk(dt);if(S.phase!=='play')return;
+  moveMe(dt);if(S.phase!=='play')return;
   const spd=spdOpp();
   for(const d of S.opps){if(d.wall||d.role==='idle'){drift(d,dt);continue;}if(busy(d,dt))continue;if(d.cd>0)d.cd-=dt;
     if(d===car){const dx=d.x-ce.x,dy=d.y-ce.y,dc=Math.hypot(dx,dy)||1;let vx=dx/dc*0.7,vy=dy/dc*0.7+0.6;const m=Math.hypot(vx,vy)||1;
@@ -522,12 +522,12 @@ function headerBy(e,tq){const S=MG.S,b=S.ball,C=S.C,def=S.ck==='def',atkSide=def
     if(e.isC){tx=Math.abs(IN.jx)>0.25?34+clamp(IN.jx,-1,1)*3.2:(S.gk.x<34?35.6+rnd(0,1.6):32.4-rnd(0,1.6));tz=clamp(0.5-IN.jy*0.9,0.15,2.1);v=11+C.a.fiz*0.04+C.a.sut*0.04;
       sd=(0.035+(100-C.a.sut)*0.0006+(100-C.a.fiz)*0.0003)*(1+crowd*0.35)*(1.6-tq*0.6);mgFlash('KAFA!','',450);}
     else{const q=e.side==='us'?(e.q||C.us.str):C.opp.str;tx=34+(S.gk.x<34?1:-1)*rnd(0.6,3.2);tz=rnd(0.2,1.9);v=11+q*0.06;sd=(0.05+(100-q)*0.0008)*(1+crowd*0.35);}
-    if(!e.isC&&e.side==='us')e.fromCenk=S.ck==='take';
+    if(!e.isC&&e.side==='us')e.fromMe=S.ck==='take';
     kick(e,tx,0,tz,v,0,sd,0.35,'shot');b.hdr=true;S.mode=def?'def':'atk';S.drop=null;S.limit=S.live+4;MG.padK=null;return;}
   kickClear(e);
   if(def)return endChance(e.isC?'clear':'defOk');
   return endChance('cleared');}
-function airCheck(){const S=MG.S,b=S.ball,def=S.ck==='def',ce=S.cenk;if(b.owner||b.held||S.phase!=='play')return;
+function airCheck(){const S=MG.S,b=S.ball,def=S.ck==='def',ce=S.hero;if(b.owner||b.held||S.phase!=='play')return;
   if(b.py>0&&b.y<=0){const f=b.py/((b.py-b.y)||1),cx=b.px+(b.x-b.px)*f,cz=b.pz+(b.z-b.pz)*f;
     if(cx>GL+0.11&&cx<GR-0.11&&cz<GH-0.11){S.inNet=true;S.net={x:cx,z:cz,a:1};vib(60);return endChance(def?'conceded':(b.last&&b.last.isC?'goal':'tmGoal'));}
     return endChance(def?'defOk':'cleared');}
@@ -550,8 +550,8 @@ function airCheck(){const S=MG.S,b=S.ball,def=S.ck==='def',ce=S.cenk;if(b.owner|
 function stepAir(dt){const S=MG.S,b=S.ball;S.live+=dt;const def=S.ck==='def';
   if(!S.kicked&&S.live>(def?1.5:2.0)){const tk=S.all.find(e=>e.role==='taker');if(tk)aiCorner(tk);}
   if(S.kicked&&S.live>S.limit)return endChance(def?'defOk':'cleared');
-  moveCenk(dt);if(S.phase!=='play')return;
-  for(const e of S.all){if(e===S.cenk||e.isGK)continue;airAI(e,dt);}
+  moveMe(dt);if(S.phase!=='play')return;
+  for(const e of S.all){if(e===S.hero||e.isGK)continue;airAI(e,dt);}
   gkAir(S.gk,dt);if(S.phase!=='play')return;
   separate();ballStep(dt);if(S.kicked)airCheck();}
 function ring(c,x,y,r,col,lw){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();let f=true;for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,P=proj(x+Math.cos(a)*r,y+Math.sin(a)*r,0);if(!P)continue;if(f){c.moveTo(P.x,P.y);f=false;}else c.lineTo(P.x,P.y);}c.stroke();}
@@ -561,7 +561,7 @@ function drawCkPreview(c){const S=MG.S,b=S.ball,p=S.charge>=0?S.charge:0.68,P=ck
 function drawGates(c){const S=MG.S;S.gates.forEach((g,i)=>{const col=g.ok===true?'#4ad27f':g.ok===false?'#ef3b36':i===S.gi?'#ffb320':'#ff7a1a';
   if(i===S.gi){const A=proj(g.x-g.w/2,g.y,0.02),B=proj(g.x+g.w/2,g.y,0.02);if(A&&B){c.strokeStyle='rgba(255,179,32,.7)';c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(A.x,A.y);c.lineTo(B.x,B.y);c.stroke();c.setLineDash([]);}}
   for(const s of [-1,1]){const P=proj(g.x+s*g.w/2,g.y,0),T=proj(g.x+s*g.w/2,g.y,0.5);if(!P||!T)continue;const w=Math.max(2,0.2*P.s);c.fillStyle=col;c.beginPath();c.moveTo(P.x-w,P.y);c.lineTo(P.x+w,P.y);c.lineTo(T.x,T.y);c.closePath();c.fill();c.fillStyle='rgba(255,255,255,.75)';c.fillRect(P.x-w*0.55,(P.y+T.y)/2-1,w*1.1,Math.max(1,w*0.3));}});}
-function gateCheck(){const S=MG.S,ce=S.cenk,g=S.gates[S.gi];const py=S.gpy??ce.y;S.gpy=ce.y;if(!g)return;
+function gateCheck(){const S=MG.S,ce=S.hero,g=S.gates[S.gi];const py=S.gpy??ce.y;S.gpy=ce.y;if(!g)return;
   if(py>g.y&&ce.y<=g.y){g.ok=Math.abs(ce.x-g.x)<=g.w/2;S.gi++;if(g.ok){S.trPts++;vib(12);}else mgFlash('KAPIYI KAÇIRDIN','bad',450);
     if(S.gi>=S.gates.length&&S.type==='tr_kos'){const f=S.trPts/S.gates.length,tb=clamp((S.limit-S.live)/S.limit,0,1);return endChance(f>=0.8?'trDone':'trMiss',{tr:clamp(f*0.7+tb*0.6*f,0,1)});}}}
 
@@ -570,7 +570,7 @@ function shotRes(k){const S=MG.S,sh=S.ball.last;
   if(S.mode==='def')return k==='goal'?'conceded':k==='saved'?'gkSave':'oppMiss';
   if(k==='out')return 'lost';
   if(sh&&sh.isC)return k;
-  if(sh&&sh.side==='us')return k==='goal'?(sh.fromCenk?'assist':'tmGoal'):'tmMiss';
+  if(sh&&sh.side==='us')return k==='goal'?(sh.fromMe?'assist':'tmGoal'):'tmMiss';
   return k==='goal'?'tmGoal':'lost';}
 function checkBall(){const S=MG.S,b=S.ball;if(S.mode==='cp')return checkBallCP();if(b.owner||b.held||S.phase!=='play')return;
   const sp=Math.hypot(b.vx,b.vy),g=S.gk;
@@ -591,7 +591,7 @@ function checkBall(){const S=MG.S,b=S.ball;if(S.mode==='cp')return checkBallCP()
       if(!e.isC&&b.kind==='shot'&&sp>14)continue;if(sp>26)continue;
       if(S.ofs===e)return endChance('offside');
       if(e.isC&&sp>13&&b.last!==e&&b.kind!=='loose'){const pr=S.opps.some(o=>dist(o,e)<2.2);if(Math.random()<clamp((pr?0.3:0.1)-S.C.a.dri*0.0032,0.02,0.26)){b.vx=b.vx*0.35+rnd(-1.6,1.6);b.vy=b.vy*0.35+rnd(-1.2,1.2);b.last=e;b.lastT=S.t;b.kind='loose';mgFlash('İLK DOKUNUŞ KAÇTI','bad',500);return;}}
-      e.fromCenk=!e.isC&&b.last===S.cenk;b.owner=e;b.kind=null;b.om=0;b.target=null;S.ofs=null;if(!e.isC){e.hold=rnd(0.3,0.45);e.think=0;}return;
+      e.fromMe=!e.isC&&b.last===S.hero;b.owner=e;b.kind=null;b.om=0;b.target=null;S.ofs=null;if(!e.isC){e.hold=rnd(0.3,0.45);e.think=0;}return;
     }else{
       if(S.mode==='def'){if(S.ofs===e)return endChance('oppOff');b.owner=e;b.kind=null;b.om=0;b.target=null;S.ofs=null;return;}
       const code=b.kind==='shot'?shotRes('blocked'):'lost';
@@ -610,16 +610,16 @@ function mgFlash(txt,cls,ms){const f=$('#mgFlash');f.textContent=txt;f.className
 function endChance(code,extra){const S=MG.S;if(!S||S.phase==='end'||S.phase==='replay')return;extra=extra||{};if(S.reb&&['lost','timeout','cleared'].includes(code))code=S.reb;if(S.ck&&code==='lost')code='cleared';if(S.gates){extra.gates=S.trPts;extra.ng=S.gates.length;}if(S.bonus)extra.bonus=S.bonus;if(S.ball&&S.ball.hdr&&S.ball.last&&S.ball.last.isC)extra.hdr=true;S.phase='end';
   const big=['goal','assist','tmGoal'].includes(code);S.endT=big?2.6:extra.injured?2.2:1.6;S.res=Object.assign({code,cond:S.cond},extra);
   const R=RES[code];let t=R.t;if(extra.injured&&code!=='injury')t+='\nSAKATLANDI';if(extra.card==='Y')t+='\nSARI KART';if(extra.card==='R')t+='\nKIRMIZI KART';mgFlash(t,R.cls,0);
-  if(code==='goal'){S.cenk.cel=2.4;S.cenk.celK=pick(['kos','ucak','diz','yumruk']);partsConfetti();MG.shake=6;vib([60,40,90]);}else if(big){partsConfetti();MG.shake=3;}else if(code==='conceded')MG.shake=2;
+  if(code==='goal'){S.hero.cel=2.4;S.hero.celK=pick(['kos','ucak','diz','yumruk']);partsConfetti();MG.shake=6;vib([60,40,90]);}else if(big){partsConfetti();MG.shake=3;}else if(code==='conceded')MG.shake=2;
   resetInput();MG.padK=null;}
 function partsGrass(x,y,n){const S=MG.S;if(!S)return;for(let i=0;i<n;i++)S.parts.push({x,y,z:0.05,vx:rnd(-2,2),vy:rnd(-2,2),vz:rnd(1,3),life:rnd(0.3,0.7),col:pick(['#5fae6a','#3f8c4d','#8fd08f']),sz:0.08});}
-function partsConfetti(){const S=MG.S,cols=[S.cenk.kit.shirt,S.cenk.kit.trim,'#ffb320','#ffffff'];for(let i=0;i<150;i++)S.parts.push({x:rnd(20,48),y:rnd(-3,6),z:rnd(3,8),vx:rnd(-3,3),vy:rnd(1,5),vz:rnd(0,3),life:rnd(1.6,2.8),col:pick(cols),sz:rnd(0.22,0.36),conf:true});}
+function partsConfetti(){const S=MG.S,cols=[S.hero.kit.shirt,S.hero.kit.trim,'#ffb320','#ffffff'];for(let i=0;i<150;i++)S.parts.push({x:rnd(20,48),y:rnd(-3,6),z:rnd(3,8),vx:rnd(-3,3),vy:rnd(1,5),vz:rnd(0,3),life:rnd(1.6,2.8),col:pick(cols),sz:rnd(0.22,0.36),conf:true});}
 function stepParts(dt){const S=MG.S;for(const p of S.parts){p.life-=dt;p.vz-=(p.conf?2.2:GRAV)*dt;if(p.conf){p.vx*=0.985;p.vy*=0.985;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.z<0){p.z=0;p.vz=0;p.vx*=0.4;p.vy*=0.4;}}if(S.parts.length)S.parts=S.parts.filter(p=>p.life>0);}
 
 /* ---------- Döngü ---------- */
 function camTarget(){const S=MG.S,b=S.ball;let fx,fy;
   if(S.ck&&(S.mode==='air'||S.mode==='set')){if(!S.kicked){fx=34+(b.x-34)*0.12;fy=6.5;}else{fx=34+(b.x-34)*0.25;fy=Math.max(6.5,b.y-2);}}
-  else if(S.gates&&S.ball.held){fx=S.cenk.x*0.7+34*0.3;fy=S.cenk.y-5;}
+  else if(S.gates&&S.ball.held){fx=S.hero.x*0.7+34*0.3;fy=S.hero.y-5;}
   else if(S.mode==='set'&&!S.kicked){fx=b.x*0.6+34*0.4;fy=b.y-(S.type==='penalti'?2.2:3.2);}else if(S.inNet){fx=34;fy=6;}
   else{fx=b.x*0.75+34*0.25;fy=b.y-(S.mode==='def'?2:2.5);}
   return {x:fx,y:clamp(fy,5,60)};}
@@ -628,7 +628,7 @@ function stepAtk(dt){const S=MG.S,b=S.ball;S.live+=dt;
   if(S.live>S.limit&&!(b.kind==='shot'&&!b.owner))return endChance('timeout');
   if(S.t>=S.brainOT){S.brainOT=S.t+0.32-S.iqOpp*0.17;brainDefend();}
   if(S.t>=S.brainUT){S.brainUT=S.t+0.3-S.iqUs*0.12;brainSupport();}
-  moveCenk(dt);if(S.gates){gateCheck();if(S.phase!=='play')return;}
+  moveMe(dt);if(S.gates){gateCheck();if(S.phase!=='play')return;}
   for(const t of S.mates)mateAtkAI(t,dt);if(S.phase!=='play')return;
   for(const d of S.opps)oppAtkAI(d,dt);if(S.phase!=='play')return;
   gkAI(S.gk,dt);if(S.phase!=='play')return;
@@ -636,12 +636,12 @@ function stepAtk(dt){const S=MG.S,b=S.ball;S.live+=dt;
 function stepDef(dt){const S=MG.S,b=S.ball;S.live+=dt;
   if(S.live>S.limit&&!(b.kind==='shot'&&!b.owner))return endChance('defOk');
   if(S.t>=S.brainOT){S.brainOT=S.t+0.3-S.iqOpp*0.15;brainAttack();}
-  moveCenk(dt);if(S.phase!=='play')return;
+  moveMe(dt);if(S.phase!=='play')return;
   for(const a of S.opps)attAI(a,dt);if(S.phase!=='play')return;
   for(const t of S.mates)coverAI(t,dt);if(S.phase!=='play')return;
   gkAI(S.gk,dt);if(S.phase!=='play')return;
   separate();ballStep(dt);checkBall();}
-function endStep(dt){const S=MG.S,ce=S.cenk,goal=S.res&&S.res.code==='goal';
+function endStep(dt){const S=MG.S,ce=S.hero,goal=S.res&&S.res.code==='goal';
   ballStep(dt);
   for(const e of S.all){
     if(e===ce&&ce.cel>0){ce.cel-=dt;if(ce.celK==='diz'&&ce.cel<1.1){drift(ce,dt,0.5);continue;}steer(ce,ce.x<34?1.5:66.5,1.5,6.2,dt);continue;}
@@ -854,7 +854,7 @@ function drawPreview(c){const S=MG.S,b=S.ball,{v,tz,om}=setParams(S.charge>=0?S.
   let x=b.x,y=b.y,vx=Math.cos(ang)*v,vy=Math.sin(ang)*v,o=om,z=0.11,trav=0;const t=d/(v*0.975);let vz=(tz-0.11+0.5*GRAV*t*t)/t;const dt=1/60;c.fillStyle='#ffffff';
   for(let i=0;i<120;i++){const a=o*dt,cs=Math.cos(a),sn=Math.sin(a),n=vx*cs-vy*sn;vy=vx*sn+vy*cs;vx=n;o*=Math.pow(0.55,dt);vz-=GRAV*dt;z+=vz*dt;x+=vx*dt;y+=vy*dt;trav+=v*dt;if(trav>d*0.45)break;
     if(i%3===0){const P=proj(x,y,Math.max(0,z));if(P){c.globalAlpha=Math.max(0,0.9-trav/(d*0.5));c.beginPath();c.arc(P.x,P.y,2.2,0,7);c.fill();}}}c.globalAlpha=1;}
-function drawOverlay(c){const S=MG.S,b=S.ball,ce=S.cenk,W=MG.W;if(S.phase==='replay')return rpOverlay(c);if(S.pressing&&S.pressT)ring(c,S.pressT.x,S.pressT.y,0.8,'rgba(255,179,32,.9)',2.2);
+function drawOverlay(c){const S=MG.S,b=S.ball,ce=S.hero,W=MG.W;if(S.phase==='replay')return rpOverlay(c);if(S.pressing&&S.pressT)ring(c,S.pressT.x,S.pressT.y,0.8,'rgba(255,179,32,.9)',2.2);
   for(const t of actMates()){const P=proj(t.x,t.y,1);if(!P||(P.x>=4&&P.x<=W-4))continue;const d=P.x<4?-1:1,x=d<0?11:W-11,y=clamp(P.y,96,MG.H*0.55);
     c.fillStyle=t.kit.shirt;c.strokeStyle='#ffffff';c.lineWidth=1.5;c.beginPath();c.moveTo(x+d*7,y);c.lineTo(x-d*5,y-8);c.lineTo(x-d*5,y+8);c.closePath();c.fill();c.stroke();}
   if(S.mode==='atk'&&S.phase==='play'&&b.owner===ce){const t=passPick();if(t){const P=proj(t.x,t.y,2.35);if(P){const s=Math.max(5,P.s*0.32);c.fillStyle='rgba(255,255,255,.95)';c.strokeStyle='rgba(0,0,0,.4)';c.lineWidth=1;c.beginPath();c.moveTo(P.x,P.y+s);c.lineTo(P.x-s,P.y-s*0.5);c.lineTo(P.x+s,P.y-s*0.5);c.closePath();c.fill();c.stroke();}}}
@@ -892,7 +892,7 @@ const PADL={own:[['KOŞ','dokun: çalım'],['PAS','tut: ara pas'],['ŞUT','kısa
   pen:[null,null,['ŞUT','basılı tut']],fk:[null,null,['ŞUT','basılı: falso']],none:[null,null,null],
   ck:[null,null,['ORTA','basılı tut']],aair:[['KOŞ','sıyrıl'],null,['KAFA','zamanla']],dair:[['KOŞ',''],['KAFA','uzaklaştır'],['KAFA','zıpla']],run:[['KOŞ','depar'],null,null]};
 function padCtx(){const S=MG.S;let k='none';
-  if(S&&S.phase!=='end'&&S.phase!=='replay'){if(S.mode==='def'||S.mode==='cp')k='def';else if(S.mode==='air')k=S.ck==='take'?'none':S.ck==='def'?'dair':'aair';else if(S.type==='tr_kos')k='run';else if(S.mode==='set')k=S.kicked?'none':(S.type==='penalti'?'pen':S.type==='korner'?'ck':'fk');else{const o=S.ball.owner;k=o===S.cenk?'own':(o&&o.side==='us')?'mate':'free';}}
+  if(S&&S.phase!=='end'&&S.phase!=='replay'){if(S.mode==='def'||S.mode==='cp')k='def';else if(S.mode==='air')k=S.ck==='take'?'none':S.ck==='def'?'dair':'aair';else if(S.type==='tr_kos')k='run';else if(S.mode==='set')k=S.kicked?'none':(S.type==='penalti'?'pen':S.type==='korner'?'ck':'fk');else{const o=S.ball.owner;k=o===S.hero?'own':(o&&o.side==='us')?'mate':'free';}}
   if(k===MG.padK)return;MG.padK=k;const L=PADL[k];applyLayout(k==='def'||k==='dair'?'def':'atk');
   ['btnC','btnB','btnA','btnD'].forEach((id,i)=>{const el=document.getElementById(id),l=L[i];el.classList.toggle('off',!l);
     el.innerHTML=l?`<span${l[0].length>5?' class="long"':''}>${l[0]}</span>${l[1]?`<small>${l[1]}</small>`:''}`:'';el.setAttribute('aria-label',l?l[0]:'');});

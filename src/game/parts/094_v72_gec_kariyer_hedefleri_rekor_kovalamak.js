@@ -41,7 +41,7 @@ function jubClub(){const CT=lcClubTot();let best=null,bs=-1;for(const [c,x] of O
 let JUB=null;
 function jubOpen(){const cid=jubClub(),c=CLUBS[cid]||myClub(),CT=lcClubTot()[cid]||{ap:0,g:0};const mates=(()=>{try{return squadOf(cid).sort((a,b)=>b.ovr-a.ovr).slice(0,4).map(p=>p.name);}catch(e){return [];}})();
   const legs=Object.values(G.leg||{}).filter(x=>x&&x.n).slice(0,3).map(x=>x.n);const g=1+(Math.random()<0.6?1:0)+(Math.random()<0.2?1:0),num=G.p.num||9;
-  const L=[[`🏟 ${c.name} stadyumu tıklım tıklım. Tribünlerde dev bir pankart: “TEŞEKKÜRLER ${(G.p.name||'CENK').toLocaleUpperCase('tr-TR')}”.`,'big'],
+  const L=[[`🏟 ${c.name} stadyumu tıklım tıklım. Tribünlerde dev bir pankart: “TEŞEKKÜRLER ${(G.p.name||(trUp(meF()))).toLocaleUpperCase('tr-TR')}”.`,'big'],
    [`Takım arkadaşların ${mates.slice(0,3).join(', ')||'eski dostların'} ve ${legs.length?legs.join(', ')+' gibi efsaneler':'yıllar boyu birlikte oynadığın efsaneler'} seninle aynı sahada.`],
    ['Çocuğun elinden tutarak sahaya çıkıyorsun; tüm stat ayakta alkışlıyor.'],
    [`8’ Gol! İlk golün geliyor — ${c.short} tribünleri yıkılıyor.`,'goal'],
@@ -50,7 +50,7 @@ function jubOpen(){const cid=jubClub(),c=CLUBS[cid]||myClub(),CT=lcClubTot()[cid
    [`70’ Oyundan alınıyorsun. Kaptanlık bandını genç bir oyuncuya bağlıyorsun; ${CT.ap} maç ve ${CT.g} golün anısına tüm stat dakikalarca seni alkışlıyor.`],
    [`🎽 Kulüp başkanı ${num} numaralı formanı emekliye ayırdığını açıklıyor. Bu numarayı bir daha kimse giymeyecek.`,'big'],
    [`🎤 Mikrofon sende: “Mahalle sahasından buraya kadar… Bu forma, bu taraftar her şeyimdi. Teşekkürler.”`]];
-  JUB={L,i:0,cid,g,t:null};const ov=document.createElement('div');ov.id='jub';ov.className='jub';ov.innerHTML=`<div class="jub-c"><p class="jub-k">JÜBİLE MAÇI · ${esc(c.name)}</p><h2>${esc(G.p.name||'Cenk Kuşku')}</h2><div class="jub-l" id="jubL"></div><div class="jub-b"><button class="btn" data-jub="skip">Sona geç</button><button class="cta" data-jub="end" id="jubEnd" hidden>Futbola veda et</button></div></div>`;
+  JUB={L,i:0,cid,g,t:null};const ov=document.createElement('div');ov.id='jub';ov.className='jub';ov.innerHTML=`<div class="jub-c"><p class="jub-k">JÜBİLE MAÇI · ${esc(c.name)}</p><h2>${esc(meN())}</h2><div class="jub-l" id="jubL"></div><div class="jub-b"><button class="btn" data-jub="skip">Sona geç</button><button class="cta" data-jub="end" id="jubEnd" hidden>Futbola veda et</button></div></div>`;
   document.body.appendChild(ov);ov.addEventListener('click',e=>{const b=e.target.closest('[data-jub]');if(!b)return;if(b.dataset.jub==='skip'){while(JUB&&JUB.i<JUB.L.length)jubNext(true);}else jubEnd();});jubNext();}
 function jubNext(fast){if(!JUB)return;const el=$('#jubL');if(!el)return;const [t,c]=JUB.L[JUB.i++];el.insertAdjacentHTML('beforeend',`<p class="${c||''}">${esc(t)}</p>`);el.scrollTop=el.scrollHeight;
   if(JUB.i<JUB.L.length){if(!fast)JUB.t=setTimeout(jubNext,1700);}else{clearTimeout(JUB.t);const b=$('#jubEnd');if(b)b.hidden=false;}}

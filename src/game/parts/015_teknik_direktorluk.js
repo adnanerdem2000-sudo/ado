@@ -12,7 +12,7 @@ function mgrJobOffers(rep,n){const mt=rep>78?9:rep>64?8:rep>50?7:rep>36?6:5;
   const cands=Object.values(CLUBS).filter(c=>{const L=LEAGUES[c.league];return !L.youth&&L.tier<=mt&&L.tier>=Math.max(3,mt-2)&&c.id!==(G.m&&G.m.club);}).map(c=>({c,w:Math.exp(-Math.abs(LEAGUES[c.league].tier-mt+0.5))*(LEAGUES[c.league].cc==='TR'?2:1)}));
   const out=[];for(let i=0;i<n&&cands.length;i++){const x=wpick(cands.map(q=>[q,q.w]));cands.splice(cands.indexOf(x),1);out.push(x.c.id);}return out;}
 function becomeManager(){if(!G.lic)G.lic={lv:G.p.fame>=60?'B':'C',exp:0};const rep=mgrRep(),ids=mgrJobOffers(rep,3);
-  openModal(`<h3>Teknik direktörlük</h3><p>Cenk Kuşku kramponlarını astı ve teknik direktörlük belgesini aldı. Kariyerine ve şöhretine göre kulüpler kapını çalıyor (itibar ${rep}).</p>
+  openModal(`<h3>Teknik direktörlük</h3><p>${meN()} kramponlarını astı ve teknik direktörlük belgesini aldı. Kariyerine ve şöhretine göre kulüpler kapını çalıyor (itibar ${rep}).</p>
   ${ids.map(id=>{const c=CLUBS[id];return `<div class="offer"><div class="offer-head">${crestSVG(c,40)}<div><b>${esc(c.name)}</b><span>${LEAGUES[c.league].name}</span></div></div>${visLine(c)}<button class="cta sm" data-act="mgrSign" data-id="${id}">Teknik direktör ol</button></div>`;}).join('')}
   <button class="btn ghost" data-act="closeModal">Vazgeç</button>`);}
 function mgrObjective(c){const tb=leagueClubs(c.league).sort((a,b)=>b.str-a.str),rk=tb.findIndex(x=>x.id===c.id)+1,v=clubVision(c),n=tb.length;
@@ -22,14 +22,14 @@ function mgrSign(id){const c=CLUBS[id],firstTime=G.mode!=='mgr';closeModal();
   G.m=Object.assign(G.m||{},{club:id,since:(G.s?G.s.year:2026)+1,conf:60,tac:'dengeli',xi:null,budget:Math.round(clubBudget(c)*0.3*VALF/1e4)*1e4,obj:mgrObjective(c),st:{w:0,d:0,l:0,gf:0,ga:0},rep:G.m&&G.m.rep||mgrRep()});
   G.phase='season';newSeason(G.s.year+1);applyBoosts();syncStr(id);licTick();mgrInit();TAB='hub';
   msg('board',`${c.name} ile anlaştın`,`Teknik direktör olarak ${c.name} yönetimiyle 3 yıllık sözleşme imzaladın. Yönetimin hedefi: ${G.m.obj.txt}. Transfer bütçen ${money(G.m.budget)}.`);
-  save();render();window.scrollTo(0,0);if(firstTime)toast('Yeni dönem: teknik direktör Cenk Kuşku');}
+  save();render();window.scrollTo(0,0);if(firstTime)toast(('Yeni dönem: teknik direktör '+meN()));}
 function mgrAdvance(){let g=0;while(g++<120&&G.phase==='season'){const t=dayType(G.s.day);if(t==='mac'||t==='kupa')break;nextDay();}save();render();window.scrollTo(0,0);}
 function mgrPlay(sim){const f=ourFixture();if(!f)return;if(!sim){const uh=f[0]===G.club;return pressConf(CLUBS[uh?f[1]:f[0]],()=>fxStart({opp:CLUBS[uh?f[1]:f[0]],usHome:uh,neutral:false,onEnd:(gu,go,sc)=>mgrFinish(gu,go,f,sc)}));}const usHome=f[0]===G.club,opp=CLUBS[usHome?f[1]:f[0]],me=myClub(),T=tacT(opp),S=xiStr();
   const tpf=(G.m.tp&&G.m.tp.f)||'denge',[lh,la]=lambdas(usHome?S:opp.str,usHome?opp.str:S),lu=(usHome?lh:la)*T.f*(tpf==='hucum'?1.06:1),lo=(usHome?la:lh)*T.a*(tpf==='savunma'?0.93:1);
   if(sim){const _M=typeof mgrMods==='function'?mgrMods(opp):{u:1,o:1};const gu=poisson(lu*_M.u),go=poisson(lo*_M.o);return mgrFinish(gu,go,f,[]);}
   MR={mgr:true,home:usHome?me:opp,away:usHome?opp:me,usHome,us:me,opp,min:0,gu:0,go:0,lu,lo,ev:[],ei:0,fast:false,timer:0,comp:`${curLeague().short} · ${G.s.week}. Hafta`,scorers:[],end:90+rint(1,4),half:1};
   mgrHalf(1);openMatchView();$('#tabs').hidden=true;$('#mvStage').hidden=true;$('#mvFeed').innerHTML='';$('#mvDone').hidden=true;$('#mvSub').hidden=true;$('#mvFast').hidden=false;$('#mvFast').textContent='Hızlandır';
-  mgrBoard();feed(0,`Hakem başlama düdüğünü çaldı. Cenk Kuşku kenarda; taktik: ${T.n}.`,'');MR.timer=setTimeout(mgrStep,500);}
+  mgrBoard();feed(0,`Hakem başlama düdüğünü çaldı. ${meN()} kenarda; taktik: ${T.n}.`,'');MR.timer=setTimeout(mgrStep,500);}
 function mgrHalf(h){const T=TAC[G.m.tac],a=h===1?1:46,b=h===1?45:MR.end,ratio=(b-a+1)/90,sq=squadOf(G.club),xi=mgrXI().map(k=>sq.find(p=>p.k===k)).filter(Boolean);
   const lu=MR.lu/T.f*T.f,lo=MR.lo;for(let i=poisson(lu*ratio);i>0;i--)MR.ev.push({m:rint(a,b),k:'us'});for(let i=poisson(lo*ratio);i>0;i--)MR.ev.push({m:rint(a,b),k:'opp'});
   for(let i=rint(0,2);i>0;i--)MR.ev.push({m:rint(a,b),k:'fl'});if(h===1)MR.ev.push({m:45,k:'ht'});MR.ev.sort((x,y)=>x.m-y.m);MR.xi=xi;}

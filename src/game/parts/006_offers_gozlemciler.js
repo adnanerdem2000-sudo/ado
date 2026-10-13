@@ -29,9 +29,9 @@ function scoutUpdate(r,played){if(!played)return;const cur=myClub(),ct=LEAGUES[c
     const w=G.watch[x.c.id]||(G.watch[x.c.id]={i:0,lv:0});w.i=clamp(w.i+d,0,100);
     while(w.lv<3&&w.i>=WLV[w.lv]){w.lv++;watchNews(x.c,w.lv);}}}
 function watchNews(c,lv){const n=Object.values(G.watch).filter(w=>w.lv>=1).length,L=LEAGUES[c.league];
-  const T={1:[n>1?`Bir kulüp daha: ${c.name} de Cenk Kuşku’yu izliyor`:`${c.name} gözlemcileri Cenk Kuşku’yu izlemeye aldı`,`${L.name} ekibi ${c.name} scout heyetinin son maçlarda tribünde olduğu ve Cenk Kuşku hakkında rapor hazırladığı öğrenildi.${n>1?` Böylece Cenk’i takip eden kulüp sayısı ${n} oldu.`:''}`],
-    2:[`${c.name} Cenk Kuşku takibini sıklaştırdı`,`Kulis bilgisine göre ${c.name} teknik heyeti, Cenk Kuşku raporlarını olumlu buldu ve maçlarını yerinde izlemeyi sürdürecek.`],
-    3:[`Kulis: ${c.name} Cenk Kuşku için harekete geçiyor`,`${c.name} yönetiminin transfer döneminde Cenk Kuşku için resmi teklif hazırladığı konuşuluyor.`]}[lv];
+  const T={1:[n>1?`Bir kulüp daha: ${c.name} de ${meNs('acc')} izliyor`:`${c.name} gözlemcileri ${meNs('acc')} izlemeye aldı`,`${L.name} ekibi ${c.name} scout heyetinin son maçlarda tribünde olduğu ve ${meN()} hakkında rapor hazırladığı öğrenildi.${n>1?` Böylece ${meFs('acc')} takip eden kulüp sayısı ${n} oldu.`:''}`],
+    2:[`${c.name} ${meN()} takibini sıklaştırdı`,`Kulis bilgisine göre ${c.name} teknik heyeti, ${meN()} raporlarını olumlu buldu ve maçlarını yerinde izlemeyi sürdürecek.`],
+    3:[`Kulis: ${c.name} ${meN()} için harekete geçiyor`,`${c.name} yönetiminin transfer döneminde ${meN()} için resmi teklif hazırladığı konuşuluyor.`]}[lv];
   msg('scout',T[0],T[1]);}
 function genOffers(kind,agedOut){
   const age=G.p.age+(kind==='end'?1:0),eff=effRating(),cur=myClub(),ct=LEAGUES[cur.league].tier,offers=[];
@@ -57,7 +57,7 @@ function acceptOffer(o){
   G.inbox.forEach(m=>{if(m.offer&&m.offer.status==='open'&&m.offer!==o)m.offer.status='declined';});
   o.status='accepted';G.p.money+=o.bonus;delete G.watch[o.club];G.tl=false;
   const contract={years:o.years,wage:o.wage,role:o.role};
-  if(o.loan){if(G.phase==='season'){G.loan={parent:G.loan?G.loan.parent:G.club,contract:G.loan?G.loan.contract:G.contract};closeSegment();G.club=o.club;G.contract=contract;G.p.trust=ROLE_TRUST[o.role]??55;if(o.league!==G.s.league)switchLeague(o.league);msg('news',`Kiralık: Cenk Kuşku ${c.name} yolunda`,`Sezon sonuna kadar ${c.name} formasını giyeceksin. Rolün: ${o.role}.`);toast(`${c.name} ile kiralık anlaşma!`);}
+  if(o.loan){if(G.phase==='season'){G.loan={parent:G.loan?G.loan.parent:G.club,contract:G.loan?G.loan.contract:G.contract};closeSegment();G.club=o.club;G.contract=contract;G.p.trust=ROLE_TRUST[o.role]??55;if(o.league!==G.s.league)switchLeague(o.league);msg('news',`Kiralık: ${meN()} ${c.name} yolunda`,`Sezon sonuna kadar ${c.name} formasını giyeceksin. Rolün: ${o.role}.`);toast(`${c.name} ile kiralık anlaşma!`);}
     else{G.next={club:o.club,contract,loan:true};msg('news',`Kiralık: ${c.name}`,`Yeni sezonu kiralık olarak ${c.name} formasıyla geçireceksin.`);toast('Kiralık anlaşma imzalandı');}
     save();render();return;}
   if(!o.renew)G.loan=null;
@@ -65,7 +65,7 @@ function acceptOffer(o){
   else if(G.phase==='season'){
     closeSegment();G.club=o.club;G.contract=contract;G.p.trust=ROLE_TRUST[o.role]??55;
     if(o.league!==G.s.league)switchLeague(o.league);
-    msg('news',`Resmi: Cenk Kuşku artık ${c.name} oyuncusu`,`Ara transfer döneminde ${c.name} ile ${o.years} yıllık sözleşme imzaladın. Rolün: ${o.role}.`);toast(`${c.name} ile imzalandı!`);
+    msg('news',`Resmi: ${meN()} artık ${c.name} oyuncusu`,`Ara transfer döneminde ${c.name} ile ${o.years} yıllık sözleşme imzaladın. Rolün: ${o.role}.`);toast(`${c.name} ile imzalandı!`);
   } else {G.next={club:o.club,contract};msg('news',`İmza atıldı: ${c.name}`,`Yeni sezonda ${c.name} formasını giyeceksin. Rolün: ${o.role}.`);toast(`${c.name} ile imzalandı!`);}
   save();render();}
 function haggle(o){if(o.haggled||o.status!=='open')return;o.haggled=true;const p=clamp(0.35+o.interest*0.04+(G.p.up.menajer?0.2:0),0.1,0.9),r=Math.random();

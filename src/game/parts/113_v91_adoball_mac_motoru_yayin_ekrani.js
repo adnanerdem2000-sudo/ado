@@ -31,11 +31,12 @@ function abAttrs(p,role,boost,fam){let R={};try{R=fmAttrs(p).raw||{};}catch(e){}
   const g=(n,d)=>{const v=R[n];return v==null?(d!=null?d:o-8):v;},c=(v,x)=>Math.round(clamp(v+(x===0?0:b),5,99));
   const pos=AB_POS[role]||'MO',tf=(f-0.7)*10;
   if(p.pos==='KL'||role==='GK')return {pos:'KL',gk_ref:c(g('Refleks',o)),gk_div:c((g('Refleks',o)+g('Çeviklik',o-4))/2),gk_pos:c(g('Pozisyon Alma',o)+tf*.4),gk_kic:c((g('Ayakla Oyun',o-10)+g('Uzun Atış',o-12))/2),gk_1v1:c(g('Bire Bir',o-2)),
-    pen:c(g('Penaltı Kullanma',35)),fk:c(g('Serbest Vuruş Kullanma',30)),cor:c(g('Korner',25)),vis:c(g('Vizyon',o-20)),bal:c(g('Denge',o-6)),lead:c(g('Liderlik',o-10),0),agg:12};
+    pen:c(g('Penaltı Kullanma',35)),fk:c(g('Serbest Vuruş Kullanma',30)),cor:c(g('Korner',25)),vis:c(g('Vizyon',o-20)),bal:c(g('Denge',o-6)),lead:c(g('Liderlik',o-10),0),agg:12,
+    gk_air:c(g('Hava Hakimiyeti',o-4)),gk_han:c(g('Elle Oyun',o-4)),gk_spd:c((g('Çeviklik',o-4)+g('Hızlanma',o-12))/2)};
   const df=/^(STP|SLB|SĞB|MDO)$/.test(pos),at=/^(SF|SLK|SĞK|MOO)$/.test(pos);
   const posi=df?g('Pozisyon Alma')*.75+g('Topsuz Alan')*.25:at?g('Topsuz Alan')*.65+g('Pozisyon Alma')*.35:(g('Pozisyon Alma')+g('Topsuz Alan'))/2;
   const aggRaw=g('Agresiflik',o-8),aggRef=p.pos==='DF'?o-2:o-12;
-  return {pos,pac:c((g('Hız')+g('Hızlanma'))/2),str:c(g('Güç')),sta:c((g('Dayanıklılık')*.7+g('Vücut Zindeliği',o-4)*.3)),dri:c((g('Dripling')*.5+g('İlk Kontrol')*.3+g('Teknik')*.2)),
+  return {pos,pac:c(g('Hız')*.8+g('Hızlanma')*.2),acc:c(g('Hızlanma')*.7+g('Çeviklik',o-4)*.3),str:c(g('Güç')),sta:c((g('Dayanıklılık')*.7+g('Vücut Zindeliği',o-4)*.3)),dri:c((g('Dripling')*.5+g('İlk Kontrol')*.3+g('Teknik')*.2)),
     pas:c(g('Pas')*.8+g('Takım Oyunu',o-4)*.2+tf*.3),lon:c(g('Uzaktan Şut')),fin:c(g('Bitiricilik')*.8+g('Soğukkanlılık',o-4)*.2),sho:c(g('Uzaktan Şut')*.45+g('Bitiricilik')*.25+g('Güç')*.3),
     hea:c(g('Kafa Vuruşu')*.7+g('Zıplama')*.3),tac:c(g('Top Kapma')),mar:c(g('Markaj')*.8+g('Konsantrasyon',o-5)*.2),posi:c(posi+tf),vis:c(g('Vizyon')*.6+g('Karar Alma')*.4+tf*.5),
     bal:c(g('Denge')),agg:Math.round(clamp((AB_AGG[pos]||40)+(aggRaw-aggRef)*0.8,8,92)),pen:c(g('Penaltı Kullanma',o-10)),fk:c(g('Serbest Vuruş Kullanma',o-14)),cor:c(g('Korner',o-14)),lead:c(g('Liderlik',o-10),0)};}
@@ -164,8 +165,8 @@ function abTickCore(){const S=ABM.fx;if(!S||FX!==S||!ABM.win)return;
     if(S.pl3&&ABM.done&&sim.finished&&S.phase!=='end'&&S.phase!=='pause'&&!PL3.mom)S.phase='end';
     if(S.pl3)try{pl3Drive();}catch(e){console.warn(e);}
   }catch(e){console.warn('ab tick',e);}}
-function abMirror(S,sim,st,dt){const R=st.rt;
-  for(const T of S.T)for(const p of T.P){if(p.ei==null||p.subbed)continue;const q=sim.players[p.ei];if(!q)continue;const xy=abXY(q.x,q.y);p.x=xy[0];p.y=xy[1];p.st=clamp((q.stam!=null?q.stam:1)*100,10,100);
+function abMirror(S,sim,st,dt){const R=st.rt,fl=sim.teams[abS2E(0)].dir!==1;/* [v133] kare basina dizi tahsisi yok (abXY ile ayni donusum) */
+  for(const T of S.T)for(const p of T.P){if(p.ei==null||p.subbed)continue;const q=sim.players[p.ei];if(!q)continue;p.x=fl?105-q.x:q.x;p.y=fl?68-q.y:q.y;p.st=clamp((q.stam!=null?q.stam:1)*100,10,100);
     if(R){try{p.rt=clamp(R.get(p.ei)+(ABM.adj[p.k]||0),3,10);const c=R.c[p.ei];if(c){p.s.pa=c.pa||0;p.s.pc=c.pok||0;}}catch(e){}}
     if(q.off&&!p.off){p.off=true;}}
   const B=sim.ball,bxy=abXY(B.x,B.y);S.ball.x=bxy[0];S.ball.y=bxy[1];S.ball.z=B.z||0;
