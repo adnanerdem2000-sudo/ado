@@ -2521,7 +2521,8 @@ html.v153-try #view>.cta,html.v153-try #view>.btn{align-self:stretch;width:auto}
 .grp-t:not(.on){color:#f0ebff}
 body.pro .chip[aria-pressed="true"]{background:#6646f0}
 @media (max-width:600px),(pointer:coarse){
-  table [data-act="club"],table [data-act="pcard"],.lgt [data-act="club"]{display:inline-block;padding:8px 0;margin:-8px 0}
+  table :not(td):not(tr):not(th)[data-act="club"],table :not(td):not(tr):not(th)[data-act="pcard"]{display:inline-block;padding:8px 0;margin:-8px 0}
+  table td[data-act="club"],table td[data-act="pcard"]{padding-top:12px;padding-bottom:12px}
   #top .md-go{height:32px}
   [data-act="hubCust"],[data-act="plTag"],[data-act="cmpT"],[data-act="euMd"],[data-act="renew"]{min-height:32px;min-width:32px}
 }
