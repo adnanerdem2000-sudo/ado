@@ -561,17 +561,17 @@ endChance=(old=>function(code,extra){const S=MG.S;try{if(S&&S.act&&S.phase!=='en
 /* ---------- an sonucu: not olayları, uyum, zincir ---------- */
 const pzFmt=v=>(v>0?'+':v<0?'−':'±')+dec(Math.abs(v),Math.abs(Math.round(v*100))%10?2:1);
 applyChance=(old=>function(res,m){if(!MR||!PZ.on||!res)return old.apply(this,arguments);
-  const R=RES[res.code]||{adj:0},A=res.pzAct||pzAct0(),ev=[],sc=res.pzId&&PZ_SC[res.pzId];let bonus=0;const add=(t,v)=>{ev.push({t,v});bonus+=v;};
+  const R=RES[res.code]||{adj:0},A=res.pzAct||pzAct0(),ev=[],sc=res.pzId&&PZ_SC[res.pzId];let bonus=0,jj=null;const add=(t,v)=>{ev.push({t,v});bonus+=v;};
   ev.push({t:PZ_LBL[res.code]||R.t,v:R.adj});if(res.bonus)ev.push({t:'Topu geri kazandı',v:res.bonus});if(res.code==='tmMiss'&&res.fromMe)ev.push({t:'Kilit pas',v:0.1});
   try{if(res.code==='saved')add('İsabetli şut',0.15);
     if(A.passOk&&!['buOk','buFwd','bpOk','swOk','kDistOk','kDistLong','assist'].includes(res.code))add(A.passOk>1?`${Math.min(2,A.passOk)} isabetli pas`:'İsabetli pas',Math.min(2,A.passOk)*0.06);
     if(A.drbOk)add('Başarılı çalım',0.08*Math.min(2,A.drbOk));if(A.drop)add('Topu elinden kaçırdı',-0.2);
-    const j=pzJudge(res,A);if(j){add(`${j.v>0?'Talimata uydu':'Talimatı dinlemedi'}: ${j.w.toLowerCase()}`,j.v>0?0.1:-0.15);if(j.v>0)PZ.comp.ok++;else PZ.comp.bad++;}}catch(e){console.warn(e);}
+    const j=pzJudge(res,A);jj=j;if(j){add(`${j.v>0?'Talimata uydu':'Talimatı dinlemedi'}: ${j.w.toLowerCase()}`,j.v>0?0.1:-0.15);if(j.v>0)PZ.comp.ok++;else PZ.comp.bad++;}}catch(e){console.warn(e);}
   res.bonus=(res.bonus||0)+bonus;const yc0=MR.yc,rc0=MR.rc;
   const r=old.call(this,res,m);
   try{if(MR.yc>yc0)ev.push({t:MR.rc>rc0?'İkinci sarıdan kırmızı':'Sarı kart',v:MR.rc>rc0?-1.3:-0.3});else if(MR.rc>rc0)ev.push({t:'Kırmızı kart',v:-1});
     if(PZ_NEW.has(res.code)){const c=R.cls;MR.mom=clamp((MR.mom||0)+(c==='ok'||c==='gold'?1:c==='bad'?-1:0),-3,3);renderBoard();}
-    pzStats(res,A);pzChain(res,m);PZ.log.push({m,n:sc?sc.n:(CH_NAME[res.type]||'An'),ev});pzPop(ev,sc?sc.n:'');pzBanner(false);pzSkipBtn();}catch(e){console.warn('pozisyon sonuç',e);}
+    pzStats(res,A);pzChain(res,m);PZ.log.push({m,n:sc?sc.n:(CH_NAME[res.type]||'An'),ev,c:res.code,sc:res.pzId||null,j:jj,fm:!!res.fromMe,po:A.passOk||0,dr:A.drbOk||0,yc:MR.yc>yc0?1:0,rc:MR.rc>rc0?1:0,dp:A.drop?1:0});pzPop(ev,sc?sc.n:'');pzBanner(false);pzSkipBtn();}catch(e){console.warn('pozisyon sonuç',e);}
   return r;})(applyChance);
 function pzStats(res,A){const s=PZ.st,c=res.code;s.shots+=A.shot+(A.set?1:0);if(c==='goal'||c==='saved')s.onT++;if(c==='goal')s.goals++;if(c==='assist')s.assists++;
   if((c==='tmMiss'&&res.fromMe)||c==='buFwd'||c==='swOk'||(A.cross&&['tmGoal','tmMiss'].includes(c)))s.keyP++;
@@ -611,9 +611,9 @@ function pzProject(rt,played){const p=G.p,sv={t:p.trust,f:p.form.slice(),e:p.ene
   try{if(played){if(PZ.league)p.trust=clamp(p.trust+(rt-6.4)*5+PZ.fin.trustD,0,100);p.form.push(rt);if(p.form.length>5)p.form.shift();}p.energy=Math.max(p.energy,80);
     p.pzLast=null;base=decideRole();p.pzLast=played?{r:rt,c:PZ.fin.compRate,n:PZ.fin.compN,y:G.s.year,d:G.s.day}:sv.l;role=decideRole();}catch(e){}finally{p.trust=sv.t;p.form=sv.f;p.energy=sv.e;p.pzLast=sv.l;}
   const T={start:rr==='start'?'İlk 11’e devam':'İlk 11’e yükseliyorsun',sub:'Yedek kulübesi',squad:'Kadro dışı'}[role]||'Hoca kararını sonra verecek';
-  const cR=PZ.fin.compRate,cN=PZ.fin.compN;let why=played?`Not ${dec(rt)}`+(cN?` · talimat uyumu %${Math.round(cR*100)}`:''):'Bu maçta süre almadın';
+  const cR=PZ.fin.compRate,cN=PZ.fin.compN;let why=played?(rt>=7.5?'Çok iyi bir maç çıkardın':rt>=6.5?'İyi bir maç çıkardın':rt>=6?'Ortalama bir maçtı':'Performansın yetmedi')+(cN?(cR>=0.75?' · talimatlara uydun':cR>=0.5?' · talimatlara kısmen uydun':' · talimatları dinlemedin'):''):'Bu maçta süre almadın';
   if(role!==base&&base)why+=role==='start'?' · bu maçla hocayı ikna ettin':' · hoca bu maçtan sonra seni kenara aldı';
-  else if(role==='start')why+=rt>=7?' · formun yerinde':' · hoca sana güveniyor';else if(role==='sub')why+=rt<6?' · performans yetmedi':' · kadrodaki rekabet sert';else if(role==='squad')why+=' · antrenmanda kendini göstermelisin';
+  else if(role==='start')why+=rt>=7?' · formun yerinde':' · hoca sana güveniyor';else if(role==='sub')why+=rt<6?'':' · kadrodaki rekabet sert';else if(role==='squad')why+=' · antrenmanda kendini göstermelisin';
   return {role,t:T,why};}
 function pzPopHide(){const el=$('#pzPop');if(el)el.classList.remove('show');clearTimeout(PZ.popT);}
 function pzFT(){const z=PZ.fin;if(!z)return;pzPopHide();const o=$('#pzFT');if(o)o.remove();const cb=$('#pzCoach');if(cb)cb.remove();
@@ -632,7 +632,7 @@ function pzFT(){const z=PZ.fin;if(!z)return;pzPopHide();const o=$('#pzFT');if(o)
 applyPlayed=(old=>function(res,role,win,draw,notes,tier,league){const r=old.apply(this,arguments);try{const z=res&&res.pz;if(z&&isPl()){const p=G.p;
     if(league)p.trust=clamp(p.trust+z.trustD,0,100);p.pzLast={r:res.rating,c:z.compRate,n:z.compN,y:G.s.year,d:G.s.day};p.pzHist=(p.pzHist||[]).concat([{r:res.rating,c:Math.round(z.compRate*100)/100,g:z.grp}]).slice(-10);
     if(Array.isArray(notes)){notes.push(`Hoca: “${z.comment}”`);notes.push(`Gelecek maç: ${z.next.t} (${z.next.why}).`);}
-    msg('coach','Hocanın maç değerlendirmesi',`${z.comment} Maç notun ${dec(res.rating)}; hedeflerden ${z.okN}/${z.objN} tuttu${z.compN?`, talimatlara uyumun %${Math.round(z.compRate*100)}`:''}. ${z.next.t}.`);}}catch(e){console.warn(e);}return r;})(applyPlayed);
+    msg('coach','Hocanın maç değerlendirmesi',`${z.comment} ${z.objN?(z.okN===z.objN?'Verdiğim hedeflerin hepsini tuttun. ':z.okN?'Hedeflerin bir kısmını tuttun. ':'Hedeflerin hiçbirini tutturamadın. '):''}${z.compN?(z.compRate>=0.75?'Talimatlarıma büyük ölçüde uydun. ':z.compRate>=0.5?'Talimatlarıma kısmen uydun. ':'Talimatlarımı dinlemedin. '):''}${z.next.t}. Ayrıntılar teknik ekibin raporunda.`);}}catch(e){console.warn(e);}return r;})(applyPlayed);
 /* son pozisyon maçının notu ve talimat uyumu bir sonraki kadro kararını etkiler */
 decideRole=(old=>function(){let r=old.apply(this,arguments);try{const L=G&&G.p&&G.p.pzLast;if(!L||!G.s||L.y!==G.s.year||G.s.day<L.d||G.s.day-L.d>12)return r;
   if(r==='start'&&(L.r<5.3||(L.n>=2&&L.c<0.4&&L.r<6.6)))r='sub';else if(r==='sub'&&L.r>=7.6&&(L.n<2||L.c>=0.5))r='start';else if(r==='squad'&&L.r>=7.2)r='sub';}catch(e){}return r;})(decideRole);

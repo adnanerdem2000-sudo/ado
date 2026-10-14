@@ -17,7 +17,7 @@ runChance=(old=>function(e){try{if(e&&!PZ.on)FT_CLT=e.type;}catch(x){}return old
 applyChance=(old=>function(res,m){if(!ftOn()||PZ.on||!res)return old.apply(this,arguments);const R=RES[res.code]||{adj:0},yc0=MR.yc,rc0=MR.rc;const r=old.apply(this,arguments);
   try{const ev=[{t:PZ_LBL[res.code]||R.t,v:R.adj}];if(res.bonus)ev.push({t:'Topu geri kazandı',v:res.bonus});if(res.code==='tmMiss'&&res.fromMe)ev.push({t:'Kilit pas',v:0.1});
     if(MR.yc>yc0)ev.push({t:MR.rc>rc0?'İkinci sarıdan kırmızı':'Sarı kart',v:MR.rc>rc0?-1.3:-0.3});else if(MR.rc>rc0)ev.push({t:'Kırmızı kart',v:-1});
-    (MR._clog=MR._clog||[]).push({m,n:CH_NAME[FT_CLT]||'An',ev});}catch(e){}return r;})(applyChance);
+    (MR._clog=MR._clog||[]).push({m,n:CH_NAME[FT_CLT]||'An',ev,c:res.code,fm:!!res.fromMe,yc:MR.yc>yc0?1:0,rc:MR.rc>rc0?1:0});}catch(e){}return r;})(applyChance);
 function ftClassicFinal(){const played=MR.role==='start'||(MR.entry&&MR.events.some(e=>e.k==='in')&&MR.end>=MR.entry&&!(MR.out&&MR.outMin&&MR.outMin<MR.entry));
   const startMin=MR.role==='start'?0:MR.entry,mins=Math.max(1,(MR.outMin||90)-startMin),win=MR.gu>MR.go,draw=MR.gu===MR.go,res=win?0.35:draw?0.05:-0.25;
   const noise=gauss()*0.18+(mins<25?-0.1:0),rt=Math.round(clamp(6.0+res+MR.adj+noise,3,10)*10)/10;
@@ -46,9 +46,8 @@ function ftStats(r,gu,go){const dS=(MR.us.str-MR.opp.str);const pos=clamp(Math.r
 
 /* ---------- maç sonu ekranı ---------- */
 const FT_NEXT={start:'start',sub:'sub',squad:'squad'};
-function ftRender(){const z=PZ.fin;if(!z)return;let repBody='';const old=$('#pzFT');if(old){repBody=old.innerHTML;old.remove();}else{pzFT();const o2=$('#pzFT');if(o2){repBody=o2.innerHTML;o2.remove();}}
-  if(z.classic)repBody=repBody.replace(/<div class="pz-objs">[\s\S]*?<\/div>/,'');
-  FT_REP_CUR={t:`${MR.home.name} ${MR.usHome?MR.gu:MR.go}-${MR.usHome?MR.go:MR.gu} ${MR.away.name}`,html:repBody};z.repHTML=repBody;z.repT=FT_REP_CUR.t;
+function ftRender(){const z=PZ.fin;if(!z)return;const old=$('#pzFT');if(old)old.remove();
+  const t=`${MR.home.name} ${MR.usHome?MR.gu:MR.go}-${MR.usHome?MR.go:MR.gu} ${MR.away.name}`;FT_REP_CUR={t,d:ftRepData(z,t)};z.repD=FT_REP_CUR.d;z.repT=t;
   const r=srnd(MR.us.id+'|'+MR.opp.id+'|'+(G.s?G.s.year+'.'+G.s.day:'')+'|ft'),goals=((MR._gt&&MR._gt.L)||[]).map(g=>Object.assign({},g));
   const win=MR.gu>MR.go,draw=MR.gu===MR.go,TU=ftTeam(MR.us,MR.gu,MR.go,win,draw,r,goals,0),TO=ftTeam(MR.opp,MR.go,MR.gu,MR.go>MR.gu,draw,r,goals,1),st=ftStats(r,MR.gu,MR.go);
   const H=MR.home,A=MR.away,hu=MR.usHome,all=(TU||[]).concat(TO||[]),motm=all.slice().sort((a,b)=>b.rt-a.rt)[0];
@@ -72,11 +71,11 @@ closeMatchView=(old=>function(){const r=old.apply(this,arguments);try{const s=$(
 
 /* ---------- teknik ekip raporu penceresi ---------- */
 function ftRepOpen(id){let R=null;try{if(id)R=(G.p.pzReps||[]).find(x=>x.id===id);if(!R&&FT_REP_CUR&&!id)R=FT_REP_CUR;if(!R){const L=G.p.pzLast;R=(G.p.pzReps||[]).find(x=>L&&x.id===L.rep)||null;}}catch(e){}
-  const L=G.p&&G.p.pzLast,body=R&&R.html?R.html:(L?`<p>Maç notun <b>${dec(L.r)}</b>${L.n?` · talimat uyumu %${Math.round((L.c||0)*100)}`:''}. Bu maç için ayrıntılı döküm kaydedilmemiş.</p>`:'<p class="muted">Henüz bir maç raporu yok.</p>');
+  const L=G.p&&G.p.pzLast,body=R&&R.d?ftRepHTML(R.d):(L?`<div class="rp-h"><div class="pz-rt ${L.r>=7.5?'hi':L.r>=6.5?'mid':'lo'}"><b>${dec(L.r)}</b><small>MAÇ NOTU</small></div><div><p class="rp-comp ${!L.n||L.c>=0.5?'ok':'no'}">${!L.n?'Bu maç için ayrıntılı döküm kaydedilmemiş.':L.c>=0.75?'Talimatlara büyük ölçüde uydun.':L.c>=0.5?'Talimatlara kısmen uydun.':'Talimatları çoğunlukla dinlemedin.'}</p></div></div>`:'<p class="muted">Henüz bir maç raporu yok.</p>');
   openModal(`<h3>Teknik ekibin raporu — ${esc(meN())}</h3>${R&&R.t?`<p class="muted" style="margin:-4px 0 10px">${esc(R.t)}</p>`:''}<div class="pz-ft ft-rep">${body}</div><button class="cta" data-act="closeModal">Kapat</button>`);
   const mc=$('#modalCard');if(mc)mc.classList.add('wide');}
 ACTX.pzRep=el=>ftRepOpen(el&&el.dataset?el.dataset.id:null);
-applyPlayed=(old=>function(res){const r=old.apply(this,arguments);try{const z=res&&res.pz;if(z&&z.repHTML&&isPl()){const p=G.p,id=uid();p.pzReps=(p.pzReps||[]).concat([{id,t:z.repT||'',html:z.repHTML}]).slice(-6);if(p.pzLast)p.pzLast.rep=id;
+applyPlayed=(old=>function(res){const r=old.apply(this,arguments);try{const z=res&&res.pz;if(z&&z.repD&&isPl()){const p=G.p,id=uid();p.pzReps=(p.pzReps||[]).concat([{id,t:z.repT||'',d:z.repD}]).slice(-6);if(p.pzLast)p.pzLast.rep=id;
     const m=G.inbox&&G.inbox.find(x=>x.title==='Hocanın maç değerlendirmesi'&&!x.pzRep);if(m)m.pzRep=id;}}catch(e){console.warn(e);}return r;})(applyPlayed);
 msgHTML=(old=>function(m){let h=old(m);try{if(m&&(m.pzRep||(m.title==='Hocanın maç değerlendirmesi'))&&h.includes('msg-body')&&!h.includes('data-act="pzRep"'))
     h=h.replace('</p>',`</p><button class="btn sm ft-repl" type="button" data-act="pzRep"${m.pzRep?` data-id="${m.pzRep}"`:''}>📋 Teknik ekip raporu</button>`);}catch(e){}return h;})(msgHTML);
@@ -89,3 +88,55 @@ const ftMatchOpen=()=>{const m=$('#match');return !!(m&&!m.hidden);};
 fmCont=(old=>function(){try{if(ftMatchOpen()){if(typeof TR!=='undefined'&&TR)return;const d=$('#mvDone');if(d&&!d.hidden){d.click();return;}if(PZ.on&&PZ.pre){pzGoStart();return;}return;}
   if(typeof MR!=='undefined'&&MR)return;}catch(e){}return old.apply(this,arguments);})(fmCont);
 onPlay=(old=>function(sim){try{if((typeof MR!=='undefined'&&MR)||ftMatchOpen()){console.warn('Maç zaten açık; yeni maç başlatılmadı');return;}}catch(e){}return old.apply(this,arguments);})(onPlay);
+
+/* ---------- v144 düzeltme: teknik ekip raporu sayısız; olumlu (yeşil) ve olumsuz (kırmızı) konuşmalar ----------
+   Rapor verisi (G.p.pzReps[].d) anların sonuç kodlarını saklar; cümleler buradan, maça göre sabit seçilen kalıplarla üretilir. */
+const RP_TX={
+  goal:['golü buldun','ağları havalandırdın','pozisyonu gole çevirdin'],assist:['gol pasını verdin','arkadaşına golü hazırladın'],tmGoal:['golle biten atakta katkın vardı','gole giden hücumda yer aldın'],
+  tmMiss:['arkadaşına net bir pozisyon hazırladın','son pası güzel verdin, arkadaşın değerlendiremedi'],saved:['isabetli vurdun ama kaleci geçit vermedi','kaleyi buldun, kaleci son anda çıkardı'],
+  wide:['şutun çerçeveyi bulmadı','vuruşun auta gitti'],over:['şutun üstten auta gitti','vuruşun kalenin üstünden gitti'],post:['direkten döndün, biraz şanssızdın'],blocked:['şutun savunmaya takıldı'],
+  lost:['topu kaptırdın','topu rakibe kaptırdın'],timeout:['atağı sonuçlandıramadın','pozisyonu oyalanarak harcadın'],offside:['ofsayta düştün','koşu zamanlaman tutmadı, ofsayt oldun'],
+  fouled:['faul kazandın','rakibi faule zorladın'],penWon:['penaltı kazandırdın'],tackle:['zamanlamasıyla topu kaptın','temiz bir müdahaleyle topu aldın'],intercept:['pas arasına girip topu kazandın','pası okuyup araya girdin'],
+  shotBlock:['şutun önüne atlayıp blokladın'],defOk:['atağı durdurduk','tehlikeyi birlikte savuşturduk'],oppMiss:['rakip şutu dışarı gitti'],oppOff:['rakip forvet ofsayta düştü'],
+  foul:['faul yaptın','gereksiz bir faul yaptın'],penConceded:['penaltıya sebep oldun ve gol yedik'],penSaved:['penaltıya sebep oldun; kalecimiz kurtardı'],conceded:['adamını tutamadın, gol yedik','pozisyonu kaybettin ve gol yedik'],
+  gkSave:['rakip şutunu kalecimiz çıkardı'],cleared:['orta rakip savunmadan döndü'],gkClaim:['top kalecinin kucağında kaldı'],clear:['yükselip topu uzaklaştırdın','hava topunu kazanıp tehlikeyi bitirdin'],injury:['sakatlandın'],
+  kSave:['müthiş bir kurtarış yaptın','refleksinle golü önledin'],kCatch:['topu iki elle kontrol ettin','şutu güvenle tuttun'],kPunch:['yumrukla tehlikeyi uzaklaştırdın'],kClaim:['topu rahatça topladın'],
+  kSmother:['çıkıp forvetin ayağından topu aldın','bire birde doğru anda çıktın'],kSweep:['ceza sahasından çıkıp topu uzaklaştırdın'],kGoal:['gole engel olamadın','şutta geç kaldın, gol yedik'],kMiss:['rakip şutu dışarı gitti'],
+  kOk:['tehlike geçti'],kPenSave:['penaltıyı kurtardın','doğru köşeye uçup penaltıyı çıkardın'],kPenGoal:['penaltıda köşeyi tutturamadın'],kPenMiss:['penaltı dışarı gitti'],
+  kDistOk:['dağıtımın arkadaşını buldu'],kDistLong:['uzun vuruşun hücumcumuzu buldu'],kDistBad:['oyun kurarken topu kaptırdın'],kFoulPen:['rakibi düşürüp penaltıya sebep oldun'],
+  buOk:['baskıdan sıyrılıp doğru pası verdin','sakin kalıp topu arkadaşına ulaştırdın'],buFwd:['hattı kıran bir pasla takımı ileri taşıdın'],bpOk:['topu güvenle kalecine verdin'],swOk:['oyunu öbür kanada açtın','diyagonal pasla oyunu değiştirdin'],
+  buSlow:['topu fazla tuttun, atak yavaşladı'],uzak:['tehlikeyi uzun vuruşla savuşturdun'],presFail:['baskın kırıldı, top geriye döndü'],tacFoul:['taktik faulle kontrayı kestin'],oTrap:['çizgiyi öne çekip forveti ofsayta düşürdün']};
+const RP_GK=new Set(['kSave','kCatch','kPunch','kClaim','kSmother','kSweep','kGoal','kOk','kPenSave','kPenGoal','kPenMiss','kFoulPen','kMiss']);
+const RP_DEF=new Set(['tackle','intercept','shotBlock','clear','conceded','foul','penConceded','penSaved','defOk','oppMiss','oppOff','oTrap','tacFoul','presFail','gkSave']);
+const RP_PAS=new Set(['buOk','buFwd','bpOk','swOk','buSlow','uzak','kDistOk','kDistLong','kDistBad','assist','tmMiss']);
+const RP_IMP=new Set(['goal','assist','penWon','penConceded','penSaved','conceded','kGoal','kPenSave','kPenGoal','kFoulPen','tackle','intercept','shotBlock','clear','kSave','kSmother','lost','kDistBad']);
+function rpWho(c,grp){return RP_GK.has(c)||(grp==='KL'&&RP_PAS.has(c))?'Kaleci antrenörü':RP_DEF.has(c)?'Yardımcı antrenör':RP_PAS.has(c)?'Performans analisti':'Teknik direktör';}
+const rpCap=s=>s?s.charAt(0).toLocaleUpperCase('tr-TR')+s.slice(1):s;
+function ftRepData(z,t){const lg=(PZ.log||[]).map(l=>({m:l.m,n:l.n,c:l.c||null,j:l.j?{v:l.j.v,w:l.j.w}:null,fm:!!l.fm,po:l.po||0,dr:l.dr||0,yc:l.yc||0,rc:l.rc||0,dp:l.dp||0,s:Math.round((l.ev||[]).reduce((a,x)=>a+x.v,0)*100)/100}));
+  return {t,rt:z.rating,played:z.played,next:z.next,comment:z.comment,obj:(z.obj||[]).map(o=>({t:o.t,ok:!!o.ok})),compN:z.compN||0,compRate:z.compRate,grp:z.grp||pzGrp(),rol:pzRolName(),log:lg,end:(z.end||[]).map(e=>({t:e.t,v:e.v})),v:2};}
+function rpSentences(d){const r=srnd('rp|'+(d.t||'')+'|'+d.rt),pk=a=>a[Math.floor(r()*a.length)],P=[],N=[];
+  for(const l of d.log||[]){if(!l.c)continue;const nl=String(l.n||'').toLocaleLowerCase('tr-TR'),op=pk([`${l.m}. dakikada`,`${l.m}. dakikadaki “${l.n}” anında`,/[,:]/.test(nl)?`${l.m}. dakikada`:`${l.m}. dakikada ${nl} pozisyonunda`]),
+      ph=RP_TX[l.c]?pk(RP_TX[l.c]):null,who=rpWho(l.c,d.grp),pos=l.s>0.001,neg=l.s<-0.001;
+    if(ph&&(pos||neg)&&(Math.abs(l.s)>=0.07||RP_IMP.has(l.c))){let txt=`${op} ${ph}`;
+      if(pos&&l.po>0&&!RP_PAS.has(l.c))txt+=pk([', paslarınla da oyunu akıttın',', isabetli paslarla oyuna katıldın']);if(pos&&l.dr>0)txt+=pk([', çalımınla adamını geçtin',', bire bir rakibini eksiltin']);
+      if(l.j&&l.j.v>0&&pos)txt+=pk(['; talimata da uydun','; istediğimiz gibi oynadın']);if(l.j&&l.j.v<0&&neg)txt+=`; üstelik talimata uymadın (${String(l.j.w).toLocaleLowerCase('tr-TR')})`;
+      (pos?P:N).push({who,txt:rpCap(txt)+'.'});}
+    if(l.j&&l.j.v>0&&!pos)P.push({who:'Teknik direktör',txt:`${l.m}. dakikada talimata uydun: ${String(l.j.w).toLocaleLowerCase('tr-TR')}.`});
+    if(l.j&&l.j.v<0&&!neg)N.push({who:'Teknik direktör',txt:`${l.m}. dakikada talimatımı dinlemedin: ${String(l.j.w).toLocaleLowerCase('tr-TR')}.`});
+    if(l.yc||l.rc)N.push({who:'Teknik direktör',txt:l.rc?`${l.m}. dakikada kırmızı kart gördün; takımı eksik bıraktın.`:`${l.m}. dakikada sarı kart gördün.`});
+    if(l.dp)N.push({who:'Kaleci antrenörü',txt:`${l.m}. dakikada ortada topu elinden kaçırdın.`});}
+  for(const e of d.end||[]){if(/^Hedef/.test(e.t))continue;if(/Gol yemedik/.test(e.t))P.push({who:d.grp==='KL'?'Kaleci antrenörü':'Yardımcı antrenör',txt:'Sahada olduğun sürece kalemizi gole kapattık.'});
+    else if(/yenilen/.test(e.t))N.push({who:d.grp==='KL'?'Kaleci antrenörü':'Yardımcı antrenör',txt:'Anlatımda yediğimiz gollerde savunma olarak payımız vardı.'});
+    else if(/katkı/.test(e.t))P.push({who:'Performans analisti',txt:'Takımın gollerinde hücumdaki varlığınla katkı verdin.'});}
+  return {P,N};}
+function rpComp(d){if(!d.compN)return ['','Bu maçta talimat değerlendirmesi yapılmadı.'];const c=d.compRate;return c>=0.75?['ok','Talimatlara büyük ölçüde uydun.']:c>=0.5?['ok','Talimatlara kısmen uydun.']:c>0?['no','Talimatların çoğunu dinlemedin.']:['no','Talimatlarımı hiç uygulamadın.'];}
+function ftRepHTML(d){const cls=d.rt>=7.5?'hi':d.rt>=6.5?'mid':'lo',nk=d.next&&d.next.role||'',S=rpSentences(d),[cc,ct]=rpComp(d);
+  const li=L=>L.map(x=>`<li><b>${esc(x.who)}</b><span>${esc(x.txt)}</span></li>`).join('');
+  return `<div class="rp-h"><div class="pz-rt ${d.played?cls:'lo'}"><b>${d.played?dec(d.rt):'—'}</b><small>MAÇ NOTU</small></div><div class="pz-ft-t"><span class="kicker">Maç sonu · ${esc(d.rol||'')}</span>
+    ${d.next?`<p class="pz-next ${nk}"><b>${esc(d.next.t)}</b><small>${esc(d.next.why||'')}</small></p>`:''}</div></div>
+    <p class="pz-cc"><i>HOCA</i> “${esc(d.comment||'')}”</p>
+    ${d.obj&&d.obj.length?`<div class="pz-objs">${d.obj.map(o=>`<span class="${o.ok?'ok':'no'}">${o.ok?'✓':'✗'} ${esc(o.t)}</span>`).join('')}</div>`:''}
+    <p class="rp-comp ${cc}">${esc(ct)}</p>
+    ${S.P.length?`<section class="rp-g ok"><h4>Olumlu</h4><ul>${li(S.P)}</ul></section>`:''}
+    ${S.N.length?`<section class="rp-g no"><h4>Olumsuz</h4><ul>${li(S.N)}</ul></section>`:''}
+    ${!S.P.length&&!S.N.length?`<p class="muted">${d.played?'Bu maçta topla pek buluşamadın; bir sonraki maçta oyunun daha çok içinde olmalısın.':'Bu maçta süre almadın.'}</p>`:''}`;}

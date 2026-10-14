@@ -2232,3 +2232,13 @@ html.dro-on,html.dro-on body{overflow:hidden}
 .ms-r.me{background:rgba(255,179,32,.16);box-shadow:inset 3px 0 0 var(--led)}.ms-r.me b{color:var(--led)}.ms-goals li.me{color:var(--led)}
 #ftRepBtn{flex:1 1 auto}.ft-repl{margin:6px 0}
 .ft-rep{max-height:none;padding:0;background:none;border:0}
+/* v144: teknik ekip raporu — olumlu (yeşil) ve olumsuz (kırmızı) konuşmalar, sayı yok */
+.rp-h{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.rp-comp{margin:0 0 10px;font-weight:700;font-size:13.5px}.rp-comp.ok{color:#7fe3a6}.rp-comp.no{color:#ff9a94}
+.rp-g{border-radius:12px;padding:8px 10px;margin:0 0 10px;border:1px solid}
+.rp-g.ok{background:rgba(74,210,127,.08);border-color:rgba(74,210,127,.45)}.rp-g.no{background:rgba(239,59,54,.08);border-color:rgba(239,59,54,.45)}
+.rp-g h4{margin:0 0 6px;font-family:var(--f-display);font-style:italic;font-weight:900;text-transform:uppercase;font-size:16px;letter-spacing:.04em}
+.rp-g.ok h4{color:var(--good)}.rp-g.no h4{color:#ff6f69}
+.rp-g ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.rp-g li{font-size:13.5px;line-height:1.4}.rp-g li b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-3)}
+.rp-g.ok li span{color:#d6f7e2}.rp-g.no li span{color:#ffd9d6}
