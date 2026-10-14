@@ -124,7 +124,7 @@ oppSlideContact=function(d){const S=MG.S,C=S.C,b=S.ball,o=b.owner;if(!o||o.side!
   if(dM<0.6){d.slideHit=true;if(o.isC&&Math.random()<0.12+C.a.dri*0.002){o.jumpT=S.t;mgFlash('ÜSTÜNDEN ATLADIN!','ok',550);return;}
     return v145FoulOnUs(d,o,{ang,slide:true,ball:false});}};
 /* avantaj boşa çıkarsa (top kaybı) hakem geri dönüp serbest vuruş verir */
-lostBall=(old=>function(d){const S=MG.S;if(S&&S.adv&&S.t-S.adv.t<2.6)return endChance('fouled',{});return old.apply(this,arguments);})(lostBall);
+lostBall=(old=>function(d){const S=MG.S;if(S&&S.adv&&S.t-S.adv.t<2.6)return endChance('fouled',{fkY:S.adv.fkY,advBack:1});return old.apply(this,arguments);})(lostBall);
 
 /* ---------- top oyun alanını terk etti ---------- */
 const v145Skip=S=>!S||!!S.gates||S.type==='drill'||(S.mode==='set'&&!S.kicked);
