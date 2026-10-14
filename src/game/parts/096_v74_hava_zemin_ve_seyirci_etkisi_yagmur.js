@@ -18,12 +18,12 @@ function wxOf0(homeId,day,awayId){const c=CLUBS[homeId];if(!c||!G.s)return null;
   const atm=Math.round(clamp(fill*70+(WX_BIG[homeId]?20:0)+(D?D.lv*5:0)+Math.min(15,cap/6000),10,100));
   const pitch=k==='saganak'?'Su birikintili':k==='yagmur'?'Ağır':k==='kar'?'Karlı':k==='sicak'?'Kuru ve sert':cs&&cs.cond==='Yenilenmeli'?'Bozuk':'İyi';
   return {k,n:WX_K[k].n,ic:WX_K[k].ic,temp,pitch,att,cap,atm,hell:!!WX_BIG[homeId]&&atm>=80,M:WX_MOD[k]||{},home:homeId};}
-function wxTxt(W){return `${W.ic} ${W.n}, ${W.temp}°C · zemin ${W.pitch.toLocaleLowerCase('tr-TR')} · ${W.att.toLocaleString('tr-TR')} seyirci${W.hell?' · cehennem atmosferi':''}`;}
+function wxTxt(W){return `${W.ic} ${W.n}, ${W.temp}°C · zemin ${trLow(W.pitch)} · ${W.att.toLocaleString('tr-TR')} seyirci${W.hell?' · cehennem atmosferi':''}`;}
 /* 2B maç */
 fxStart=(old=>function(o){const r=old.apply(this,arguments);try{const S=FX;if(!S||!o||!o.opp||!G.s)return r;const home=o.neutral?null:(o.usHome?G.club:o.opp.id),away=o.usHome?o.opp.id:G.club;if(!home||!CLUBS[home])return r;
     const W=wxOf(home,G.s.day,away);if(!W)return r;S.wx=W;const M=W.M;for(const T of S.T)for(const p of T.P){for(const k of ['pa','dr','sh','sp','gk'])if(M[k]&&p.a[k]!=null)p.a[k]=clamp(p.a[k]*(1+M[k]),10,99);}
     const Aw=o.usHome?S.O:S.U,hp=(W.atm-50)/100;for(const p of Aw.P)for(const k of ['pa','sh','dr'])if(p.a[k]!=null)p.a[k]=clamp(p.a[k]*(1-Math.max(0,hp)*0.035),10,99);
-    S.wxp=[];fxEv(0,`${W.ic} Hava ${W.n.toLocaleLowerCase('tr-TR')}, ${W.temp}°C. Zemin: ${W.pitch.toLocaleLowerCase('tr-TR')}. Tribünlerde ${W.att.toLocaleString('tr-TR')} seyirci${W.hell?'; deplasman takımı için tam bir cehennem':''}.`,'');}catch(e){console.warn(e);}return r;})(fxStart);
+    S.wxp=[];fxEv(0,`${W.ic} Hava ${trLow(W.n)}, ${W.temp}°C. Zemin: ${trLow(W.pitch)}. Tribünlerde ${W.att.toLocaleString('tr-TR')} seyirci${W.hell?'; deplasman takımı için tam bir cehennem':''}.`,'');}catch(e){console.warn(e);}return r;})(fxStart);
 fxStM=(old=>function(p){const v=old.apply(this,arguments);try{const W=FX&&FX.wx;if(W&&W.M.st)return v*W.M.st;}catch(e){}return v;})(fxStM);
 fxDraw=(old=>function(){old.apply(this,arguments);const S=FX,cv=$('#fxCv');if(!S||!cv||!S.wx)return;const k=S.wx.k;if(!['yagmur','saganak','kar','sis','sicak'].includes(k))return;try{const c=cv.getContext('2d'),dpr=S.dpr,W=S.cw,H=S.ch;c.save();c.setTransform(dpr,0,0,dpr,0,0);
     if(k==='sis'){c.fillStyle='rgba(220,225,235,.18)';c.fillRect(0,0,W,H);c.restore();return;}if(k==='sicak'){c.fillStyle='rgba(255,170,60,.05)';c.fillRect(0,0,W,H);c.restore();return;}
@@ -46,7 +46,7 @@ if(typeof startMatch==='function')startMatch=(old=>function(cfg){LASTCFG_WX=cfg&
 /* ana sayfa: maç günü hava durumu */
 function wxNext(){try{const md=nextMatchDay(G.s.day);if(md==null||md-G.s.day>3)return null;const f=ourFixture();if(!f)return null;return {W:wxOf(f[0],md,f[1]),md};}catch(e){return null;}}
 viewHub=(old=>function(){const h=old.apply(this,arguments);try{if(G.phase!=='season'||isRef())return h;const X=wxNext();if(!X||!X.W)return h;const W=X.W,ef=W.k==='yagmur'||W.k==='saganak'?'Top zeminde hızlı kayar, ilk dokunuş ve paslar zorlaşır; kaleciler hata yapabilir.':W.k==='kar'?'Oyuncular yavaşlar, top yerde sekmez; uzun toplar daha etkili olabilir.':W.k==='sicak'?'Kondisyon hızlı düşer; rotasyon ve değişiklikler önemli.':W.k==='ruzgar'?'Uzaktan şutlar ve uzun toplar rüzgârdan sapar.':W.k==='sis'?'Görüş kısıtlı; uzun paslar riskli.':'Hava futbol oynamaya çok uygun.';
-    const band=`<section class="panel wx-band"><span class="wx-ic">${W.ic}</span><div><b>Maç günü: ${esc(W.n)}, ${W.temp}°C</b><small>Zemin ${esc(W.pitch.toLocaleLowerCase('tr-TR'))} · ${W.att.toLocaleString('tr-TR')} seyirci bekleniyor${W.hell?' · rakip için cehennem atmosferi':W.atm>=80?' · ateşli tribünler':''}</small><small>${esc(ef)}</small></div></section>`;
+    const band=`<section class="panel wx-band"><span class="wx-ic">${W.ic}</span><div><b>Maç günü: ${esc(W.n)}, ${W.temp}°C</b><small>Zemin ${esc(trLow(W.pitch))} · ${W.att.toLocaleString('tr-TR')} seyirci bekleniyor${W.hell?' · rakip için cehennem atmosferi':W.atm>=80?' · ateşli tribünler':''}</small><small>${esc(ef)}</small></div></section>`;
     const i=h.indexOf('<section class="today">');if(i>=0){const j=h.indexOf('</section>',i);if(j>0)return h.slice(0,j+10)+band+h.slice(j+10);}return h+band;}catch(e){}return h;})(viewHub);
 oppAnalysis=(old=>function(){let h=old.apply(this,arguments);try{const X=wxNext();if(h&&X&&X.W)h+=`<p class="muted" style="margin-top:8px">${esc(wxTxt(X.W))}</p>`;}catch(e){}return h;})(oppAnalysis);
 

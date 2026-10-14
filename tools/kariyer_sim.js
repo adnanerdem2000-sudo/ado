@@ -35,7 +35,7 @@ const PROFILES = {
         const md = document.querySelector('#modal');
         if (md && !md.hidden) {
           const bs = [...document.querySelectorAll('#modalCard button')].filter(vis);
-          const pref = bs.find(x => /\bcta\b/.test(x.className) && !/sil|ayrıl|istifa|emekli|bırak|kov/i.test(x.textContent)) || bs.find(x => x.dataset.act && x.dataset.act !== 'closeModal' && !/sil|ayrıl|istifa|emekli|bırak|kov|reddet/i.test(x.textContent));
+          const pref = bs.find(x => x.dataset.auto) || bs.find(x => /\bcta\b/.test(x.className) && !/sil|ayrıl|istifa|emekli|bırak|kov/i.test(x.textContent)) || bs.find(x => x.dataset.act && x.dataset.act !== 'closeModal' && !/sil|ayrıl|istifa|emekli|bırak|kov|reddet/i.test(x.textContent));
           if (pref && Math.random() < 0.8) { pref.click(); return 'pencere:' + (pref.dataset.act || pref.textContent.trim().slice(0, 20)); }
           closeModal(); return 'pencere-kapat';
         }

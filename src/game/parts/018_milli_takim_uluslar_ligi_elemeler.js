@@ -38,7 +38,7 @@ function tourFinish(res,cfg){const t=G.tour,p=G.p,notes=[],win=res.us>res.opp,dr
       const adv=pos<=2||(pos===3&&me.p>=4);t.gpos=pos;if(adv){notes.push(`Grubu ${pos}. sırada bitirdiniz, ${t.ko[0]} turundasınız!`);t.opp=tourDraw(t);}else{t.alive=false;notes.push(`Grubu ${pos}. sırada bitirdiniz. Turnuvaya veda.`);}}}
   else{let adv=win;if(draw){const [x,y]=pens(82,opp.str);adv=x>y;rec.pen=`${x}-${y}`;notes.push(`Uzatmalarda eşitlik bozulmadı. Seri penaltılar: ${x}-${y}.`);}
     if(stage==='Final'){t.alive=false;if(adv){t.won=true;G.trophies.push({year:String(t.y),name:t.name,club:G.club,nat:true});bump('fame',t.k==='WC'?30:t.k==='EURO'?22:10);notes.push(`TÜRKİYE ŞAMPİYON! ${t.name} kupası ay-yıldızlıların!`);}else notes.push('Finalde kaybettiniz. Yine de tarihi bir turnuva.');}
-    else if(adv){t.si++;t.opp=tourDraw(t);notes.push(`Tur atlandı! ${t.ko[t.si]} rakibi: ${t.opp.name}.`);}else{t.alive=false;notes.push(`${stage} turunda elendiniz.`);}}
+    else if(adv){t.si++;t.opp=tourDraw(t);notes.push(`Tur atlandı! ${t.ko[t.si]} rakibi: ${t.opp.name}.`);}else{t.alive=false;notes.push(`${turLoc(stage)} elendiniz.`);}}
   t.res.push(rec);
   if(!t.alive){t.done=true;if(t.g>=5)G.trophies.push({year:String(t.y),name:`${t.name} Gol Kralı (${t.g} gol)`,club:G.club,nat:true});if(!t.won)tourNews(tourOf(t.y),t.y,false,true);}
   msg('nat',`${t.name} · ${stage}: Türkiye ${res.us}-${res.opp} ${opp.name}`,notes.join(' '));save();

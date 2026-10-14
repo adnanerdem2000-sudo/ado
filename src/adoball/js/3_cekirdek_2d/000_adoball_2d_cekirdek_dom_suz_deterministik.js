@@ -432,7 +432,7 @@
             S.players.forEach(function (p) {
                 if (p.off) return;
                 var f = (p.home || FORM.filter(function (r) { return r[0] === p.role; })[0]), d = S.teams[p.team].dir;
-                var kd = KO_DIST && p.team !== first, fx = Math.min(f[1], kd ? .41 : .47), fy = kd ? koY(p.role, f[2]) : f[2]; p.x = d === 1 ? fx * PW : (1 - fx) * PW; p.y = d === 1 ? fy * PH : (1 - fy) * PH; p.vx = p.vy = 0;
+                var ks = koSpot(p, p.team === first), fx = ks[0], fy = ks[1]; p.x = d === 1 ? fx * PW : (1 - fx) * PW; p.y = d === 1 ? fy * PH : (1 - fy) * PH; p.vx = p.vy = 0;
                 p.tx = p.x; p.ty = p.y; p.fx = d;
                 if (MOVE) { p.fy = 0; p.fa = null; p.stx = null; p.idle = false; }
             });
@@ -441,6 +441,19 @@
         }
         // [dead] KO_DIST: başlamayı yapmayan takımın forveti ve 10 numarası orta yuvarlağın dışında, ayrı noktalarda (y oranı)
         function koY(role, fy) { return role === 'ST' ? .5 - 4 / PH : role === 'AM' ? .5 + 6 / PH : fy; }
+        // [v153] başlama vuruşu dizilişinde aynı takımdan iki oyuncu üst üste gelmesin (4-4-2'de MO ile MOO gibi): sonraki oyuncu yana kaydırılır (RNG yok)
+        function koSpotRaw(p, kicking) { var f = (p.home || FORM.filter(function (r) { return r[0] === p.role; })[0]), kd = KO_DIST && !kicking; return [Math.min(f[1], kd ? .41 : .47), kd ? koY(p.role, f[2]) : f[2]]; }
+        function koSpot(p, kicking) {
+            var d = S.teams[p.team].dir, ms = S.players.filter(function (q) { return q.team === p.team && !q.off; }), fix = [];
+            var sp = ms.map(function (q) { var k = kicking && (q.role === 'ST' || q.role === 'AM'); fix.push(k); if (kicking && q.role === 'ST') return [.5 - .6 / PW, .5]; if (kicking && q.role === 'AM') return [.5 - 3 / PW, d === 1 ? .5 + 4 / PH : .5 - 4 / PH]; return koSpotRaw(q, kicking); });
+            for (var it = 0; it < 2; it++) for (var i = 0; i < sp.length; i++) for (var j = 0; j < sp.length; j++) {
+                if (i === j || fix[j] || (j < i && !fix[i])) continue;
+                var dx = (sp[i][0] - sp[j][0]) * PW, dy = (sp[i][1] - sp[j][1]) * PH; if (dx * dx + dy * dy >= 16) continue;
+                var sg = dy > 0 ? -1 : 1; sp[j][1] = Math.max(.03, Math.min(.97, sp[j][1] + sg * (4 - Math.abs(dy)) / PH));
+                if (KO_DIST && !kicking) { var cx = (.5 - sp[j][0]) * PW, cy = (sp[j][1] - .5) * PH; if (cx * cx + cy * cy < 92) sp[j][0] = .5 - Math.sqrt(Math.max(0, 92 - cy * cy)) / PW; }
+            }
+            var ix = ms.indexOf(p); return ix < 0 ? koSpotRaw(p, kicking) : sp[ix];
+        }
         function startDead(kind, team, spot, extra) {
             var d = { kind: kind, team: team, x: spot.x, y: spot.y, timer: 0, wait: { kickoff: DEAD_K, throw: DEAD_T, goalkick: DEAD_G, corner: DEAD_C, freekick: DEAD_F, penalty: 5 }[kind], taker: null };
             for (var k in extra) d[k] = extra[k];
@@ -1521,7 +1534,7 @@
             var d = S.dead, T = S.teams[p.team], dir = T.dir, kind = d.kind;
             if (p === d.taker) { p.tx = d.x - dir * (kind === 'penalty' ? 3 : .2) * (kind === 'penalty' ? 1 : 0); p.ty = d.y; if (kind === 'penalty') p.tx = d.x - dir * 2.5; p.sf = 1; if (kind === 'throw') { p.tx = d.x; p.ty = d.y + (d.y < CY ? -.4 : .4); } else if (DEADB || PEN14) takerSpot(p, d, dir); return; }
             var atk = p.team === d.team, ag = atkGoalX(d.team);
-            if (kind === 'kickoff') { var f = (p.home || FORM.filter(function (r) { return r[0] === p.role; })[0]), kd = KO_DIST && !atk, fx = Math.min(f[1], kd ? .41 : .47), fy = kd ? koY(p.role, f[2]) : f[2]; p.tx = dir === 1 ? fx * PW : (1 - fx) * PW; p.ty = dir === 1 ? fy * PH : (1 - fy) * PH; if (p.role === 'AM' && atk) { p.tx = CX - dir * 3; p.ty = CY + 4; } p.sf = .95; return; }
+            if (kind === 'kickoff') { var ks = koSpot(p, atk), fx = ks[0], fy = ks[1]; p.tx = dir === 1 ? fx * PW : (1 - fx) * PW; p.ty = dir === 1 ? fy * PH : (1 - fy) * PH; if (p.role === 'AM' && atk) { p.tx = CX - dir * 3; p.ty = CY + 4; } p.sf = .95; return; }
             if (kind === 'corner' || kind === 'penalty') {
                 var gd = S.teams[d.team].dir, gx = ag;
                 if (p.role === 'GK') {

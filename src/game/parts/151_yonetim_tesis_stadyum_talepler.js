@@ -26,7 +26,7 @@ function viewBoard(){const c=myClub(),L=curLeague(),cs=cstate(G.club),p=G.p,star
   <button class="btn" data-act="squad" data-id="${G.club}">Takım kadrosu ve oyuncu kartları</button>
   <section class="panel"><p class="sub-h"><span>Kulüp durumu</span><span>${G.loan?'Kiralık kulübün':''}</span></p>
    <div class="fac"><div><span>Antrenman tesisi</span><b class="stars">${stars(cs.fac)}</b><small>İdman gelişimi ×${dec(0.8+cs.fac*0.1,1)}</small></div>
-   <div class="clk" data-act="ccard" data-id="${G.club}"><span>Teknik direktör</span><b>${esc(coachOf(G.club).n)}</b><small>${flagImg(coachOf(G.club).nat,'fl-row')} ${coachOf(G.club).age} yaş · kart ›</small></div><div><span>Stadyum</span><b>${esc(stadName(c))}</b><small>${cs.cap.toLocaleString('tr-TR')} kişilik · zemin ${cs.cond.toLowerCase()}</small></div>
+   <div class="clk" data-act="ccard" data-id="${G.club}"><span>Teknik direktör</span><b>${esc(coachOf(G.club).n)}</b><small>${flagImg(coachOf(G.club).nat,'fl-row')} ${coachOf(G.club).age} yaş · kart ›</small></div><div><span>Stadyum</span><b>${esc(stadName(c))}</b><small>${cs.cap.toLocaleString('tr-TR')} kişilik · zemin ${cs.cond.toLocaleLowerCase('tr-TR')}</small></div>
    <div><span>Yıllık bütçe</span><b>${money(clubBudget(c))}</b><small>${cs.boost?`+${cs.boost} takviye`:''}</small></div>
    ${cs.pend?`<div><span>Devam eden proje</span><b>${cs.pend.k==='tesis'?'Tesis yenilemesi':'Transfer çalışması'}</b><small>${Math.max(0,cs.pend.at-absDay())} gün içinde</small></div>`:''}</div></section>
   <section class="panel"><p class="sub-h"><span>Sözleşmen</span><span>${G.tl?'<span class="pill red">Transfer listesinde</span>':''}</span></p>

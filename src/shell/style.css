@@ -2425,3 +2425,86 @@ body.ab-hostfs-on{overflow:hidden}
   #modalCard.cp .cp-gen .cp-t span{font-size:10px;word-break:break-word;hyphens:auto}
 }
 #modalCard.pf .pf-hd .pf-id h2{margin-top:3px}
+/* v153: telefonda üst çubuk taşmasın (tam ekran ve arama Menü'de), maç ve arayüz düzeltmeleri */
+@media (max-width:600px){
+  .top{gap:6px;padding:6px 8px}
+  .top-club{flex:1 1 0;min-width:0;overflow:hidden}
+  .top-meta{gap:5px;flex-shrink:0}
+  #top .fs-btn,#top #qsBtn,#top .qs-w{display:none}
+  .top-meta .led{font-size:14px}
+  .top-meta>div>span:not(.led){font-size:11px;white-space:nowrap}
+  #top .icon-btn{width:32px;height:32px}
+  .md-go{margin:0 2px 0 0}
+}
+@media (max-width:380px){
+  .top-txt{display:none}
+  .top-meta>div>span:not(.led){display:none}
+  .md-go small{display:none}
+  .top-club{min-width:32px}
+  .fm-cont{padding:0 6px 0 9px;gap:3px}
+}
+.ui-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ui-extra .ui-mi{justify-content:center}
+
+/* v152: kayıt sağlamlığı — kota penceresinde kayıt boyutları, bozuk kayıt penceresi */
+.kv-ql{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px;max-height:46vh;overflow:auto}
+.kv-q{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.05)}
+.kv-q>div{flex:1;min-width:0}
+.kv-q b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kv-q em{font-style:normal;font-size:12px;color:#35d49a}
+.kv-q small{display:block;font-size:12px;opacity:.75}
+.kv-n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kv-b{display:flex;gap:4px}
+.kv-b .btn,.kv-sil{min-height:36px}
+.btn.onay{background:#c0392b;color:#fff;border-color:#c0392b}
+/* v155: meslek derinliği — karar pencereleri, hakem atama/gözlemci paneli, men ekranı, doktor, SD/başkan */
+.v155-dec h3{margin:2px 0 8px}.v155-b p{margin:0 0 8px;line-height:1.45}.v155-b .cupres{margin:6px 0 0}
+.v155-opts{display:flex;flex-direction:column;gap:8px;margin-top:12px}.v155-o{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;width:100%;min-height:44px}
+.v155-o b{font-size:15px}.v155-o small{font-size:12px;opacity:.8;font-weight:500;text-transform:none;letter-spacing:0}.v155-note{margin:10px 0 0;font-size:12px}
+.v155-alert{border-color:rgba(255,120,80,.6);background:rgba(255,120,80,.12)}
+.v155-obs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}.v155-obs li{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 8px;border-radius:7px;background:var(--panel-2)}
+.v155-obs b.pos{color:var(--good)}.v155-obs b.neg{color:#ff8a84}
+.v155-ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.v155-ladder span{font-size:11.5px;text-align:center;padding:6px 2px;border-radius:7px;border:1px solid var(--line);color:var(--chalk-3)}.v155-ladder span.on{border-color:#ff8a84;color:#ffb3ae;background:rgba(255,80,70,.12)}
+.v155-ban h2{margin:4px 0 8px;font-family:var(--f-display);font-size:26px}.v155-ban .strip{margin:10px 0}
+.v155-inj{margin:10px 0;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,120,80,.5);background:rgba(255,120,80,.1);font-size:13.5px}.v155-inj small{display:block;color:var(--chalk-3);margin-top:2px}
+details.v155-more{margin:10px 0}details.v155-more>summary{cursor:pointer;list-style:none;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);font-weight:700;min-height:44px;box-sizing:border-box}
+details.v155-more>summary::after{content:'▾';float:right;opacity:.7}details.v155-more[open]>summary::after{content:'▴'}details.v155-more[open]>summary{margin-bottom:10px}
+.v155-rev h3{margin:2px 0 10px}.v155-rev .strip{margin-bottom:10px}
+.v155-vote{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}.v155-vote>div{display:grid;grid-template-columns:1fr;gap:3px}.v155-vote i{display:block;height:10px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}.v155-vote em{display:block;height:100%;background:var(--good)}.v155-vote em.r{background:#ff8a84}.v155-vote span{font-size:12px;color:var(--chalk-3)}
+.v155-spb{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ag-l li>div>small{display:block}
+b.stars:not([style]){background:none;-webkit-text-fill-color:currentColor;color:var(--led)}b.stars:not([style]) i.off{font-style:normal;color:rgba(255,255,255,.16);-webkit-text-fill-color:rgba(255,255,255,.16)}
+.v155-pp{display:block;text-align:center;margin-top:4px;font-size:12px}
+.v155-ref #top .top-club .ref-ic{font-size:22px}
+html.v155-spec #fx .fx-tac,html.v155-spec #fx [data-fx="tac"],html.v155-spec #fx [data-fx="sub"],html.v155-spec #fx .fx-shout,html.v155-spec #fx .fx-subs{display:none!important}
+/* v151: temsili (üretilmiş) kadro notu */
+.temsili-not{margin:0 0 10px;padding:8px 12px;border-radius:8px;background:rgba(242,194,0,.12);border:1px solid rgba(242,194,0,.35);font-size:13px;line-height:1.4}
+.temsili-not b{color:#f2c200}
+.pf-ch.temsili b{color:#f2c200}
+
+/* v154: kaleci öğreticisi ve futbolcu düzeltmeleri */
+.tut-card li b.d{background:#e08a1e;color:#1a1208}
+.tut-card.gk li{grid-template-columns:84px 1fr}
+.tut-card li span b{display:inline-block;padding:0 7px;font-size:12.5px;line-height:1.5}
+/* v153: yıldızlar (stil değişkeni olmayan .stars öğelerinde boş yıldızlar soluk) */
+.stars:not([style]){background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;color:var(--led)}
+.stars:not([style]) i.off{font-style:normal;color:rgba(255,255,255,.18);-webkit-text-fill-color:rgba(255,255,255,.18)}
+/* v153: transfer dönemi rozeti dar kartta satır kırar */
+.tw-pill{white-space:normal;max-width:100%;line-height:1.25;border-radius:12px}
+/* v153: Kontroller penceresinde Tamam düğmesi hep görünür (yapışkan alt şerit) */
+#modalCard .ctl-box>.offer-btns:last-child{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom,0px));z-index:3;margin:0 -16px calc(-18px - env(safe-area-inset-bottom,0px));padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(11,29,20,.85),#0b1d14 40%);border-top:1px solid var(--line)}
+body.pro #modalCard .ctl-box>.offer-btns:last-child{background:linear-gradient(180deg,rgba(31,14,68,.85),#1f0e44 40%)}
+/* v153: seçmede öğretici açıkken ATLA düğmesi kartın üstüne binmesin; an başlığı telefonda iki satıra iner */
+.match:has(#mgTut:not([hidden]))>.skip-btn{visibility:hidden}
+.tut-card{max-height:calc(100% - 24px);overflow:auto}
+@media (max-width:600px){
+  .mg-tt b,.mv-stage .mg-tt b,.match.live .mg-top .mg-tt b{white-space:normal;font-size:15px;line-height:1.1;max-width:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
+/* v153: seçme günü (öncesi ve sonucu) masaüstünde tek sütun: sonuç → rapor → teklifler */
+html.v153-try #view{display:flex;flex-direction:column;align-items:stretch;max-width:760px;margin-left:auto;margin-right:auto}
+html.v153-try #view>*{width:auto;max-width:none;grid-column:auto;order:0}
+html.v153-try #view .hub-top:empty{display:none}
+html.v153-try #view>.cta,html.v153-try #view>.btn{align-self:stretch;width:auto}
+/* v153: lig tablosu 360 px'de taşmasın */
+.lg-body>*{min-width:0}
+@media (max-width:980px){.lg-body{grid-template-columns:minmax(0,1fr)}}

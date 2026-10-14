@@ -1874,7 +1874,7 @@
             g.strokeStyle = own ? '#fff' : 'rgba(255,255,255,.55)'; g.lineWidth = (own ? 2.6 : 1.3) * u; g.stroke();
             g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 2 * u; g.beginPath(); g.moveTo(X(x) + v.fx[i] * (R + .5 * u), Y(y) + v.fy[i] * (R + .5 * u)); g.lineTo(X(x) + v.fx[i] * (R + 4.5 * u), Y(y) + v.fy[i] * (R + 4.5 * u)); g.stroke();
             g.fillStyle = inkOn(col); g.font = '700 ' + (Math.max(8, Math.round(Rm * .78)) * u) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-            g.fillText(p.db ? p.db.pos : ROLE(p.role), X(x), Y(y) + .5 * u); g.textBaseline = 'alphabetic';
+            g.fillText(p.db ? (p.db.lbl || p.db.pos) : ROLE(p.role), X(x), Y(y) + .5 * u); g.textBaseline = 'alphabetic';
             if (isF || ringCol || (o.live && own) || hov || (S.ov.names && !o.sc)) label(p.short || p.name, X(x), Y(y) + R + 2 * u, ringCol || (isF ? '#ffc93c' : '#fff'));
         }
         var z = v.bz * K * .7, bx = v.bx, by = v.by, br = Math.max(3.4, .62 * K) * u;
@@ -3021,7 +3021,7 @@
         if (st.goals) bits.push(st.goals + ' gol'); if (st.assists) bits.push(st.assists + ' asist'); if (st.red) bits.push('kırmızı kart'); else if (st.yellow) bits.push('sarı kart'); if (st.shots) bits.push(st.shots + ' şut'); if (st.saves) bits.push(st.saves + ' kurtarış');
         if (ex.tk) bits.push(ex.tk + ' top kapma'); if (ex.ic) bits.push(ex.ic + ' pas kesme'); if (ex.hd) bits.push(ex.hd + ' hava topu');
         bits.push(pas); bits.push(km + ' km');
-        return '<div class="t-h"><b>' + esc(p.name) + '</b><span>' + esc(rec ? rec.pos : '') + ' · ' + ovrTag(rec ? getOverall(rec) : null) + ' · ' + rating.toFixed(1) + '</span></div><div class="t-a">' + attrs + '</div>' + brainHTML(p) + ratingHTML(i) + '<div class="t-s">' + bits.join(' · ') + '</div>';
+        return '<div class="t-h"><b>' + esc(p.name) + '</b><span>' + esc(rec ? (rec.lbl || rec.pos) : '') + ' · ' + ovrTag(rec ? getOverall(rec) : null) + ' · ' + rating.toFixed(1) + '</span></div><div class="t-a">' + attrs + '</div>' + brainHTML(p) + ratingHTML(i) + '<div class="t-s">' + bits.join(' · ') + '</div>';
     }
     /* reyting gerekçesi: en büyük üç katkı (Rating2D olay günlüğünden) */
     function ratingHTML(i) {
@@ -3142,9 +3142,9 @@
     function xiRows(t) {
         var out = '', k, eid, p, rec, pos;
         for (k = 0; k < 11; k++) {
-            eid = MAP[k] + 11 * t; p = S.sim.players[eid]; rec = p.db; pos = rec ? rec.pos : ROLE(p.role);
-            out += '<button type="button" class="xi-row" data-i="' + eid + '"' + (rec ? ' data-id="' + rec.id + '"' : '') + ' title="' + esc(p.name) + '" aria-label="' + esc(p.name + ', ' + pos) + '">' +
-                '<span class="pos-badge ' + esc(pos) + '">' + esc(pos) + '</span><span class="xi-name">' + esc(p.short || p.name) + '</span><span class="xi-b"></span><span class="lineup-rating rating-good">6.5</span></button>';
+            eid = MAP[k] + 11 * t; p = S.sim.players[eid]; rec = p.db; pos = rec ? rec.pos : ROLE(p.role); var lb = rec && rec.lbl || pos;      // [v153] görünen kısaltma oyunun 14 mevkili kümesinden
+            out += '<button type="button" class="xi-row" data-i="' + eid + '"' + (rec ? ' data-id="' + rec.id + '"' : '') + ' title="' + esc(p.name) + '" aria-label="' + esc(p.name + ', ' + lb) + '">' +
+                '<span class="pos-badge ' + esc(pos) + '">' + esc(lb) + '</span><span class="xi-name">' + esc(p.short || p.name) + '</span><span class="xi-b"></span><span class="lineup-rating rating-good">6.5</span></button>';
         }
         return out;
     }
@@ -3781,7 +3781,7 @@
                 var p = getPlayerFromId(id); if (!p) return;
                 var r = (matchData.ratings && matchData.ratings[id] !== undefined) ? matchData.ratings[id] : 6.5;
                 var off = isSentOff(id);
-                html += '<span class="ab-hud-pp' + (off ? ' off' : '') + '" title="' + esc(p.name) + '"><span class="pos">' + esc(p.pos) + '</span><span class="rt ' + ratingClass(r) + '">' + r.toFixed(1) + '</span></span>';
+                html += '<span class="ab-hud-pp' + (off ? ' off' : '') + '" title="' + esc(p.name) + '"><span class="pos">' + esc(p.lbl || p.pos) + '</span><span class="rt ' + ratingClass(r) + '">' + r.toFixed(1) + '</span></span>';
             });
         });
         if (H.pills !== html) { H.pills = html; H.bottom.innerHTML = html; }                       // [opt] 22 hap yalnız içerik değişince yeniden kurulur

@@ -8,7 +8,7 @@ const NAMEP4={"AR":{"f":["Juan","Santiago","Matías","Nicolás","Lucas","Facundo
     DOMC[cc]={name:cupN,short:cupS,r:['Son 32','Son 16','Çeyrek Final','Yarı Final','Final'],lg:{[lid]:0}};
     if(eu)EU_SPOTS[lid]=eu.slice();if(typeof TV_REV==='object')TV_REV[lid]=tv;}
   for(const r of NEW_CLUB_DATA3){const [id,name,short,c1,c2,str,league]=r;if(CLUBS[id])continue;CLUB_DATA.push(r);CLUBS[id]={id,name,short,c1,c2,str,str0:str,league};}
-  Object.assign(SQ_REAL,NEW_SQ3);Object.assign(NAMEP2,NAMEP4);
+  if(typeof NEW_SQ3!=='undefined')Object.assign(SQ_REAL,NEW_SQ3);/* v151: SQ_RL'ye taşındı */Object.assign(NAMEP2,NAMEP4);
   const late=()=>{try{for(const l of LIDS)if(!WORLD.includes(l))WORLD.push(l);Object.assign(CC,CCN);return true;}catch(e){return false;}};if(!late())setTimeout(late,0);
   /* eksik bayraklar ve ülke adları */
   const sv=(b)=>'data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 45">${b}</svg>`)));

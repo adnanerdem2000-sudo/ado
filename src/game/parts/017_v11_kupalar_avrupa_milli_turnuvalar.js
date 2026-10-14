@@ -94,7 +94,7 @@ function cupApply(k,us,them,notes){const r=k.rounds[k.cur],me=myClub(),opp=clubO
       else{cupWin(k,k.opp,G.club);txt+=`Finalde kaybettiniz. ${opp.name} kupayı kaldırdı.`;}}
     else if(adv){k.cur++;if(k.type==='eu'){k.opp=euDraw(k);const r1=k.rounds[k.cur],r2=k.rounds[k.cur+1];if(r1.n!=='Final'){r1.home=Math.random()<0.5;if(r2&&r2.leg===2)r2.home=!r1.home;}}else{k.opp=domDraw(k);k.rounds[k.cur].home=Math.random()<0.5;}
       txt+=`Tur atladınız! ${k.rounds[k.cur].n} rakibi: ${clubObj(k.opp).name} (${fmtDate(dateOf(k.rounds[k.cur].day))}).`;}
-    else{k.alive=false;k.out=r.n;txt+=`${r.n} turunda elendiniz.`;}}
+    else{k.alive=false;k.out=r.n;txt+=`${turLoc(r.n)} elendiniz.`;}}
   if(txt)notes.push(txt);return txt;}
 function cupStat(k,res){k.st.apps++;k.st.goals+=res.goals||0;k.st.assists+=res.assists||0;G.totals.apps++;G.totals.goals+=res.goals||0;G.totals.assists+=res.assists||0;}
 function playCup(sim){const cu=cupToday();if(!cu)return toast('Bugün kupa maçı yok');const {c:k,r}=cu,me=myClub(),opp=clubObj(k.opp);if(!opp){k.alive=false;nextDay();save();render();return;}

@@ -83,9 +83,9 @@ function abSetup(S){const W=ABM.win;if(!W)return;const H=W.ABH;
   /* motorun rahat çalıştığı güç bandı (≈72+): iki takım birlikte kaydırılır, aradaki fark aynen kalır */
   const avg=T=>{const on=T.P.filter(p=>!p.off);return on.reduce((a,p)=>a+(p.ovr||60),0)/Math.max(1,on.length);};ABM.shift=Math.round(clamp(72-(avg(S.U)+avg(S.O))/2,0,30));
   ABM.map={byId:{},ei:[],asg:[]};const recsE=[],homes=[],teams=[];
-  sides.forEach((T,e)=>{const asg=abAssign(T),recs=asg.res.map((p,i)=>{const rr=abRec(p,AB_ROLE[i],T,(T.boost||0)+ABM.shift,T.famF);rr.pos=AB_POS[AB_ROLE[i]];if(i===0)rr.pos='KL';db.push(rr);ABM.map.byId[rr.id]=p;p.ei=e*11+i;p.abId=rr.id;return rr;});
+  sides.forEach((T,e)=>{const asg=abAssign(T),recs=asg.res.map((p,i)=>{const rr=abRec(p,AB_ROLE[i],T,(T.boost||0)+ABM.shift,T.famF);rr.pos=AB_POS[AB_ROLE[i]];if(i===0)rr.pos='KL';try{rr.lbl=i===0?'KL':posTag(p,T);}catch(e){}db.push(rr);ABM.map.byId[rr.id]=p;p.ei=e*11+i;p.abId=rr.id;return rr;});
     /* yedekler de kayıtlı (değişiklik için) */
-    for(const b of T.bench||[]){if(b.abId&&db.some(x=>x.id===b.abId))continue;const rr=abRec(b,b.pos==='KL'?'GK':b.pos==='DF'?'LCB':b.pos==='FW'?'ST':b.pos==='KN'?'LW':'AM',T,(T.boost||0)+ABM.shift,T.famF);db.push(rr);b.abId=rr.id;ABM.map.byId[rr.id]=b;}
+    for(const b of T.bench||[]){if(b.abId&&db.some(x=>x.id===b.abId))continue;const rr=abRec(b,b.pos==='KL'?'GK':b.pos==='DF'?'LCB':b.pos==='FW'?'ST':b.pos==='KN'?'LW':'AM',T,(T.boost||0)+ABM.shift,T.famF);db.push(rr);b.abId=rr.id;try{rr.lbl=dpTag(b);}catch(e){}ABM.map.byId[rr.id]=b;}
     recsE.push(recs);homes.push(asg.homes);ABM.map.asg.push(asg);teams.push(abTeam(T,e,recs,asg));});
   W.__abHomes=homes;W.__abForm=sides.map(T=>T.form);W.__abTac=sides.map(abTac);W.__ab2d_seed=(Date.now()^(Math.random()*4294967296))>>>0;
   const ctl=G.mode==='mgr'&&!S.watch&&!S.pl3&&!S.scr&&!S.ref3;W.__abMine=ctl?(ABM.s0===0?0:1):null;
@@ -228,8 +228,8 @@ function abFullTime(){const S=ABM.fx;if(!S||FX!==S||ABM.done)return;ABM.done=tru
   try{const R=W.ado2d.state.rt;for(const T of S.T)for(const p of T.P){if(p.subbed&&ABM.rtSnap[p.k]!=null)p.rt=ABM.rtSnap[p.k];else if(p.ei!=null&&R){p.rt=clamp(R.get(p.ei)+(ABM.adj[p.k]||0),3,10);}}}catch(e){}
   if(S.pl3){S.phase='end';try{pl3Drive();}catch(e){}return;}            /* futbolcu modu: maçı MR bitirir */
   S.phase='end';
-  if(ABM.ffDetach){abDone();return;}
-  try{W.showMatchSummary(()=>abDone());const b=W.document.getElementById('summary-continue-btn');if(b)b.innerText='Devam';}catch(e){abDone();}}
+  if(ABM.ffDetach&&!(G.mode==='mgr'&&!S.watch)){abDone();return;}   /* v153: TD hızlı sonuçta da tam süre özetini görür */
+  abFfUI(false);if(ABM.ffDetach)try{abSumSync(W,sim);}catch(e){}try{W.showMatchSummary(()=>abDone());const b=W.document.getElementById('summary-continue-btn');if(b)b.innerText='Devam';}catch(e){abDone();}}
 function abDone(){const S=ABM.fx;cancelAnimationFrame(ABM.raf);ABM.raf=0;ABM.ff=0;ABM.ffDetach=0;abFfUI(false);
   try{const W=ABM.win;if(W){W.ado2d.state.running=false;try{W.ABH.stop();}catch(e){}try{W.stopCrowdAmbience&&W.stopCrowdAmbience();}catch(e){}try{W.sndBedStop&&W.sndBedStop(true);}catch(e){}}}catch(e){}
   if(!S||FX!==S)return;ABM.fx=null;try{fxClose();}catch(e){console.warn('fxClose',e);}}
@@ -245,6 +245,7 @@ function abToEnd(){const S=ABM.fx,W=ABM.win,sim=ABM.sim;if(!S||!W||!sim||ABM.ff)
   const st=W.ado2d.state,R=st.rt;const run=()=>{if(FX!==S||!ABM.ff)return;const t0=performance.now();
     if(abLag(S)>2){setTimeout(run,40);return;}
     while(performance.now()-t0<28&&!sim.finished){if(S.phase==='pause'||abLag(S)>2)break;sim.step();}
+    if(FX!==S||!ABM.ff||ABM.done)return;   /* v153: FULLTIME olayı adım içinde maçı kapattıysa örtüyü geri ekleme */
     abFfUI(true);
     if(!sim.finished){if(S.phase!=='pause'){/* senaryolu modlar */}setTimeout(run,0);}
     else{abFullTime();}};
@@ -271,8 +272,8 @@ function abSubOpen(sel){const W=ABM.win,S=ABM.fx;if(!W||!S)return;const d=W.docu
   ABM.subSel=sel||ABM.subSel||null;const on=fxOn(U).sort((a,b)=>(a.ei||0)-(b.ei||0)),bench=U.bench||[],left=5-(U.subs||0);
   const rt=p=>dec(clamp(p.rt||6.5,3,10),1),cond=p=>Math.round(p.st||100);
   ov.innerHTML=`<div class="abh-sp"><header><h3>Oyuncu değişikliği</h3><span class="abh-left">${left} hak kaldı</span><button type="button" class="btn btn-ghost icon-btn" data-sx="close" aria-label="Kapat">✕</button></header>
-    <div class="abh-cols"><section><h4>Sahada</h4>${on.map(p=>`<button type="button" class="abh-pl${ABM.subSel===p.k?' on':''}" data-out="${esc(p.k)}"${p.spos==='KL'&&false?' disabled':''}><span class="ps">${esc(p.spos||p.pos)}</span><b>${esc(p.name)}</b><i class="cd" style="--c:${cond(p)}%"></i><em>${rt(p)}</em></button>`).join('')}</section>
-    <section><h4>Yedekler</h4>${bench.length?bench.map(p=>`<button type="button" class="abh-pl" data-in="${esc(p.k)}"${!ABM.subSel||left<=0?' disabled':''}><span class="ps">${esc(p.pos)}</span><b>${esc(p.name)}</b><em>${R200(p.ovr||'')}</em></button>`).join(''):'<p class="abh-nob">Yedek yok</p>'}</section></div>
+    <div class="abh-cols"><section><h4>Sahada</h4>${on.map(p=>`<button type="button" class="abh-pl${ABM.subSel===p.k?' on':''}" data-out="${esc(p.k)}"${p.spos==='KL'&&false?' disabled':''}><span class="ps">${esc(posTag(p,U))}</span><b>${esc(p.name)}</b><i class="cd" style="--c:${cond(p)}%"></i><em>${rt(p)}</em></button>`).join('')}</section>
+    <section><h4>Yedekler</h4>${bench.length?bench.map(p=>`<button type="button" class="abh-pl" data-in="${esc(p.k)}"${!ABM.subSel||left<=0?' disabled':''}><span class="ps">${esc(dpTag(p))}</span><b>${esc(p.name)}</b><em>${R200(p.ovr||'')}</em></button>`).join(''):'<p class="abh-nob">Yedek yok</p>'}</section></div>
     <footer><p>${ABM.subSel?'Şimdi oyuna girecek yedeği seç.':'Önce oyundan çıkacak oyuncuyu seç.'}</p><button type="button" class="btn btn-primary" data-sx="close">Maça dön</button></footer></div>`;ov.hidden=false;}
 function abSubClick(e){const W=ABM.win,S=ABM.fx;if(!W||!S)return;const t=e.target.closest('button');const ov=W.document.getElementById('abh-subov');
   if(!t){if(e.target===ov)abSubClose();return;}

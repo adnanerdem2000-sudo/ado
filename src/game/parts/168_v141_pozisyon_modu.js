@@ -566,7 +566,7 @@ applyChance=(old=>function(res,m){if(!MR||!PZ.on||!res)return old.apply(this,arg
   try{if(res.code==='saved')add('İsabetli şut',0.15);
     if(A.passOk&&!['buOk','buFwd','bpOk','swOk','kDistOk','kDistLong','assist'].includes(res.code))add(A.passOk>1?`${Math.min(2,A.passOk)} isabetli pas`:'İsabetli pas',Math.min(2,A.passOk)*0.06);
     if(A.drbOk)add('Başarılı çalım',0.08*Math.min(2,A.drbOk));if(A.drop)add('Topu elinden kaçırdı',-0.2);
-    const j=pzJudge(res,A);jj=j;if(j){add(`${j.v>0?'Talimata uydu':'Talimatı dinlemedi'}: ${j.w.toLowerCase()}`,j.v>0?0.1:-0.15);if(j.v>0)PZ.comp.ok++;else PZ.comp.bad++;}}catch(e){console.warn(e);}
+    const j=pzJudge(res,A);jj=j;if(j){add(`${j.v>0?'Talimata uydu':'Talimatı dinlemedi'}: ${trLow(j.w)}`,j.v>0?0.1:-0.15);if(j.v>0)PZ.comp.ok++;else PZ.comp.bad++;}}catch(e){console.warn(e);}
   res.bonus=(res.bonus||0)+bonus;const yc0=MR.yc,rc0=MR.rc;
   const r=old.call(this,res,m);
   try{if(MR.yc>yc0)ev.push({t:MR.rc>rc0?'İkinci sarıdan kırmızı':'Sarı kart',v:MR.rc>rc0?-1.3:-0.3});else if(MR.rc>rc0)ev.push({t:'Kırmızı kart',v:-1});

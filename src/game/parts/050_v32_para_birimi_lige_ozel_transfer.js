@@ -1,6 +1,6 @@
 /* ================= v32: Para birimi € · lige özel transfer dönemleri · Avrupa kupaları · lig tablosu ================= */
 /* ---------- para birimi: oyunun tamamı € ---------- */
-const KUR={eur:55.32,d:'9 Ekim 2026'};
+const KUR={eur:55.32,d:'9 Ekim 2026'};/* v151: oyundaki tek döviz kuru (1 € = ₺). EUR_TL kur değil, iç birimdir; ₺ hep tlOf() ile hesaplanır */
 const tl=v=>'₺'+(v>=1e9?dec(v/1e9,2)+' Mr':v>=1e6?dec(v/1e6,1)+' Mn':Math.round(v).toLocaleString('tr-TR'));
 const tlOf=n=>tl(n/EUR_TL*KUR.eur);
 /* ---------- transfer dönemleri ---------- */
@@ -203,7 +203,7 @@ function euViewHTML(){if(!G||!G.s||!G.s.cal)return '';const cs=cupsOf(),mine=(cs
   const ko=`<section class="panel"><p class="sub-h"><span>Eleme turları</span><span>${B.champ?'🏆 '+esc(euNm(B.champ)):''}</span></p>${koH}</section>`;
   const P=D.pz,pz=`<ul class="cupres">${[['Katılım',P.start],['Lig aşaması galibiyet',P.w],['Beraberlik',P.d],['Play-off',P.po],['Son 16',P.r16],['Çeyrek final',P.qf],['Yarı final',P.sf],['Final',P.f],['Şampiyonluk bonusu',P.win]].map(([a,b])=>`<li><span>${a}</span><b>${eur(b)}</b></li>`).join('')}</ul>`;
   const trc=B.parts.filter(x=>CLUBS[x]&&ccOf(CLUBS[x])==='TR');
-  const trH=trc.length?`<ul class="cupres">${trc.map(x=>{const i=B.tbl.findIndex(y=>y.id===x);let st=`${i+1}. sıra · ${B.tbl[i].p} puan`;if(B.lpDone){const outR=['po','r16','qf','sf','f'].find(c=>(B.ko[c]||[]).some(t=>t.pl&&(t.a===x||t.b===x)&&t.w!==x));st=B.champ===x?'Şampiyon':outR==='f'?'Finalist':outR?`${KRN[outR]} turunda elendi`:i>=24?'Lig aşamasında elendi':'Devam ediyor';}return `<li><span>${euCr(x,14)} ${esc(euNm(x))}</span><b>${st}</b></li>`;}).join('')}</ul>`:'<p class="muted">Bu sezon bu kupada Türk takımı yok.</p>';
+  const trH=trc.length?`<ul class="cupres">${trc.map(x=>{const i=B.tbl.findIndex(y=>y.id===x);let st=`${i+1}. sıra · ${B.tbl[i].p} puan`;if(B.lpDone){const outR=['po','r16','qf','sf','f'].find(c=>(B.ko[c]||[]).some(t=>t.pl&&(t.a===x||t.b===x)&&t.w!==x));st=B.champ===x?'Şampiyon':outR==='f'?'Finalist':outR?`${turLoc(KRN[outR])} elendi`:i>=24?'Lig aşamasında elendi':'Devam ediyor';}return `<li><span>${euCr(x,14)} ${esc(euNm(x))}</span><b>${st}</b></li>`;}).join('')}</ul>`:'<p class="muted">Bu sezon bu kupada Türk takımı yok.</p>';
   const past=(G.cupW||[]).filter(x=>x.c===E.name).slice(0,8),pastH=past.length?`<section class="panel"><p class="sub-h"><span>Geçmiş şampiyonlar</span></p><ul class="cupres">${past.map(x=>`<li><span>${esc(x.y)}</span><b>${esc(euNm(x.w))}</b><em>${x.r?esc(euNm(x.r)):''}</em></li>`).join('')}</ul></section>`:'';
   const rules=`<section class="panel"><p class="sub-h"><span>${esc(E.name)} kuralları</span></p><ul class="rules">${euRulesList(id).map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="sub-h" style="margin-top:12px"><span>Lig kontenjanları</span></p>${euQuotaHTML()}</section>`;
   return `${chips}${head}<div class="eu-grid"><div>${tbl}</div><div>${mdH}<section class="panel"><p class="sub-h"><span>Türk temsilciler</span></p>${trH}</section><section class="panel"><p class="sub-h"><span>Para ödülleri (yaklaşık)</span></p>${pz}</section></div></div>${ko}<div class="eu-grid2">${rules}${pastH}</div>`;}

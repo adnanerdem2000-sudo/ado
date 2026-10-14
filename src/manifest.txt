@@ -1,6 +1,6 @@
 # Futbol Kariyeri — ana belge
 # Derleme sırası. Her satır: bu klasöre göre bir dosya yolu, "| " ile başlayan düz satır ya da "@abdoc <manifest>".
-# Satırlar bayt bayt çıktıyı belirler; yeni parçayı doğru yere ekle ve dosyayı satır sonuyla bitir.
+# "@z <veri.js>": dosya derlemede sıkıştırılarak gömülür (tools/sikistir.js; yalnız üst düzeyde tek global tanımlayan veri). Satırlar bayt bayt çıktıyı belirler; yeni parçayı doğru yere ekle ve dosyayı satır sonuyla bitir.
 shell/head.html
 | <style>
 shell/style.css
@@ -10,7 +10,6 @@ shell/body.html
 game/parts/000_baslangic.js
 game/parts/001_util.js
 game/parts/002_data.js
-game/data/new_sq2.js
 game/parts/002_data_2.js
 game/parts/003_graphics.js
 game/parts/004_state.js
@@ -24,7 +23,6 @@ game/parts/011_match_runner.js
 game/parts/012_mac_ani_kontrollu_oyun.js
 game/parts/013_render.js
 game/parts/014_kadrolar_gercek_oyuncular_super_lig_5.js
-game/data/new_sq.js
 game/parts/014_kadrolar_gercek_oyuncular_super_lig_5_2.js
 game/parts/015_teknik_direktorluk.js
 game/data/flags.js
@@ -105,7 +103,6 @@ game/parts/085_v62_2b_mac_motoru_gercekci_top_fizigi.js
 game/parts/086_v63_fm_tarzi_mac_ekrani_sol_kadro_paneli.js
 game/parts/087_v64_yeni_ligler_ve_gercek_kadrolar.js
 game/data/new_club_data3.js
-game/data/new_sq3.js
 game/parts/087_v64_yeni_ligler_ve_gercek_kadrolar_2.js
 game/parts/088_v65_teknik_ekip_gorev_panosu_yardimci.js
 game/parts/089_v66_hakem_maci_yarida_kalmasin_devam_eden.js
@@ -123,13 +120,11 @@ game/parts/100_v78_duzeltme_kulup_sezon_tahmininde.js
 game/parts/101_v79_3b_mac_gorunumu_adoball_3b_motoru.js
 game/parts/102_v80_test_turundan_duzeltmeler.js
 game/parts/103_v81_oyuncu_profili_kariyer_sekmesi.js
-game/data/sq_add.js
 game/parts/104_v82_eksik_gercek_oyuncular_235_kulube.js
 game/parts/105_v83_oyuncu_profili_football_manager_tarzi.js
 game/parts/106_v84_futbolcu_modu_maclari_3b_motorda_mac.js
 game/parts/107_v85_istege_bagli_3b_izleme_gozlemci_ve.js
 game/parts/108_v86_altyapidan_yetisen_gencler_newgen_iyi.js
-game/data/sq_fix.js
 game/parts/109_v87_2026_27_kadrolari_dogrulandi_ekim.js
 game/parts/110_v88_sezon_ici_gelisim_teknik_ekipten.js
 game/parts/111_v89_hizli_baslangic_senaryosunda_da.js
@@ -197,6 +192,11 @@ game/parts/174_v147_menajerler.js
 game/parts/175_v148_takim_kisaltma_ipucu.js
 game/parts/176_v149_kompakt_profiller.js
 game/parts/177_v150_mac_tam_ekran.js
+game/parts/180_v153_mac_ve_arayuz_duzeltmeleri.js
+game/parts/182_v155_meslek_derinligi.js
+game/parts/179_v152_kayit_saglamligi.js
+game/parts/178_v151_boyut_ve_veri.js
+game/parts/181_v154_futbolcu_duzeltmeleri.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
@@ -211,18 +211,18 @@ game/parts/160_start.js
 game/parts/161_events.js
 | </script>
 | <script>
-engine3d/data/ado3d_glb_b64.js
+@z engine3d/data/ado3d_glb_b64.js
 |
 | </script>
 | <script>
 engine3d/data/ado_stad_data.js
 engine3d/stadium_loader.js
-engine3d/data/ado3d_meshy.js
-engine3d/data/ado3d_buzz.js
-engine3d/data/ado3d_hair.js
-engine3d/data/ado3d_scalp.js
-engine3d/data/ado3d_hair_ek.js
-engine3d/data/ado3d_scalp_ek.js
+@z engine3d/data/ado3d_meshy.js
+@z engine3d/data/ado3d_buzz.js
+@z engine3d/data/ado3d_hair.js
+@z engine3d/data/ado3d_scalp.js
+@z engine3d/data/ado3d_hair_ek.js
+@z engine3d/data/ado3d_scalp_ek.js
 | </script>
 | <script>
 engine3d/engine.js

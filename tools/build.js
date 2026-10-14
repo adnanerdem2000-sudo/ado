@@ -3,11 +3,16 @@
    Kullanım: node tools/build.js [--out dist/futbol-kariyeri.html] [--verify <karşılaştırılacak.html>] [--check]
      --check   yalnız denetle, dosya yazma
      --verify  çıktı verilen dosyayla bayt bayt aynı mı (bölme işleminin kayıpsız olduğunu kanıtlamak için)
+   Manifest satırları: dosya yolu, "| düz satır", "@abdoc <manifest>" ya da "@z <veri.js>" (v151: sıkıştırılmış gömme, tools/sikistir.js).
+   Çıktı 15,5 milyon baytı aşarsa uyarır, 16 milyonu aşarsa başarısız olur (yayın sınırı).
    Başarılıysa son satır SYNTAX_OK olur. Sözdizimi hatasında hatanın kaynak dosyası ve satırı yazılır. */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname, '..');
+const ZIP = require('./sikistir');
+/* v151: yayın sınırı (artifact 16 MB): 15,5 milyon baytı aşınca uyar, 16 milyonu aşınca derleme başarısız */
+const SIZE_WARN = 15500000, SIZE_MAX = 16000000;
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i < 0 ? null : (args[i + 1] || ''); };
 const OUT = path.resolve(ROOT, opt('--out') || 'dist/futbol-kariyeri.html');
 const AB_TAG = '<script type="text/x-abdoc" id="abdoc">';
@@ -20,6 +25,12 @@ function assemble(manifest) {
     if (row === '' || row.startsWith('#')) return;
     const at = `${path.relative(ROOT, manifest)}:${n + 1}`;
     if (row.startsWith('| ') || row === '|') { out.push(row.slice(2)); src.push([at, 1]); return; }
+    if (row.startsWith('@z ')) {   /* v151: veri dosyasını sıkıştırılmış gömer (tools/sikistir.js); oyunda ilk kullanımda açılır */
+      const rel = row.slice(3).trim(), f = path.join(dir, rel);
+      if (!fs.existsSync(f)) fail(`${at}: dosya yok: ${rel}`);
+      let z; try { z = ZIP.zLine(fs.readFileSync(f, 'utf8'), rel); } catch (e) { fail(`${at}: ${e.message}`); }
+      out.push(z.line); src.push([path.relative(ROOT, f), 1]); return;
+    }
     if (row.startsWith('@abdoc ')) {
       const sub = assemble(path.join(dir, row.slice(7).trim()));
       checkScripts(sub, 'Adoball');
@@ -64,8 +75,10 @@ const nScripts = checkScripts(doc, 'Ana belge');
 const text = doc.lines.join('\n') + '\n';
 const buf = Buffer.from(text, 'utf8');
 const md5 = crypto.createHash('md5').update(buf).digest('hex');
+if (buf.length > SIZE_MAX) fail(`çıktı ${buf.length.toLocaleString('tr-TR')} bayt: yayın sınırı ${SIZE_MAX.toLocaleString('tr-TR')} baytı aşıyor (büyük veriyi manifestte @z ile sıkıştır ya da kullanılmayanı çıkar)`);
+if (buf.length > SIZE_WARN) console.warn(`UYARI: çıktı ${buf.length.toLocaleString('tr-TR')} bayt — sınıra (${SIZE_MAX.toLocaleString('tr-TR')}) yaklaşıyor`);
 if (args.includes('--check')) console.log(`denetlendi: ${nScripts} betik bloğu`);
-else { fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, buf); console.log(`${path.relative(ROOT, OUT)} · ${(buf.length / 1048576).toFixed(2)} MB · md5 ${md5}`); }
+else { fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, buf); console.log(`${path.relative(ROOT, OUT)} · ${buf.length.toLocaleString('tr-TR')} bayt (${(buf.length / 1048576).toFixed(2)} MiB) · md5 ${md5}`); }
 const ver = opt('--verify');
 if (ver != null) {
   const ref = fs.readFileSync(path.resolve(ver));

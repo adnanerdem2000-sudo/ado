@@ -168,7 +168,7 @@ function oppDizHTML(id){const c=CLUBS[id];if(!c)return '';const O=oppLineup(id),
    <p class="muted" style="margin:0 0 8px">${lastTxt?lastTxt+' · ':''}Teknik direktör: ${esc(co.n)} · Yaklaşım: ${TAC[O.tac]?TAC[O.tac].n:'Dengeli'}. <b>Sadece görüntüleme</b>, bu dizilişi değiştiremezsin.</p>
    <div class="fm-pitch ro">${slots}</div>
    <p class="sub-h" style="margin:12px 0 6px"><span>Takım talimatları</span></p>${tiRows||'<p class="muted">Standart talimatlar (tümü varsayılan).</p>'}
-   <p class="sub-h" style="margin:12px 0 6px"><span>Yedekler</span></p><div class="fm-bench ro">${O.bench.map(q=>`<button class="fm-b" data-act="pcard" data-id="${id}" data-k="${q.k}"><span>${q.pos}</span><b>${esc(ksur(q.name))}</b><em>${scO(q,c)}</em></button>`).join('')}</div></section>`;}
+   <p class="sub-h" style="margin:12px 0 6px"><span>Yedekler</span></p><div class="fm-bench ro">${O.bench.map(q=>`<button class="fm-b" data-act="pcard" data-id="${id}" data-k="${q.k}"><span>${dpTag(q)}</span><b>${esc(ksur(q.name))}</b><em>${scO(q,c)}</em></button>`).join('')}</div></section>`;}
 sqTabs=(old=>function(id){let h=old.apply(this,arguments);try{const mine=G&&G.mode==='mgr'&&id===G.club;if(!mine&&CLUBS[id]&&!LEAGUES[CLUBS[id].league].youth)h=h.replace('</div>',`<button data-act="sqTab" data-id="${id}" data-k="diz" class="${SQT==='diz'?'on':''}">Diziliş</button></div>`);}catch(e){}return h;})(sqTabs);
 squadHTML=(old=>function(id){const mine=G&&G.mode==='mgr'&&id===G.club;if(SQT!=='diz'||mine)return old.apply(this,arguments);const c=CLUBS[id];if(!c)return '';const L=LEAGUES[c.league];
   return `<div class="club-hd">${crestSVG(c,52)}<div><h3>${esc(c.name)}</h3><span>${L.name}</span></div></div>${sqTabs(id)}${oppDizHTML(id)}`;})(squadHTML);

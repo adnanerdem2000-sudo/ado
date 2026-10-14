@@ -24,7 +24,7 @@ function ngMake(id,lv){const c=CLUBS[id],Y=G.s.year;G.ng=G.ng||{};const n=Object
   G.tx=G.tx||{};G.tx[k]=id;return G.ng[k];}
 function pickNum(id){let used=new Set();try{used=new Set(squadOf(id).map(p=>p.num));}catch(e){}for(const n of [27,28,30,31,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]){if(!used.has(n))return n;}return 60+rint(0,30);}
 /* kulübün altyapı çıkışlı aktif gençleri */
-function ngOf(id){const out=[];const tx=G.tx||{};for(const [k,to] of Object.entries(tx)){if(to!==id)continue;const p=G.ng&&G.ng[k];if(p&&p.ai&&p.alive)out.push(p);}return out;}
+function ngOf(id){const out=[];const tx=G.tx||{},N=G.ng;if(!N)return out;/* v152: tüm transferler yerine yalnız gençler taranır (sezon geçişi hızlandı) */for(const k in N){if(tx[k]!==id)continue;const p=N[k];if(p&&p.ai&&p.alive)out.push(p);}return out;}
 function ngSeason(){if(!G||!G.s||G.phase==='tryout')return;const Y=G.s.year;if(Y<=2026)return;G.ngY=G.ngY||{};if(G.ngY[Y])return;G.ngY[Y]=1;
   const mine=G.mode==='mgr'&&G.m?G.club:null,news=[];
   for(const id of Object.keys(CLUBS)){if(id===mine)continue;const lv=acqOf(id);if(!lv)continue;

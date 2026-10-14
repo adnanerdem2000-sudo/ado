@@ -4,7 +4,8 @@
      c: kulüp tablosu [ad, oyun kulüp kimliği|'' , FotMob takım kimliği]
      l: lig/turnuva adları
      p: {oyunKulübü: {oyuncuAdı: "boy|sezonlar|transferler|milli|ayak+yaş"}}
-        sezon   = yıl,kulüp,maç,gol,asist,reyting*100,lig[,L]   yeni → eski sırada; ilk yıl 1980'den fark, sonrakiler bir öncekinden fark
+        sezon   = yıl,kulüp,maç,gol,asist,reyting*100,lig[,L|C|LC] yeni → eski sırada; ilk yıl 1980'den fark, sonrakiler bir öncekinden fark
+                  L kiralık; C takvim yılı sezonu (FotMob "2023": MLS, Eliteserien, J1, Brasileirão…; yıl = takvim yılı − 1, oyunda "2023" diye yazılır)
         transfer= yıl-1980,kimden,kime,tür[bedel_bin€]           eski → yeni sırada; tür: T transfer, F bonservissiz, L kiralık (bedel varsa kiralama bedeli), R kiralıktan dönüş
         kulüp ve lig sıra numaraları 36 tabanında
         milli   = maç,gol,ilk sezon (A milli takım; yoksa boş)
@@ -61,7 +62,7 @@ const sameClub = (a, b) => { const A = toks(a).filter(w => w.length >= 4), B = t
 
 const ageAt = dob => { if (!dob) return null; const d = new Date(dob + 'T00:00:00Z'), r = new Date('2026-08-01T00:00:00Z'); let a = r.getUTCFullYear() - d.getUTCFullYear(); if (r.getUTCMonth() < d.getUTCMonth() || (r.getUTCMonth() === d.getUTCMonth() && r.getUTCDate() < d.getUTCDate())) a--; return a; };
 const fakeAge = {}; for (const [id, c] of Object.entries(D.clubs)) { if (!c.sq || !c.sq.length) continue; const m = {}; for (const r of c.sq) m[r[2]] = (m[r[2]] || 0) + 1; fakeAge[id] = Math.max(...Object.values(m)) / c.sq.length > 0.5; }
-const out = {}; let nPos = 0, nAge = 0, nFt = 0, nP = 0, nS = 0, nM = 0, nFee = 0, nH = 0, nN = 0, nSS = 0, nCard = 0, nFree = 0, nLoanFee = 0;
+const out = {}; let nPerm = 0, nCal = 0, nPos = 0, nAge = 0, nFt = 0, nP = 0, nS = 0, nM = 0, nFee = 0, nH = 0, nN = 0, nSS = 0, nCard = 0, nFree = 0, nLoanFee = 0;
 const stat = { yasFark: 0, boyFark: [] };
 for (const [key, e] of Object.entries(P)) {
   if (!e.p) continue;
@@ -75,15 +76,26 @@ for (const [key, e] of Object.entries(P)) {
     const ap = s[3], gl = s[4], as = s[5]; if (ap == null && gl == null) continue;
     const lgs = (s[8] || []).filter(t => t[0] && !CUP.test(t[0])), lg = lgs.length ? lgs[0][0] : '';
     const li = lgIdx(lg), dy = py == null ? y - 1980 : py - y; py = y;
-    S.push([dy, b36(clubIdx(s[1], s[2])), ap || 0, gl || 0, as || 0, s[6] ? Math.round(s[6] * 100) : '', li === '' ? '' : b36(li)].join(',') + (s[7] === 'on_loan' ? ',L' : ''));
+    const fl = (s[7] === 'on_loan' ? 'L' : '') + (/^\d{4}$/.test(s[0]) ? 'C' : ''); if (fl.includes('C')) nCal++;
+    S.push([dy, b36(clubIdx(s[1], s[2])), ap || 0, gl || 0, as || 0, s[6] ? Math.round(s[6] * 100) : '', li === '' ? '' : b36(li)].join(',') + (fl ? ',' + fl : ''));
   }
   /* transferler: takım girdilerinden (eski → yeni) */
   const te = X.te.filter(t => t[2]).slice().sort((a, b) => a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0), M = [], fees = cardFees(nm), SST = BON[key] && BON[key].t;
-  let cur = te[0];
+  let cur = te[0], lp = null;
   for (let j = 1; j < te.length; j++) {
     const a = cur, b = te[j];
     /* aynı kulübün A takımı ile rezerv/altyapı takımı arası geçiş transfer sayılmaz; ana takım "kimden" olarak kalır */
     if (SEL.test(b[1])) continue;
+    /* v151: kiralıktan kalıcıya (satın alma opsiyonu/zorunluluğu): aynı kulüpte kiralık girdiyi kalıcı girdi izler. Yalnız SofaScore
+       aynı tarihlerde bu kulübe kalıcı transfer kaydı veriyorsa yazılır (bedel yoksa "açıklanmadı"); kimden = kiralayan kulüp */
+    if (a[0] === b[0] && a[4] === 'on_loan' && b[4] !== 'on_loan' && lp && b[2] <= '2026-10-01') {
+      const yd = moveY(b[2]), ss = ssFind(SST, b[2], b[1]);
+      if (yd && yd[0] >= 1985 && ss && ss[5] === 3 && teamSim(ss[1], lp[1])) {
+        const v = ss[6] > 0 ? Math.round(ss[6] * (EURO[ss[7]] || 1) / 1000) : 0, tp = v > 0 ? 'T' + v : /^free$/i.test(ss[8]) ? 'F' : 'T';
+        M.push([yd[0] - 1980, b36(clubIdx(lp[0], lp[1])), b36(clubIdx(b[0], b[1])), tp].join(',')); nPerm++; if (v > 0) nFee++;
+      }
+      cur = b; continue;
+    }
     if (a[0] === b[0] || sameBase(a[1], b[1])) { if (RES.test(a[1]) && !RES.test(b[1])) cur = b; continue; }
     cur = b;
     if (b[2] > '2026-10-01') continue;
@@ -98,6 +110,7 @@ for (const [key, e] of Object.entries(P)) {
       else if (ss[5] === 2 && tp === 'T') tp = 'R';
     }
     if (tp === 'T' && fee === '') { const f = fees.find(x => Math.abs(x.y - yd[0]) <= 1 && sameClub(x.n, b[1])); if (f) { fee = Math.round(f.fee * 1000); nFee++; nCard++; } }
+    if (tp === 'L') lp = a;
     M.push([yd[0] - 1980, b36(clubIdx(a[0], a[1])), b36(clubIdx(b[0], b[1])), tp + fee].join(','));
   }
   /* A milli takım: en çok maçlı büyükler takımı → maç,gol,ilk yıl (sezon) */
@@ -127,6 +140,6 @@ const z = zlib.deflateRawSync(Buffer.from(json), { level: 9 }).toString('base64'
 const head = `/* v128 veri: FotMob'dan gerçek kariyer geçmişi ve boylar — ${nP} oyuncu, ${C.length} kulüp (Ekim 2026). tools/veri/ ile üretildi; elle düzenleme. */`;
 fs.writeFileSync(OUT, head + '\nconst FMK_Z="' + z + '";\n');
 console.log(`oyuncu ${nP} · boy ${nH} · milli ${nN} · sezon ${nS} · transfer ${nM} (bedel ${nFee}) · kulüp ${C.length} (oyunda ${C.filter(c => c[1]).length}) · lig ${L.length}`);
-console.log(`ayak ${nFt} · yaş düzeltmesi ${nAge} · güncel mevki ${nPos}`);
+console.log(`ayak ${nFt} · yaş düzeltmesi ${nAge} · güncel mevki ${nPos} · takvim yılı sezonu ${nCal} · kiralıktan kalıcıya ${nPerm}`);
 console.log(`bedel kaynağı: SofaScore ${nSS} · CARD ${nCard} · SofaScore'a göre bonservissiz ${nFree} · ücretli kiralık ${nLoanFee}`);
 console.log(`ham ${(json.length / 1048576).toFixed(2)} MB → dosya ${(fs.statSync(OUT).size / 1048576).toFixed(2)} MB · ${path.relative(ROOT, OUT)}`);

@@ -54,7 +54,7 @@ function droScene(){const p=DRO.p,c=CLUBS[G.club]||{},cs=droCase();const xr=DRO.
     <div class="pl dro-wr"><div class="dro-shelf"><i></i><i></i><i></i></div><div class="dro-sink"></div></div>
     <div class="pl dro-wf"></div>
     ${droBox('bed',230,62,96,120,180,-60,'<span class="pillow"></span>')}
-    ${droBox('desk',190,74,90,-170,180,40,'')}<div class="dro-mon" style="transform:translate3d(-118px,106px,30px) rotateY(18deg)"><b>${esc(p.name)}</b><small>${esc(c.name||'')} · ${p.pos||''} · ${p.age||''} yaş</small><small>${cs?(cs.src==='ill'?'İdman öncesi şikâyet':'Maç sonrası'):''}</small></div>
+    ${droBox('desk',190,74,90,-170,180,40,'')}<div class="dro-mon" style="transform:translate3d(-118px,106px,30px) rotateY(18deg)"><b>${esc(p.name)}</b><small>${esc(c.name||'')} · ${esc(v153PosP(p))} · ${p.age||''} yaş</small><small>${cs?(cs.src==='ill'?'İdman öncesi şikâyet':'Maç sonrası'):''}</small></div>
     <div class="dro-doc" style="transform:translate3d(-225px,180px,-55px)">${droDocSVG()}<span class="dro-tag doc">Dr. ${esc((G.p.name||'').split(' ').slice(-1)[0]||'')}</span></div>
     <div class="dro-pt" id="droPt" style="transform:${droP3()}">${droPatientSVG()}<span class="dro-tag">${esc(p.name)}</span><div class="dro-say" id="droSay" hidden></div></div>
   </div></div></div>`;}
