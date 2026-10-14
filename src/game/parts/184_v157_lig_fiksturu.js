@@ -72,7 +72,7 @@ function fxTableHTML(lid,D,upto,hl){const tb=tableOf(lid,D.res.slice(0,upto));if
 function fxWeekHTML(lid,D){const R=D.fx.length,cur=fxCurW(D),w=clamp(FXV.w||cur,1,R),rd=D.fx[w-1]||[],day=D.cal[w-1],pl=w<=D.res.length;
   let gl=0,hw=0,dr=0,aw=0;const rows=rd.map(([h,a])=>{const r=pl?fxRes(D,w-1,h,a):null,me=h===G.club||a===G.club;if(r){gl+=r[0]+r[1];if(r[0]>r[1])hw++;else if(r[0]<r[1])aw++;else dr++;}
     const wh=r&&r[0]>r[1],wa=r&&r[1]>r[0];
-    return `<div class="fx-m ${me?'me':''} ${r?'pl':'up'}"><button class="fx-t h ${wh?'w':''}" data-act="club" data-id="${h}"><span>${fxNm(h)}</span>${fxCr(h,22)}</button><span class="fx-s">${r?`<b>${r[0]}</b><i>–</i><b>${r[1]}</b>`:`<small>${esc(fxDt(day).split(' ').slice(0,3).join(' '))}</small>`}</span><button class="fx-t a ${wa?'w':''}" data-act="club" data-id="${a}">${fxCr(a,22)}<span>${fxNm(a)}</span></button></div>`;}).join('');
+    return `<div class="fx-m ${me?'me':''} ${r?'pl':'up'}"><button class="fx-t fh ${wh?'w':''}" data-act="club" data-id="${h}"><span>${fxNm(h)}</span>${fxCr(h,22)}</button><span class="fx-s">${r?`<b>${r[0]}</b><i>–</i><b>${r[1]}</b>`:`<small>${esc(fxDt(day).split(' ').slice(0,3).join(' '))}</small>`}</span><button class="fx-t fa ${wa?'w':''}" data-act="club" data-id="${a}">${fxCr(a,22)}<span>${fxNm(a)}</span></button></div>`;}).join('');
   const inR=new Set(rd.flat()),bye=leagueClubs(lid).filter(c=>!inR.has(c.id));
   const sum=pl?`<b>${rd.length}</b> maç · <b>${gl}</b> gol (maç başı ${(gl/Math.max(1,rd.length)).toFixed(1)}) · ev ${hw} · beraberlik ${dr} · deplasman ${aw}`:`<b>${rd.length}</b> maç · ${esc(fxDt(day))} · henüz oynanmadı`;
   const chips=D.fx.map((_,i)=>`<button class="chip fx-c ${i<D.res.length?'pl':''} ${i+1===cur?'now':''}" data-act="fxW" data-w="${i+1}" aria-pressed="${i+1===w}" aria-label="${i+1}. hafta">${i+1}</button>`).join('');
@@ -81,7 +81,7 @@ function fxWeekHTML(lid,D){const R=D.fx.length,cur=fxCurW(D),w=clamp(FXV.w||cur,
       <div class="fx-wt"><b>${w}. Hafta</b><small>${esc(fxDt(day))} · ${w}/${R}${pl?' · oynandı':w===D.res.length+1?' · sıradaki':''}</small></div>
       <button class="btn ghost fx-ar" data-act="fxW" data-d="1" ${w>=R?'disabled':''} aria-label="Sonraki hafta">▶</button></div>
     <div class="filt fx-wc">${chips}</div>
-    <p class="fx-sum">${sum}${w!==cur?` <button class="btn ghost sm fx-now" data-act="fxW" data-w="${cur}">Bu haftaya git</button>`:''}</p>
+    <p class="fx-sum"><span>${sum}</span>${w!==cur?` <button class="btn ghost sm fx-now" data-act="fxW" data-w="${cur}">Bu haftaya git</button>`:''}</p>
     <div class="fx-list">${rows||'<p class="muted">Bu hafta maç yok.</p>'}</div>${bye.length?`<p class="muted fx-bye">Bay: ${bye.map(c=>esc(c.name)).join(', ')}</p>`:''}</section>${T}`;}
 function fxTeamHTML(lid,D){const clubs=leagueClubs(lid).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'tr'));if(!clubs.length)return '';
   let t=FXV.t;if(!clubs.some(c=>c.id===t))t=clubs.some(c=>c.id===G.club)?G.club:(tableOf(lid,D.res)[0]||clubs[0]).id;
