@@ -2508,3 +2508,20 @@ html.v153-try #view>.cta,html.v153-try #view>.btn{align-self:stretch;width:auto}
 /* v153: lig tablosu 360 px'de taşmasın */
 .lg-body>*{min-width:0}
 @media (max-width:980px){.lg-body{grid-template-columns:minmax(0,1fr)}}
+/* v153: erişilebilirlik — 11 px altındaki yazılar en az 11 px (otomatik derlenen geçersiz kılma listesi) */
+.lic-ovr span,.tab,.tab .badge,.cpath u.rt,.pc-stats.co4 div.nat span,.trrow .to small,.sc-meters span,.pbtn small,.mg-cond small,.day .dn,.day .dl,.need small,.fm-slot small,.fm-cand b u,.fm-b span,.ng-log p i,.fp-row small,.stf-row i,.stc-st small,.stf-sum small,.case .pill,.cl-h,.cl-m,.cmp th small,.sqt .pos,table.lgt .frm i,.eu-tie small,.eu-quota i,table.ldr td.pl-n .tp,table.kr-t em,.kr-loan,.nav-cat>p,.nav-b,.tr-day small,.fin-kpi span,.aw span,.aw-p small,.ctag,.rum,.dz-p em,.chip .pill,.pc.mini b,.pi,.pl-p u,.ib-cols,.ib-t span,.ib-t em,.ib-o small,.fm-slot.cdr .pis.slot .pi,.fm-slot .pis.slot .pi,.fxl-p,.fxl-r em,.fxt-st span,.fxt-p small,.rdr-f i,.rdr-pr small,.pf-ch span,.pf-mh,.lg-chip i,.cp-pl .pos,.cp-t small,.sm2-ok,.sm2-livetag,.ca-row span,.ca-q,.lg-chip small,.md-go small,.pz-rt small,.ib-cat,.tw-r,.tw-p small,.ag-strip span,#modalCard.pf .pf-ch span,#modalCard.pf .fmp-ss span,#modalCard.cp .cp-t span{font-size:11px}
+@media (pointer:fine){.match .pbtn:before,.fx-ctl [data-fx=play]:after{font-size:11px}}
+@media (min-width:1000px) and (pointer:fine){.fx-ctl button[data-key]:after{font-size:11px}}
+@media (max-width:800px){.rlb{font-size:11px}}
+@media (max-width:900px){.ib-o small{font-size:11px}}
+@media (max-width:600px){.rdr-f i{font-size:11px}}
+@media (max-width:760px){#pl3Hud,#pl3Hud span,#modalCard.pf .ca-row span,#modalCard.pf .ca-row b small,#modalCard.cp .cp-gen .cp-t span{font-size:11px}}
+@media (max-width:700px){.md-go small{font-size:11px}}
+/* v153: kontrast ve dokunma alanları */
+.grp-t:not(.on){color:#f0ebff}
+body.pro .chip[aria-pressed="true"]{background:#6646f0}
+@media (max-width:600px),(pointer:coarse){
+  table [data-act="club"],table [data-act="pcard"],.lgt [data-act="club"]{display:inline-block;padding:8px 0;margin:-8px 0}
+  #top .md-go{height:32px}
+  [data-act="hubCust"],[data-act="plTag"],[data-act="cmpT"],[data-act="euMd"],[data-act="renew"]{min-height:32px;min-width:32px}
+}
