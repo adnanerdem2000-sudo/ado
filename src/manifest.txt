@@ -201,6 +201,8 @@ game/parts/183_v156_gercekci_maaslar.js
 game/parts/184_v157_lig_fiksturu.js
 game/data/ten_fm.js
 game/parts/185_v159_gercekci_portreler.js
+game/parts/188_v161_transferler_ve_menajerler.js
+game/parts/187_v160_magaza_ve_formalar.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
