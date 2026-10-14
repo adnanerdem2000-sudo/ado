@@ -93,7 +93,7 @@ function viewRefBan(){const j=refJob(),M=mhkOf(),all=j.rlog||[],avg=all.length?a
    <div class="strip"><div><b>${j.seasons||0}</b><span>Sezon</span></div><div><b>${all.length}</b><span>Son maçlar</span></div><div><b>${all.length?dec(avg,2):'-'}</b><span>Not ort.</span></div><div><b>${esc(j.title)}</b><span>Son klasman</span></div></div>
    <p class="muted">Men kararı kesindir; kokart ve klasman hakları düşer. Kariyer geçmişin ve maç raporların arşivde kalır.</p></section>
    ${M.hist&&M.hist.length?`<section class="panel"><p class="sub-h"><span>Sicil geçmişi</span></p><ul class="cupres">${M.hist.slice(0,8).map(x=>`<li><span>${esc(x.y||'')}</span><b>${x.n||0} maç uzaklaştırma${x.dem?' · klasman düşürme':''}</b><em class="res-l">${x.rt?dec(x.rt,1):''}</em></li>`).join('')}</ul></section>`:''}
-   <div class="day-ctas v155-banb"><button class="btn big" data-act="newCareer"><span>Yeni kariyer başlat</span><small>Başka bir meslek seç</small></button><button class="btn" data-act="navGo" data-tab="refs">Maç raporlarım</button></div>`;}
+   <div class="day-ctas v155-banb"><button class="btn" data-act="newCareer">Yeni kariyer başlat · başka bir meslek seç</button><button class="btn" data-act="navGo" data-tab="refs">Maç raporlarım</button></div>`;}
 fmCont=(old=>function(){try{if(isRef()&&G.phase==='retired'){toast('Hakemlik kariyerin MHK kararıyla sona erdi');return;}}catch(e){}return old.apply(this,arguments);})(fmCont);
 viewRetired=(old=>function(){try{if(isRef()&&G.job&&(G.job.dismissed||(G.job.mhk&&G.job.mhk.marks>=4)))return viewRefBan();}catch(e){console.warn(e);}return old.apply(this,arguments);})(viewRetired);
 
@@ -351,7 +351,8 @@ ACTX.v155PostPress=()=>{const P=V155_POST;V155_POST=null;closeModal();if(!P||!G|
    ORTAK ARAYÜZ
    ===================================================================== */
 render=(old=>function(){const r=old.apply(this,arguments);try{if(!G)return r;document.documentElement.classList.toggle('v155-ref',isRef());
-    if(isRef()){const t=$('#top');if(t)t.style.setProperty('--club','#3a4152');}
+    if(isRef()){const t=$('#top');if(t){t.style.setProperty('--club','#3a4152');const cr=t.querySelector('.top-club>svg');if(cr)cr.outerHTML='<span class="ref-ic">🟨</span>';const tx=t.querySelector('.top-txt');if(tx&&G.job)tx.innerHTML=`<b>${esc(PN())}</b><span>${esc(G.job.title)}${G.phase==='retired'?' · men edildi':''}</span>`;}
+      const nb=document.querySelector('.nav-brand');if(nb){const sv=nb.querySelector('svg');if(sv)sv.outerHTML='<span class="ref-ic">🟨</span>';const bb=nb.querySelector('b');if(bb)bb.textContent='Hakem';}}
     /* sayfa başlığı: genel "Kulüp"/"Takım" yerine menüdeki sekme adı */
     const h2=document.querySelector('#view h2.h');if(h2&&/^(Kulüp|Takım)$/.test(h2.textContent.trim())){let lab=null;for(const [,its] of navCats())for(const [,l,a] of its){if(a.tab!==TAB)continue;if(a.k&&typeof KTAB!=='undefined'&&a.k!==KTAB)continue;lab=lab||l;if(a.k)lab=l;}if(lab&&lab!==h2.textContent.trim())h2.textContent=lab;}
     /* sezon dışı: yalnız bilgi olayları (seçim sonucu gibi) bir kez gösterilir */

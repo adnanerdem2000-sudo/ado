@@ -62,10 +62,11 @@ genPS=(old=>function(L){const ps=old.apply(this,arguments);try{for(const c of le
    ====================================================================== */
 let V154_SE=false;
 leaders=(old=>function(k){if(V154_SE&&isPl()&&G&&G.s&&typeof lgLeaders==='function'){try{const key=k==='g'?'g':'a';return lgLeaders(G.s.league,k).map(x=>({n:x.me?meN():x.p.name,c:x.c,v:x[key]||0,me:!!x.me}));}catch(e){}}return old.apply(this,arguments);})(leaders);
-seasonEnd=(old=>function(){V154_SE=true;try{return old.apply(this,arguments);}finally{V154_SE=false;}})(seasonEnd);
+let V154_ST=null;
+seasonEnd=(old=>function(){V154_SE=true;try{V154_ST=G&&G.s&&G.s.stats?Object.assign({},G.s.stats):null;}catch(e){}try{return old.apply(this,arguments);}finally{V154_SE=false;V154_ST=null;}})(seasonEnd);
 seasonAwards=(old=>function(){const S=G&&G.s,yl=S?seasonLabel(S.year):null,had=!!(G&&G.awards&&yl&&G.awards[yl]);const r=old.apply(this,arguments);
-  try{if(!isPl()||had||!G.awards||!G.awards[yl]||typeof lgLeaders!=='function')return r;const A=G.awards[yl],st=S.stats||{},lid=S.league,me={k:'me',n:meN(),c:G.club,g:st.goals||0,a:st.assists||0,r:st.apps?+(st.rsum/st.apps).toFixed(2):0};
-    const top=(k)=>{const L=lgLeaders(lid,k),o=L.filter(x=>!x.me),best=o[0];return {best,ov:best?(best[k]||0):0};};
+  try{if(!isPl()||had||!G.awards||!G.awards[yl]||typeof lgLeaders!=='function')return r;const A=G.awards[yl],st=V154_ST||S.stats||{},lid=S.league,me={k:'me',n:meN(),c:G.club,g:st.goals||0,a:st.assists||0,r:st.apps?+(st.rsum/st.apps).toFixed(2):0};
+    const top=(k)=>{const L=lgLeaders(lid,k),o=L.filter(x=>!x.me&&x.p&&x.p.k!=='me'),best=o[0];return {best,ov:best?(best[k]||0):0};};
     const pk=x=>x?{k:x.p.k,n:x.p.name,c:x.c,g:x.g,a:x.a,r:x.ap?+(x.rt/x.ap).toFixed(2):0}:null;
     const G1=top('g'),A1=top('a');A.gk=me.g>=3&&me.g>=G1.ov?me:pk(G1.best)||A.gk;A.ak=me.a>=3&&me.a>=A1.ov?me:pk(A1.best)||A.ak;
     const aw=(G.summary&&G.summary.yl===yl&&G.summary.awards)||[];if(aw.includes('Sezonun Oyuncusu'))A.po=me;if(aw.includes('Yılın Genç Oyuncusu'))A.yg=me;
