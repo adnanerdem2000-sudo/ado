@@ -2298,7 +2298,7 @@ html.dro-on,html.dro-on body{overflow:hidden}
 .ag-hd .kicker{display:flex;align-items:center;gap:6px;letter-spacing:.06em;font-size:11px;flex-wrap:wrap}
 .ag-st{color:var(--yellow);font-size:15px;letter-spacing:1px}.ag-st small{color:var(--chalk-3);font-size:11px;letter-spacing:0;margin-left:4px}
 .ag-dl{grid-template-columns:1fr 1fr}.ag-dl dd small{display:block;color:var(--chalk-3);font-weight:400;font-size:11px}
-.ag-strip{margin:10px 0}.ag-strip b{font-size:15px}
+.ag-strip{margin:10px 0}.ag-strip b{font-size:13px;white-space:nowrap}.ag-strip span{font-size:10px}
 .ag-top{margin:6px 0 10px;color:var(--chalk-2)}
 .lnk{background:none;border:0;padding:0;color:var(--led);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .ag-deals,.ag-rum,.ag-his{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:5px}

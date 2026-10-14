@@ -80,7 +80,7 @@ function agHist(id,t){const X=agx();(X.h[id]=X.h[id]||[]).unshift({w:when(),t});
 function agKnow(id,v){const X=agx();X.k[id]=clamp((X.k[id]||0)+v,0,3);}
 const agMine=()=>{const p=G&&G.p;return p&&p.ag&&/^m\d+$/.test(p.ag.id)?agById(p.ag.id):null;};
 /* v45 arayüzüne bağla: komisyon, pazarlık gücü, bağlantı ve dürüstlük */
-agOf=(old=>function(){const a=agMine();if(a){const p=G.p;return {id:a.id,n:a.n,d:a.ag,com:(p.ag.com!=null?p.ag.com:a.fee)/100,pow:0.03+a.rep*0.0028,net:a.rep/25,hon:a.hon/100,fame:0,mine:1};}return old.apply(this,arguments);})(agOf);
+agOf=(old=>function(){const a=agMine();if(a){const p=G.p;return {id:a.id,n:a.n,d:a.ag,com:(p.ag.com!=null?p.ag.com:a.fee)/100,pow:0.03+a.rep*0.0028,net:p.ag.gone?0:a.rep/50,hon:a.hon/100,fame:0,mine:1};}return old.apply(this,arguments);})(agOf);
 function agMeScore(){let mv=0;try{mv=marketValue();}catch(e){}return clamp(agSc(mv)+G.p.fame*0.12,1,99);}
 const agWin=()=>G.phase==='season'&&G.s&&G.s.win&&G.s.day>=G.s.win.open&&G.s.day<G.s.win.close;
 function agPen(){const p=G.p;if(!p.ag||p.ag.rev)return 0;if(!/^m\d+$/.test(p.ag.id))return absDay()-p.ag.since<365&&p.ag.id!=='aile'?G.contract.wage*4:0;
@@ -143,7 +143,7 @@ function agFitClub(better){const cur=myClub(),ct=LEAGUES[cur.league].tier,eff=ef
 function agJust(kind){const p=G.p,st=G.s.stats,L=curLeague(),cur=myClub(),wk=Math.max(1,G.s.week-1),avg=seasonAvg(),eff=effRating(),m=eff-clubNeed(cur);
   const openRenew=G.inbox.some(x=>x.offer&&x.offer.status==='open'&&x.offer.renew);
   switch(kind){
-    case 'raise':{if(L.youth||openRenew||G.contract.years<1)return false;let est=0;try{const o=makeOffer(cur,m,'mid',G.contract.role,false);est=o.wage;}catch(e){}return st.apps>=5&&avg>=7.0&&p.trust>=55&&(est>G.contract.wage*1.05||avg>=7.3);}
+    case 'raise':{if(L.youth||openRenew||G.contract.years<1||(G.p.agx&&G.p.agx.rz&&absDay()-G.p.agx.rz<150))return false;let est=0;try{const o=makeOffer(cur,m,'mid',G.contract.role,false);est=o.wage;}catch(e){}return st.apps>=5&&avg>=7.0&&p.trust>=55&&(est>G.contract.wage*1.05||avg>=7.3);}
     case 'list':return !L.youth&&p.age>=18&&(p.trust<42||(st.apps<wk*0.3&&wk>=5)||m>7);
     case 'club':return !!agFitClub(true);
     case 'spon':{if(typeof SPN==='undefined')return false;const im=imInit();return SPN.some(s=>p.fame>=s[3]&&im.v>=s[5]&&!im.deals.some(d=>d.id===s[0])&&!im.offers.some(o=>o.id===s[0]))&&im.deals.length<3;}
@@ -169,7 +169,7 @@ function agSend(a,kind,opt){opt=opt||{};const p=G.p,X=agx(),mine=agMine()&&agMin
   let title,body;
   if(kind==='rep'){d.fee=clamp(a.fee+(a.hon<40?rint(0,3):0),3,22);d.yrs=a.hon<40?3:rint(1,3);d.up=a.hon<40&&Math.random()<0.75?agFeeUp(a,rint(2,4)):0;d.bonus=a.hon>=60&&a.rep>=75?Math.round(G.contract.wage*2/50)*50:0;
     title=`${a.n} seni temsil etmek istiyor`;
-    body=a.hon<40?`${a.n} (${a.ag}) aradı: “Seni ${pick(['Avrupa’nın büyük kulüplerine','Premier Lig’e','Süper Lig’in devlerine'])} götürürüm, bana güven. Ama bu fırsat beklemez: bugün imzalarsan masrafları ben öne alırım.” Teklif: %${d.fee} komisyon, ${d.yrs} yıllık temsil sözleşmesi${d.up?`, ${money(d.up)} “dosya ve tanıtım masrafı” ön ödemesi`:''}. Yanıt için 3 gün var.`
+    body=a.hon<40?`${a.n} (${a.ag}) aradı: “Seni ${pick(['Avrupa’nın büyük kulüplerine','Premier Lig’e','Süper Lig’in devlerine'])} götürürüm, bana güven. Ama bu fırsat beklemez: bugün imzalarsan işlemleri hemen başlatırım.” Teklif: %${d.fee} komisyon, ${d.yrs} yıllık temsil sözleşmesi${d.up?`, ${money(d.up)} “dosya ve tanıtım masrafı” ön ödemesi`:''}. Yanıt için 3 gün var.`
       :`${a.n} (${a.ag}, ${a.city}) seninle tanışmak istiyor: “Maçlarını izliyorum. ${AG_SPEC[a.spec]} alanında çalışıyorum; acele etmeden doğru adımları birlikte atabiliriz.” Teklif: %${d.fee} komisyon, ${d.yrs} yıllık temsil${d.bonus?`, imzada ${money(d.bonus)} jest`:''}. Müşteri listesine ve geçmişine bakabilirsin.`;}
   else{const just=agJust(kind);d.just=just;
     if(kind==='club'){let c=null;if(good&&just){c=agFitClub(true);d.real=1;}else if(!good){if(Math.random()<0.5){c=agFitClub(false);d.kick=1;}if(!c){const big=Object.values(CLUBS).filter(x=>LEAGUES[x.league]&&!LEAGUES[x.league].youth&&LEAGUES[x.league].tier>=curLeague().tier+2);c=big.length?{c:pick(big)}:null;d.fake=1;d.kick=0;}}
@@ -183,7 +183,7 @@ function agApproach(force){const p=G.p;if(!force&&(agOpenMsg()||p.age<15))return
   let kind=force&&force.kind;if(!kind){const hasAg=p.ag&&p.ag.id&&p.ag.id!=='aile';kind=Math.random()<(hasAg?0.35:0.7)?'rep':null;
     if(!kind){const js=AG_KINDS.filter(k=>agJust(k));kind=a.hon>=50?(js.length?pick(js):'rep'):pick(Math.random()<0.6?['raise','list','club','spon']:(js.length?js:['club']));}}
   return agSend(a,kind);}
-function agAdvise(){const a=agMine();if(!a||agOpenMsg())return false;const js=AG_KINDS.filter(k=>agJust(k));let kind;
+function agAdvise(){const a=agMine();if(!a||G.p.ag.gone||agOpenMsg())return false;const js=AG_KINDS.filter(k=>agJust(k));let kind;
   if(a.hon>=50){if(!js.length){if(Math.random()<0.5)msg('menajer',`Menajerin ${a.n}: durum değerlendirmesi`,`“Şu an acele edecek bir şey yok. Sahada ortalamanı yükselt, antrenmanda hocanın güvenini kazan; ilgi kendiliğinden gelir. Bir fırsat çıkarsa ilk ben ararım.”`,{ag:a.id});return false;}kind=pick(js);}
   else kind=Math.random()<0.6?pick(['raise','list','club','loan','free']):(js.length?pick(js):'club');
   return agSend(a,kind);}
@@ -201,8 +201,8 @@ function agRunAct(d){const a=agById(d.a),p=G.p,cur=myClub();if(!a)return 'Menaje
   if(d.fee){if(!agPay(d.fee))return `${money(d.fee)} ödemeye paran yetmiyor.`;fee=` ${money(d.fee)} ödedin.`;}
   const hist=t=>{agHist(a.id,t);agKnow(a.id,1);};let res='';
   switch(d.kind){
-    case 'raise':if(just){const o=makeOffer(cur,effRating()-clubNeed(cur),'mid',G.contract.role,true);o.wage=Math.max(o.wage,Math.round(G.contract.wage*(1.12+clamp(seasonAvg()-7,0,1)*0.25)/50)*50);o.years=Math.max(G.contract.years,rint(2,4));agPushOffer(o,a,d);res=`${cur.name} yönetimi görüşmeyi kabul etti: masada ${money(o.wage)}/hafta yeni sözleşme teklifi var (gelen kutusu).`;hist('Zam görüşmesi: kulüp yeni sözleşme teklif etti');}
-      else{bump('trust',-6);bump('morale',-4);msg('board','Zam talebine ret',`${cur.name} yönetimi: “Bu performansla zam talebi ciddiye alınamaz. Önce sahada göster.” Hocan da talebin zamanlamasından hoşlanmadı.`);res='Yönetim zam talebini sert karşıladı (güven −6, moral −4).';hist('Zam talebi reddedildi: tavsiye yanlış zamandaydı');agKnow(a.id,1);}break;
+    case 'raise':if(just){const o=makeOffer(cur,effRating()-clubNeed(cur),'mid',G.contract.role,true);o.wage=Math.max(o.wage,Math.round(G.contract.wage*(1.12+clamp(seasonAvg()-7,0,1)*0.25)/50)*50);o.years=Math.max(G.contract.years,rint(2,4));agx().rz=absDay();agPushOffer(o,a,d);res=`${cur.name} yönetimi görüşmeyi kabul etti: masada ${money(o.wage)}/hafta yeni sözleşme teklifi var (gelen kutusu).`;hist('Zam görüşmesi: kulüp yeni sözleşme teklif etti');}
+      else{bump('trust',-6);bump('morale',-4);msg('board','Zam talebine ret',`${cur.name} yönetimi: “Bu performansla zam talebi ciddiye alınamaz. Önce sahada göster.” Hocan da talebin zamanlamasından hoşlanmadı.`);agx().rz=absDay();res='Yönetim zam talebini sert karşıladı (güven −6, moral −4).';hist('Zam talebi reddedildi: tavsiye yanlış zamandaydı');agKnow(a.id,1);}break;
     case 'list':if(just){const cs=[agFitClub(true),agFitClub(true)].filter(Boolean);for(const x of cs){const w=G.watch[x.c.id]=G.watch[x.c.id]||{i:0,lv:0};w.i=clamp(w.i+22,0,100);w.lv=WLV.filter(t=>w.i>=t).length;}bump('trust',-3);
         if(agWin()&&cs[0]){const o=makeOffer(cs[0].c,cs[0].m,'mid');agPushOffer(o,a,d);}res=`Transfer listesine kondun. ${cs.length?cs.map(x=>x.c.name).join(' ve ')+' ilgisini artırdı.':''}${agWin()&&cs[0]?' Bir teklif masada.':' Teklifler transfer döneminde gelecek.'}`;hist('Transfer listesi: kulüpler ilgilendi');}
       else{bump('trust',-10);bump('morale',-5);try{imHit(3);}catch(e){}msg('coach','Transfer listesi talebi',`Hoca: “Takımda yerin varken neden gitmek istiyorsun? Bu talep soyunma odasında iyi karşılanmadı.”`);res='Kulüp talebini kabul etmedi; hocanın ve takımın güveni sarsıldı (güven −10).';hist('Transfer listesi talebi ters tepti');}break;
@@ -215,7 +215,7 @@ function agRunAct(d){const a=agById(d.a),p=G.p,cur=myClub();if(!a)return 'Menaje
       break;}
     case 'spon':if(good&&just){const im=imInit(),el=SPN.filter(s=>p.fame>=s[3]&&im.v>=s[5]&&!im.deals.some(x=>x.id===s[0])&&!im.offers.some(o=>o.id===s[0]));const s=el[el.length-1];const o={id:s[0],pay:spnPay(s),w:rint(1,3)*52,until:absDay()+28};if(d.succ)o.agf={a:a.id,pct:d.succ};im.offers.push(o);
         msg('offer',`Sponsorluk teklifi: ${s[1]}`,`${a.n} aracılığıyla ${s[1]} (${s[2]}) haftalık ${money(o.pay)} karşılığında ${o.w/52} yıllık reklam yüzü olmanı istiyor. Kariyer › Menajer ve sponsorlar ekranından yanıtla.`);res=`${s[1]} resmi teklif gönderdi (Menajer ve sponsorlar ekranı).`;hist(`${s[1]} sponsorluğunu getirdi`);}
-      else{res=`Aylar geçti, söz verilen sponsor hiç ortaya çıkmadı.${fee}`;hist('Sponsorluk vaadi boş çıktı'+(d.fee?` · ${money(d.fee)} kayıp`:''));agKnow(a.id,2);}break;
+      else{res='Aylar geçti, söz verilen sponsor hiç ortaya çıkmadı.';hist('Sponsorluk vaadi boş çıktı'+(d.fee?` · ${money(d.fee)} kayıp`:''));agKnow(a.id,2);}break;
     case 'loan':if(just){G.wantLoan=true;if(agWin()&&typeof genLoanOffers==='function')genLoanOffers();res=agWin()?'Kiralık teklifleri gelen kutunda.':'Kulübün kiralık gitmene sıcak bakıyor; ara transfer döneminde teklifler gelecek.';hist('Kiralık planı yapıldı');}
       else{bump('trust',-5);bump('morale',-3);res='Hoca: “Seni planlarımda düşünüyorum, neden gitmek istiyorsun?” Kiralık talebin kabul görmedi (güven −5).';hist('Kiralık talebi yersizdi');agKnow(a.id,1);}break;
     case 'free':{const X=agx();if(just){X.bos=G.s.year;const cs=[agFitClub(true),agFitClub(true)].filter(Boolean);for(const x of cs){const w=G.watch[x.c.id]=G.watch[x.c.id]||{i:0,lv:0};w.i=clamp(w.i+18,0,100);w.lv=WLV.filter(t=>w.i>=t).length;}bump('trust',-2);res=`Uzatma görüşmelerini dondurdun. Serbest kalacağın konuşuluyor${cs.length?'; '+cs.map(x=>x.c.name).join(', ')+' ilgileniyor':''}. Sezon sonu tekliflerde imza parası yüksek olacak.`;hist('Serbest kalma planı');}
@@ -236,7 +236,7 @@ ACTX.agFire=()=>{const p=G.p,pen=agPen(),o=agOf();if(!p.ag||!p.ag.id||p.ag.id===
   msg('menajer','Menajerinle yollarını ayırdın',`${o?o.n:'Menajerin'} ile temsil sözleşmesi feshedildi.${pen?` ${money(pen)} fesih bedeli ödedin.`:''}`);p.ag={id:'aile',since:absDay()};closeModal();save();render();toast('Menajerinle yollarını ayırdın');};
 ACTX.agAsk=el=>{const a=agById(el.dataset.id);if(!a||!isPl())return;const X=agx();if(X.last[a.id]&&absDay()-X.last[a.id]<30)return toast(`${a.n} kısa süre önce görüştü; biraz bekle`);if(a.rep>agMeScore()+22)return toast('Seninle henüz ilgilenmiyor');closeModal();agSend(a,'rep');save();TAB='inbox';render();toast(`${a.n} teklifini gelen kutuna gönderdi`);};
 /* komisyon ve başarı ücretleri gerçek teklif kabullerine bağlı */
-acceptOffer=(old=>function(o){const w0=G.contract.wage;const r=old.apply(this,arguments);try{if(o&&o.status==='accepted'&&isPl()){if(o.agf){const a=agById(o.agf.a),c=Math.round((o.renew?Math.max(0,o.wage-w0)*26:o.wage*4)*o.agf.pct/100/50)*50;if(a&&c>0){G.p.money-=c;agHist(a.id,`Başarı ücreti ${money(c)}`);msg('menajer',`${a.n} başarı ücretini aldı`,`${a.n}, aracılık ettiği anlaşma için ${money(c)} başarı ücreti kesti.`,{ag:a.id});}}
+acceptOffer=(old=>function(o){const w0=G.contract.wage;const r=old.apply(this,arguments);try{if(o&&o.status==='accepted'&&isPl()){if(o.renew)agx().rz=absDay();if(o.agf){const a=agById(o.agf.a),c=Math.round((o.renew?Math.max(0,o.wage-w0)*26:o.wage*4)*o.agf.pct/100/50)*50;if(a&&c>0){G.p.money-=c;agHist(a.id,`Başarı ücreti ${money(c)}`);msg('menajer',`${a.n} başarı ücretini aldı`,`${a.n}, aracılık ettiği anlaşma için ${money(c)} başarı ücreti kesti.`,{ag:a.id});}}
   if(o.agKick){const a=agById(o.agKick);if(a){agx().kick={a:a.id,club:o.club,at:absDay()+rint(30,70)};agHist(a.id,`${CLUBS[o.club].name} transferine yönlendirdi`);}}}}catch(e){console.warn('menajer',e);}return r;})(acceptOffer);
 if(ACTX.spnAcc)ACTX.spnAcc=(old=>function(el){const im=imInit(),o=im.offers.find(x=>x.id===el.dataset.k),f=o&&o.agf;const r=old.apply(this,arguments);try{if(f&&im.deals.some(d=>d.id===o.id)){const a=agById(f.a),c=Math.round(o.pay*8*f.pct/100/50)*50;if(a&&c>0){G.p.money-=c;agHist(a.id,`Sponsorluk başarı ücreti ${money(c)}`);save();render();}}}catch(e){}return r;})(ACTX.spnAcc);
 /* serbest kalma kararının sezon sonu teklifine etkisi */
@@ -251,14 +251,14 @@ function agTick(){if(!G||!G.p||!isPl()||G.mode==='mgr'||G.phase!=='season'||!G.s
   for(const m of G.inbox){if(m.t==='menajer'&&m.ev&&!m.ev.done&&m.ev.d&&m.ev.d.exp<=d){const a=agById(m.ev.d.a);m.ev.done=true;m.ev.choice='Yanıt vermedin';m.ev.res=a&&a.hon<50?`${a?a.n:'Menajer'} başka bir oyuncuya yöneldi.`:'Teklifin süresi doldu.';}
     if(m.offer&&m.offer.agExp&&m.offer.status==='open'&&m.offer.agExp<=d)m.offer.status='expired';}
   if(!X.next)X.next=d+rint(10,30);
-  if(d>=X.next){const f=formAvg(),sc=agMeScore();if(agApproach())X.next=d+Math.round(rint(21,56)*(f>=7.2?0.7:1)*(sc>=60?0.85:1));else X.next=d+7;}
+  if(d>=X.next){const f=formAvg(),sc=agMeScore();if(agApproach())X.next=d+Math.round(rint(21,56)*(f>=7.2?0.7:1)*(sc>=60?0.85:1)*(agMine()?1.5:1));else X.next=d+7;}
   if(agMine()){if(!X.adv)X.adv=d+rint(25,45);if(d>=X.adv){agAdvise();X.adv=d+rint(30,63);}}
   /* kötü menajerin gizli masrafları, iyi menajerin desteği (haftada bir) */
-  const a=agMine();if(a&&wdOf(today())===0){if(a.hon<45&&Math.random()<0.06){const c=Math.round(G.contract.wage*rnd(0.6,1.6)/50)*50;if(c>0){p.money-=c;agHist(a.id,`Açıklanmayan masraf faturası ${money(c)}`);agKnow(a.id,1);msg('menajer','Menajerinden masraf faturası',`${a.n} “seyahat, temsil ve ağırlama” kalemiyle ${money(c)} fatura kesti. Faturada ayrıntı yok.`,{ag:a.id});}}
+  const a=agMine();if(a&&!p.ag.gone&&wdOf(today())===0){if(a.hon<45&&Math.random()<0.06){const c=Math.round(G.contract.wage*rnd(0.6,1.6)/50)*50;if(c>0){p.money-=c;agHist(a.id,`Açıklanmayan masraf faturası ${money(c)}`);agKnow(a.id,1);msg('menajer','Menajerinden masraf faturası',`${a.n} “seyahat, temsil ve ağırlama” kalemiyle ${money(c)} fatura kesti. Faturada ayrıntı yok.`,{ag:a.id});}}
     else if(a.hon<45&&Math.random()<(45-a.hon)/900){try{imHit(3);}catch(e){}msg('gundem',`Basında: ${a.n} hakkında iddialar`,`${a.ag} ile ilgili vergi ve komisyon soruşturması iddiaları gündemde. Adının bu haberlerle anılması imajına zarar veriyor.`);agKnow(a.id,1);}
     else if(a.hon>=70&&Math.random()<0.04){bump('morale',3);msg('menajer',`Menajerin ${a.n} aradı`,'“Son haftalarda emeğini görüyorum; sabırlı ol, doğru zamanda doğru adımı atacağız.” (moral +3)',{ag:a.id});}}
   /* kötü menajer: ön ödemeden sonra ortadan kaybolma / gizli komisyon skandalı */
-  if(X.sc&&d>=X.sc.at){const s=X.sc,b=agById(s.a);X.sc=null;if(b&&agMine()&&agMine().id===b.id){p.ag.rev=1;agKnow(b.id,3);agHist(b.id,'Telefonlara çıkmıyor; ön ödeme boşa gitti');msg('menajer',`${b.n} ortadan kayboldu`,`${b.n} haftalardır telefonlarına dönmüyor. Ödediğin ${money(s.amt)} “dosya masrafı” için hiçbir iş yapılmamış. Sözleşmeyi bedelsiz feshedebilirsin.`,{ag:b.id});}}
+  if(X.sc&&d>=X.sc.at){const s=X.sc,b=agById(s.a);X.sc=null;if(b&&agMine()&&agMine().id===b.id){p.ag.rev=1;p.ag.gone=1;agKnow(b.id,3);agHist(b.id,'Telefonlara çıkmıyor; ön ödeme boşa gitti');msg('menajer',`${b.n} ortadan kayboldu`,`${b.n} haftalardır telefonlarına dönmüyor. Ödediğin ${money(s.amt)} “dosya masrafı” için hiçbir iş yapılmamış. Sözleşmeyi bedelsiz feshedebilirsin.`,{ag:b.id});}}
   const K=X.kick;if(K&&!K.done&&d>=K.at){K.done=1;const b=agById(K.a);if(b){agKnow(b.id,3);agHist(b.id,'Gizli komisyon ortaya çıktı');try{imHit(4);}catch(e){}bump('morale',-4);if(agMine()&&agMine().id===b.id)p.ag.rev=1;
     msg('gundem','Menajer skandalı',`${CLUBS[K.club]?CLUBS[K.club].name:'Bir kulüp'} transferinde menajer ${b.n} (${b.ag}) kulüpten gizli komisyon almış. Seni kendi çıkarı için yönlendirmiş.${agMine()&&agMine().id===b.id?' Artık bedelsiz ayrılabilirsin.':''}`);}}}
 nextDay=(old=>function(){const r=old.apply(this,arguments);try{agTick();}catch(e){console.warn('menajer',e);}return r;})(nextDay);
