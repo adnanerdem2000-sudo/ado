@@ -295,7 +295,7 @@ function attAI(a,dt){const S=MG.S,C=S.C,b=S.ball,ce=S.hero;
     const da=a.da??-Math.PI/2;steer(a,a.x+Math.cos(da)*3,a.y+Math.sin(da)*3,spd*0.9,dt);
     const dx=a.x-ce.x,dd=Math.hypot(dx,a.y-ce.y);
     if(dd<1.45&&a.cd<=0&&ce.slide<=0&&ce.down<=0&&ce.stag<=0&&ce.y<a.y+0.5){a.cd=0.8;const p=clamp(0.28+C.opp.str*0.0045-C.a.def*0.0045,0.08,0.62);if(Math.random()<p){ce.stag=0.6;a.vx+=(dx>=0?1:-1)*3.5;mgFlash('ÇALIMI YEDİN','bad',650);}}
-    if(dist(ce,b)<0.62&&ce.stag<=0&&ce.down<=0&&S.t>S.pokeT){S.pokeT=S.t+0.35;if(Math.random()<0.16+C.a.def*0.003){b.owner=ce;return endChance('tackle');}}
+    if(dist(ce,b)<0.62&&ce.stag<=0&&ce.down<=0&&S.t>S.pokeT&&goalSide(ce,a)>-0.25){S.pokeT=S.t+0.35;if(Math.random()<0.16+C.a.def*0.003){b.owner=ce;return endChance('tackle');}}
     return;}
   if(!b.owner&&!b.held&&b.kind!=='shot'&&(b.target===a||dist(a,b)<6)){const pl=interceptPath(predictPath(),a,spd,0)||b;steer(a,pl.x,pl.y,spd,dt);return;}
   steer(a,a.tx,a.ty,spd*0.85,dt);}
@@ -603,8 +603,11 @@ function checkBall(){const S=MG.S,b=S.ball;if(S.mode==='cp')return checkBallCP()
     if(cx>GL+0.11&&cx<GR-0.11&&cz<GH-0.11){S.inNet=true;S.net={x:cx,z:cz,a:1};vib(60);return endChance(shotRes('goal'));}
     const post=((Math.abs(cx-GL)<0.22||Math.abs(cx-GR)<0.22)&&cz<GH+0.1)||(cx>GL&&cx<GR&&Math.abs(cz-GH)<0.2);
     if(post){b.vy=Math.abs(b.vy)*0.55;b.y=0.05;b.vx+=rnd(-3,3);b.vz=Math.abs(b.vz)*0.5+1;vib(40);return endChance(shotRes(b.kind==='shot'?'post':'out'));}
-    return endChance(shotRes(b.kind==='shot'?(cx>GL-0.6&&cx<GR+0.6&&cz>=GH?'over':'wide'):'out'));}
-  if(b.x<-0.4||b.x>68.4||b.y>70)return endChance(S.mode==='def'?'defOk':'lost');}
+    return outGL(cx,cz);}
+  if(b.x<-0.11||b.x>68.11||b.y>70)return outTouch();}
+/* Top oyun alanını terk etti (v145 bu iki kancayı taç/korner/aut kurallarıyla değiştirir) */
+function outGL(cx,cz){const S=MG.S,b=S.ball;return endChance(shotRes(b.kind==='shot'?(cx>GL-0.6&&cx<GR+0.6&&cz>=GH?'over':'wide'):'out'));}
+function outTouch(){const S=MG.S;return endChance(S.mode==='def'?'defOk':'lost');}
 let flashT=0;
 function mgFlash(txt,cls,ms){const f=$('#mgFlash');f.textContent=txt;f.className='mg-flash show '+(cls||'');clearTimeout(flashT);if(ms)flashT=setTimeout(()=>{f.className='mg-flash';},ms);}
 function endChance(code,extra){const S=MG.S;if(!S||S.phase==='end'||S.phase==='replay')return;extra=extra||{};if(S.reb&&['lost','timeout','cleared'].includes(code))code=S.reb;if(S.ck&&code==='lost')code='cleared';if(S.gates){extra.gates=S.trPts;extra.ng=S.gates.length;}if(S.bonus)extra.bonus=S.bonus;if(S.ball&&S.ball.hdr&&S.ball.last&&S.ball.last.isC)extra.hdr=true;S.phase='end';
