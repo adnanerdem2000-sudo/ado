@@ -2325,3 +2325,103 @@ html.dro-on,html.dro-on body{overflow:hidden}
 #fx.ab-hostfs{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;border-radius:0!important;z-index:2147483000!important;transform:none!important}
 #fx.ab-hostfs #abWrap,#fx.ab-hostfs #abIf{position:absolute;inset:0;width:100%;height:100%}
 body.ab-hostfs-on{overflow:hidden}
+/* v149: kompakt profiller — oyuncu ve kulüp sayfalarında daha sıkı dikey düzen; uzun listeler katlanır */
+.kmp-fold:not(.kmp-open) .kmp-h{display:none!important}
+.kmp-more{display:block;width:100%;min-height:34px;margin:6px 0 0;padding:6px 10px;background:rgba(255,255,255,.05);border:1px dashed rgba(150,172,205,.3);border-radius:8px;color:var(--led,#35d49a);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.kmp-more:hover{background:rgba(255,255,255,.09)}
+/* başlık: rozet satırı adın üstüne binmesin, bilgi çipleri daha alçak */
+#modalCard.pf .pf-bd>span{display:inline-flex;align-items:center;height:18px;line-height:0}
+#modalCard.pf .pf-ch{padding:3px 8px}
+#modalCard.pf .pf-ch span{font-size:9.5px}
+#modalCard.pf .pf-tabs button{padding:10px 12px 9px}
+#modalCard.pf .pf-body{padding-top:10px}
+/* Genel sekmesi */
+#modalCard.pf .trt-sec{margin-bottom:8px}
+#modalCard.pf .trt-sec .trt-chips{margin:4px 0}
+#modalCard.pf .trt-d{font-size:12px;margin:2px 0;line-height:1.35}
+#modalCard.pf .ca-sec{margin:0 0 8px}
+#modalCard.pf .ca-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#modalCard.pf .ca-row>div{padding:5px 8px}
+#modalCard.pf .ca-row b{font-size:16px}
+#modalCard.pf .fmi{padding:4px 4px;gap:6px;line-height:1.3}
+#modalCard.pf .fmi>b small{font-size:11.5px}
+#modalCard.pf .pf-ssg{margin-top:6px}
+#modalCard.pf .fmp-sec{margin:8px 0 4px}
+#modalCard.pf .fmp-ss{gap:5px;padding:6px}
+#modalCard.pf .fmp-ss div{padding:4px 3px}
+#modalCard.pf .fmp-ss b{font-size:17px}
+#modalCard.pf .fmp-ss span{font-size:10px}
+@media (max-width:760px){
+  #modalCard.pf .ca-row span{font-size:9px;letter-spacing:.04em;line-height:1.2}
+  #modalCard.pf .ca-row b{font-size:15px}
+  #modalCard.pf .ca-row b small{font-size:10px}
+  #modalCard.pf .fmi:not(.two){grid-template-columns:96px 1fr;font-size:13px}
+}
+@media (min-width:900px){
+  #modalCard.pf:not(.cp) .pf-pane .fmp-pr{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:22px;align-items:start}
+}
+/* Özellikler: telefonda iki sütun dengeli (Teknik+Fiziksel | Zihinsel+Kişilik) */
+#modalCard.pf .fmp-attr .fmr{min-height:0}
+@media (max-width:899px){
+  #modalCard.pf .pf-pane .fmp-attr{grid-auto-flow:row dense;align-items:start}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc:nth-child(1){grid-column:1;grid-row:1}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc:nth-child(2){grid-column:2;grid-row:1}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc:nth-child(3){grid-column:1;grid-row:2}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc.fmx{grid-column:2;grid-row:2;align-self:start}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc.fmx p{margin:0 0 2px;font-size:12.5px}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc.fmx p.fmh{margin-top:6px}
+  #modalCard.pf .pf-pane .fmp-attr>.fmc.fmx p.fmh:first-child{margin-top:0}
+}
+/* Kariyer sekmesi */
+#modalCard.pf .kr2{gap:8px}
+#modalCard.pf .kr2-hd{padding:7px 12px;gap:10px}
+#modalCard.pf .kr2-hd h3{font-size:19px;margin:1px 0}
+#modalCard.pf .kr2-st b{font-size:20px}
+#modalCard.pf .kr2-p .sub-h{margin-bottom:4px}
+#modalCard.pf .tline li{padding:2px 0;gap:8px;grid-template-columns:24px 1fr}
+#modalCard.pf .tline li i{width:24px;height:24px;font-size:11px}
+#modalCard.pf .tline:before{left:15px}
+#modalCard.pf .tline b{font-size:13.5px;line-height:1.25}
+#modalCard.pf .tline small{font-size:11.5px}
+#modalCard.pf .cpath{gap:4px}
+#modalCard.pf .cpath li{padding:5px 9px}
+#modalCard.pf .cpath b{font-size:13.5px}
+#modalCard.pf table.kr-t td,#modalCard.pf table.kr-t th{padding:3px 5px}
+#modalCard.pf .fmp-krx svg[viewBox]{max-height:150px}
+/* kulüp sayfası */
+#modalCard.cp .cp-gen,#modalCard.cp .cp-two{gap:10px}
+#modalCard.cp .panel .sub-h{margin-bottom:6px}
+#modalCard.cp .cp-kits{padding:2px 0}
+#modalCard.cp .cp-kit svg{width:64px;height:89px}
+#modalCard.cp .cp-kit figcaption{margin-top:2px;font-size:10px}
+#modalCard.cp .cp-dl{margin-top:4px}
+#modalCard.cp .cp-dl>div{padding:5px 2px}
+#modalCard.cp .cp-pl li{box-sizing:border-box;padding:2px 4px;min-height:32px}
+#modalCard.cp .cp-tro{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+#modalCard.cp .cp-t{padding:6px 5px;gap:2px}
+#modalCard.cp .cp-tro.big .cp-t b{font-size:22px}
+#modalCard.cp .cp-t span{font-size:10.5px}
+#modalCard.cp .cp-mini td{padding-top:4px;padding-bottom:4px}
+#modalCard.cp .fin-kpi{gap:6px}
+#modalCard.cp .fin-kpi>div{padding:6px 10px}
+#modalCard.cp .fin-kpi{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+/* kadro sekmesi: başlık tekrarını gizle (kulüp adı üstte), özet tek satır, satırlar daha alçak */
+#modalCard.cp .cp-sq>.club-hd{display:none}
+#modalCard.cp .cp-sq>dl.offer-terms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 6px}
+#modalCard.cp .cp-sq>dl.offer-terms>div{padding:4px 8px}
+#modalCard.cp .cp-sq>p.muted{margin:0 0 6px;font-size:12px}
+#modalCard.cp .cp-sq .stabs{margin-bottom:6px}
+#modalCard.cp .cp-sq p.sub-h{margin:8px 0 3px}
+#modalCard.cp .cp-sq .sqrow{padding:3px 10px;min-height:34px;margin-bottom:2px}
+#modalCard.cp .cp-sq .sqrow em{font-size:17px}
+#modalCard.cp .cp-sq .sqrow b{font-size:14px}
+#modalCard.cp .cp-sq table td,#modalCard.cp .cp-sq table th{padding-top:4px;padding-bottom:4px}
+@media (max-width:760px){
+  #modalCard.cp .cp-hd{position:relative}
+  #modalCard.cp .cp-hd .pf-acts{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:12px;margin:0;width:auto;left:auto;flex-wrap:nowrap}
+  #modalCard.cp .cp-hd .cp-name{padding-right:112px}
+  #modalCard.cp .cp-kit svg{width:52px;height:72px}
+  #modalCard.cp .cp-gen .cp-tro{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #modalCard.cp .cp-gen .cp-t span{font-size:10px;word-break:break-word;hyphens:auto}
+}
+#modalCard.pf .pf-hd .pf-id h2{margin-top:3px}
