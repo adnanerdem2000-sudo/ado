@@ -29,6 +29,8 @@ fs.mkdirSync(OUT, { recursive: true });
   await clk('#btn-start-match'); await p.waitForTimeout(700);
   await fr.evaluate(() => { const b = [...document.querySelectorAll('button[data-ok]')].find(x => x.offsetParent && !/Onaylandı/.test(x.textContent)); if (b) b.click(); }); await p.waitForTimeout(500);
   await clk('#tac-go'); await p.waitForTimeout(1000);
+  /* v153 sonrası taktik ekranında ayrıca 'MAÇI BAŞLAT' düğmesi var */
+  for (let k = 0; k < 3; k++) { await fr.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => x.offsetParent && /MAÇI BAŞLAT/i.test(x.textContent)); if (b) b.click(); }); await p.waitForTimeout(700); }
   await clk('#speed-' + (SPD === '1' ? '1x' : SPD + 'x'));
   /* kare süresi ölçümü (çerçeve içinde) */
   await fr.evaluate(() => { window.__ft = []; let l = performance.now(); const f = t => { window.__ft.push(t - l); l = t; if (window.__ft.length < 100000) requestAnimationFrame(f); }; requestAnimationFrame(f); });
