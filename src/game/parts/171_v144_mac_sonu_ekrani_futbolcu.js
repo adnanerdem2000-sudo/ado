@@ -82,3 +82,10 @@ msgHTML=(old=>function(m){let h=old(m);try{if(m&&(m.pzRep||(m.title==='Hocanın 
     h=h.replace('</p>',`</p><button class="btn sm ft-repl" type="button" data-act="pzRep"${m.pzRep?` data-id="${m.pzRep}"`:''}>📋 Teknik ekip raporu</button>`);}catch(e){}return h;})(msgHTML);
 showResult=(old=>function(h,a,hg,ag,res){const r=old.apply(this,arguments);try{if(res&&res.pz&&res.played){const c=document.querySelector('#modalCard .cta[data-act=closeModal]');
     if(c&&!document.querySelector('#modalCard [data-act=pzRep]')){const id=G.p.pzLast&&G.p.pzLast.rep;c.insertAdjacentHTML('beforebegin',`<button class="btn ft-repl" type="button" data-act="pzRep"${id?` data-id="${id}"`:''}>📋 Teknik ekip raporu</button>`);}}}catch(e){}return r;})(showResult);
+/* ---------- hata düzeltmesi: maç ekranı açıkken Space/Devam yeni maç başlatmasın ----------
+   Maç ekranı (ön kart, anlatım, maç sonu) açıkken Space eskiden fmCont → "Maça çık" → aynı fikstür için yeni maç ve yeni "Maça çık" kartı açıyordu.
+   Artık: ön kartta maçı başlatır, maç sonunda "Maç sonu"na basar, maç sürerken hiçbir şey yapmaz; oynanmakta olan maç varken yeni maç açılmaz. */
+const ftMatchOpen=()=>{const m=$('#match');return !!(m&&!m.hidden);};
+fmCont=(old=>function(){try{if(ftMatchOpen()){if(typeof TR!=='undefined'&&TR)return;const d=$('#mvDone');if(d&&!d.hidden){d.click();return;}if(PZ.on&&PZ.pre){pzGoStart();return;}return;}
+  if(typeof MR!=='undefined'&&MR)return;}catch(e){}return old.apply(this,arguments);})(fmCont);
+onPlay=(old=>function(sim){try{if((typeof MR!=='undefined'&&MR)||ftMatchOpen()){console.warn('Maç zaten açık; yeni maç başlatılmadı');return;}}catch(e){}return old.apply(this,arguments);})(onPlay);
