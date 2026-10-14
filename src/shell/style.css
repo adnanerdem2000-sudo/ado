@@ -770,7 +770,7 @@ body.pro .strip b{color:#fff}
 }
 @media (min-width:1400px){.stab-body{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (pointer:fine){
-  .match .pbtn:after{content:attr(data-key);position:absolute;top:-6px;right:-6px;background:#fff;color:#111;font-size:10px;font-weight:900;border-radius:5px;padding:1px 5px;font-style:normal}
+  .match .pbtn:before{content:attr(data-key);position:absolute;top:-6px;right:-6px;left:auto;bottom:auto;z-index:2;line-height:1.3;background:#fff;color:#111;font-size:10px;font-weight:900;border-radius:5px;padding:1px 5px;font-style:normal}
   .fx-ctl [data-fx=play]:after{content:' (boşluk)';font-size:10px;opacity:.7}
 }
 
@@ -791,7 +791,7 @@ body.pro .strip b{color:#fff}
 #fxSm{font-size:12px}#fxSm.on{background:#7b5cff;color:#fff}
 @media (max-width:440px){.fx-ctl button{padding:8px 9px;font-size:13px}.fx-ctl .fx-info{width:100%;margin:2px 0 0;justify-content:center;font-size:12px}}
 /* klavye ipuçları sadece geniş ekranda */
-@media (pointer:fine) and (max-width:999px){.match .pbtn:after,.fx-ctl [data-fx=play]:after{content:none!important}}
+@media (pointer:fine) and (max-width:999px){.match .pbtn:before,.fx-ctl [data-fx=play]:after{content:none!important}}
 @media (min-width:1000px) and (pointer:fine){.fx-ctl [data-fx=play]:after{content:none}.fx-ctl button[data-key]{position:relative}.fx-ctl button[data-key]:after{content:attr(data-key);position:absolute;top:-7px;right:-5px;background:#fff;color:#111;font-size:9px;font-weight:900;border-radius:4px;padding:0 4px;line-height:14px}}
 /* v22: bilgisayarda taktik ekranı tek ekranda */
 @media (min-width:1000px){

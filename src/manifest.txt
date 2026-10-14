@@ -194,6 +194,7 @@ game/parts/171_v144_mac_sonu_ekrani_futbolcu.js
 game/parts/172_v145_gercekci_an_dinamikleri.js
 game/parts/173_v146_renkli_gelen_kutusu.js
 game/parts/174_v147_menajerler.js
+game/parts/175_v148_takim_kisaltma_ipucu.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
