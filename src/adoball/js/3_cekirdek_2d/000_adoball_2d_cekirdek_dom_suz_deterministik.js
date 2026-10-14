@@ -379,6 +379,7 @@
         var B = S.ball = { x: CX, y: CY, z: 0, vx: 0, vy: 0, vz: 0, owner: null, last: null, high: null, shotFlag: false };
         var str = opts.strength || [0, 0];
         S.refLog = opts.refLog ? [] : null;      // laboratuvar: faul ve gol bağlamı (kart/VAR kalibrasyonu)
+        S.spr = opts.spr || null;      // [v164] [{cor:'near'|'far'|'spot'|'short', w}, ...]: takım başına korner rutini (yoksa eski davranış)
         S.takers = opts.takers || null;   // [{pen, fk, cor}, {...}]: takım içi oyuncu sırası (0-10, FORM sırası); yoksa en yakın oyuncu kullanır
         // Özellik→etki eğrisi. 'linear' = ilk prototip (özellikler doğrusal, elit farkı küçük). 'elite' = üstel: her +10 puan hatayı/başarıyı sabit oranda değiştirir, 70 = nötr.
         var CURVE = opts.curve === 'elite';
@@ -1018,8 +1019,19 @@
         // ---------- ölü top ----------
         function corner(p, dd) {
             var att = S.players.filter(function (q) { return !q.off && (q.team === p.team && q !== p && q.role !== 'GK' && inBox(q.x, q.y, p.team) || (q.team === p.team && q !== p && q.role === 'ST')); });
-            var q = att.length ? att[Math.floor(R() * att.length)] : DEADFB ? (bestPass(p, false, 0) || shortMate(p, 0)).q : bestPass(p, false, 0).q;      // [dead] DEADFB: pas seçeneği yoksa kısa
+            var sp = S.spr && S.spr[p.team], q;
+            if (sp && sp.cor && att.length) q = sprCorner(p, att, sp, R());      // [v164] kullanıcının korner rutini: R() yine tam bir kez tüketilir (belirlenimcilik korunur)
+            else q = att.length ? att[Math.floor(R() * att.length)] : DEADFB ? (bestPass(p, false, 0) || shortMate(p, 0)).q : bestPass(p, false, 0).q;      // [dead] DEADFB: pas seçeneği yoksa kısa
             doPass(p, q, true, 'CORNER');
+        }
+        // [v164] korner rutini: r < w ise rutinin hedef noktasına en yakın hücumcu (yakın direk / uzak direk / penaltı noktası) ya da kısa korner; değilse eski tekdüze seçim
+        function sprCorner(p, att, sp, r) {
+            var w = sp.w != null ? sp.w : .6;
+            if (r >= w) return att[Math.min(att.length - 1, Math.floor((r - w) / (1 - w) * att.length))];
+            if (sp.cor === 'short') { var sm = shortMate(p, 0); if (sm && sm.q) return sm.q; return att[0]; }
+            var gx = atkGoalX(p.team), sg = gx > CX ? -1 : 1, ny = p.y < CY ? CY - GW / 2 : CY + GW / 2, fy = p.y < CY ? CY + GW / 2 : CY - GW / 2;
+            var tx = sp.cor === 'spot' ? gx + sg * 11 : gx + sg * (sp.cor === 'near' ? 4.5 : 6), ty = sp.cor === 'near' ? ny : sp.cor === 'far' ? fy : CY;
+            var b = att[0], bd = 1e9; att.forEach(function (q) { var d = hyp(q.x - tx, q.y - ty); if (d < bd) { bd = d; b = q; } }); return b;
         }
         // [dead] DEADFB: uygun pas yoksa en yakın / en iyi kısa seçenek (gürültüsüz, R tüketmez); hiç yoksa en yakın arkadaş
         function shortMate(p, wp) { var b = null; passOptions(p, false, wp, true).forEach(function (o) { if (!b || o.s > b.s) b = o; }); if (!b) { var m1 = anyMate(p); if (m1) b = { q: m1, d: hyp(m1.x - p.x, m1.y - p.y) }; } return b; }

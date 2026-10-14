@@ -136,7 +136,7 @@
         var h = matchData.h, a = matchData.a; if (!h || !a) return;
         S.seed = newSeed();
         S.tac = G.__abTac ? [tacNorm(G.__abTac[0]), tacNorm(G.__abTac[1])] : [loadTac(h.name), loadTac(a.name)]; S.tacOk = [false, false]; S.tacOpen = false; { var tov = $('tac-overlay'); if (tov) { tov.hidden = true; tov.innerHTML = ''; } document.body.classList.remove('tac-open'); }
-        var sim = S.sim = Sim2D.create({ seed: S.seed, names: [h.name, a.name], curve: 'elite', roster: [teamRoster(h), teamRoster(a)], takers: [takers(h), takers(a)], brainBase: G.__abNoBrainBase ? undefined : brainBase(), homes: G.__abHomes || undefined, tactics: S.tac });
+        var sim = S.sim = Sim2D.create({ seed: S.seed, names: [h.name, a.name], curve: 'elite', roster: [teamRoster(h), teamRoster(a)], takers: [takers(h), takers(a)], spr: G.__abSpr || null, brainBase: G.__abNoBrainBase ? undefined : brainBase(), homes: G.__abHomes || undefined, tactics: S.tac });
         S.sid = matchSessionId;
         S.eng2db = sim.players.map(function (p) { return p.db ? p.db.id : null; });
         S.db2eng = {}; S.eng2db.forEach(function (d, i) { if (d != null) S.db2eng[d] = i; });
