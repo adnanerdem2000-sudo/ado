@@ -12,8 +12,8 @@ function lockApply(){const W=ABM.win,S=ABM.fx;if(!W||!S||FX!==S)return;const d=W
   if(!LOCK.orig){const ww=q('watch-wide'),wk=q('watch-key');LOCK.orig={wide:ww?ww.textContent:'Geniş özet',key:wk?wk.textContent:'Kritik anlar'};}
   if(key==='pro'){if(st.watch!=='wide'){if(LOCK.prevWatch==null)LOCK.prevWatch=st.watch;try{W.ado2d.setWatch('wide');}catch(e){}}}
   else if(LOCK.prevWatch!=null&&key==='pro-off'){try{W.ado2d.setWatch(LOCK.prevWatch);}catch(e){}LOCK.prevWatch=null;}
-  if(key==='ref'&&st.watch==='fm'){try{W.ado2d.setWatch('key');}catch(e){}abToast('Hakem modunda FM tarzı yerine “Sakin anları hızlı geç” kullanılır: karar anında oyun yine durur.');}
-  const hint=key==='pro'?'Pro modu: oyuncun sahadayken maç canlı ve gerçek zamanlı akar; özet, FM arası ve ileri sarma yok. Akıllı tempo yalnız ölü toplarda hızlandırır.':
+  if(key==='ref'&&st.watch==='fm'){try{W.ado2d.setWatch('key');}catch(e){}abToast('Hakem modunda “Önemli anlar” yerine “Sakin anları hızlı geç” kullanılır: karar anında oyun yine durur.');}
+  const hint=key==='pro'?'Pro modu: oyuncun sahadayken maç canlı ve gerçek zamanlı akar; özet, önemli anlar arası ve ileri sarma yok. Akıllı tempo yalnız ölü toplarda hızlandırır.':
     key==='pro-off'?'Oyuncun sahada değil: izleme biçimini ve hızı dilediğin gibi seçebilirsin. Oyuna girdiğinde maç yeniden canlı akar.':
     key==='ref'?'Hakem modu: karar gerektiren her pozisyonda oyun durur; pozisyon hakem gözünden tekrar gösterilir, ne olduğu anlatılır, kararı sen verirsin.':null;
   const h=q('eng-hint');if(hint&&h&&h.textContent!==hint)h.textContent=hint;

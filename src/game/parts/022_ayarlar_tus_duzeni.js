@@ -13,7 +13,7 @@ function openSettings(){
   <div class="ctl-entry"><div><b>Dokunmatik düzen ve klavye tuşları</b><small>Topa sahipken, top rakipteyken ve kaleciyken düğmelerin yeri, boyutu, saydamlığı; joystick eli; bilgisayarda tuş atama.</small></div><button class="cta sm" data-act="ctlOpen">Düzenle</button></div>
   <p class="sub-h" style="margin:14px 0 6px"><span>Oyun</span></p>
   ${fsOK()?`<label class="hurt" style="margin:0 0 6px"><input type="checkbox" data-act="autofs" ${G&&G.autoFS===false?'':'checked'}> Maça çıkınca otomatik tam ekran</label>`:''}
-  <label class="hurt" style="margin:0 0 6px"><input type="checkbox" data-act="themeTog" ${setsGet().theme==='klasik'?'':'checked'}> Profesyonel arayüz (FM tarzı)</label>
+  <label class="hurt" style="margin:0 0 6px"><input type="checkbox" data-act="themeTog" ${setsGet().theme==='klasik'?'':'checked'}> Profesyonel arayüz (ayrıntılı)</label>
   <label class="hurt" style="margin:0 0 6px"><input type="checkbox" data-act="rpTog" ${setsGet().rp===false?'':'checked'}> Gollerden sonra ağır çekim tekrar</label>
   ${G&&isPl()?`<label class="hurt" style="margin:0"><input type="checkbox" data-act="trscene" ${G.trScene!==false?'checked':''}> Maç önü idmanını sahada oyna</label>`:''}
   ${G?`<p class="sub-h" style="margin:14px 0 6px"><span>Kariyerdeki ismin</span></p><div class="rn"><input id="rnIn" value="${esc(G.p.name||'')}" maxlength="28" autocomplete="off"><button class="btn" data-act="rename">Kaydet</button></div>`:''}<div class="offer-btns" style="margin-top:12px"><button class="btn" data-act="help">Nasıl oynanır?</button>${G?'<button class="btn" data-act="toMenu">Kariyer seçimine dön</button>':''}</div>`);}

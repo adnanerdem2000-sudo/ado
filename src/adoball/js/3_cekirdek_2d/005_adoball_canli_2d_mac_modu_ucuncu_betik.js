@@ -3232,8 +3232,8 @@
     var DUR = { wide: dur([16, 8, 4, 2]), key: dur([8, 4, 2, 1]) };        // tüm maçın izleme süresi (gol tekrarları hariç); proto/pace_lab.js ile 12 tam maçta ölçüldü (Geniş özet: 15,7 / 8,0 / 4,1 / 2,1 · Kritik anlar: 8,2 / 4,1 / 2,0 / 1,0)
     function watchHint() {          // [ui21] tek kısa satır; ayrıntılı süre tablosu düğmelerin ve ipucunun title'ında
         var ml = typeof matchLenMin === 'function' ? matchLenMin() : 0, dk = ml ? '1x’te ' + ml + ' dk' : null;
-        if (S.use3) return S.watch === 'fm' ? 'FM tarzı önemli anlar · gerçek hızda' : S.watch === 'key' ? 'Yalnız pozisyonlar · 1x gerçek hız (~10 dk)' : 'Tüm maç · 1x gerçek hız (~17 dk' + (dk ? '; ' + dk + ' hedefi için sakin bölümler hızlanır' : ', 2x ~9 dk') + ')';      // [fiz] 3B
-        return S.watch === 'fm' ? 'FM tarzı önemli anlar · ' + (dk || 'aralar gösterilmez') : S.watch === 'key' ? 'Yalnız pozisyonlar · ' + (dk || '1x’te ~4 dk') : 'Tüm maç · ' + (dk || '1x’te ~8 dk');
+        if (S.use3) return S.watch === 'fm' ? 'Önemli anlar · gerçek hızda' : S.watch === 'key' ? 'Yalnız pozisyonlar · 1x gerçek hız (~10 dk)' : 'Tüm maç · 1x gerçek hız (~17 dk' + (dk ? '; ' + dk + ' hedefi için sakin bölümler hızlanır' : ', 2x ~9 dk') + ')';      // [fiz] 3B
+        return S.watch === 'fm' ? 'Önemli anlar · ' + (dk || 'aralar gösterilmez') : S.watch === 'key' ? 'Yalnız pozisyonlar · ' + (dk || '1x’te ~4 dk') : 'Tüm maç · ' + (dk || '1x’te ~8 dk');
     }
     var WATCH_TIP = { wide: 'Tüm maç akıcı tempoda izlenir; tehlikeli anlarda yavaşlar, ölü toplarda hızlanır', key: 'Yalnızca pozisyonlar normal hızda izlenir; aradaki süre hızlı akar' };
     function syncWatchUI() {

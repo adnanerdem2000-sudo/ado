@@ -1,7 +1,7 @@
 /* ================= v103: başlangıç seviyesi (FM gibi) · maaşlar yıllık ve euro =================
    Her meslekte: Sıfırdan (eski akış) · Orta seviye · Zirve. Orta ve zirvede kulübünü (hakemde ligini) kendin seçersin. */
 W.lvl=W.lvl||'sifir';
-const LVL_TXT={sifir:['Sıfırdan','Alt seviyeden başlar, yükselerek ilerlersin.'],orta:['Orta seviye','Deneyimli başlarsın: orta lisans/seviye, istediğin kulüp.'],zirve:['Zirve (FM gibi)','En üst lisans ve seviye; istediğin büyük kulüpten hemen başla.']};
+const LVL_TXT={sifir:['Sıfırdan','Alt seviyeden başlar, yükselerek ilerlersin.'],orta:['Orta seviye','Deneyimli başlarsın: orta lisans/seviye, istediğin kulüp.'],zirve:['Zirve','En üst lisans ve seviye; istediğin büyük kulüpten hemen başla.']};
 function lvlLeagues(){return Object.entries(LEAGUES).filter(([id,L])=>!L.youth&&Object.values(CLUBS).some(c=>c.league===id)).sort((a,b)=>(b[1].cc==='TR')-(a[1].cc==='TR')||(b[1].tier||0)-(a[1].tier||0)).map(([id,L])=>({id,L}));}
 function lvlClubs(lg){return Object.values(CLUBS).filter(c=>c.league===lg).sort((a,b)=>(b.str||0)-(a.str||0));}
 function lvlDefaults(){const lg=lvlLeagues();if(!W.lg||!LEAGUES[W.lg]){const tr=lg.find(x=>x.L.cc==='TR'&&!x.L.youth);W.lg=(tr||lg[0]).id;}const cl=lvlClubs(W.lg);if(!W.club||!CLUBS[W.club]||CLUBS[W.club].league!==W.lg)W.club=(W.lvl==='zirve'?cl[0]:cl[Math.floor(cl.length/2)]||cl[0]).id;}
