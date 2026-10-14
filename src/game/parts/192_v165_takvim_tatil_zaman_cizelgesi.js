@@ -275,6 +275,7 @@ function v165Recap(){const s=G.s,K=v165Kind(),yl=seasonLabel(s.year),T=(()=>{try
   const sc=Object.values(s.ps||{}).filter(p=>p.c===G.club).sort((a,b)=>((b.g||0)*3+(b.a||0)*2)-((a.g||0)*3+(a.a||0)*2)).slice(0,3).map(p=>({n:p.n,g:p.g||0,a:p.a||0}));
   const ms=(G.ms||[]).filter(m=>m.y===yl).slice(-8).map(m=>({t:m.t,ic:m.ic}));
   const V=v165(),s0=V.ss0&&V.ss0.y===s.year?V.ss0:{};const R={y:s.year,yl,prof:v165Prof(),pn:v165ProfN(),kind:K,ref,name:(G.p&&G.p.name)||'',club:G.club,lg:s.league,lgn:curLeague().name,pos,n:T.length,row:{o:me.o||0,g:me.g||0,b:me.b||0,m:me.m||0,a:me.a||0,y:me.y||0,p:me.p||0},form:form.slice(-10).join(''),bw:bw?[bw[0],bw[1],bw[2],bw[3]]:null,bl:bl?[bl[0],bl[1],bl[2],bl[3]]:null,run:best,un:bu,cups,trs,sc,ms,age:G.p?G.p.age:0};
+  if(ref){R.bw=R.bl=null;R.run=R.un=0;R.cups=[];R.sc=[];R.form='';}
   if(K==='pl'){const st=s.stats||{},sm=G.summary&&G.summary.yl===yl?G.summary:null;R.me=sm&&(sm.apps||!st.apps)?{ap:sm.apps||0,g:sm.goals||0,as:sm.assists||0,avg:sm.avg?Math.round(sm.avg*100)/100:0}:{ap:st.apps||0,g:st.goals||0,as:st.assists||0,avg:st.apps?Math.round(st.rsum/st.apps*100)/100:0};Object.assign(R.me,{yc:G.p.yellows||0,ovr:OVR(),ovr0:s0.ovr,mv:(()=>{try{return marketValue();}catch(e){return null;}})(),mv0:s0.mv,caps:G.p.caps||0,aw:sm?sm.awards||[]:[]});}
   else if(K==='mgr'){const m=G.m||{},st=m.st||{};R.me={w:st.w||0,d:st.d||0,l:st.l||0,gf:st.gf||0,ga:st.ga||0,rep:m.rep,rep0:s0.rep,conf:m.conf,bud:m.budget,bud0:s0.bud,role:m.role||'td',sacked:!!m.sacked};R.obj=m.obj?{t:m.obj.txt,ok:pos>0&&pos<=m.obj.pos}:null;}
   else{const j=G.job||{};R.me={title:j.title||'',rep:Math.round(j.rep||0),rep0:s0.rep,lvl:j.lvl||0};
@@ -284,7 +285,7 @@ function v165Recap(){const s=G.s,K=v165Kind(),yl=seasonLabel(s.year),T=(()=>{try
   try{if(K==='pl'&&R.me.g>=5){const prev=(G.history||[]).filter(h=>h.year!==yl&&h.pos!=='TD'&&h.pos!=='ST').reduce((a,h)=>Math.max(a,h.goals||0),0);if(R.me.g>prev&&prev>0)msAdd(`Kariyer rekoru: bir sezonda ${R.me.g} gol`,'rec');}}catch(e){}
   R.tgt=v165Targets(R);return R;}
 function v165Targets(R){const t=[],p=R.pos,n=R.n||18;
-  if(p>1&&!R.ref){const g=p<=3?1:p<=6?Math.max(1,p-2):p>n-4?n-4:Math.max(1,p-3);t.push(g===1?'Şampiyonluk için yarış':`Ligi ilk ${g} içinde bitir`);}else if(p===1)t.push('Şampiyonluğu koru');
+  if(p>1&&!R.ref){const g=p<=3?1:p<=6?Math.max(1,p-2):p>n-4?n-4:Math.max(1,p-3);t.push(g===1?'Şampiyonluk için yarış':`Ligi ilk ${g} içinde bitir`);}else if(p===1&&!R.ref)t.push('Şampiyonluğu koru');
   if(R.cups&&R.cups.length&&!R.cups.some(c=>c.w))t.push('Kupada bir tur daha ileri git');
   if(R.kind==='pl'){const m=R.me;t.push(m.ap<Math.max(8,R.row.o*0.5)?`En az ${Math.max(10,Math.round(R.row.o*0.6))} maçta forma giy`:`${Math.max(m.g+2,Math.round(m.g*1.25))} gole ulaş`);if(m.avg&&m.avg<7)t.push('Sezon ortalamanı 7,0’ın üstüne çıkar');}
   else if(R.kind==='mgr'){if(R.obj&&!R.obj.ok)t.push('Yönetimin sezon hedefini tuttur');if(R.row.y>R.row.o*1.4)t.push('Savunmayı sağlamlaştır: yenilen golü azalt');else t.push('Gol yollarını artır');}
@@ -304,7 +305,7 @@ function v165SzCard(R){const c=CLUBS[R.club]||myClub(),L=LEAGUES[R.lg]||{},st=(v
   const mom=[R.bw?`<li><i>⬆</i><span>En farklı galibiyet</span><b>${R.bw[0]}-${R.bw[1]} ${esc(CLUBS[R.bw[2]]?CLUBS[R.bw[2]].short:'')}</b></li>`:'',R.bl?`<li><i>⬇</i><span>En ağır yenilgi</span><b>${R.bl[0]}-${R.bl[1]} ${esc(CLUBS[R.bl[2]]?CLUBS[R.bl[2]].short:'')}</b></li>`:'',R.run>=2?`<li><i>🔥</i><span>En uzun galibiyet serisi</span><b>${R.run} maç</b></li>`:'',R.un>=4?`<li><i>🛡</i><span>Yenilgisiz seri</span><b>${R.un} maç</b></li>`:'',...(R.ms||[]).filter(x=>!/^(İlk|Kariyerin en farklı|Ağır)/.test(x.t)||true).slice(0,4).map(x=>`<li><i>${MS_IC[x.ic]||'•'}</i><span>${esc(x.t)}</span></li>`)].join('');
   const aw=[...(R.trs||[]),...(m.aw||[]).filter(a=>!(R.trs||[]).includes(a))];
   return `<article class="v5sz" style="--c1:${c.c1||'#1d5c3a'};--c2:${c.c2||'#fff'}">
-    <header><div class="v5szc">${crestSVG(c,54)}</div><div><p class="kicker">Futbol Kariyeri · ${esc(R.yl)} sezon özeti</p><h3>${esc(R.name)}</h3><small>${esc(R.ref?(m.title||'Hakem'):R.kind==='staff'?(m.title||R.pn):R.pn)} · ${esc(R.ref?(L.name||R.lgn):c.name)}${R.ref?'':' · '+esc(R.lgn)} · ${R.age} yaş</small></div></header>
+    <header><div class="v5szc">${R.ref?'<b style="font-size:30px">⚖</b>':crestSVG(c,54)}</div><div><p class="kicker">Futbol Kariyeri · ${esc(R.yl)} sezon özeti</p><h3>${esc(R.name)}</h3><small>${esc(R.ref?(m.title||'Hakem'):R.kind==='staff'?(m.title||R.pn):R.pn)} · ${esc(R.ref?(L.name||R.lgn):c.name)}${R.ref?'':' · '+esc(R.lgn)} · ${R.age} yaş</small></div></header>
     ${R.ref?'':`<div class="v5szp"><b>${R.pos||'—'}.</b><span>${esc(L.short||'')} sırası${R.n?' / '+R.n:''}</span><span class="r">${R.row.g}G ${R.row.b}B ${R.row.m}M · ${R.row.a}:${R.row.y} · ${R.row.p} puan</span></div><div class="st-form">${fm}</div>`}
     <div class="v5szs">${big}</div>
     ${aw.length?`<div class="v5szt"><p>🏆 Kupalar ve ödüller</p><ul>${aw.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}

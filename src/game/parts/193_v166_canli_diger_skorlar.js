@@ -20,8 +20,10 @@ function lcvPlanOK(){const S=G&&G.s,P=S&&S.lcv;if(!P||P.lid!==S.league||P.y!==S.
 simScore=(old=>{window.__lcvSim0=old;return function(h,a){try{const P=lcvPlanOK();if(P){const r=P.m[h+'|'+a];if(r)return [r[0],r[1]];}}catch(e){}return old.apply(this,arguments);};})(simScore);
 function lcvPlan(wi,skip){const S=G.s;let P=S.lcv;if(P&&P.lid===S.league&&P.y===S.year&&P.wi===wi)return P;
   P={lid:S.league,y:S.year,wi,m:{}};const sim=window.__lcvSim0||simScore;
-  for(const [h,a] of S.fixtures[wi]||[]){if(!CLUBS[h]||!CLUBS[a]||(h===skip[0]&&a===skip[1]))continue;const r=sim(h,a);P.m[h+'|'+a]=[r[0]|0,r[1]|0];}
+  for(const [h,a] of S.fixtures[wi]||[]){if(!CLUBS[h]||!CLUBS[a]||skip.some(f=>f&&h===f[0]&&a===f[1]))continue;const r=sim(h,a);P.m[h+'|'+a]=[r[0]|0,r[1]|0];}
   S.lcv=P;return P;}
+/* oyuncunun kulübü (3B izlemede G.club geçici olarak değişir) */
+const lcvClub=()=>(typeof W3!=='undefined'&&W3.on&&W3.club0)||G.club;
 /* ekrandaki maç ve saati */
 function lcvClock(){
   try{if(typeof FX!=='undefined'&&FX&&FX.T&&FX.T[0]&&FX.T[1]&&!(FX.o&&FX.o.headless)){const el=$('#fx');if(el&&!el.hidden){
@@ -47,8 +49,12 @@ const lcvCrest=id=>LCV.cr[id]||(LCV.cr[id]=CLUBS[id]?crestSVG(CLUBS[id],16):'');
 /* anlık durum */
 function lcvState(){const ck=lcvClock();if(!ck)return null;const R=lcvRound(ck.ids);if(!R)return null;
   const S=G.s,lid=S.league,wi=R.wi,f=R.f,cur=ck.ph==='end'?99:ck.cur,fin=ck.ph==='end'||cur>=90,started=ck.ph!=='pre';
-  const P=R.done?null:lcvPlan(wi,f),rows=[];
-  for(const fx of S.fixtures[wi]||[]){const [h,a]=fx;if(h===f[0]&&a===f[1])continue;if(!CLUBS[h]||!CLUBS[a])continue;
+  /* kulübün kendi maçı ekranda değilse (hakem vb.) sonucu başka yerde belirlenir: hafta kaydedilmeden gösterilmez */
+  const cid=lcvClub(),cf=(S.fixtures[wi]||[]).find(x=>x.includes(cid)),cfx=!R.done&&cf&&cf!==f?cf:null;
+  const P=R.done?null:lcvPlan(wi,[f,cfx]),rows=[];
+  /* ekrandaki başka bir maç (hakem) bitince skoru haftaya aynen yazılsın */
+  if(P&&cfx&&ck.ph==='end'){const k=f[0]+'|'+f[1];if(!P.m[k])P.m[k]=[ck.sc[f[0]]|0,ck.sc[f[1]]|0];}
+  for(const fx of S.fixtures[wi]||[]){const [h,a]=fx;if(h===f[0]&&a===f[1])continue;if(cfx&&fx===cfx)continue;if(!CLUBS[h]||!CLUBS[a])continue;
     let fs=null;if(R.done){const r=(S.results[wi]||[]).find(q=>q[0]===h&&q[1]===a);if(r)fs=[r[2],r[3]];}else{fs=P.m[h+'|'+a];}
     if(!fs)continue;const ev=lcvMins(S.year,lid,wi,h,a,fs[0],fs[1]);let hg=0,ag=0;const shown=[];
     for(const e of ev){if(fin||(started&&e[0]<=cur)){if(e[1])ag++;else hg++;shown.push(e);}}
@@ -88,7 +94,7 @@ function lcvTick(){let st=null;try{if(G&&G.s)st=lcvState();}catch(e){st=null;}
   if(!st){if(LCV.key){LCV.key='';LCV.seen={};LCV.fl=[];LCV.cur=null;LCV.hot={};}lcvParentHide();lcvAbHide();return;}
   const fresh=LCV.key!==st.key;if(fresh){LCV.key=st.key;LCV.seen={};LCV.fl=[];LCV.cur=null;LCV.hot={};LCV.sig='';LCV.abSig='';LCV.tbSig='';}
   lcvGoals(st,fresh);
-  LCV.last={lid:st.lid,y:G.s.year,wi:st.wi,fin:st.fin,cur:st.cur,rows:st.rows.map(r=>[r.h,r.a,r.hg,r.ag,r.ev.map(e=>e[0]+(e[1]?'d':'e')).join(' ')])};
+  LCV.last={lid:st.lid,y:G.s.year,wi:st.wi,fin:st.fin,cur:st.cur,rows:st.rows.map(r=>[r.h,r.a,r.hg,r.ag,r.ev.map(e=>e[0]+(e[1]?'d':'e')).join(' '),r.fh,r.fa])};
   const fl=st.ck.host!=='ab'&&lcvBlocked(st)==='modal'?null:lcvNextFlash();
   if(st.ck.host==='ab'){lcvParentHide();lcvAb(st,fl);}else{lcvAbHide();lcvParent(st,fl);}}
 /* ---------- klasik ekranlar: üst sayfada panel ---------- */
@@ -205,6 +211,8 @@ function lcvAb(st,fl){const W=typeof ABM!=='undefined'&&ABM.win;if(!W||!W.docume
 LCV.dbg=()=>{const s=LCV.last;return s?{wi:s.wi,fin:s.fin,n:s.rows.length,cur:s.cur,sk:s.rows.map(r=>r[2]+'-'+r[3]+(r[4]?'('+r[4]+')':'')).join(' ')}:null;};
 LCV.snap=()=>{try{lcvTick();}catch(e){}return LCV.dbg();};
 LCV.compare=()=>{const s=LCV.last;if(!s)return {err:'gösterim yok'};const R=G.s.league===s.lid&&G.s.year===s.y?G.s.results[s.wi]:null;if(!R)return {err:'hafta kaydı yok',wi:s.wi,n:G.s.results.length};
-  let diff=0;const bad=[];for(const [h,a,hg,ag] of s.rows){const r=R.find(q=>q[0]===h&&q[1]===a);if(!r||r[2]!==hg||r[3]!==ag){diff++;bad.push(`${h}-${a} ekran ${hg}-${ag} kayıt ${r?r[2]+'-'+r[3]:'yok'}`);}}
-  return {wi:s.wi,fin:s.fin,n:s.rows.length,diff,bad};};
+  let diff=0,dplan=0;const bad=[];for(const [h,a,hg,ag,,fh,fa] of s.rows){const r=R.find(q=>q[0]===h&&q[1]===a);
+    if(!r||r[2]!==fh||r[3]!==fa){dplan++;bad.push(`${h}-${a} 90' skoru ${fh}-${fa} kayıt ${r?r[2]+'-'+r[3]:'yok'}`);}
+    if(s.fin&&(!r||r[2]!==hg||r[3]!==ag)){diff++;bad.push(`${h}-${a} ekran ${hg}-${ag} kayıt ${r?r[2]+'-'+r[3]:'yok'}`);}}
+  return {wi:s.wi,fin:s.fin,n:s.rows.length,diff:s.fin?diff:null,dplan,bad};};
 setInterval(()=>{try{lcvTick();}catch(e){}},450);
