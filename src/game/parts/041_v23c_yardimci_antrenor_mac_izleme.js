@@ -31,7 +31,7 @@ fxTopUI=(old=>function(){old();const S=FX;if(!S)return;const bn=$('#fxBan'),c=(S
   if(S.watch){const inf=$('#fxInfo'),j=jobInit();if(inf)inf.textContent=`🧢 Kenardasın · hoca güveni ${Math.round(j.tr)} · öneri ${(S.sug||[]).filter(x=>x.ok).length}/${(S.sug||[]).length}`;}})(fxTopUI);
 fxBodyUI=(old=>function(){const S=FX,el=$('#fxBody');if(S&&el&&S.tab==='cm'&&S.phase!=='ht'&&S.phase!=='end'){el.innerHTML=`<ul class="fx-ev fx-com">${(S.com||[]).slice(0,40).map(c=>`<li class="${c.imp?'bold':''}"><i>${c.m}’</i>🎙 ${esc(c.t)}</li>`).join('')||'<li>Maç başlamak üzere...</li>'}</ul>`;return;}
   old();if(S&&S.watch&&el){el.querySelectorAll('[data-fx=advok]').forEach(b=>b.textContent='Hocaya öner');if(S.tab==='tk'||S.tab==='ky'||S.tab==='as')el.insertAdjacentHTML('afterbegin',`<p class="fx-sub" style="color:#ffd23f">Yardımcı antrenörsün: değişiklikler hocaya öneri olarak gider. Hoca mantıklı bulursa uygular.</p>`);}})(fxBodyUI);
-fxStep=(old=>function(dt){old(dt);const S=FX;if(!S||S.phase!=='play')return;fxCom(dt);if(S.watch){fxCoachU();fxSugEval();}})(fxStep);
+fxStep=(old=>function(dt){old(dt);const S=FX;if(!S||S.phase!=='play')return;fxCom(dt);if(S.watch){fxCoachU();fxSugEval();}else if(S.bsk)fxCoachU();})(fxStep);
 /* ---------- yardımcı antrenör: hocaya öneri ---------- */
 function fxSugOk(k,v){const S=FX,U=S.U,mn=fxMin(),d=S.score[0]-S.score[1];
   if(k==='tac')return (d<0&&(v==='hucum'||v==='pres'))||(d>0&&mn>=70&&v==='savunma')||(d===0&&v==='dengeli');

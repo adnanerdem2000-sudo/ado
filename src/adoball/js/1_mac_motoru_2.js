@@ -15,7 +15,7 @@
         if (typeof SND_DATA !== 'object' || !SND_DATA || !ctx.decodeAudioData) { SND.st = 3; return false; }
         try {
             var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = .005; comp.release.value = .25;
-            SND.out = ctx.createGain(); SND.out.gain.value = .9; SND.out.connect(comp); comp.connect(ctx.destination);
+            SND.out = ctx.createGain(); SND.out.gain.value = .9; SND.lp = ctx.createBiquadFilter(); SND.lp.type = 'lowpass'; SND.lp.frequency.value = 20000; SND.out.connect(SND.lp); SND.lp.connect(comp); comp.connect(ctx.destination); sndLocaApply();      // [v158] loca: cam arkasından boğuk ses (lp)
         } catch (e) { SND.st = 3; return false; }
         SND.st = 1;
         var keys = Object.keys(SND_DATA), left = keys.length, okN = 0;
@@ -69,6 +69,10 @@
             return true;
         } catch (e) { SND.bed = null; return false; }
     }
+    /* [v158] loca sesi: tüm maç sesi camın arkasından gelir gibi boğuk (alçak geçiren süzgeç); gol anında "loca kapısı açılır" (__abLocaOpen) */
+    function sndLocaApply() { if (!SND.lp) return; try { var ctx = ensureAudioCtx(), t = ctx.currentTime, f = SND.lp.frequency; f.cancelScheduledValues(t); f.setTargetAtTime(SND.loca ? 820 : 20000, t, .25); } catch (e) { } }
+    window.__abLoca = function (on) { SND.loca = !!on; sndLocaApply(); };
+    window.__abLocaOpen = function () { if (!SND.loca || !SND.lp) return; try { var ctx = ensureAudioCtx(), t = ctx.currentTime, f = SND.lp.frequency; f.cancelScheduledValues(t); f.setTargetAtTime(9500, t, .05); f.setTargetAtTime(820, t + 2.8, 1.1); } catch (e) { } };
     function sndBedStop(fast) {
         SND.bedWant = false;
         var B = SND.bed; SND.bed = null; sndChantStop(fast);

@@ -113,7 +113,7 @@
             if (o.gfx === 'auto' || o.gfx === 'low' || o.gfx === 'mid' || o.gfx === 'high') S.gfx = o.gfx;                       // 3B görüntü kalitesi (yalnızca bu anahtarın YENİ alanı - fm_*_v16'ya dokunmaz)             // yayın kamerası açısı: 3B Yayın modunda kullanılan öntanımlı/alçak/geniş açı tercihi (yalnızca bu YENİ anahtara ait alan - fm_*_v16'ya dokunmaz)
         } catch (e) { }
     }
-    function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify({ replay: S.replayOn, smart: S.smart, zoom: S.zoom, speed: S.preset, watch: S.watch, view: S.view, cam3: S.cam3, camStyle: S.camStyle, gfx: S.gfx })); } catch (e) { } }
+    function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify({ replay: S.replayOn, smart: S.smart, zoom: S.zoom, speed: S.preset, watch: S.watch, view: S.view, cam3: S.cam3 === 'loca' ? 'bcast' : S.cam3, camStyle: S.camStyle, gfx: S.gfx })); } catch (e) { } }
     loadPrefs();
     if (!S.viewSet) { try { S.view = (G.Ado3D && Ado3D.supported() && Ado3D.hw() && !(navigator && navigator.webdriver)) ? '3d' : '2d'; } catch (e) { S.view = '2d'; } }        // ilk açılışta 3B (destek varsa); otomasyon (test) tarayıcılarında 2B
 
@@ -1682,7 +1682,7 @@
         if (!w) return;
         dpr = Math.min(2, G.devicePixelRatio || 1);
         var k = (w - 2 * M) / PW, cw = w;
-        var room = 0, bc = !!(S.use3 && S.cam3 === 'bcast' && S.r3);      // [ui22] 3B Yayın: tuval kabı doldurur
+        var room = 0, bc = !!(S.use3 && (S.cam3 === 'bcast' || S.cam3 === 'loca') && S.r3);      /* [v158] loca da kabı doldurur */      // [ui22] 3B Yayın: tuval kabı doldurur
         if (G.innerWidth >= 700 || G.innerHeight < G.innerWidth) {          // sahayı ekran yüksekliğine sığdır (aşağı kaydırmadan izlenebilsin) [ui2] 960x600 gibi küçük pencerelerde ve yatay telefonda da
             var pv = $('view-2d'), below = pv && pv.offsetHeight ? Math.max(0, pv.offsetHeight - wrap.offsetHeight) : 60;
             var top = wrap.getBoundingClientRect().top + (G.scrollY || 0); room = G.innerHeight - Math.min(top, G.innerHeight * .55) - below - 30;
@@ -2190,7 +2190,7 @@
     }
     function setView(k) {
         if (k === '2d') S.view = '2d';
-        else if (k === 'bcast' || k === 'full') { if (!(G.Ado3D && Ado3D.supported()) || S.r3fail) return; S.view = '3d'; S.cam3 = k; if (S.r3) S.r3.resetCam && S.r3.resetCam(); }
+        else if (k === 'bcast' || k === 'full' || k === 'loca') { if (!(G.Ado3D && Ado3D.supported()) || S.r3fail) return; S.view = '3d'; S.cam3 = k; if (S.r3) S.r3.resetCam && S.r3.resetCam(); }
         else return;
         savePrefs(); applyView();
     }

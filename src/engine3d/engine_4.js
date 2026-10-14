@@ -2328,6 +2328,7 @@
                 var co = R._camOverride || R.varCam || R.cutCam; eye[0] = co.eye[0]; eye[1] = co.eye[1]; eye[2] = co.eye[2]; CAM_FD = Math.hypot(co.at[0] - eye[0], co.at[1] - eye[1], co.at[2] - eye[2]); CAM_AX = co.at[0]; CAM_AZ = co.at[2];
                 curFov = (co.fov || 34) * Math.PI / 180; mlook(VIEW, eye[0], eye[1], eye[2], co.at[0], co.at[1], co.at[2]); mpersp(PROJ, curFov, asp, .1, 900); mmul(VP, PROJ, VIEW); return;
             }
+            if (st.mode === 'loca' && !st.vs) { locaCam(st, bx, bz, dt); return; }      // [v158] loca: ana tribünün üst katındaki camlı locadan bakış (yayın kamerası değil)
             var mode = st.mode === 'full' || st.vs ? 'full' : 'bcast', g = camGoal(mode, st, bx, bz, cel0, v), c = S.cam;
             if (!c) { c = S.cam = { tx: g.tx, tz: g.tz, dist: g.dist, elev: g.elev, az: g.az }; }
             var wp = mode === 'full' ? 4 : 3.6;      // [v133] kritik sonumlu yay: hiz surekli (canli/olu top kadraj gecisinde ve vuruslarda sarsinti yok)
@@ -2335,6 +2336,27 @@
             eye[0] = c.tx + Math.sin(c.az) * Math.cos(c.elev) * c.dist; eye[1] = Math.sin(c.elev) * c.dist; eye[2] = c.tz + Math.cos(c.az) * Math.cos(c.elev) * c.dist;
             curFov = FOVY; CAM_FD = c.dist; CAM_AX = c.tx; CAM_AZ = c.tz; mlook(VIEW, eye[0], eye[1], eye[2], c.tx, 0, c.tz); mpersp(PROJ, FOVY, asp, 1.5, 900); mmul(VP, PROJ, VIEW);
         }
+        /* [v158] loca kamerası: göz yakın (S) tribünün en üst sırasının biraz üstünde ve gerisinde SABİT durur (yalnız topa doğru çok az kayar);
+           bakış hedefi topu insan başı gibi gecikmeli izler; geniş açı. Unity stadyumunda üst sıra yüksekliği seyirci şeritlerinden bulunur. */
+        var LOCA_P = null;
+        function locaPos() {
+            var key = !!(G.ADO_STAD && G.ADO_STAD.ready); if (LOCA_P && LOCA_P.k === key) return LOCA_P;
+            var y = 4.62, z = PH + 20.6;                                           // yerleşik yakın tribün: 11 sıra × .42 m yükseklik, × .78 m derinlik (stand('S', …))
+            if (key) { try { var D = G.ADO_STAD, s, my = -1, mz = 0; for (s = 0; s < D.ns; s++) { var ax = D.sp[s * 5], ay = D.sp[s * 5 + 1], az = D.sp[s * 5 + 2], bx2 = D.sp[s * 5 + 3], bz2 = D.sp[s * 5 + 4];
+                if (az > PH + 2 && bz2 > PH + 2 && Math.abs((ax + bx2) / 2 - PW / 2) < 30 && ay > my) { my = ay; mz = (az + bz2) / 2; } } if (my > 0) { y = my; z = mz; } } catch (e) { } }
+            return LOCA_P = { k: key, y: y + 7.2, z: z - 1.2 };
+        }
+        function locaCam(st, bx, bz, dt) {
+            var L = S.lcam, P = locaPos(), dd = st.dead, gx = clamp(bx, 26, PW - 26), gz = PH / 2 + (bz - PH / 2) * .3, por = asp < 1;
+            if (dd && dd.kind === 'kickoff') { gx = PW / 2; gz = PH / 2; }
+            if (!L) L = S.lcam = { lx: gx, lz: gz, ex: PW / 2 + (gx - PW / 2) * .1 };
+            camSd(L, 'lx', gx, 1.25, dt); camSd(L, 'lz', gz, 1.1, dt); camSd(L, 'ex', PW / 2 + (L.lx - PW / 2) * .1, .45, dt);
+            eye[0] = L.ex; eye[1] = P.y + (por ? 5 : 0) + Math.sin((st.now || 0) / 2300) * .035; eye[2] = P.z + (por ? 4 : 0);
+            curFov = (por ? 50 : 40) * Math.PI / 180; CAM_AX = L.lx; CAM_AZ = L.lz; CAM_FD = Math.hypot(L.lx - eye[0], eye[1], L.lz - eye[2]);
+            mlook(VIEW, eye[0], eye[1], eye[2], L.lx, 0, L.lz); mpersp(PROJ, curFov, asp, .3, 900); mmul(VP, PROJ, VIEW);
+        }
+        if (!R.resetCam) R.resetCam = function () { S.lcam = null; };      // [v158] görünüm değişince loca kamerası yeniden yerleşir
+        R._locaState = function () { return { eye: eye.slice(), fov: curFov * 180 / Math.PI, at: S.lcam ? [S.lcam.lx, 0, S.lcam.lz] : null, pos: locaPos() }; };
         // test/hata ayıklama: camGoal'ün ANLIK hedefini (yumuşatma uygulanmadan) ve canlı kamera durumunu okur - ekran görüntüsü yerine sayısal doğrulama için
         R._camGoal = function (cam, bx, bz, cel0, v) { var mode = cam.mode === 'full' || cam.vs ? 'full' : 'bcast'; return camGoal(mode, cam, bx, bz, cel0, v); };
         R.varCam = null;

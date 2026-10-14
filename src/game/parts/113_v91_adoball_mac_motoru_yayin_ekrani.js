@@ -88,7 +88,7 @@ function abSetup(S){const W=ABM.win;if(!W)return;const H=W.ABH;
     for(const b of T.bench||[]){if(b.abId&&db.some(x=>x.id===b.abId))continue;const rr=abRec(b,b.pos==='KL'?'GK':b.pos==='DF'?'LCB':b.pos==='FW'?'ST':b.pos==='KN'?'LW':'AM',T,(T.boost||0)+ABM.shift,T.famF);db.push(rr);b.abId=rr.id;try{rr.lbl=dpTag(b);}catch(e){}ABM.map.byId[rr.id]=b;}
     recsE.push(recs);homes.push(asg.homes);ABM.map.asg.push(asg);teams.push(abTeam(T,e,recs,asg));});
   W.__abHomes=homes;W.__abForm=sides.map(T=>T.form);W.__abTac=sides.map(abTac);W.__ab2d_seed=(Date.now()^(Math.random()*4294967296))>>>0;
-  const ctl=G.mode==='mgr'&&!S.watch&&!S.pl3&&!S.scr&&!S.ref3;W.__abMine=ctl?(ABM.s0===0?0:1):null;
+  const ctl=G.mode==='mgr'&&!S.watch&&!S.pl3&&!S.scr&&!S.ref3&&!S.bsk;W.__abMine=ctl?(ABM.s0===0?0:1):null;
   const bc=W.document.body.classList;bc.toggle('abh-mine',ctl);bc.toggle('abh-mine0',ctl&&W.__abMine===0);bc.toggle('abh-mine1',ctl&&W.__abMine===1);bc.toggle('abh-notac',!ctl);
   try{if(!W.localStorage.getItem('ado_match_len_v1'))W.localStorage.setItem('ado_match_len_v1','5');}catch(e){}
   const md=H.md();md.h=teams[0];md.a=teams[1];md.isTournamentMatch=true;md.neutralVenue=!!(S.o&&S.o.neutral);
@@ -159,7 +159,7 @@ function abTickCore(){const S=ABM.fx;if(!S||FX!==S||!ABM.win)return;
     if(dt>0){abMirror(S,sim,st,dt);
       if(S.scr){try{w3Tick();}catch(e){}}
       if(S.ref3){try{ref3Tick();}catch(e){}}
-      ABM.aiT+=dt;if(ABM.aiT>=60){ABM.aiT=0;try{fxCoachAI();}catch(e){}if(S.watch){try{fxCoachU();fxSugEval();}catch(e){}}abTacSync(S);}
+      ABM.aiT+=dt;if(ABM.aiT>=60){ABM.aiT=0;try{fxCoachAI();}catch(e){}if(S.watch){try{fxCoachU();fxSugEval();}catch(e){}}else if(S.bsk){try{fxCoachU();}catch(e){}}abTacSync(S);}
       abForceTick(S,sim);}
     if(S.pl3){try{sim.holdEnd=!!(MR&&!MR.fin&&!PL3.end&&MR.min<MR.end);}catch(e){}}
     if(S.pl3&&ABM.done&&sim.finished&&S.phase!=='end'&&S.phase!=='pause'&&!PL3.mom)S.phase='end';
@@ -212,6 +212,7 @@ function abFxPk(k){const S=ABM.fx;for(const T of S.T)for(const p of T.P)if(p.k==
 /* ---------- devre arası ---------- */
 function abHalf(S){const W=ABM.win;if(!W)return;
   if(S.pl3||S.scr||S.ref3){setTimeout(()=>{try{if(FX===S&&W.ado2d.state.hold==='half'){W.startSecondHalf();}}catch(e){}},1400);return;}
+  if(S.bsk){try{v158Half(S);}catch(e){console.warn(e);}return;}   /* v158: başkan/SD locada: devre arası seçenekleri */
   if(G.mode!=='mgr'||S.watch)return;
   try{const ho=W.document.getElementById('halftime-overlay');if(!ho||ho.querySelector('.abh-talk'))return;const ft=W.document.getElementById('ht-foot')||ho.querySelector('.bc-foot')||ho;
     const box=W.document.createElement('div');box.className='abh-talk';box.innerHTML=`<p class="abh-tk">Soyunma odası konuşması</p><div class="abh-tb">${[['sakin','Sakin ve net ol'],['ovgu','Övgü: “Böyle devam”'],['ofke','Öfke: “Bu kabul edilemez!”'],['beklenti','“Daha fazlasını bekliyorum”']].map(([k,l])=>`<button type="button" class="btn btn-ghost" data-htt="${k}">${l}</button>`).join('')}</div><p class="abh-tr" hidden></p>`;
@@ -264,7 +265,7 @@ ABM.exitAsk=function(){const W=ABM.win,S=ABM.fx;if(!W||!S)return;const d=W.docum
   ov=d.createElement('div');ov.id='abh-exit';ov.innerHTML=`<div class="abh-ex"><h3>Maçtan ayrılıyor musun?</h3><p>Kalan dakikalar görüntüsüz oynanacak ve sonuç kaydedilecek.</p><div class="abh-exb"><button type="button" class="btn btn-ghost" data-x="no">Maça dön</button><button type="button" class="btn btn-primary" data-x="go">Sonucu gör</button></div></div>`;
   d.body.appendChild(ov);ov.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b&&e.target!==ov)return;ov.remove();if(b&&b.dataset.x==='go'){if(S.pl3){S.ff=true;}abToEnd();}});};
 /* ---------- maç çubuğu: oyuncu değişikliği ---------- */
-function abBarExtras(W){const d=W.document;const S=ABM.fx;let b=d.getElementById('abh-sub');const can=G.mode==='mgr'&&!S.watch&&!S.pl3&&!S.scr&&!S.ref3;
+function abBarExtras(W){const d=W.document;const S=ABM.fx;let b=d.getElementById('abh-sub');const can=G.mode==='mgr'&&!S.watch&&!S.pl3&&!S.scr&&!S.ref3&&!S.bsk;
   if(!b){const ref=d.getElementById('btn-tactics');if(!ref)return;b=d.createElement('button');b.type='button';b.id='abh-sub';b.className=ref.className;b.innerHTML='<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-shuffle"/></svg><span class="mb-t">Değişiklik</span>';ref.parentNode.insertBefore(b,ref.nextSibling);b.addEventListener('click',()=>abSubOpen());}
   b.hidden=!can;}
 function abSubOpen(sel){const W=ABM.win,S=ABM.fx;if(!W||!S)return;const d=W.document,U=S.U;let ov=d.getElementById('abh-subov');if(!ov){ov=d.createElement('div');ov.id='abh-subov';d.body.appendChild(ov);ov.addEventListener('click',abSubClick);}
@@ -302,7 +303,7 @@ function abShoutApply(k){const S=ABM.fx,sim=ABM.sim,E=AB_SH[k];if(!S||!sim||!E)r
 function abShoutEnd(){const sh=ABM.shout;if(!sh)return;ABM.shout=null;for(const [q,o] of sh.saved)for(const a in o)q.a[a]=o[a];}
 abTickCore=(old=>function(){const r=old.apply(this,arguments);try{if(ABM.shout&&ABM.sim&&ABM.sim.t>=ABM.shout.until)abShoutEnd();}catch(e){}return r;})(abTickCore);
 /* maç çubuğu: kenar (seslen / öneri) */
-abBarExtras=(old=>function(W){old.apply(this,arguments);const d=W.document,S=ABM.fx;let b=d.getElementById('abh-side');const tdm=(G.mode==='mgr'||!!S.watch)&&!S.pl3&&!S.scr&&!S.ref3;
+abBarExtras=(old=>function(W){old.apply(this,arguments);const d=W.document,S=ABM.fx;let b=d.getElementById('abh-side');const tdm=(G.mode==='mgr'||!!S.watch)&&!S.pl3&&!S.scr&&!S.ref3&&!S.bsk;
   if(!b){const ref=d.getElementById('abh-sub');if(!ref)return;b=d.createElement('button');b.type='button';b.id='abh-side';b.className=ref.className;b.innerHTML='<svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bolt"/></svg><span class="mb-t">Kenar</span>';ref.parentNode.insertBefore(b,ref.nextSibling);b.addEventListener('click',()=>abSideOpen());}
   b.hidden=!tdm;const sb=d.getElementById('abh-sub');if(sb){sb.hidden=!tdm;const t=sb.querySelector('.mb-t');if(t)t.textContent=S.watch?'Değişiklik öner':'Değişiklik';}
   const bs=d.getElementById('abh-side');if(bs){const t=bs.querySelector('.mb-t');if(t)t.textContent=S.watch?'Hocaya öner':'Kenar';}})(abBarExtras);
