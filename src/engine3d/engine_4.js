@@ -1848,6 +1848,7 @@
             players.forEach(function (p, i) {
                 var kit = S.team[p.team], dark = lum(kit) < .35, isGK = p.role === 'GK', h = hash(p.name || ('p' + i)), pv = new Float32Array(SLOT_N * 3);
                 var gkc = p.team ? (S.gkc2 || S.gkc) : S.gkc, kitc = isGK ? gkc : kit, short = isGK ? [.09, .1, .13] : (dark ? [.94, .94, .96] : mixc(kit, [0, 0, .06], .72)), socks = isGK ? mixc(gkc, [0, 0, 0], .35) : kit, trim = isGK ? [1, 1, 1] : (dark ? [1, 1, 1] : [.06, .06, .1]);
+                var KX = !isGK && S.kitX ? S.kitX[p.team] : null; if (KX) { try { if (KX.shorts) short = hex2rgb(KX.shorts); if (KX.socks) socks = hex2rgb(KX.socks); if (KX.trim) trim = hex2rgb(KX.trim); } catch (e) { } }      // [v160]
                 // ten rengi: oyuncuya kalıcı bir değer atanmışsa (p.sk, bkz DB2D.getAppearance/setAppearance) onu kullan; yoksa eski isim-hash yedeği
                 var skIdx = p.sk != null ? clamp(p.sk | 0, 0, 4) : (h % 5 === 4 && (h >>> 4) % 3 ? 3 : h % 5);
                 // saç rengi: veritabanından (p.hc, bkz DB2D.getAppearance); yoksa isim-hash yedeği (koyu ağırlıklı dağılım)
@@ -2050,6 +2051,7 @@
             if (!kitEnsure(N, L)) return;
             var LB = VQ.face ? L : 1, cv2 = KIT.cv && KIT.cv.width === N && KIT.cv.height === N * LB ? KIT.cv : (KIT.cv = mkCanvas(N, N * LB)), g = cv2.getContext('2d'), nums = shirtNumbers(players), names = KIT.names || [];   // [vq] LB > 1: tüm katmanlar alt alta
             var pats = [teamPattern(names[0], S.team[0]), teamPattern(names[1], S.team[1])];
+            if (S.kitX) for (var kq = 0; kq < 2; kq++) if (S.kitX[kq] && S.kitX[kq].p3 != null) pats[kq] = S.kitX[kq].p3 | 0;      // [v160] sezonluk forma deseni
             gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D_ARRAY, KIT.tex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
             for (var i = 0; i <= players.length; i++) {
                 var ref = i === players.length, p = ref ? null : players[i], pv = ref ? S.refPal : S.pal[i], isGK = !ref && p.role === 'GK';
@@ -2083,6 +2085,7 @@
         }
         R.setMatch = function (o) {
             S.team = [hex2rgb(o.cols[0]), hex2rgb(o.cols[1])];
+            S.kitX = o.kits && o.kits.length === 2 ? o.kits : null;      // [v160] sezonluk forma: desen, şort, tozluk, garnitür (yoksa eski davranış)
             var cand = [[.2, .82, .36], [1, .62, .12], [1, .36, .66], [.72, .95, .1], [.66, .4, 1], [.15, .8, .9]], best = cand[0], bd = -1;
             cand.forEach(function (c) { var d = Math.min(dist3(c, S.team[0]), dist3(c, S.team[1])); if (d > bd) { bd = d; best = c; } });
             S.gkc = best;

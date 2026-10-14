@@ -29,11 +29,11 @@ function makeChance(type,C){
     iqOpp:iqOf(C.opp.str),iqUs:iqOf(C.us.str),cond:C.cond??C.energy??90,wx:C.wx||'acik',wind:C.wind||0};S.stam=stamCap(S.cond);
   const side=Math.random()<.5?-1:1;
   const kUs=kitOf(C.us);let kOpp=kitOf(C.opp);
-  if(colorDist(kUs.shirt,kOpp.shirt)<130){kOpp=kitOf(C.opp,true);if(colorDist(kUs.shirt,kOpp.shirt)<130)kOpp={shirt:'#f3f3f3',trim:C.opp.c1,pat:0,shorts:'#1d2128',socks:'#f3f3f3',num:'#141414'};}
+  if(colorDist(kUs.shirt,kOpp.shirt)<130){kOpp=kitOf(C.opp,true);if(colorDist(kUs.shirt,kOpp.shirt)<130)kOpp=kitOf(C.opp,2);if(colorDist(kUs.shirt,kOpp.shirt)<130)kOpp={shirt:'#f3f3f3',trim:C.opp.c1,pat:0,shorts:'#1d2128',socks:'#f3f3f3',num:'#141414'};}
   const gkA={shirt:'#ff8a1f',trim:'#3a1d00',pat:0,shorts:'#2a1505',socks:'#ff8a1f',num:'#2a1505'},gkB={shirt:'#19c2a6',trim:'#03302a',pat:0,shorts:'#06231f',socks:'#19c2a6',num:'#03302a'};
   const U=(x,y,o)=>{const e=mkP('us',x,y,Object.assign({kit:kUs,q:clamp(C.us.str+rnd(-8,8),20,95)},o));S.mates.push(e);return e;};
   const O=(x,y,o)=>{const e=mkP('opp',x,y,Object.assign({kit:kOpp},o));S.opps.push(e);return e;};
-  const ce=S.hero=mkP('us',34,30,{kit:kUs,isC:true,skin:PL().sk,hair:PL().hc,hs:PL().hs,bd:G.p.age>=18?PL().bd:null,hgt:clamp(1+((G.p.h||1.74)-1.8)*1.2,0.85,1.15),num:C.num,capt:!!C.capt,boot:G.p.up.kt>=4?'#ffd400':G.p.up.kt>=3?'#ff4f9a':'#f4f4f4'});
+  const ce=S.hero=mkP('us',34,30,{kit:kUs,isC:true,skin:PL().sk,hair:PL().hc,hs:PL().hs,bd:G.p.age>=18?PL().bd:null,hgt:clamp(1+((G.p.h||1.74)-1.8)*1.2,0.85,1.15),num:C.num,capt:!!C.capt,boot:G.p.up.kc?G.p.up.kc:G.p.up.kt>=4?'#ffd400':G.p.up.kt>=3?'#ff4f9a':'#f4f4f4'});
   S.ball={x:0,y:0,z:0,vx:0,vy:0,vz:0,om:0,owner:null,held:null,last:null,lastT:-9,kind:null,rot:0,px:0,py:0,pz:0,target:null,gkChecked:false,ign:null};
   if(type==='atak'){
     let cx=34+side*rnd(3,10),cy=rnd(24,29);
