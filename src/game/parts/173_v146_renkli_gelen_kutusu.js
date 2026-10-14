@@ -141,16 +141,19 @@ function clxIndex(){if(!G||!G.s)return null;const ids=Object.keys(CLUBS);const k
   for(const id of ids){const c=CLUBS[id];if(!c)continue;if(c.league===lg||id===G.club){if(c.name&&c.name.length>=4)map.set(c.name,id);const s=c.short;if(s&&s.length>=2&&s===s.toLocaleUpperCase('tr')&&/\p{L}/u.test(s)&&!CLX_STOP.has(s)&&!map.has(s))map.set(s,id);}}
   const first=new Set();for(const n of map.keys())first.add(clxTrim(n.split(CLX_SPL)[0]));
   const alt=[...map.keys()].sort((a,b)=>b.length-a.length).map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
-  CLX={key,map,first,re:alt?new RegExp(`(?<![\\p{L}\\p{N}])(${alt})(?![\\p{L}\\p{N}])`,'gu'):null};return CLX;}
+  CLX={key,map,first,re:alt?clxRe(alt):null};return CLX;}
 function clubIdByName(n){const I=clxIndex();return I&&I.map?I.map.get(n)||null:null;}
 const CLX_SKIP='button,a,input,textarea,select,option,label,svg,canvas,[data-act],[contenteditable],.plink,.clink,.ib-av,.msg-tag,.tab,.top,#tabs,.ng-id,.cp-hd h2,.cp-hd h3,.cp-name';
+/* iOS 16.4 öncesi Safari geriye bakışı (?<!) desteklemez: yoksa sözcük başı kontrolü döngüde yapılır */
+const CLX_LB=(()=>{try{new RegExp('(?<!a)b');return true;}catch(e){return false;}})();
+function clxRe(alt){return new RegExp((CLX_LB?'(?<![\\p{L}\\p{N}])':'')+'('+alt+')(?![\\p{L}\\p{N}])','gu');}
 function clubLinkify(root,skipId){const I=clxIndex();if(!I||!I.re||!root)return;
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const v=n.nodeValue,pe=n.parentElement;if(!pe||!v||v.length<2)return NodeFilter.FILTER_REJECT;
     let hit=false;for(const t of v.split(CLX_SPL)){if(t&&I.first.has(clxTrim(t))){hit=true;break;}}if(!hit)return NodeFilter.FILTER_REJECT;
     if(pe.closest(CLX_SKIP))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
   const ns=[];let n;while((n=w.nextNode()))ns.push(n);
   for(const t of ns){const s=t.nodeValue,frag=document.createDocumentFragment();let last=0,mm;I.re.lastIndex=0;
-    while((mm=I.re.exec(s))){const id=I.map.get(mm[1]);if(!id||id===skipId)continue;frag.append(s.slice(last,mm.index));const sp=document.createElement('span');sp.className='clink';sp.dataset.act='club';sp.dataset.id=id;sp.textContent=mm[1];frag.append(sp);last=mm.index+mm[1].length;}
+    while((mm=I.re.exec(s))){const id=I.map.get(mm[1]);if(!id||id===skipId)continue;if(!CLX_LB&&mm.index>0&&/[\p{L}\p{N}]/u.test(s[mm.index-1]))continue;frag.append(s.slice(last,mm.index));const sp=document.createElement('span');sp.className='clink';sp.dataset.act='club';sp.dataset.id=id;sp.textContent=mm[1];frag.append(sp);last=mm.index+mm[1].length;}
     if(last){frag.append(s.slice(last));t.replaceWith(frag);}}}
 function clxModal(){try{const mc=$('#modalCard');if(!mc||$('#modal').hidden)return;const cp=mc.querySelector('.cp-wrap');clubLinkify(mc,cp&&typeof CP!=='undefined'?CP.id:null);}catch(e){}}
 render=(old=>function(){const r=old.apply(this,arguments);try{if(G&&G.phase!=='tryout')clubLinkify($('#view'));}catch(e){}return r;})(render);
