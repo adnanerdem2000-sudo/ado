@@ -2219,3 +2219,16 @@ html.dro-on,html.dro-on body{overflow:hidden}
 .mv-tl{list-style:none;margin:0 0 8px;padding:0}.mv-tl li{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);padding:5px 0;font-size:14px}
 .mv-tl b.g{color:var(--good)}.mv-tl b.m{color:var(--led)}.mv-tl b.b{color:#ff8a84}
 .mv-sc{margin:0;font-size:13.5px;font-style:italic;color:var(--chalk-2)}
+/* v144: futbolcu maç sonu ekranı (iki takım reytingleri) ve teknik ekip raporu */
+.ft-sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-y:auto;flex:1 1 auto;min-height:0;box-sizing:border-box}
+.match .ft-sheet~.mv-feed{flex:0 0 auto;max-height:22vh}
+.ft-sum{display:flex;align-items:center;gap:10px;margin-bottom:8px}.ft-sum div{flex:1;min-width:0}.ft-sum b{display:block;font-size:14px}.ft-sum small{color:var(--chalk-3);font-size:12px}
+.ft-rt{flex:0 0 auto;min-width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:22px;border:2px solid var(--chalk-3);background:#030a06}
+.ft-rt.hi{border-color:var(--good);color:var(--good)}.ft-rt.mid{border-color:var(--led);color:var(--led)}.ft-rt.lo{border-color:var(--red);color:#ff8a84}
+.pz-chip{flex:0 0 auto;font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 9px;border:1px solid var(--line);max-width:42%;text-align:center;line-height:1.2}
+.pz-chip.start{border-color:rgba(74,210,127,.6);color:#9df0bd}.pz-chip.sub{border-color:rgba(255,179,32,.6);color:var(--led)}.pz-chip.squad{border-color:rgba(239,59,54,.6);color:#ffb0ac}
+.ft-st{width:100%;border-collapse:collapse;margin:0 0 10px;font-size:13px}.ft-st th{font-weight:600;color:var(--chalk-3);font-size:12px;text-align:center;padding:3px 0}.ft-st td{width:22%;text-align:center;font-weight:800;font-variant-numeric:tabular-nums;padding:3px 0}
+.ft-st tr{border-bottom:1px solid rgba(255,255,255,.06)}
+.ms-r.me{background:rgba(255,179,32,.16);box-shadow:inset 3px 0 0 var(--led)}.ms-r.me b{color:var(--led)}.ms-goals li.me{color:var(--led)}
+#ftRepBtn{flex:1 1 auto}.ft-repl{margin:6px 0}
+.ft-rep{max-height:none;padding:0;background:none;border:0}
