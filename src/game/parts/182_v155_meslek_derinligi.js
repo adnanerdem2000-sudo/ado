@@ -191,7 +191,7 @@ function v155RoleDay(){const m=G.m,S=G.s,V=v155();if(!m||!m.hc)return;if(m.hcMoo
   if(b){b.v155=1;v155Mark('bid');const p=pByKey(b.k),c=CLUBS[b.club];if(p&&c){v155Push({g:m.role,k:'bid',key:b.id,bid:b.id,t:`Teklif: ${p.name}`,b:`<p><b>${esc(c.name)}</b>, ${esc(p.name)} (${p.age}, ${p.pos}) için <b>${eur(b.fee)}</b> teklif etti. Piyasa değeri ${eur(pValue(p))}.</p><p class="muted">Hoca ${esc(m.hc.n)}: ${p.ovr>=xiStr()?'“İlk 11 oyuncusu, satılmasın.”':'“Kararı sana bırakıyorum.”'}</p>`,o:[['ac','Pazarlık masasına git','Teklifi incele, karşı teklif ver'],['red','Reddet','Oyuncu kalır'],['nfs','Satılık değil ilan et','Bu sezon teklifleri kapat']]});return;}}
   if(!v155Due('role',11))return;
   const n=Math.random();if(n>0.5)return;v155Mark('role');
-  const sq=squadOf(G.club),exp=sq.filter(p=>{try{return ctExpiring(p)&&!(m.ct&&m.ct[p.k]&&m.ct[p.k].end>S.year+1);}catch(e){return false;}}).sort((a,b)=>b.ovr-a.ovr),rp=exp.find(p=>!(V.last['rn'+p.k]));
+  const sq=squadOf(G.club),exp=sq.filter(p=>{try{return ctExpiring(p)&&!(m.ct&&m.ct[p.k]&&m.ct[p.k].end>S.year+1);}catch(e){return false;}}).sort((a,b)=>b.ovr-a.ovr),rp=exp.find(p=>!(V.last['rn'+p.k])&&p.ovr>=myClub().str-3);
   const pool=[];if(rp&&m.role==='sd')pool.push('renew');pool.push('coach');if(v155Due('meet',40))pool.push('meet');if(rp&&m.role==='bsk')pool.push('renew');
   const k=pick(pool);
   if(k==='renew'){V.last['rn'+rp.k]=1;const w=pWage(rp,G.club),nw=rnd5(w*(1.12+Math.max(0,rp.ovr-myClub().str)*0.015),100),bon=Math.round(w*EUR_TL*6/1e3)*1e3;
