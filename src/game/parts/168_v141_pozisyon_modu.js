@@ -150,12 +150,12 @@ const PZ_SCL=[
       S.pzInit=S2=>{startCP(dm);S2.cpLim=3.6+(1-S2.iqOpp);};}},
   {id:'m_cevir',fam:'atk',type:'atak',n:'Baskı altında topu çevir',k:'İki rakip üstüne geliyor',tag:'pass bu safe',w:{MC:9,DM:10,OOS:2,STP:3},
     h:'Baskı geldi! Topu kaptırmadan boştaki arkadaşına PAS ver. UZUN TOP ile oyunu da değiştirebilirsin.',
-    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+sd*rnd(0,6),rnd(40,46),0,-1);S.ball.owner=h;S.bu=1;pzO(S,h.x+sd*2,h.y-2.6);pzO(S,h.x-sd*3,h.y-3.4);pzO(S,h.x+sd*0.5,h.y+3.2);pzO(S,34-sd*12,h.y-6);pzO(S,34+sd*14,h.y-7);
-      pzU(S,34-sd*9,h.y+8,{role:'support',ox:34-sd*9-h.x,oy:8});pzU(S,34+sd*9,h.y+9,{role:'support',ox:34+sd*9-h.x,oy:9});pzU(S,34+sd*rnd(22,26),h.y-5,{role:'wide',rx:34+sd*24,ry:h.y-8});pzU(S,34-sd*3,h.y-11,{role:'striker',rx:34-sd*3,ry:h.y-14});S.limit=9;}},
+    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+sd*rnd(0,6),rnd(40,46),0,-1);S.ball.owner=h;S.bu=1;pzO(S,h.x+sd*2,h.y-4.2);pzO(S,h.x-sd*3.5,h.y-5);pzO(S,h.x+sd*1,h.y+4.6);pzO(S,34-sd*12,h.y-6);pzO(S,34+sd*14,h.y-7);
+      pzU(S,34-sd*9,h.y+8,{role:'support',ox:34-sd*9-h.x,oy:8});pzU(S,34+sd*9,h.y+9,{role:'support',ox:34+sd*9-h.x,oy:9});pzU(S,34+sd*rnd(22,26),h.y-5,{role:'wide',rx:34+sd*24,ry:h.y-8});pzU(S,34-sd*3,h.y-6,{role:'striker',rx:34-sd*3,ry:h.y-6.5});S.limit=9;}},
   {id:'m_degistir',fam:'atk',type:'atak',n:'Oyunu öbür kanada aç',k:'Bir taraf kalabalık',tag:'pass wide bu',w:{MC:7,DM:6,BEK:3},
     h:'Bu taraf kalabalık. Joystick’i boş kanada çevir ve PAS ya da UZUN TOP ile oyunu değiştir.',
-    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34-sd*rnd(8,13),rnd(36,42),0,-1);S.ball.owner=h;S.bu=1;pzO(S,h.x+sd*1.5,h.y-2.8);pzO(S,h.x-sd*2.5,h.y-3.5);pzO(S,h.x+sd*5,h.y-1);pzO(S,34,h.y-8);pzO(S,34+sd*20,h.y-12);
-      pzU(S,34+sd*rnd(23,27),h.y-rnd(4,8),{role:'wide',rx:34+sd*25,ry:h.y-6});pzU(S,h.x-sd*4,h.y+7,{role:'support',ox:-sd*4,oy:7});pzU(S,34+sd*2,h.y-12,{role:'striker',rx:34+sd*2,ry:h.y-13});S.limit=9;}},
+    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34-sd*rnd(8,13),rnd(36,42),0,-1);S.ball.owner=h;S.bu=1;pzO(S,h.x+sd*1.5,h.y-4);pzO(S,h.x-sd*2.5,h.y-4.8);pzO(S,h.x+sd*5,h.y-1.5);pzO(S,34,h.y-8);pzO(S,34+sd*20,h.y-12);
+      pzU(S,34+sd*rnd(23,27),h.y-rnd(4,8),{role:'wide',rx:34+sd*25,ry:h.y-6});pzU(S,h.x-sd*4,h.y+7,{role:'support',ox:-sd*4,oy:7});pzU(S,34+sd*2,h.y-7,{role:'striker',rx:34+sd*2,ry:h.y-7.5});S.limit=9;}},
   {id:'m_taktik',fam:'def',type:'savunma',n:'Taktik faul kararı',k:'Kontra geliyor, sayı az',tag:'def',w:{DM:5,MC:4},
     h:'Rakip 3’e 1 kontraya çıkıyor. Topu alabilirsen al; alamıyorsan taktik faulle kes (kart riski!).',
     b:(S,C,sd)=>{pzR(S);const A=pzO(S,34+sd*rnd(0,6),rnd(44,48),{role:'att',fy:-1});pzO(S,34-sd*14,A.y+1,{role:'runner',fy:-1});pzO(S,34+sd*15,A.y+2,{role:'runner',fy:-1});
@@ -224,10 +224,10 @@ const PZ_SCL=[
   {id:'s_kur',fam:'atk',type:'atak',n:'Geriden oyun kur',k:'İlk pas senden',tag:'pass bu',w:{STP:9,DM:3},
     h:'Top sende, forvetler basıyor. Ön liberoya ya da beke PAS ver; hattı kıran pas ekstra puan getirir.',
     b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+sd*rnd(4,9),rnd(50,56),0,-1);S.ball.owner=h;S.bu=1;pzU(S,34,65.5,{role:'gkmate',kit:GK_KIT,rx:34,ry:65.5});
-      pzO(S,h.x-sd*1,h.y-3.2);pzO(S,34-sd*6,h.y-4);pzO(S,34,h.y-10);pzO(S,34+sd*18,h.y-9);pzU(S,34,h.y-8,{role:'support',ox:34-h.x,oy:-8});pzU(S,34+sd*24,h.y-4,{role:'wide',rx:34+sd*25,ry:h.y-6});pzU(S,34-sd*9,h.y+1,{role:'support',ox:34-sd*9-h.x,oy:1});S.limit=9;}},
+      pzO(S,h.x-sd*1,h.y-4.6);pzO(S,34-sd*6,h.y-5.5);pzO(S,34,h.y-10);pzO(S,34+sd*18,h.y-9);pzU(S,34,h.y-8,{role:'support',ox:34-h.x,oy:-8});pzU(S,34+sd*24,h.y-4,{role:'wide',rx:34+sd*25,ry:h.y-6});pzU(S,34-sd*9,h.y+1,{role:'support',ox:34-sd*9-h.x,oy:1});S.limit=9;}},
   {id:'s_uzun',fam:'atk',type:'atak',n:'Uzun diyagonal',k:'Karşı kanat boş',tag:'pass wide bu',w:{STP:6,BEK:3,DM:3},
     h:'Karşı kanattaki arkadaşın tamamen boş. Joystick’i ona çevir, UZUN TOP ile diyagonal at.',
-    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34-sd*rnd(6,11),rnd(48,54),0,-1);S.ball.owner=h;S.bu=1;pzO(S,h.x+sd*1,h.y-3);pzO(S,h.x-sd*3,h.y-4.5);pzO(S,34,h.y-9);pzO(S,34-sd*12,h.y-12);
+    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34-sd*rnd(6,11),rnd(48,54),0,-1);S.ball.owner=h;S.bu=1;pzO(S,h.x+sd*1.5,h.y-4.4);pzO(S,h.x-sd*3,h.y-5.8);pzO(S,34,h.y-9);pzO(S,34-sd*12,h.y-12);
       pzU(S,34+sd*rnd(23,27),h.y-rnd(12,18),{role:'wide',rx:34+sd*25,ry:h.y-15});pzU(S,h.x+sd*6,h.y-7,{role:'support',ox:sd*6,oy:-7});pzU(S,h.x-sd*2,h.y+8,{role:'support',ox:-sd*2,oy:8});S.limit=9;}},
   /* ---- duran toplar ---- */
   {id:'dkorner',fam:'dset',type:'dkorner',n:'Rakip korner',k:'Adamını bırakma',tag:'def',w:{STP:6,DM:4,BEK:3,MC:3,FORVET:1},h:''},
@@ -265,11 +265,11 @@ const PZ_SCL=[
       const tx=side?34+side*rnd(1.8,3.1):34+rnd(-0.6,0.6);S.ball.owner=null;S.ball.x=34;S.ball.y=11;kick(T,tx,0,rnd(0.2,1.9),rnd(19,23)+S.C.opp.str*0.03,0,0.012,0.15,'shot');S.limit=S.live+2.4;}},
   {id:'g_geripas',fam:'atk',type:'atak',st:'savunma',n:'Geri pas, baskı var',k:'Pas mı, uzaklaştır mı?',tag:'dist',w:{KL:8},
     h:'Stoper geri verdi, forvet üstüne geliyor! Boştaki arkadaşa PAS ya da UZUN VURUŞ ile uzaklaştır.',
-    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+sd*rnd(2,6),rnd(61,63),0,-1);S.ball.owner=h;pzGkDist(S);pzO(S,h.x-sd*1.2,h.y-3.6,{role:'chaser'});pzO(S,34-sd*10,h.y-8);pzO(S,34+sd*14,h.y-10);
-      pzU(S,34+sd*13,h.y-2,{role:'support',ox:34+sd*13-h.x,oy:-2});pzU(S,34-sd*13,h.y-3,{role:'support',ox:34-sd*13-h.x,oy:-3});pzU(S,34+sd*25,h.y-14,{role:'wide',rx:34+sd*25,ry:h.y-15});pzU(S,34,h.y-16,{role:'striker',rx:34,ry:h.y-18});S.limit=7;}},
+    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+sd*rnd(2,6),rnd(61,63),0,-1);S.ball.owner=h;pzGkDist(S);pzO(S,h.x+sd*rnd(4,5.5),h.y-rnd(5.5,7),{role:'chaser'});pzO(S,34-sd*10,h.y-8);pzO(S,34+sd*14,h.y-10);
+      pzU(S,34+sd*13,h.y-2,{role:'support',ox:34+sd*13-h.x,oy:-2});pzU(S,34-sd*13,h.y-3,{role:'support',ox:34-sd*13-h.x,oy:-3});pzU(S,34+sd*25,h.y-14,{role:'wide',rx:34+sd*25,ry:h.y-15});pzU(S,34-sd*6,h.y-9,{role:'striker',rx:34-sd*6,ry:h.y-9.5});S.limit=7;}},
   {id:'g_dagitim',fam:'atk',type:'atak',st:'savunma',n:'Topu oyuna sok',k:'Hızlı dağıtım hücumu başlatır',tag:'dist',w:{KL:8},
     h:'Top elinde. Yakındaki arkadaşa PAS (elle at) ya da ileriye UZUN VURUŞ; joystick ile yön seç.',
-    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+rnd(-2,2),rnd(60,63),0,-1);S.ball.owner=h;pzGkDist(S);
+    b:(S,C,sd)=>{pzR(S);const h=pzH(S,34+rnd(-2,2),rnd(60,63),0,-1);S.ball.owner=h;pzGkDist(S);S.pzHands=1;
       pzU(S,34+sd*24,h.y-8,{role:'wide',rx:34+sd*25,ry:h.y-9});pzU(S,34-sd*24,h.y-9,{role:'wide',rx:34-sd*25,ry:h.y-10});pzU(S,34+sd*10,h.y-3,{role:'support',ox:sd*10,oy:-3});pzU(S,34-sd*10,h.y-2,{role:'support',ox:-sd*10,oy:-2});
       pzU(S,34+sd*3,h.y-18,{role:'striker',rx:34+sd*3,ry:h.y-20});pzU(S,34-sd*18,h.y-30,{role:'striker',rx:34-sd*18,ry:h.y-32});pzO(S,34+sd*20,h.y-12);pzO(S,34-sd*6,h.y-12);pzO(S,34+sd*6,h.y-20);pzO(S,34-sd*22,h.y-24);S.limit=8;}}
 ];
@@ -401,7 +401,7 @@ runChance=(old=>function(e){if(PZ.on&&MR&&e){try{pzStopZip();PZ.mN=(PZ.mN||0)+1;
     else if(e.type==='penalti'||e.type==='serbest')sc=PZ_SC[e.type];
     else if(e.type==='korner'||e.type==='dkorner')sc=pzPick(null,null,s=>s.type===e.type);
     else sc=pzPick(PZ_FAM[e.type]||'atk');
-    if(sc){e.sc=sc.id;e.re=0;e.type=sc.type;e.sub=sc.sub||'std';PZ.used[sc.id]=(PZ.used[sc.id]||0)+1;PZ.lastSc=sc.id;PZ.cur={sc,e};}}catch(x){console.warn('an seçimi',x);PZ.cur=null;}}
+    if(sc){if(!e.pre&&sc.id==='g_penalti')e.pre='Ceza sahasında faul: rakip penaltı kazandı!';else if(!e.pre&&sc.id==='penalti')e.pre='Ceza sahasında faul! Hakem penaltı noktasını gösterdi.';e.sc=sc.id;e.re=0;e.type=sc.type;e.sub=sc.sub||'std';PZ.used[sc.id]=(PZ.used[sc.id]||0)+1;PZ.lastSc=sc.id;PZ.cur={sc,e};}}catch(x){console.warn('an seçimi',x);PZ.cur=null;}}
   return old.apply(this,arguments);})(runChance);
 
 /* ---------- sahneyi kur ---------- */
@@ -443,7 +443,7 @@ function mgActs(){const c=mgCtx();return c?mgActsFor(c,MG.S):[];}
 /* ---------- eylem kaydı ---------- */
 heroShoot=(old=>function(){const S=MG.S;try{if(S&&S.act){S.act.shot++;S.act.shotPos={x:S.hero.x,y:S.hero.y};}}catch(e){}return old.apply(this,arguments);})(heroShoot);
 heroPass=(old=>function(through){const S=MG.S;try{if(S&&S.act){S.act.pass++;if(through)S.act.thr++;S.act.kickPos={x:S.ball.x,y:S.ball.y};if(S.act.firstPassT==null)S.act.firstPassT=S.act.own;}}catch(e){}
-  const r=old.apply(this,arguments);try{const t=S&&S.ball.target;if(t&&Math.abs(t.x-34)>15)S.act.wide++;}catch(e){}return r;})(heroPass);
+  const r=old.apply(this,arguments);try{const t=S&&S.ball.target;if(t&&Math.abs(t.x-34)>15)S.act.wide++;if(S&&S.ofs&&S.ofs.y>52.5)S.ofs=null;}catch(e){}return r;})(heroPass);
 skillMove=(old=>function(){const S=MG.S;let nd=null,st0=0,cd0=S?S.skillCd:0;try{if(S){let m=99;for(const d of actOpps()){const q=dist(d,S.hero);if(q<m){m=q;nd=d;}}if(nd)st0=nd.stag;}}catch(e){}
   const r=old.apply(this,arguments);try{if(S&&S.act&&S.skillCd!==cd0){S.act.drb++;if(nd&&nd.stag>st0+0.2)S.act.drbOk++;}}catch(e){}return r;})(skillMove);
 standTackle=(old=>function(){const S=MG.S,c0=S?S.tkCd:0;const r=old.apply(this,arguments);try{if(S&&S.act&&S.tkCd!==c0)S.act.tk++;}catch(e){}return r;})(standTackle);
@@ -497,7 +497,7 @@ gkAir=(old=>function(g){if(g&&g.isC)return;return old.apply(this,arguments);})(g
 function pzGkShot(){const S=MG.S,b=S.ball,h=S.hero,C=S.C;if(b.owner||b.held||b.kind!=='shot'||b.gkChecked||!b.last||b.last.side==='us')return;if(!(b.py>h.y&&b.y<=h.y))return;b.gkChecked=true;
   const f=(b.py-h.y)/((b.py-b.y)||1),cx=b.px+(b.x-b.px)*f,cz=b.pz+(b.z-b.pz)*f,dx=Math.abs(cx-h.x),sp=Math.hypot(b.vx,b.vy),A=C.a,dv=!!(h.gkD&&h.gkD.dir),lying=dv&&h.gkD.t>=h.gkD.dur;
   const tt=b.y/Math.max(1,-b.vy),gx=b.x+b.vx*tt,onT=gx>GL-0.4&&gx<GR+0.4&&cz<GH+0.35;if(!onT&&!dv)return;
-  let rx=0.55+A.dri*0.003+(dv?0.55+A.def*0.004:0)+(h.jumpT!=null?0.1:0),rz=dv?(lying?0.75:1.35+A.fiz*0.007):(1.95+A.fiz*0.004+(h.jumpT!=null?0.35:0));if(h.down>0&&!dv){rx=0.6;rz=0.6;}
+  let rx=0.55+A.dri*0.003+(dv?0.55+A.def*0.004:0)+(h.jumpT!=null?0.1:0),rz=dv?(lying?0.8:1.7+A.fiz*0.006):(1.95+A.fiz*0.004+(h.jumpT!=null?0.35:0));if(h.down>0&&!dv){rx=0.6;rz=0.6;}
   if(dx<rx&&cz<rz){let p=0.62+A.def*0.0035-(sp-20)*0.025-(dx>rx*0.7?0.12:0)+(dv&&!lying&&Math.abs(S.t-h.diveAt-0.25)<0.2?0.12:0)-(S.pzPen?0.05:0);p=clamp(p,0.2,0.96);
     if(Math.random()<p){if(sp<20.5&&dx<0.55+A.def*0.002&&cz<1.9&&Math.random()<0.4+A.def*0.004){b.held=h;b.owner=null;vib(30);return endChance(S.pzPen?'kPenSave':'kCatch');}
       b.vy=Math.abs(b.vy)*0.3+2;b.vx=(cx<h.x?-1:1)*rnd(3,7);b.vz=rnd(1.5,3.5);b.om=0;b.kind='loose';b.last=h;b.lastT=S.t;vib(30);return endChance(S.pzPen?'kPenSave':'kSave');}
@@ -528,6 +528,7 @@ function pzTick(S,dt){const b=S.ball,h=S.hero,A=S.act;
       if(S.gkm==='dist')return endChance(A.long>0&&d>20?'kDistLong':'kDistOk');
       if(S.bu)return endChance(o.role==='gkmate'?'bpOk':d>22?'swOk':o.y<kp.y-8?'buFwd':'buOk');}
     if(o===h&&prev&&prev.side==='opp')A.regain=1;}
+  if((S.tac||S.pzHands)&&b.owner===h){const R0=S.tac?2.2:4;for(const e of S.opps){const d=dist(e,h);if(d<R0&&d>0.01){e.x=h.x+(e.x-h.x)/d*R0;e.y=h.y+(e.y-h.y)/d*R0;e.vx*=0.3;e.vy*=0.3;}}}else if(S.pzHands&&b.owner!==h)S.pzHands=0;
   if(S.pzClr&&S.t>S.pzClr&&!b.owner)return endChance('uzak');
   if(S.pz&&S.pz.t)S.pz.t(S,dt);
   if(S.gkm==='save'&&b.kind==='shot'&&!b.owner&&b.last&&b.last.side==='opp'&&!S._shotF){S._shotF=1;mgFlash('ŞUT!','bad',420);}}
