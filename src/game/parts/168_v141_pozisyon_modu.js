@@ -19,7 +19,7 @@ const pzGrp=()=>PZ_G[pzRol()]||'MC';
 function pzRolName(){const r=pzRol(),x=(PZ_ROL[G.p.pos]||[]).find(y=>y[0]===r);return x?x[1]:r;}
 function pzOn(){try{return isPl()&&!!G.p&&(plMode()==='pozisyon'||G.p.pos==='KL');}catch(e){return false;}}
 try{POSN.KL='kaleci';}catch(e){}
-try{TRY_PLAN.KL=['savunma','dkorner','penalti'];}catch(e){}
+/* TRY_PLAN 158'de tanımlı (bu parçadan sonra); kaleci planı 170'te startTraining sırasında eklenir */
 const GK_KIT={shirt:'#ff8a1f',trim:'#3a1d00',pat:0,shorts:'#2a1505',socks:'#ff8a1f',num:'#2a1505'};
 
 /* ---------- durum ---------- */
