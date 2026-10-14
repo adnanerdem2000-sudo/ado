@@ -902,16 +902,21 @@ function hudUpdate(){const S=MG.S;if(!S)return;const tl=S.mode==='set'&&!S.kicke
   const pv=Math.round((S.charge>=0?S.charge:0)*40)/40,ba=$('#btnA');if(ba._p!==pv){ba._p=pv;ba.style.setProperty('--p',pv);}
   const cd=Math.round(S.cond),ce=$('#mgCond');if(ce._c!==cd){ce._c=cd;ce.style.width=cd+'%';ce.className=condCls(cd);$('#mgCondT').textContent=cd<25?`KONDİSYON ${cd} · YORGUN`:`KONDİSYON ${cd}`;}
   padCtx();}
-function keyJoy(){if(MG.joyOn)return;const k=IN.keys;let x=(k.has('R')?1:0)-(k.has('L')?1:0),y=(k.has('D')?1:0)-(k.has('U')?1:0);const m=Math.hypot(x,y)||1;IN.jx=x/m;IN.jy=y/m;}
+function keyJoy(){if(MG.joyOn)return;const k=IN.keys;let x=(k.has('R')?1:0)-(k.has('L')?1:0),y=(k.has('D')?1:0)-(k.has('U')?1:0);const m=Math.hypot(x,y)||1;ctlSetJ(x/m,y/m);}
 function padInit(){
-  const zone=$('#joyZone'),joy=$('#joy'),knob=$('#joyKnob'),R=50;let jid=null,ox=0,oy=0;
-  const rest=()=>{joy.classList.remove('on');joy.style.left='';joy.style.top='';knob.style.transform='';IN.jx=0;IN.jy=0;MG.joyOn=false;};
+  /* v142: joystick sabit ya da serbest olabilir; dinlenme yeri ve boyutu ctlApply (169) ile ayarlanır */
+  const zone=$('#joyZone'),joy=$('#joy'),knob=$('#joyKnob');let R=50,jid=null,ox=0,oy=0,fixed=false;
+  const rest=()=>{joy.classList.remove('on');const r=MG.joyRest;joy.style.left=r?r.x+'px':'';joy.style.top=r?r.y+'px':'';knob.style.transform='';ctlSetJ(0,0);MG.joyOn=false;};
+  MG.joyRestFn=()=>{if(jid!==null)return;const r=MG.joyRest;joy.style.left=r?r.x+'px':'';joy.style.top=r?r.y+'px':'';};
   zone.addEventListener('pointerdown',e=>{if(jid!==null)return;e.preventDefault();jid=e.pointerId;try{zone.setPointerCapture(jid);}catch(_){}
-    const r=zone.getBoundingClientRect();ox=e.clientX;oy=e.clientY;joy.style.left=(e.clientX-r.left)+'px';joy.style.top=(e.clientY-r.top)+'px';joy.classList.add('on');MG.joyOn=true;});
-  zone.addEventListener('pointermove',e=>{if(e.pointerId!==jid)return;e.preventDefault();let dx=e.clientX-ox,dy=e.clientY-oy,d=Math.hypot(dx,dy);
-    if(d>R*1.35){const k=(d-R*1.35)/d;ox+=dx*k;oy+=dy*k;const r=zone.getBoundingClientRect();joy.style.left=(ox-r.left)+'px';joy.style.top=(oy-r.top)+'px';dx=e.clientX-ox;dy=e.clientY-oy;d=Math.hypot(dx,dy);}
+    const r=zone.getBoundingClientRect();R=50*(MG.joyM||1);fixed=ctlCfg().joy==='fixed'&&!!MG.joyRest;
+    if(fixed){ox=r.left+MG.joyRest.x;oy=r.top+MG.joyRest.y;}else{ox=e.clientX;oy=e.clientY;joy.style.left=(e.clientX-r.left)+'px';joy.style.top=(e.clientY-r.top)+'px';}
+    joy.classList.add('on');MG.joyOn=true;if(fixed)mv(e);});
+  const mv=e=>{let dx=e.clientX-ox,dy=e.clientY-oy,d=Math.hypot(dx,dy);
+    if(!fixed&&d>R*1.35){const k=(d-R*1.35)/d;ox+=dx*k;oy+=dy*k;const r=zone.getBoundingClientRect();joy.style.left=(ox-r.left)+'px';joy.style.top=(oy-r.top)+'px';dx=e.clientX-ox;dy=e.clientY-oy;d=Math.hypot(dx,dy);}
     const cl=Math.min(d,R),nx=d?dx/d:0,ny=d?dy/d:0;knob.style.transform=`translate(${nx*cl}px,${ny*cl}px)`;
-    const mag=d<7?0:Math.min(1,(d-7)/(R-7));IN.jx=nx*mag;IN.jy=ny*mag;});
+    const dz=7*(MG.joyM||1),mag=d<dz?0:Math.min(1,(d-dz)/(R-dz));ctlSetJ(nx*mag,ny*mag);};
+  zone.addEventListener('pointermove',e=>{if(e.pointerId!==jid)return;e.preventDefault();mv(e);});
   const end=e=>{if(e.pointerId!==jid)return;jid=null;rest();};
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
   document.querySelectorAll('.pbtn').forEach(btn=>{const b=btn.dataset.b;let pid=null;
@@ -919,9 +924,11 @@ function padInit(){
     const up=e=>{if(e.pointerId!==pid)return;pid=null;release(b);btn.classList.remove('on');};
     btn.addEventListener('pointerup',up);btn.addEventListener('pointercancel',up);btn.addEventListener('contextmenu',e=>e.preventDefault());});
   $('#mvStage').addEventListener('contextmenu',e=>e.preventDefault());
-  const KM={ArrowLeft:'L',ArrowRight:'R',ArrowUp:'U',ArrowDown:'D',a:'L',d:'R',w:'U',s:'D',A:'L',D:'R',W:'U',S:'D'},BK={k:'a',K:'a',' ':'a',j:'b',J:'b',l:'c',L:'c',Shift:'c',i:'d',I:'d'};
-  document.addEventListener('keydown',e=>{if(!MG.S||$('#mvStage').hidden)return;if(KM[e.key]){IN.keys.add(KM[e.key]);keyJoy();e.preventDefault();}else if(BK[e.key]){if(!e.repeat)press(BK[e.key]);e.preventDefault();}});
-  document.addEventListener('keyup',e=>{if(KM[e.key]){IN.keys.delete(KM[e.key]);keyJoy();}else if(BK[e.key])release(BK[e.key]);});
+  /* v142: klavye tuşları Ayarlar → Kontroller'den değiştirilebilir (ctl_keys_v142) */
+  document.addEventListener('keydown',e=>{if(!MG.S||$('#mvStage').hidden||e.ctrlKey||e.metaKey||e.altKey)return;const a=ctlKeyAct(e);if(!a)return;
+    if(CTL_MV[a]){IN.keys.add(CTL_MV[a]);keyJoy();e.preventDefault();}else if(CTL_BT[a]){if(!e.repeat)press(CTL_BT[a]);e.preventDefault();}else{if(!e.repeat)ctlCmd(a);e.preventDefault();}});
+  document.addEventListener('keyup',e=>{const a=ctlKeyAct(e);if(!a)return;if(CTL_MV[a]){IN.keys.delete(CTL_MV[a]);keyJoy();}else if(CTL_BT[a])release(CTL_BT[a]);});
+  window.addEventListener('blur',()=>{if(MG.S){IN.keys.clear();keyJoy();}});
   window.addEventListener('resize',()=>{if(MG.S&&!$('#mvStage').hidden)mgSetup();});
 }
 

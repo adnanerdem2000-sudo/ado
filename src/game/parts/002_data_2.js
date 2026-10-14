@@ -14,6 +14,8 @@ const POS={
   KN:{name:'Kanat',num:7,w:{hiz:.3,dri:.3,pas:.2,sut:.15,fiz:.05,def:0},base:{sut:33,pas:33,dri:40,hiz:41,fiz:30,def:20},mix:[['atak',38],['kontra',22],['serbest',10],['penalti',4],['korner',10],['savunma',16]],n:5},
   OS:{name:'Orta Saha',num:10,w:{pas:.35,dri:.2,sut:.15,fiz:.15,def:.15,hiz:0},base:{sut:32,pas:40,dri:36,hiz:33,fiz:32,def:30},mix:[['atak',32],['serbest',14],['savunma',28],['kontra',8],['korner',9],['dkorner',9]],n:5},
   DF:{name:'Defans',num:4,w:{def:.4,fiz:.3,hiz:.15,pas:.15,sut:0,dri:0},base:{sut:22,pas:32,dri:26,hiz:35,fiz:38,def:41},mix:[['savunma',50],['dkorner',18],['serbest',8],['atak',8],['korner',16]],n:4},
+  /* v141: kaleci. Kalecide özellik anlamı: def=refleks/elle kontrol, hiz=çıkış, fiz=hava topu, dri=pozisyon alma, pas=ayakla oyun kurma, sut=degaj */
+  KL:{name:'Kaleci',num:1,w:{def:.35,fiz:.2,hiz:.15,dri:.15,pas:.1,sut:.05},base:{sut:26,pas:30,dri:32,hiz:32,fiz:36,def:42},mix:[['savunma',60],['dkorner',30],['atak',10]],n:5},
 };
 const ATTR={sut:'Şut',pas:'Pas',dri:'Dribling',hiz:'Hız',fiz:'Fizik',def:'Defans'};
 const ROLE_BONUS={'Yıldız':7,'İlk 11':4,'Rotasyon':0,'Gelişim':-4,'Altyapı':2,'A Takıma Yükselme':-3};

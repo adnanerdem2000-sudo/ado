@@ -27,7 +27,7 @@ function squadHTML(id){const c=CLUBS[id];if(!c)return '';const sq=squadOf(id),L=
   const R=squadRoles(id),tv=sq.reduce((a,p)=>a+pValue(p),0),aa=sq.reduce((a,p)=>a+p.age,0)/sq.length;
   const me=G&&isPl()&&id===G.club;
   const grp=[['KL','Kaleciler'],['DF','Defans'],['OS','Orta saha'],['KN','Kanat'],['FW','Forvet']].map(([k,t])=>{const ps=sq.filter(p=>p.pos===k).sort((a,b)=>b.ovr-a.ovr);
-    const meRow=me&&POS[G.p.pos]&&({FW:'FW',KN:'KN',OS:'OS',DF:'DF'}[G.p.pos])===k?`<button class="sqrow me" data-act="goPlayer"><i>${G.p.num}</i><b>${meN()}${rshort(meRole())}</b><span>${flagImg('TUR','fl-row')} ${G.p.age}</span><em>${R200(OVR())}</em></button>`:'';
+    const meRow=me&&POS[G.p.pos]&&({FW:'FW',KN:'KN',OS:'OS',DF:'DF',KL:'KL'}[G.p.pos])===k?`<button class="sqrow me" data-act="goPlayer"><i>${G.p.num}</i><b>${meN()}${rshort(meRole())}</b><span>${flagImg('TUR','fl-row')} ${G.p.age}</span><em>${R200(OVR())}</em></button>`:'';
     return `<p class="sub-h" style="margin:12px 0 6px"><span>${t}</span></p>${meRow}${ps.map(p=>`<button class="sqrow${xi.includes(p.k)?' xi':''}" data-act="pcard" data-id="${id}" data-k="${p.k}"><i>${p.num}</i><b>${esc(p.name)}${rshort(R[p.k])}</b><span>${flagImg(p.nat,'fl-row')} ${p.age}</span><em>${R200(scO(p,c))}</em></button>`).join('')}`;}).join('');
   return (`<div class="club-hd">${crestSVG(c,52)}<div><h3>${esc(c.name)}</h3><span>${L.name}</span></div></div>
   <dl class="offer-terms" style="margin:10px 0 0"><div><dt>Yaş ort.</dt><dd>${dec(aa)}</dd></div><div><dt>Kadro değeri</dt><dd>${eur(tv)}</dd></div><div><dt>Kadro</dt><dd>${sq.length+(me?1:0)} oyuncu</dd></div></dl>
