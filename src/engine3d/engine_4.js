@@ -3662,7 +3662,7 @@
         function oaTS(ac) {
             var hc0 = OAB.hc === ac, et0 = Math.max(0, CLK - OAB.ht), e0 = hc0 ? Math.exp(-et0 / OAB.etau) : 0, ey0 = hc0 ? oaEy(et0) : 0;      // [fiz] kalan giris ofseti
             if (OAB.hc === ac) OAB.hc = null;
-            var tl = ac.t0 + .03, L = clamp(CLK - tl, 0, .35);
+            var tl = R._dl ? ac.tc : ac.t0 + .03, L = clamp(CLK - tl, 0, .35);      // [v135] gecikmede motor topu temas aninda ayrilir: gecikmesiz birakis
             if (L < .015 || !bhAt(tl, TSP)) { oaRelE(ac, CLK, ac.tau, ac.drop, ac.vz0); return; }
             OAB.on = 0;
             OAB.ts = { rt: CLK, L: L, T: Math.max(.4, L * 5), rx: ac.hx + OAB.ex * e0 - TSP[0], ry: ac.hy + ey0 - TSP[1], rz: ac.hz + OAB.ez * e0 - TSP[2] };
@@ -3760,7 +3760,8 @@
                 pose.fill(0); PW_ = 1; spStrike(a, ac, ac.tc); PW_ = o0; bodyDQ(pose, gkDQ);
                 fb = ac.foot > 0 ? BB.FootL : BB.FootR; fp = BODY_BIND[fb]; dqsPt(gkDQ, fb, fp[0], fp[1] - .025, fp[2] + .1, gkQ);
                 oaAlign(ac, x, z, d[8], d[9], gkQ[0] * ws, gkQ[2] * ws, d[0], d[1], d[10] > 0 ? 1.3 : .75, .45);      // [carry] vur-koşla öndeki topa daha uzun uzanır
-                ac.hold = 1; ac.h0t = ac.t0; ac.h1t = ac.tc; ac.hx = d[0]; ac.hy = .17 + d[2]; ac.hz = d[1]; ac.tau = ac.pr.kind === 'shot' ? .09 : .07;
+                ac.hold = 1; ac.h0t = R._dl ? Math.max(ac.t0, ac.tc - .06) : ac.t0; ac.h1t = ac.tc; ac.hx = d[0]; ac.hy = .17 + d[2];      /* [v135] gecikmede top temastan hemen once ayaga (geri savurmada yuvarlanir) */
+                ac.hz = d[1]; ac.tau = ac.pr.kind === 'shot' ? .09 : .07;
                 ac.hx0 = ac.hx; ac.hz0 = ac.hz; ac.act = a;      /* [temas] ilk tutus noktasi ve vuran */
                 return;
             }
@@ -4908,10 +4909,11 @@
             return { kind: 'shot', dur: .52 + .16 * p, cf: .16, lg0: 1.0 + .30 * p, lg1: -1.45 - .45 * p, kn0: 1.25 + .35 * p, arm: .52, torso: 1.15 };
         }
         // foot: motorun seçtiği vuruş ayağı ('L'/'R', anatomik); verilmezse oyuncunun güçlü ayağı (S.ft, veritabanından)
-        R.kick = function (id, kind, power, foot) {
+        R.kick = function (id, kind, power, foot, tc) {
             var a = S.st && S.st[id]; if (!a) return;
-            a.kickC = CLKOK ? 1 : 0; a.kickT = CLKOK ? CLK : lastNow / 1000;      // [v133] sim saati (top ayni saatle ucar)
             var pr = kickProfile(kind, power);
+            a.kickC = CLKOK ? 1 : 0; a.kickT = CLKOK ? CLK : lastNow / 1000;      // [v133] sim saati (top ayni saatle ucar)
+            if (tc != null && CLKOK) a.kickT = tc - (pr.cf != null ? pr.cf : .3) * pr.dur;      // [v135] gecikmeli gosterim: temas karesi topun cikis anina
             a.kickKind = pr.kind; a.kickDur = pr.dur; a.kickCf = pr.cf; a.kickLg0 = pr.lg0; a.kickLg1 = pr.lg1; a.kickKn0 = pr.kn0; a.kickArm = pr.arm; a.kickTorso = pr.torso;
             a.kickFoot = foot === 'L' || foot === 'R' ? foot : (S.ft && S.ft[id]) || 'R';
         };
