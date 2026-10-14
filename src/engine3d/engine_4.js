@@ -3966,7 +3966,7 @@
         function ctRecv() {      // [temas] ayakla karsilama (16 mod 3, tutussuz): gorunen top karsilayan ayagin en yakin noktasina (hiz sinirli ofset)
             CT2_RT.x = CT2_RT.y = CT2_RT.z = 0; CT2_RT.on = 0;
             if (CLKOK && !GB.held && !OAB.hc) ctRecvT();
-            var mx = 6 * Math.max(.001, FRM[2]), dx = CT2_RT.x - CT2_R.x, dy = CT2_RT.y - CT2_R.y, dz = CT2_RT.z - CT2_R.z, dl = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            var mx = 6 * Math.max(.001, FRM[5] || FRM[2]), dx = CT2_RT.x - CT2_R.x      /* [v139] karsilama ofseti sim saatiyle (hizli oynatmada top ayaga gec gelmez) */, dy = CT2_RT.y - CT2_R.y, dz = CT2_RT.z - CT2_R.z, dl = Math.sqrt(dx * dx + dy * dy + dz * dz);
             if (dl > mx) { dx *= mx / dl; dy *= mx / dl; dz *= mx / dl; }
             CT2_R.x += dx; CT2_R.y += dy; CT2_R.z += dz; if (!CLKOK || GB.held) { CT2_R.x = CT2_R.y = CT2_R.z = 0; return; }
             GB.x += CT2_R.x; GB.z += CT2_R.z; GB.y = Math.max(.17, GB.y + CT2_R.y);      /* top zeminin altina inmez */
@@ -4838,7 +4838,7 @@
                 }
                 R._trace.push(trr);
             }
-            var bo = S.ball, bxm = GB.x, bzm = GB.z, by = GB.y;
+            var bo = S.ball, bxm = GB.x, bzm = GB.z, by = GB.y, SPS_W = v && v.sps ? v.sps * 2 * Math.PI : 0;      // [v139] motorun yan donusu (rad/sn)
             // [fx] top dönüşü: yerde yuvarlanma (kaymadan yuvarlanmaya hızlı geçiş), havada açısal hız korunur ve yavaşça söner;
             // kalkışta tür: yüksek top geri dönüş (backspin), sert yerden/alçak şut az üst dönüş + yan falso. Zaman: görünen saat (yavaş çekimde yavaş döner)
             var tcl = CLKOK ? CLK : lastNow / 1000, dtv = bo.lc != null ? tcl - bo.lc : 0; bo.lc = tcl;
@@ -4849,10 +4849,10 @@
                 var kick = hs - bo.hsp > 6 || (air && !bo.air && vy3 > 2);
                 if (air) {
                     if (kick) {
-                        var hl = hs || 1, ax = vz3 / hl, az = -vx3 / hl, sgn = ((bxm * 7.3 + bzm * 3.1) % 2) < 1 ? 1 : -1;
-                        if (vy3 > 2.5) { var bs = -(8 + .25 * hs); bo.wx = ax * bs; bo.wz = az * bs; bo.wy = sgn * 2.5; }      // havalı top: geri dönüş
-                        else { bo.wx = ax * 3; bo.wz = az * 3; bo.wy = sgn * (3 + .15 * hs); }                                // sert vuruş: az üst dönüş + falso
-                    } else { var dk = Math.exp(-dtv * .35); bo.wx *= dk; bo.wy *= dk; bo.wz *= dk; }
+                        var hl = hs || 1, ax = vz3 / hl, az = -vx3 / hl, ssw = SPS_W;      // [v139] yan donus uydurma degil: motorun B.sps'i (devir/sn) - Magnus yonu kavisle ayni (+ = sola kivrilir, dikey eksende +)
+                        if (vy3 > 2.5) { var bs = -(8 + .25 * hs); bo.wx = ax * bs; bo.wz = az * bs; bo.wy = ssw; }      // havalı top: geri dönüş
+                        else { bo.wx = ax * 3; bo.wz = az * 3; bo.wy = ssw; }                                // sert vuruş: az üst dönüş + motorun falsosu
+                    } else { var dk = Math.exp(-dtv * .35); bo.wx *= dk; bo.wz *= dk; bo.wy = SPS_W ? bo.wy + (SPS_W - bo.wy) * (1 - Math.exp(-dtv * 6)) : bo.wy * dk; }      // [v139] havada yan donus motorla es (kavis surdukce)
                 } else {
                     var rx = vz3 / Rb0, rz = -vx3 / Rb0, ex = rx - bo.wx, ez = rz - bo.wz, el = Math.sqrt(ex * ex + ez * ez), am = 2.5 * .4 * 9.81 / Rb0 * dtv;      // [v59] yerde: kayan top dönüşünü sürtünme torkuyla kazanır (kayma → yuvarlanma)
                     if (el > am) { bo.wx += ex / el * am; bo.wz += ez / el * am; } else { bo.wx = rx; bo.wz = rz; }
@@ -5007,6 +5007,7 @@
         R._clk = null;                                                     // test: aksiyon saatini elle sabitler (null = st.clock)
         R.actor = function (i) { return S.st ? S.st[i] || null : null; };
         R._carryTab = function () { if (GA_ON && GA_OWN) { var gf = gaspFeet(); if (gf) return gf.tab; } return carryFeet(); };
+        R._spin = function () { var b = S.ball; return b ? [b.wx || 0, b.wy || 0, b.wz || 0] : null; };      // [v139] test: gorunen topun acisal hizi (rad/sn)
         R._ayak = function (o) { if (o && o.on != null) FK_ON = o.on; return FK_ON; };
         R.mxSet = function (on) { MX_ON = on ? 1 : 0; KCT = {}; return MX_ON; }; R._mxStat = function () { return { on: MX_ON, c: MXC }; };
         R._kcTrue = function () { var o = {}; ['strike foward jog', 'kick soccerball'].forEach(function (nm) { var s = ADO_MOCAP[nm]; if (s) o[nm] = { cf: s.cf, gercek0: kcTrue(nm, 0, s), gercek1: kcTrue(nm, 1, s) }; }); return o; };      /* [temas] olcum */

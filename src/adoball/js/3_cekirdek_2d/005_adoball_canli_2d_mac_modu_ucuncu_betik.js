@@ -42,7 +42,7 @@
     function dlWant() { return !!(S.use3 && S.r3 && !S.r3.lost && mode === '2d' && !S.raw && !G.__abLive && S.watch !== 'fm' && !S.skip && !(S.sim && S.sim.userRef) && S.ring && S.ring.n > 4); }
     function dlFlush(all) {      // goruntu saatine gelen olaylar (gol/kart/VAR duraklamasi baslarsa durur)
         var q = DL.q;
-        while (q.length && (all || !S.hold)) { var e = q[0]; if (!all && e.t - DT > DL.dT + 1e-6) break; q.shift(); try { handle(e); } catch (x) { warn('olay ' + e.type, x); } if (e.type === 'GOAL' || e.type === 'CARD' || e.type === 'VAR') DL.fz = 0; }
+        while (q.length && (all || !S.hold)) { var e = q[0]; if (!all && e.t - DT > DL.dT + 1e-6) break; q.shift(); try { handle(e); } catch (x) { warn('olay ' + e.type, x); } }
     }
     function dlOff() { if (!DL.on) return; DL.on = 0; dlFlush(true); DL.fz = 0; if (S.sim) DL.dT = S.sim.t; }
     function dlView() {      // goruntu saatindeki kare (halka kayit, kareler arasi ara deger) - canlidaki gibi aksiyon saati payi (clkOff) ile
@@ -64,7 +64,8 @@
     var KEY_PACE = { GOAL: 1, SHOT: 1, SAVE: 1, POST: 1, CORNER: 1, CARD: 1, VAR: 1 };       // "Kritik anlar" modunda bu olaylardan sonra sonuç görülene dek normal tempoda kalınır
     var KEY_TAIL = 4;                                                       // sim sn
     var MAX_RATE = 120;                                                     // sim sn / gerçek sn üst sınırı (ileri sarmada tarayıcı kare başına en çok ~50 adım işler)
-    var RING = 400, RO = 6 + 22 * 4, FS = RO + 25;      // [yan] RO+13..24: yan hakemler (x, y, fx, fy, isaret, isaret degeri) x 2      // [fiz] RO+11 sonraki planli dokunus ani, RO+12 ayagi      // [carry] RO+4..10: görünen top sürme (son dokunuş, döngü, sayaç, tür, önceki dokunuş, açık, sahibin adım evresi)               // gol tekrarı için son 16 sn'lik kare tamponu (kare başına: t, top x/y/z, top sahibi, ölü top bayrağı, 22 x [x y fx fy], hakem [x y fx fy])
+    var RING = 400, RO = 6 + 22 * 4, FS = RO + 26;      // [v139] RO+25: topun yan donusu (motor B.sps, devir/sn; serbest canli topta)
+         // [yan] RO+13..24: yan hakemler (x, y, fx, fy, isaret, isaret degeri) x 2      // [fiz] RO+11 sonraki planli dokunus ani, RO+12 ayagi      // [carry] RO+4..10: görünen top sürme (son dokunuş, döngü, sayaç, tür, önceki dokunuş, açık, sahibin adım evresi)               // gol tekrarı için son 16 sn'lik kare tamponu (kare başına: t, top x/y/z, top sahibi, ölü top bayrağı, 22 x [x y fx fy], hakem [x y fx fy])
     var MB = 38;                                                // tuval alt boşluğu (px): yedek kulübeleri ve hakem inceleme alanı (VAR monitörü) sahanın hemen dışında çizilir
     var ICON_BALL = '<svg class="ico" aria-hidden="true" focusable="false"><use href="#ab"/></svg>';
 
@@ -125,7 +126,7 @@
         S.rt = (window.Rating2Dv2 || Rating2D).create({ roles: sim.players.map(function (p) { return p.role; }), total: SIM_TOTAL });      // [reyting] v37 S.rtDisp = []; S.keyUntil = -1;
         S.keyUntil = -1; S.rtDisp = []; S.fm = null; S.keyHit = false; S.clkOff = 0;      /* [port] önceki maçtan kalan kritik an süresi sıfırlanır (FM tarzı / kritik anlar modu ikinci maçta da çalışsın) */
         S.prev = sim.players.map(function (p) { return { x: p.x, y: p.y, fx: p.fx, fy: p.fy }; }); S.prevB = { x: sim.ball.x, y: sim.ball.y };      // [v133] fx/fy: bakis yonu ara degeri · [v135] prevB yorumda kalmisti
-        DL.on = 0; DL.q.length = 0; DL.fz = 0; DL.dT = sim.t;      // [v135] gosterim gecikmesi yeni macta sifirdan
+        DL.on = 0; DL.q.length = 0; DL.fz = 0; DL.dT = sim.t; S.goalPend = null; S.scHold = null;      // [v135] gosterim gecikmesi yeni macta sifirdan
         CRD.on = 0; CRD.pon = 0; CRD.own = -1; CRD.n = 0; CRD.tl = CRD.tp = -9; GPH.fill(0); GPHP.fill(0); GCK.fill(0); GSP.fill(0);      // [carry]
         for (var yi0 = 0; yi0 < 22; yi0++) YAW[yi0] = Math.atan2(sim.players[yi0].fx, sim.players[yi0].fy);      // [fiz]
         S.running = false; S.hold = null; S.acc = 0; S.skip = false; S.halfPending = false; S.focus = null; S.trail = []; S.boot = false;
@@ -157,7 +158,8 @@
         try { fmKey(km, text, type); } catch (e) { }
     }
     // VAR incelemesi sürerken skor incelemeden ÖNCEKİ değerde kalır (onaylanan gol sonuç açıklanmadan skora yansımaz)
-    function scoreNow() { var sim = S.sim; if (S.fm && S.fm.sid === S.sid && S.fm.ph === 'clip' && S.fm.sc && S.watch === 'fm') return S.fm.sc; return S.vs && S.vs.score ? S.vs.score : [sim.teams[0].score, sim.teams[1].score]; }      // [fm] önemli an oynarken skor görüntüden önce değişmez
+    function scoreNow() { var sim = S.sim; if (S.scHold) return S.scHold;      // [v139] gol goruntude ilan edilene dek eski skor
+        if (S.fm && S.fm.sid === S.sid && S.fm.ph === 'clip' && S.fm.sc && S.watch === 'fm') return S.fm.sc; return S.vs && S.vs.score ? S.vs.score : [sim.teams[0].score, sim.teams[1].score]; }      // [fm] önemli an oynarken skor görüntüden önce değişmez
     function syncStats() {
         var sim = S.sim, a = sim.teams[0].st, b = sim.teams[1].st, pp = sim.possPct(), sc = scoreNow();
         [[matchData.hStats, sim.teams[0], a, pp[0]], [matchData.aStats, sim.teams[1], b, pp[1]]].forEach(function (x) {
@@ -792,12 +794,13 @@
     }
     function handle(ev) {
         var sim = S.sim, T = ev.team, m = ev.meta || {}, ps = S.pst;
-        if (DL.on && !ev.__dl) { ev.__dl = 1; actEvent(ev, m); DL.q.push(ev); if (ev.type === 'GOAL' || ev.type === 'CARD' || ev.type === 'VAR') DL.fz = 1; return; }      // [v135] aksiyon simde, gerisi goruntu olaya gelince (gol/kart/VAR: sim durur, goruntu yetisir)
+        if (DL.on && !ev.__dl) { ev.__dl = 1; actEvent(ev, m); DL.q.push(ev); if (ev.type === 'GOAL' && !S.scHold) { var sh0 = [sim.teams[0].score, sim.teams[1].score]; if (T === 0 || T === 1) sh0[T] = Math.max(0, sh0[T] - 1); S.scHold = sh0; }      // [v139]
+            if (ev.type === 'GOAL' || ev.type === 'CARD' || ev.type === 'VAR') DL.fz = 1; return; }      // [v135] aksiyon simde, gerisi goruntu olaya gelince (gol/kart/VAR: sim durur, goruntu yetisir)
         if (fmIntercept(ev)) return;                                       // [fm] önemli an: görüntü olaya ulaşınca işlenir
         if (ev.type === 'VAR') { if (S.vs) S.vs.after.push(ev); else varEv(ev); return; }          // VAR: hakem monitöre gider; sonuç sahne bitince işlenir (aynı adımda ikinci inceleme varsa sırayla)
         if (S.vs && (ev.type === 'GOAL' || ev.type === 'CARD')) { S.vs.after.push(ev); return; }   // incelemenin sonucuna bağlı olaylar sahne bitince işlenir (skor/kart önceden görünmesin)
         var sndH = false; if (ev.type !== 'CARD' && ev.type !== 'GOAL') { try { sndH = sndEvent(ev, { ff: sndFF() }); } catch (e) { } }      // [ses] vuruş, şut, kurtarış, direk, kaçan fırsat, faul, ofsayt, korner
-        S.feed.push(ev);
+        if (ev.type !== 'GOAL') S.feed.push(ev);      // [v139] gol satiri top cizgiyi gecince (goalAnnounce)
         try { fmLog(ev); } catch (e) { }                                             // [fm2] önemli anlar / baskı
         if (!ev.__dl) actEvent(ev, m);
         handleRest(ev, m, sim, T, ps, sndH);
@@ -840,8 +843,25 @@
             case 'HALFTIME': S.halfPending = true; break;
         }
     }
+    /* [v139] gol GORUNTUDE ilan edilir: top cizgiyi tamamen gecene dek (gtLive ile aga ilerler) skor, GOL bandi, ses, spiker, kutlama kamerasi bekler */
     function goal(ev) {
+        if (S.goalPend && S.goalPend.ev === ev) return;
+        var m0 = ev.meta || {}, T0 = ev.team, sc0 = S.scHold || [S.sim.teams[0].score, S.sim.teams[1].score];
+        if (!S.scHold) { sc0 = sc0.slice(); if (T0 === 0 || T0 === 1) sc0[T0] = Math.max(0, sc0[T0] - 1); S.scHold = sc0; }
+        S.hold = 'goal';
+        S.goalInfo = { scorer: ev.p, ast: (m0.assist != null && m0.assist >= 0) ? m0.assist : -1, own: !!m0.own, team: T0, min: minOf(ev.t), pen: !!m0.pen, gx: ev.x, gy: ev.y };
+        S.goalPend = { ev: ev, t0: performance.now(), sid: S.sid };
+    }
+    function goalPendTick() {      // [v139] her kare: cizilen top cizgiyi gecti mi (top yaricapi kadar icerde) - gtLive yoksa kisa sure sonra, en gec 1.6 sn
+        var P = S.goalPend; if (!P) return;
+        if (P.sid !== S.sid) { S.goalPend = null; S.scHold = null; return; }
+        var g2 = S.gb, el = performance.now() - P.t0, ok = el > 1600 || (S.gbGi === S.goalInfo && (!g2 ? el > 150 : (g2.x - g2.gl) * g2.dirG > .12));
+        if (!ok) return;
+        S.goalPend = null; S.scHold = null; goalAnnounce(P.ev);
+    }
+    function goalAnnounce(ev) {
         var sim = S.sim, m = ev.meta || {}, T = ev.team, scorer = ev.p, own = !!m.own, ast = (m.assist != null && m.assist >= 0) ? m.assist : -1;
+        try { S.feed.push(ev); } catch (e) { }
         syncStats();
         var ls = S.lastShot, fk = !!(ls && ls.p === scorer && ls.tag === 'FK' && ev.t - ls.t < 8 && !own && !m.pen), vr = !!m.varOk, mn = minOf(ev.t);
         var text = own ? '⚽ Kendi kalesine - ' + nameOf(scorer) : '⚽ ' + nameOf(scorer) + (ast >= 0 ? ' (Asist: ' + nameOf(ast) + ')' : '') + (m.pen ? ' (P)' : fk ? ' (Frikik)' : '');
@@ -856,7 +876,7 @@
         S.dirty = true;                                   // gol rozetleri + yenen gol (kaleci/defans reytingi, Rating2D olay günlüğünden işler)
         try { SND.goalTeam = T; } catch (e) { }                               // [ses] gol bağırışı: ev sahibi golünde tüm stat, deplasmanda misafir tribün
         S.hold = 'goal'; var sidNow = S.sid;
-        S.goalInfo = { scorer: scorer, ast: ast, own: own, team: T, min: mn, pen: !!m.pen, gx: ev.x, gy: ev.y };
+        if (!S.goalInfo || S.goalInfo.scorer !== scorer) S.goalInfo = { scorer: scorer, ast: ast, own: own, team: T, min: mn, pen: !!m.pen, gx: ev.x, gy: ev.y };      // [v139] bekleyen golun nesnesi korunur (top aga ilerlemeye devam eder)
         S.goalPulseT0 = performance.now(); S.statTimer = 0;          // [ui2] gol alt bandı + skor bandı bir sonraki karede
         var show = function () { return showGoalEffect(nameOf(scorer) + (own ? ' (k.k.)' : ''), teamObj(T).name); };
         Promise.resolve(show()).then(function () {
@@ -1511,6 +1531,7 @@
         for (i = 0; i < 22; i++) { p = sim.players[i]; q = o + 6 + i * 4; b[q] = p.x; b[q + 1] = p.y; b[q + 2] = p.fx; b[q + 3] = p.fy; }
         q = o + RO; b[q] = S.ref.x; b[q + 1] = S.ref.y; b[q + 2] = S.ref.fx; b[q + 3] = S.ref.fy;
         if (CRD.on) { b[o + 1] = CRD.x; b[o + 2] = CRD.y; b[o + 3] = CRD.z; }      // [carry] tekrar da görünen topu gösterir
+        b[q + 25] = (!B.owner && sim.mode === 'live') ? (B.sps || 0) : 0;      // [v139] yan donus kayda (tekrar ayni falsoyla doner)
         b[q + 4] = CRD.tl; b[q + 5] = CRD.Tt; b[q + 6] = CRD.n; b[q + 7] = CRD.k; b[q + 8] = CRD.tp; b[q + 9] = CRD.on; b[q + 10] = CRD.gph % 6283.185307; b[q + 11] = CRD.tn; b[q + 12] = CRD.fn; arRec(b, q + 13);
         R.n++;
     }
@@ -1597,6 +1618,7 @@
                     S.rateNow = rate;
                     var dlw = dlWant(); if (dlw && !DL.on) { DL.on = 1; DL.q.length = 0; DL.fz = 0; DL.dT = sim.t - (1 - Math.max(0, Math.min(1, S.acc / DT))) * DT; } else if (!dlw && DL.on) dlOff();      // [v135]
                     if (DL.on) {      // [v135] goruntu saati gercek hizla akar; sim onu DL.D onde tutar (yetisme en cok ~12 adim)
+                        DL.fz = !!(S.vs || S.goalPend) || DL.q.some(function (e) { return e.type === 'GOAL' || e.type === 'CARD' || e.type === 'VAR'; });      // [v139] gol/kart/VAR goruntude bitene dek sim bekler (VAR sonrasi gol: son kare golun karesi kalir)
                         DL.dT += dt * rate; var nD = 0, tgD = DL.dT + DL.D;
                         while (!DL.fz && sim.t < tgD - 1e-9 && nD < 12 && !S.hold && !sim.finished && !S.halfPending) { var tq = sim.t; stepOnce(); nD++; if (sim.t === tq) break; }
                         if (DL.dT > sim.t) DL.dT = sim.t; if (DL.dT < sim.t - DL.D - .25) DL.dT = sim.t - DL.D - .25;
@@ -1622,6 +1644,7 @@
             if (now - S.ratingTimer > 700) { S.ratingTimer = now; flushRatings(); if (S.use3) bcastHudPills(); }
             /* [opt] görünürlük önbelleği (görünürken 250 ms'de bir yoklanır) */ var cvs = $('cv2d'); if (cvs && (now < (S.cvVisT || 0) || cvVis(cvs, now))) { if (S.hold === 'replay' && S.rp) drawReplay(dt); else if (!S.hold && fmOn() && (S.fm.ph === 'gap' || S.fm.ph === 'clip')) drawFm(dt); else draw(Math.max(0, Math.min(1, S.acc / DT)), dt); }
         }
+        try { goalPendTick(); } catch (e) { S.goalPend = null; S.scHold = null; }      // [v139]
         if (mode === '2d' && S.sim && S.sid === matchSessionId) loop();
     }
 
@@ -1770,7 +1793,7 @@
             if (pv !== p && pv.fx != null) { var fa0 = Math.atan2(pv.fx, pv.fy), fda = Math.atan2(p.fx, p.fy) - fa0; fda = Math.atan2(Math.sin(fda), Math.cos(fda)); fa0 += fda * alpha; V.fx[i] = Math.sin(fa0); V.fy[i] = Math.cos(fa0); } else { V.fx[i] = p.fx; V.fy[i] = p.fy; } }      // [v133] bakis yonu de adimlar arasinda (25 Hz basamak yok)
         V.bx = lerp(S.prevB.x, B.x, alpha); V.by = lerp(S.prevB.y, B.y, alpha);
         if (sim.ball3d) z = lerp(S.prevB.z != null ? S.prevB.z : (B.z || 0), B.z || 0, alpha); else if (B.high) { var pr = (sim.t - B.high.t0) / (B.high.tLand - B.high.t0); z = Math.sin(Math.PI * Math.max(0, Math.min(1, pr))) * B.high.h; }
-        V.bz = z; V.owner = B.owner ? B.owner.id : -1;
+        V.bz = z; V.owner = B.owner ? B.owner.id : -1; V.sps = (!B.owner && sim.mode === 'live') ? (B.sps || 0) : 0;      // [v139] motorun gercek yan donusu
         if (CRD.on) { V.bx = lerp(CRD.px, CRD.x, alpha); V.by = lerp(CRD.py, CRD.y, alpha); V.bz = lerp(CRD.pz, CRD.z, alpha); }      // [carry]
         if (!V.gp) V.gp = new Float32Array(22); for (var gpi = 0; gpi < 22; gpi++) V.gp[gpi] = (GPHP[gpi] + (GPH[gpi] - GPHP[gpi]) * alpha) % 6283.185307; V.gpOn = 1;      // [motor] motor adim evresi
         V.dOn = CRD.on; V.dtl = CRD.tl + (S.clkOff || 0); V.dtp = CRD.tp + (S.clkOff || 0); V.dTt = CRD.Tt; V.dn = CRD.n; V.dk = CRD.k; V.gph = lerp(CRD.pgph, CRD.gph, alpha); V.dtn = CRD.tn > 0 ? CRD.tn + (S.clkOff || 0) : -9; V.dfn = CRD.fn;
@@ -1795,7 +1818,7 @@
             V.fx[i] = f[o0 + q + 2]; V.fy[i] = f[o0 + q + 3];
         }
         V.bx = f[o0 + 1] + (f[o1 + 1] - f[o0 + 1]) * a; V.by = f[o0 + 2] + (f[o1 + 2] - f[o0 + 2]) * a; V.bz = f[o0 + 3] + (f[o1 + 3] - f[o0 + 3]) * a;
-        V.owner = a < .5 ? f[o0 + 4] : f[o1 + 4]; crViewF(V, f, o0, o1, a);
+        V.owner = a < .5 ? f[o0 + 4] : f[o1 + 4]; crViewF(V, f, o0, o1, a); V.sps = f[o0 + RO + 25] || 0;      // [v139]
         V.rx = f[o0 + RO] + (f[o1 + RO] - f[o0 + RO]) * a; V.ry = f[o0 + RO + 1] + (f[o1 + RO + 1] - f[o0 + RO + 1]) * a; V.rfx = f[o0 + RO + 2]; V.rfy = f[o0 + RO + 3]; arViewF(V, f, o0, o1, a);
         S.viewT = f[o0] + (f[o1] - f[o0]) * a;                                  // [gk] tekrar saati (kayıtlı sim zamanı)
         return V;
@@ -2017,7 +2040,7 @@
             v.x[i] = b[o0 + q] + (b[o1 + q] - b[o0 + q]) * a; v.y[i] = b[o0 + q + 1] + (b[o1 + q + 1] - b[o0 + q + 1]) * a;
             if (a > 0) { var ra0 = Math.atan2(b[o0 + q + 2], b[o0 + q + 3]), rda = Math.atan2(b[o1 + q + 2], b[o1 + q + 3]) - ra0; rda = Math.atan2(Math.sin(rda), Math.cos(rda)); ra0 += rda * a; v.fx[i] = Math.sin(ra0); v.fy[i] = Math.cos(ra0); } else { v.fx[i] = b[o0 + q + 2]; v.fy[i] = b[o0 + q + 3]; }      // [v135] bakis da ara degerli
         }
-        v.bx = b[o0 + 1] + (b[o1 + 1] - b[o0 + 1]) * a; v.by = b[o0 + 2] + (b[o1 + 2] - b[o0 + 2]) * a; v.bz = b[o0 + 3] + (b[o1 + 3] - b[o0 + 3]) * a; v.owner = a < .5 ? b[o0 + 4] : b[o1 + 4]; crViewF(v, b, o0, o1, a);
+        v.bx = b[o0 + 1] + (b[o1 + 1] - b[o0 + 1]) * a; v.by = b[o0 + 2] + (b[o1 + 2] - b[o0 + 2]) * a; v.bz = b[o0 + 3] + (b[o1 + 3] - b[o0 + 3]) * a; v.owner = a < .5 ? b[o0 + 4] : b[o1 + 4]; crViewF(v, b, o0, o1, a); v.sps = b[o0 + RO + 25] || 0;      // [v139]
         if (a > 0 && b[o0 + 5] !== 1 && b[o1 + 5] === 1 && Math.hypot(b[o1 + 1] - b[o0 + 1], b[o1 + 2] - b[o0 + 2]) > 1.2) { v.bx = b[o1 + 1]; v.by = b[o1 + 2]; v.bz = b[o1 + 3]; }      // [fm] olu top yerlesimi: ara deger yok
         v.rx = b[o0 + RO] + (b[o1 + RO] - b[o0 + RO]) * a; v.ry = b[o0 + RO + 1] + (b[o1 + RO + 1] - b[o0 + RO + 1]) * a; v.rfx = b[o0 + RO + 2]; v.rfy = b[o0 + RO + 3]; arViewF(v, b, o0, o1, a);
         return v;
@@ -2264,7 +2287,7 @@
         if (live && S.hoverRef && v.rx != null) ringPut(v.rx, v.ry, 1.3, RG_REF, .95);
         // gol kutlaması: golü atan ve yakınındaki takım arkadaşları kollarını kaldırır
         var cel = null;
-        if (live && S.hold === 'goal' && S.goalInfo && S.goalInfo.scorer >= 0 && !S.goalInfo.own && v.x[S.goalInfo.scorer] > -20) {
+        if (live && S.hold === 'goal' && !S.goalPend && S.goalInfo && S.goalInfo.scorer >= 0 && !S.goalInfo.own && v.x[S.goalInfo.scorer] > -20) {
             var sc = S.goalInfo.scorer, tm = sim.players[sc].team, ids = RG.cel.ids; ids.length = 0; ids.push(sc);
             for (i = 0; i < 22; i++) if (i !== sc && sim.players[i].team === tm && v.x[i] > -20 && Math.hypot(v.x[i] - v.x[sc], v.y[i] - v.y[sc]) < 14) ids.push(i);
             cel = RG.cel;
@@ -2797,7 +2820,7 @@
         var dirG = gi.gx > PW / 2 ? 1 : -1, gl = dirG > 0 ? PW : 0, bx = f[o + 1], by = f[o + 2], bz = f[o + 3];
         var vx = (f[o + 1] - f[op + 1]) * 25, vy = (f[o + 2] - f[op + 2]) * 25, vz = (f[o + 3] - f[op + 3]) * 25;
         var dx = gl - bx, dy = gi.gy - by, d = Math.hypot(dx, dy);
-        if (d > 6 || (bx - gl) * dirG > .3) return null;
+        if ((bx - gl) * dirG > 2.5) return null;      // [v139] uzak son kare de kabul (top gol noktasina yonelir) son canli karede top cizgiyi gecmis olabilir: yine de aga ilerlesin (tekrar ortada kesilmesin)
         var sp = Math.min(34, Math.max(Math.hypot(vx, vy), d / DT, 6));
         if (dx * dirG > .35) { vx = dx / d * sp; vy = dy / d * sp; }
         else { var fs = Math.hypot(vx, vy); if (vx * dirG < 2) { vx = dirG * Math.max(6, fs); vy = vy * .5; } else if (fs < 6) { vx *= 6 / fs; vy *= 6 / fs; } }
@@ -2852,9 +2875,9 @@
         var gi = S.goalInfo; if (!gi) return;
         if (S.gb === undefined || S.gbSid !== S.sid || S.gbGi !== gi) {
             S.gbSid = S.sid; S.gbGi = gi; S.gb = null;
-            var R = S.ring, b = R.buf, k = R.n - 1, lim = Math.max(2, R.n - 6);
+            var R = S.ring, b = R.buf, k = R.n - 1, lim = Math.max(2, R.n - 14);      // [v139] golun son canli karesi daha geride de aranir
             while (k > lim && b[(k % RING) * FS + 5] === 1) k--;
-            if (k >= 2 && b[(k % RING) * FS + 5] !== 1 && R.n - 1 - k <= 3) S.gb = gtInit(b, (k % RING) * FS, ((k - 1) % RING) * FS, gi);
+            if (k >= 2 && b[(k % RING) * FS + 5] !== 1 && R.n - 1 - k <= 12) S.gb = gtInit(b, (k % RING) * FS, ((k - 1) % RING) * FS, gi);
         }
         var g2 = S.gb; if (!g2) return;
         var h = Math.min(.05, dt || .016) * .8; g2.acc = (g2.acc || 0) + h; if (g2.acc < 3) { var st = Math.ceil(h / .01); for (var j = 0; j < st; j++) gtStep(g2, h / st); }
@@ -3706,7 +3729,7 @@
         if (show && H.dead.textContent !== lab) H.dead.textContent = lab;
         H.dead.classList.toggle('on', show);
         // gol alt bandı: kutlama süresince (sonra gol tekrarı ya da oyun)
-        var gi = S.hold === 'goal' ? S.goalInfo : null, wrap = H.top.parentNode;
+        var gi = S.hold === 'goal' && !S.goalPend ? S.goalInfo : null, wrap = H.top.parentNode;      // [v139]
         if (gi) {
             var gk = gi.team + '|' + gi.scorer + '|' + gi.min + '|' + hsT + asT;
             if (H.gk !== gk) {
