@@ -197,6 +197,7 @@ game/parts/182_v155_meslek_derinligi.js
 game/parts/179_v152_kayit_saglamligi.js
 game/parts/178_v151_boyut_ve_veri.js
 game/parts/181_v154_futbolcu_duzeltmeleri.js
+game/parts/183_v156_gercekci_maaslar.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js

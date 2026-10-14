@@ -2526,3 +2526,6 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
   #top .md-go{height:32px}
   [data-act="hubCust"],[data-act="plTag"],[data-act="cmpT"],[data-act="euMd"],[data-act="renew"]{min-height:32px;min-width:32px}
 }
+
+/* v156: maaşlarda haftalık karşılık */
+.wg-hf{font-size:.78em;font-weight:500;opacity:.75;white-space:nowrap}
