@@ -50,6 +50,27 @@
         if (!DLV) DLV = newView();
         var v = ringView(fa, n1, DLV), fo = S.clkOff || 0, i0 = Math.floor(fa); if (fo) { v.dtl += fo; v.dtp += fo; if (v.dtn > 0) v.dtn += fo; }
         v.dead = S.ring.buf[(Math.min(n1, i0 + (fa - i0 > .5 ? 1 : 0)) % RING) * FS + 5] === 1 ? 1 : 0; S.viewT = DL.dT;
+        try { dlCushion(v, fa, lo, n1); } catch (e) { }
+        return v;
+    }
+    /* [v139] yumusak ilk dokunus (cushion): kayitta gorunen andan en cok ~.22 sn once, topu yeni alan oyuncunun ilk temasi (hiz kirilimi) varsa
+       gorunen top temastan sonra gelis hizini birden kaybetmez: O(t) = (v_gelis - v_cikis)·dt·e^(-dt/tau) (temas aninda 0, hiz surekli, en cok ~.2 m), sonra motor topuna doner */
+    var CU_TAU = .045;
+    function dlCushion(v, fa, lo, n1) {
+        var b = S.ring.buf, i0 = Math.floor(fa), j, k, best = -1;
+        for (j = i0; j > Math.max(lo + 2, i0 - 6); j--) {
+            var oj = (j % RING) * FS, om = ((j - 1) % RING) * FS, ow = b[oj + 4]; if (ow < 0 || b[om + 4] !== ow || b[oj + 5] === 1) continue;
+            var op = ((j + 1) % RING) * FS; if (j + 1 > n1 || b[op + 4] !== ow) continue;
+            var vix = (b[oj + 1] - b[om + 1]) / DT, viy = (b[oj + 2] - b[om + 2]) / DT, viz = (b[oj + 3] - b[om + 3]) / DT, vox = (b[op + 1] - b[oj + 1]) / DT, voy = (b[op + 2] - b[oj + 2]) / DT, voz = (b[op + 3] - b[oj + 3]) / DT;
+            var vin = Math.hypot(vix, viy, viz), dv = Math.hypot(vix - vox, viy - voy, viz - voz); if (vin < 3 || dv < 2.5 || Math.hypot(vox, voy, voz) > vin * .8) continue;
+            var fresh = false; for (k = 2; k < 38 && j - k > lo; k++) { if (b[((j - k) % RING) * FS + 4] !== ow) { fresh = true; break; } } if (!fresh) continue;      // yalniz yeni alinan top (ilk dokunus)
+            best = j; break;
+        }
+        if (best < 0) return;
+        var ob = (best % RING) * FS, obm = ((best - 1) % RING) * FS, obp = ((best + 1) % RING) * FS, tt = (fa - best) * DT; if (tt <= 0) return;
+        var ex = Math.exp(-tt / CU_TAU) * tt, dx = ((b[ob + 1] - b[obm + 1]) - (b[obp + 1] - b[ob + 1])) / DT * ex, dy = ((b[ob + 2] - b[obm + 2]) - (b[obp + 2] - b[ob + 2])) / DT * ex, dz = ((b[ob + 3] - b[obm + 3]) - (b[obp + 3] - b[ob + 3])) / DT * ex, dl = Math.hypot(dx, dy, dz);
+        if (dl > .2) { dx *= .2 / dl; dy *= .2 / dl; dz *= .2 / dl; }
+        v.bx += dx; v.by += dy; v.bz = Math.max(0, v.bz + dz); v.cuT = tt;
         return v;
     }
     function gkHandAt(t) {      // [v135] gorunen anda topu elinde tutan kaleci (gunlukten, tur 3)

@@ -3342,6 +3342,32 @@
             fkArm(BB.ArmR, BB.ForeR, Wt, [PR[0] + (TR[0] - PR[0]) * w, PR[1] + (TR[1] - PR[1]) * w, PR[2] + (TR[2] - PR[2]) * w]);
             a.hik = w;
         }
+        /* [v139] kurtaris / havadan alma: kalecinin elleri temas aninda topa (kestirilen yol, temas ani). Tutus: avuclar topun iki yaninda (biraz arkasinda);
+           celme / bilinmeyen: topa yakin el topa, oteki el yarim agirlikla yardim eder. Erisim fkArm ile sinirli (kol boyu); agirlik temastan .28 sn once artar, .3 sn sonra soner. */
+        var GKIK_ON = 1, GKT = new Float64Array(3);
+        function ctGkSaveIK(a, root) {
+            var ac = a.ac, c = CLK, w = sm(rmp(c, ac.tc - .28, ac.tc - .04)) * (1 - sm(rmp(c, ac.tc + .08, ac.tc + .32))); if (w < .02 || ac.out === 3) return;
+            if (ac.k === 1 && ac.path && ac.d) gkPathAt(ac, ac.tc, GKT);
+            else if (ac.k === 2 && ac.d) { GKT[0] = ac.d[0]; GKT[1] = .17 + (ac.d[2] || 1.8); GKT[2] = ac.d[1]; }
+            else return;
+            if (ac.ctp && c >= ac.tc - .1) { GKT[0] = ac.ctp[0]; GKT[1] = ac.ctp[1]; GKT[2] = ac.ctp[2]; }      // ctGkPalm'in son konumu (gorunen top)
+            GKT[1] = ballY(GKT[1]);
+            if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
+            bodyDQ(pose, CT_DQ);
+            var m = fkW2M(root, GKT), hl = BODY_BIND[BB.ForeL], hr = BODY_BIND[BB.ForeR];
+            dqsPt(CT_DQ, BB.ForeL, hl[0], hl[1] - .27, hl[2], CT_Q); var PL = [CT_Q[0], CT_Q[1], CT_Q[2]];
+            dqsPt(CT_DQ, BB.ForeR, hr[0], hr[1] - .27, hr[2], CT_Q); var PR = [CT_Q[0], CT_Q[1], CT_Q[2]];
+            var R = .11 * BSC / (a.wScale || .98) + .015, lat = fkN(fkS(PR, PL)), TL, TR;
+            if (ac.out === 1 || ac.k === 2) { TL = [m[0] - lat[0] * R, m[1] - lat[1] * R, m[2] - lat[2] * R]; TR = [m[0] + lat[0] * R, m[1] + lat[1] * R, m[2] + lat[2] * R]; }      // tutus: top iki avuc arasinda
+            else {
+                var dL = Math.hypot(PL[0] - m[0], PL[1] - m[1], PL[2] - m[2]), dR = Math.hypot(PR[0] - m[0], PR[1] - m[1], PR[2] - m[2]), near = dL < dR ? PL : PR, nx = near[0] - m[0], ny = near[1] - m[1], nz = near[2] - m[2], nl = Math.hypot(nx, ny, nz) || 1;
+                var Tn = [m[0] + nx / nl * R, m[1] + ny / nl * R, m[2] + nz / nl * R], far = dL < dR ? PR : PL, Tf = [far[0] + (m[0] - far[0]) * .55, far[1] + (m[1] - far[1]) * .55, far[2] + (m[2] - far[2]) * .55];
+                TL = dL < dR ? Tn : Tf; TR = dL < dR ? Tf : Tn;
+            }
+            var Wt = fkR(_bw[BB.Torso]);
+            fkArm(BB.ArmL, BB.ForeL, Wt, [PL[0] + (TL[0] - PL[0]) * w, PL[1] + (TL[1] - PL[1]) * w, PL[2] + (TL[2] - PL[2]) * w]);
+            fkArm(BB.ArmR, BB.ForeR, Wt, [PR[0] + (TR[0] - PR[0]) * w, PR[1] + (TR[1] - PR[1]) * w, PR[2] + (TR[2] - PR[2]) * w]);
+        }
         function ctKickIK(a, root) {      // [temas] vuran ayak temas aninda topun arkasinda
             var ac = a.ac; if (!CLKOK || !ac || !ac.init || ac.k !== 18 || ac.hx0 == null) return;
             var c = CLK, w = sm(rmp(c, ac.tc - .14, ac.tc - .03)) * (1 - sm(rmp(c, ac.tc + .02, ac.tc + .1))); if (w < .01) return;
@@ -4448,7 +4474,7 @@
             if (!a.rM) { a.rM = new Float32Array(16); a.dqc = new Float32Array(BODY_BONES.length * 8); }
             var root = a.rM, cyw = Math.cos(a.dYaw), syw = Math.sin(a.dYaw);      // [opt] kök matrisi satır içi: mtrs(root, x, ry, z, 0, yaw, 0, sc, ws) ile aynı
             root[0] = cyw * ws; root[1] = 0; root[2] = -syw * ws; root[3] = 0; root[4] = 0; root[5] = sc; root[6] = 0; root[7] = 0; root[8] = syw * ws; root[9] = 0; root[10] = cyw * ws; root[11] = 0; root[12] = x; root[13] = ry; root[14] = z; root[15] = 1;
-            a.gaRT = -1; poseFor(a, a.spd, t, mods); if (a.gaRT === t && (a.gaRX || a.gaRZ)) { root[12] += a.gaRX; root[14] += a.gaRZ; } if (FK_ON) footIK(a, root); if (NC_ON && BK_ON) legNoCross(a); if (GD_ON) ctGround(a, root); if (CT_ON && a.ac && a.ac.k === 18) ctKickIK(a, root); if (CT3_ON && a.needHand && (a.holdK || 0) > .05 && !(a.ac && a.ac.init && CLK >= a.ac.t0 && a.ac.k >= 4 && a.ac.k <= 9)) ctGkHoldIK(a, root); else a.hik = 0; bodyDQ(pose, a.dqc);      // [gasp] kalca salinimi kokte
+            a.gaRT = -1; poseFor(a, a.spd, t, mods); if (a.gaRT === t && (a.gaRX || a.gaRZ)) { root[12] += a.gaRX; root[14] += a.gaRZ; } if (FK_ON) footIK(a, root); if (NC_ON && BK_ON) legNoCross(a); if (GD_ON) ctGround(a, root); if (CT_ON && a.ac && a.ac.k === 18) ctKickIK(a, root); if (CT3_ON && a.needHand && (a.holdK || 0) > .05 && !(a.ac && a.ac.init && CLK >= a.ac.t0 && a.ac.k >= 4 && a.ac.k <= 9)) ctGkHoldIK(a, root); else a.hik = 0; if (GKIK_ON && CLKOK && a.ac && a.ac.init && (a.ac.k === 1 || a.ac.k === 2) && !(a.hik > .05)) ctGkSaveIK(a, root); bodyDQ(pose, a.dqc);      // [gasp] kalca salinimi kokte
             if (a.needHand) { if (!a.hR) { a.hR = new Float32Array(3); a.hL = new Float32Array(3); } handsModel(a.dqc); xform(root, gkQ, a.hR); xform(root, gkQ2, a.hL); }   // [gk] avuç noktaları (top elde)
             if (VQ.sh) {                                                     // [vq] temas gölgesi için göğüs + ayak ortası (dünya)
                 if (!a.cP) a.cP = new Float32Array(6);
