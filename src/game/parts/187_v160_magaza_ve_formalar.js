@@ -58,7 +58,7 @@ function v160Kits3D(o){try{const S=FX;if(!S||!S.U||!S.O||!o||!o.cols)return null
   const out=[0,1].map(i=>{const t=pickT(nm[i],i);if(!t)return null;const k=t.kit;if(v160D(o.cols[i],k.shirt)>130)return null;return {p3:k.p3,shorts:k.shorts,socks:k.socks,trim:k.trim};});
   return out[0]||out[1]?[out[0],out[1]]:null;}catch(e){return null;}}
 function v160Hook3D(){try{const A=window.Ado3D;if(!A||A.__v160||typeof A.create!=='function')return;const cr=A.create;
-  A.create=function(){const R3=cr.apply(this,arguments);try{if(R3&&typeof R3.setMatch==='function'&&!R3.__v160){const sm=R3.setMatch;R3.setMatch=function(o){try{if(o&&!o.kits){const k=v160Kits3D(o);if(k)o.kits=k;}V160.last=o&&o.kits||null;}catch(e){}return sm.apply(this,arguments);};R3.__v160=1;}}catch(e){}return R3;};A.__v160=1;}catch(e){}}
+  A.create=function(){const R3=cr.apply(this,arguments);try{if(R3&&typeof R3.setMatch==='function'&&!R3.__v160){const sm=R3.setMatch;R3.setMatch=function(o){try{if(o&&!o.kits){const k=v160Kits3D(o);if(k)o.kits=k;}}catch(e){}return sm.apply(this,arguments);};R3.__v160=1;}}catch(e){}return R3;};A.__v160=1;}catch(e){}}
 try{window.addEventListener('load',()=>setTimeout(v160Hook3D,0));}catch(e){}
 /* kulüp sayfası: forma çizimi ve sezon seçici */
 function v160KitSVG(k,lbl,num,sub){const u='v6k'+(++V160.n),sh=k.shirt,tr=k.trim,ps=k.ps||'plain';
