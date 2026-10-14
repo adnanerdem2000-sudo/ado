@@ -1,60 +1,87 @@
-    var SND = { ok: false, tried: false, b: {}, out: null, bed: null, ch: null, lv: .3, chNext: 0, last: {}, boost: 0, boostT: 0, goalTeam: -1, wh: 0, alive: 0, driven: false };
-    var IMA_S = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767];
-    var IMA_I = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8];
-    function sndDecode(D) {
-        var bin = atob(D.d), u8 = new Uint8Array(bin.length), n = D.n + (D.pre || 0), f = new Float32Array(n), i;
-        for (i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-        if (D.c === 'u') { for (i = 0; i < n; i++) { var u = ~u8[i] & 255, e = (u >> 4) & 7, v = ((((u & 15) << 3) + 132) << e) - 132; f[i] = ((u & 128) ? -v : v) / 32768; } }
-        else {
-            var pred = 0, idx = 0, b, nib, st, df;
-            for (i = 0; i < n; i++) { b = u8[i >> 1]; nib = (i & 1) ? (b >> 4) : (b & 15); st = IMA_S[idx]; df = st >> 3; if (nib & 4) df += st; if (nib & 2) df += st >> 1; if (nib & 1) df += st >> 2; pred = (nib & 8) ? pred - df : pred + df; if (pred > 32767) pred = 32767; else if (pred < -32768) pred = -32768; idx += IMA_I[nib]; if (idx < 0) idx = 0; else if (idx > 88) idx = 88; f[i] = pred / 32768; }
-        }
-        return D.pre ? f.subarray(D.pre) : f;
-    }
+    /* [v140] GERÇEK SES PAKETİ: SND_DATA artık CC0 (kamu malı) lisanslı gerçek stadyum kayıtlarından kesilmiş MP3'ler taşır
+       (kaynak listesi: src/adoball/SESLER.md). Eski sentetik paket ve IMA ADPCM / mu-law çözücüsü kaldırıldı.
+       Örnekler ilk sesli etkileşimde decodeAudioData ile eşzamansız çözülür; çözülürken gelen sesler kısa bir kuyrukta bekler,
+       hiçbiri çözülemezse sndPlay false döner ve çağıran eski sentez sesine döner. Döngüler (tribün uğultusu) dosyanın içindeki
+       ls..le aralığında döner (dosya başı/sonu MP3 kod çözücü gecikmesine karşı payla periyodik kesilmiştir). */
+    var SND = { ok: false, st: 0, b: {}, out: null, bed: null, ch: null, lv: .3, chNext: 0, last: {}, boost: 0, boostT: 0, goalTeam: -1, wh: 0, alive: 0, driven: false, q: [], bedWant: false };
+    // [v140] aynı olayın ses çeşitleri: istenen ad yerine çözülmüş çeşitlerden rastgele biri çalar (tekdüzeliği kırar)
+    var SND_VAR = { Kick: ['Kick', 'Kick2', 'Kick3'], KickHard: ['KickHard', 'KickHard2'], CrowdRoar: ['CrowdRoar', 'CrowdRoar2'], CrowdOoh: ['CrowdOoh', 'CrowdOoh2'], Whistle: ['Whistle', 'Whistle2'], CrowdChant: ['CrowdChant', 'CrowdChant2'] };
+    function sndPick(name) { var v = SND_VAR[name], a = [], i; if (v) for (i = 0; i < v.length; i++) if (SND.b[v[i]]) a.push(v[i]); return a.length ? a[Math.floor(Math.random() * a.length)] : name; }
+    function sndB64(s) { var bin = atob(s), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8.buffer; }
+    // st: 0 başlamadı, 1 çözülüyor, 2 hazır, 3 kullanılamaz (çağıran sentez sese döner)
     function sndInit() {
-        if (SND.tried) return SND.ok;
-        var ctx = ensureAudioCtx(); if (!ctx) return false; SND.tried = true;
+        if (SND.st) return SND.st !== 3;
+        var ctx = ensureAudioCtx(); if (!ctx) return false;
+        if (typeof SND_DATA !== 'object' || !SND_DATA || !ctx.decodeAudioData) { SND.st = 3; return false; }
         try {
-            for (var k in SND_DATA) { var D = SND_DATA[k], f = sndDecode(D), ab = ctx.createBuffer(1, D.n, D.sr); if (ab.copyToChannel) ab.copyToChannel(f, 0); else ab.getChannelData(0).set(f); SND.b[k] = ab; }
             var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = .005; comp.release.value = .25;
             SND.out = ctx.createGain(); SND.out.gain.value = .9; SND.out.connect(comp); comp.connect(ctx.destination);
-            SND.ok = true;
-        } catch (e) { SND.ok = false; }
-        return SND.ok;
+        } catch (e) { SND.st = 3; return false; }
+        SND.st = 1;
+        var keys = Object.keys(SND_DATA), left = keys.length, okN = 0;
+        function fin() { if (SND.st !== 1) return; SND.st = okN ? 2 : 3; SND.ok = okN > 0; sndFlush(); }
+        keys.forEach(function (k) {
+            var D = SND_DATA[k], over = false;
+            function ok(ab) { if (over) return; over = true; if (ab && ab.length) { SND.b[k] = ab; okN++; } if (--left <= 0) fin(); }
+            function bad() { if (over) return; over = true; if (--left <= 0) fin(); }
+            try { var p = ctx.decodeAudioData(sndB64(D.d), ok, bad); if (p && p.then) p.then(ok, bad); } catch (e) { bad(); }
+        });
+        if (!keys.length) fin();
+        setTimeout(fin, 6000);                                                   // güvenlik: takılan çözümde ne çözüldüyse onunla devam
+        return true;
     }
-    // tek ses: true = çalındı ya da bilerek atlandı (ses kapalı / aralık sınırı); false = örnek yok, çağıran eski sese döner
+    // çözüm bitince kuyrukta bekleyen (son 1,2 sn içinde istenmiş) sesleri ve tribün uğultusunu başlat
+    function sndFlush() {
+        var q = SND.q, now = performance.now(); SND.q = [];
+        if (SND.st !== 2) { SND.bedWant = false; return; }
+        if (SND.bedWant) { SND.bedWant = false; try { sndBedStart(); } catch (e) { } }
+        q.forEach(function (o) { var age = (now - o.t) / 1000; if (age < 1.2) sndRaw(o.n, o.v, Math.max(0, (o.d || 0) - age), o.r); });
+    }
+    function sndRaw(name, vol, delay, rate) {
+        var ctx = ensureAudioCtx(), nm = sndPick(name), buf = SND.b[nm]; if (!ctx || !buf) return false;
+        try { var s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = buf; if (rate) s.playbackRate.value = rate; g.gain.value = vol == null ? 1 : vol; s.connect(g); g.connect(SND.out); s.start(ctx.currentTime + (delay || 0)); return true; } catch (e) { return false; }
+    }
+    // tek ses: true = çalındı / kuyruğa alındı ya da bilerek atlandı (ses kapalı / aralık sınırı); false = örnek yok, çağıran eski sese döner
     function sndPlay(name, vol, delay, rate, gap) {
         if (!soundEnabled) return true;
-        var ctx = ensureAudioCtx(); if (!ctx || !sndInit() || !SND.b[name]) return false;
+        var ctx = ensureAudioCtx(); if (!ctx || !sndInit()) return false;
+        if (SND.st === 2 && !SND.b[name]) return false;
         var now = performance.now(); if (gap && SND.last[name] && now - SND.last[name] < gap) return true; SND.last[name] = now;
-        try { var s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = SND.b[name]; if (rate) s.playbackRate.value = rate; g.gain.value = vol == null ? 1 : vol; s.connect(g); g.connect(SND.out); s.start(ctx.currentTime + (delay || 0)); return true; } catch (e) { return false; }
+        if (SND.st === 1) { if (SND.q.length < 24) SND.q.push({ n: name, v: vol, d: delay, r: rate, t: now }); return true; }
+        return sndRaw(name, vol, delay, rate);
     }
     function sndWhistle(name, vol, delay) { var now = performance.now(); if (now - SND.wh < 3500 && name === 'Whistle' && !delay) return true; SND.wh = now; return sndPlay(name, vol, delay, 1, 0); }
     function sndBedStart() {
         if (!soundEnabled) return true;
         var ctx = ensureAudioCtx(); if (!ctx || !sndInit()) return false; if (SND.bed) return true;
+        if (SND.st === 1) { SND.bedWant = true; return true; }                 // [v140] çözüm bitince başlar
+        var b = SND.b.CrowdLoop; if (!b) return false;
         try {
-            var b = SND.b.CrowdLoop, g = ctx.createGain(), hs = ctx.createBiquadFilter(), L = ctx.createBufferSource(), R = ctx.createBufferSource(), sp = !!ctx.createStereoPanner, pl = sp ? ctx.createStereoPanner() : null, pr = sp ? ctx.createStereoPanner() : null, t = ctx.currentTime;
+            var D = SND_DATA.CrowdLoop || {}, ls = D.ls || 0, le = D.le && D.le <= b.duration ? D.le : b.duration, len = le - ls;
+            var g = ctx.createGain(), hs = ctx.createBiquadFilter(), L = ctx.createBufferSource(), R = ctx.createBufferSource(), sp = !!ctx.createStereoPanner, pl = sp ? ctx.createStereoPanner() : null, pr = sp ? ctx.createStereoPanner() : null, t = ctx.currentTime;
             hs.type = 'highshelf'; hs.frequency.value = 1800; hs.gain.value = -3;
-            L.buffer = b; R.buffer = b; L.loop = true; R.loop = true;
+            L.buffer = b; R.buffer = b; L.loop = true; R.loop = true; L.loopStart = ls; L.loopEnd = le; R.loopStart = ls; R.loopEnd = le;
             if (sp) { pl.pan.value = -.7; pr.pan.value = .7; L.connect(pl); R.connect(pr); pl.connect(hs); pr.connect(hs); } else L.connect(hs);
             hs.connect(g); g.connect(SND.out); g.gain.value = 0; SND.lv = .3; g.gain.setTargetAtTime(SND.lv, t, .9);
-            L.start(t, 0); if (sp) R.start(t, b.duration * .47);                      // kaydırılmış ikinci kopya: ilintisiz stereo kalabalık
+            L.start(t, ls + Math.random() * len * .2); if (sp) R.start(t, ls + len * .52);      // kaydırılmış ikinci kopya: ilintisiz stereo kalabalık
             SND.bed = { L: L, R: sp ? R : null, g: g, hs: hs }; SND.driven = false; SND.alive = performance.now();
             SND.chNext = performance.now() + 30000 + Math.random() * 40000;
             return true;
         } catch (e) { SND.bed = null; return false; }
     }
     function sndBedStop(fast) {
+        SND.bedWant = false;
         var B = SND.bed; SND.bed = null; sndChantStop(fast);
         if (!B) return; try { var ctx = ensureAudioCtx(), t = ctx.currentTime, tl = fast ? .05 : .7; B.g.gain.cancelScheduledValues(t); B.g.gain.setTargetAtTime(0, t, tl); B.L.stop(t + tl * 5); if (B.R) B.R.stop(t + tl * 5); } catch (e) { try { B.L.stop(); if (B.R) B.R.stop(); } catch (e2) { } }
     }
+    // [v140] tezahürat: gerçek kayıt (davullu / şarkılı) bir kez, yumuşak giriş-çıkışla çalar; "loops" eski çağrılarla uyum için yok sayılır
     function sndChant(loops) {
-        var ctx = ensureAudioCtx(); if (!ctx || !SND.ok || SND.ch || !SND.bed || !soundEnabled) return;
+        var ctx = ensureAudioCtx(); if (!ctx || SND.st !== 2 || SND.ch || !SND.bed || !soundEnabled) return;
         try {
-            var s = ctx.createBufferSource(), g = ctx.createGain(), t = ctx.currentTime, dur = SND.b.CrowdChant.duration * (loops || 2);
-            s.buffer = SND.b.CrowdChant; s.loop = true; g.gain.value = 0; g.gain.setTargetAtTime(.2, t, 1.2); g.gain.setTargetAtTime(0, t + dur - 2.2, .8);
-            s.connect(g); g.connect(SND.out); s.start(t); s.stop(t + dur + 2.5);
+            var nm = sndPick('CrowdChant'), buf = SND.b[nm]; if (!buf) return;
+            var s = ctx.createBufferSource(), g = ctx.createGain(), t = ctx.currentTime, dur = buf.duration;
+            s.buffer = buf; g.gain.value = 0; g.gain.setTargetAtTime(.24, t, .9); g.gain.setTargetAtTime(0, t + Math.max(1, dur - 2.2), .7);
+            s.connect(g); g.connect(SND.out); s.start(t); s.stop(t + dur + .1);
             var C = SND.ch = { s: s, g: g }; s.onended = function () { if (SND.ch === C) SND.ch = null; };
         } catch (e) { SND.ch = null; }
     }
@@ -68,7 +95,7 @@
         var lv = o.paused ? .07 : Math.min(.62, (.24 + .22 * o.tens * (o.home ? 1 : .7) + .05 * (o.late || 0) + bst) * (o.dead ? .92 : 1));
         if (Math.abs(lv - SND.lv) > .004) { SND.bed.g.gain.setTargetAtTime(lv, t, lv > SND.lv ? .35 : 1.3); SND.lv = lv; }
         SND.bed.hs.gain.setTargetAtTime(-4 + 6.5 * Math.max(0, Math.min(1, (lv - .24) / .3)), t, .5);      // coşkuyla tiz (bağırış) artar
-        if (!o.ff && !o.paused && now > SND.chNext) { SND.chNext = now + 75000 + Math.random() * 75000; if (Math.random() < .75) sndChant(Math.random() < .4 ? 3 : 2); }
+        if (!o.ff && !o.paused && now > SND.chNext) { SND.chNext = now + 75000 + Math.random() * 75000; if (Math.random() < .75) sndChant(); }
     }
     /* 2B motor olayına tepki (vuruş, şut, kurtarış, direk, kaçan fırsat, faul, kart, ofsayt, korner). c = { ff: hızlı akış }.
        true = örneklerle işlendi (ya da ses kapalı) - false: çağıran eski sese döner */
@@ -79,18 +106,18 @@
         switch (ty) {
             case 'PASS':
                 if (m.tag === 'KICKOFF') sndWhistle('Whistle', .55, 0);                     // golden sonra başlama düdüğü (maç başı düdüğü az önce çaldıysa atlanır)
-                sndPlay(m.high || m.cross ? 'KickHard' : 'Kick', m.high || m.cross ? .3 : .24, m.tag === 'KICKOFF' ? .25 : 0, r, 100); break;
-            case 'CLEAR': sndPlay('KickHard', .36, 0, r * .95, 100); break;
-            case 'SHOT': sndPlay('KickHard', m.tag === 'HEAD' ? .3 : .6, 0, m.tag === 'HEAD' ? r * .8 : r, 120); sndBoost(.08 + .22 * Math.min(1, xg * 3), 2.4); break;
-            case 'HEADER': sndPlay('Kick', .2, 0, .78 * r, 100); break;
-            case 'BLOCK': sndPlay('Kick', .3, 0, .85 * r, 100); break;
-            case 'SAVE': sndPlay('Applause', ev.team === 0 ? .42 : .3, .25, 1, 1800); if (xg >= .15) sndPlay('CrowdOoh', Math.min(.85, .45 + xg), 0, 1, 1500); break;
+                sndPlay(m.high || m.cross ? 'KickHard' : 'Kick', m.high || m.cross ? .34 : .3, m.tag === 'KICKOFF' ? .25 : 0, r, 100); break;      // [v140] gerçek vuruş kayıtları sentezden kısık: seviye biraz artırıldı
+            case 'CLEAR': sndPlay('KickHard', .4, 0, r * .95, 100); break;
+            case 'SHOT': if (m.tag === 'HEAD') sndPlay('Header', .42, 0, r, 120); else sndPlay('KickHard', .62, 0, r, 120); sndBoost(.08 + .22 * Math.min(1, xg * 3), 2.4); break;
+            case 'HEADER': sndPlay('Header', .3, 0, r, 100); break;
+            case 'BLOCK': sndPlay('Kick', .34, 0, .85 * r, 100); break;
+            case 'SAVE': sndPlay(ev.team === 0 ? 'CrowdCheer' : 'Applause', ev.team === 0 ? .4 : .22, .25, 1, 1800); if (xg >= .15) sndPlay('CrowdOoh', Math.min(.85, .45 + xg), 0, 1, 1500); break;
             case 'POST': sndPlay('Post', .75, 0, 1, 600); sndPlay('CrowdOoh', .85, .1, 1, 1200); sndBoost(.2, 3); break;
-            case 'OFF': if (xg >= .1) sndPlay('CrowdOoh', Math.min(.85, .35 + xg * 1.2), 0, 1, 1500); break;
+            case 'OFF': if (xg >= .1) sndPlay('CrowdOoh', Math.min(.85, .35 + xg * 1.2), 0, 1, 1500); if (xg >= .3 && ev.team === 0) sndPlay('CrowdGroan', .4, 1.1, 1, 5000); break;      // [v140] ev sahibinin büyük fırsatı kaçınca hayal kırıklığı iç çekişi
             case 'FOUL': sndWhistle(m.pen ? 'WhistleLong' : 'Whistle', .55, 0); if (ev.team === 1 || m.pen) sndPlay('CrowdWhistle', m.pen ? .5 : .26, .25, 1, 4000); break;      // deplasman faulüne ev sahibi yuhalar
             case 'CARD': sndPlay('CrowdWhistle', m.card === 'R' ? .75 : .42, .1, 1, 2500); break;
             case 'OFFSIDE': sndWhistle('Whistle', .5, 0); break;
-            case 'CORNER': sndBoost(.08, 3); if (ev.team === 0) sndPlay('Applause', .22, .2, 1, 6000); break;
+            case 'CORNER': sndBoost(.08, 3); if (ev.team === 0) sndPlay('CrowdCheer', .22, .2, 1, 6000); break;
         }
         return true;
     }

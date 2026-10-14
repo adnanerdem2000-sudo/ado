@@ -1072,7 +1072,7 @@
         pauseMatch();
         document.getElementById('match-time').innerText = matchData.injuryMinutes ? `90+${matchData.injuryMinutes}:00` : '90:00';
         addTicker("Maç sona erdi. Hakem son düdüğü çalıyor.");
-        if (sndPlay('Whistle', .6, 0, 1, 0)) { sndPlay('Whistle', .6, .5, 1, 0); sndPlay('WhistleLong', .65, 1.0, 1, 0); sndPlay('Applause', .55, 1.6, 1, 0); } else playWhistle();      // [ses] maç sonu: iki kısa + bir uzun düdük, alkış
+        if (sndPlay('Whistle2', .6, 0, 1, 0)) { sndPlay('Whistle2', .6, .55, 1, 0); sndPlay('WhistleLong', .65, 1.15, 1, 0); sndPlay('Applause', .55, 1.9, 1, 0); } else playWhistle();      // [ses] maç sonu: iki kısa + bir uzun düdük, alkış ([v140] aynı düdük, gerçek kayıt)
 
         if(matchData.isTournamentMatch && typeof window.onTournamentMatchEnd === 'function') {
             window.onTournamentMatchEnd(matchData.hStats.goals, matchData.aStats.goals);
@@ -1300,7 +1300,7 @@
     }
 
     function playDisappointment() {
-        if (sndPlay('CrowdWhistle', .6, 0, 1, 1500)) { sndPlay('CrowdOoh', .5, .2, 1, 0); return; }      // [ses]
+        if (sndPlay('CrowdWhistle', .6, 0, 1, 1500)) { sndPlay('CrowdGroan', .5, .2, 1, 0); return; }      // [ses] [v140] yuhalama + hayal kırıklığı iç çekişi
         // Gol iptal edilince tribünden gelen "aaah!" hayal kırıklığı sesi
         playNoiseBurst(1.0, 0.16, 0);
         playTone(320, 0.5, 'sawtooth', 0.13, 0.05);
@@ -1354,9 +1354,10 @@
             crowdAmbienceNode = null;
         }
     }
-    /* [ses] FIFA TARZI STADYUM SESİ - gerçek ses örnekleri: Adoball Unreal projesinin Tools/SoundGen/make_sounds.py ile matematiksel üretilmiş,
-       lisans gerektirmeyen sesleri (yüzlerce sentetik insan sesinden tribün uğultusu, tezahürat, gol bağırışı, "ooo", alkış, yuhalama; vuruş,
-       file, direk, düdük). 22,05 kHz; tribün sesleri IMA ADPCM 4 bit, kısa sesler mu-law 8 bit; ilk sesli etkileşimde AudioBuffer'a çözülür.
+    /* [ses] FIFA TARZI STADYUM SESİ - [v140] gerçek ses örnekleri: Freesound'daki CC0 (kamu malı) lisanslı stadyum kayıtları
+       (San Siro uğultusu, Şili tribününden davullu tezahürat, gol bağırışı, "ooo", iç çekiş, alkış, yuhalama; gerçek top vuruşu,
+       file, direk, hakem düdüğü). Kaynaklar ve lisanslar: src/adoball/SESLER.md. 22,05 kHz mono MP3; ilk sesli etkileşimde
+       decodeAudioData ile AudioBuffer'a çözülür. Vuruş, gol bağırışı, "ooo", düdük ve tezahüratın birden çok çeşidi rastgele çalar.
        Tribün: aynı döngünün kaydırılmış iki kopyasından stereo uğultu; şiddeti oyunun tehlikesine göre (atak ceza sahasına yaklaştıkça kabarır,
        ev sahibi atağında daha gür), son dakika gerginliği, gol sonrası coşku; ara ara tezahürat. Hızlı akışta yalnız uğultu ve büyük tepkiler.
        Örnekler çözülemezse eski sentez sesleri çalar. */
