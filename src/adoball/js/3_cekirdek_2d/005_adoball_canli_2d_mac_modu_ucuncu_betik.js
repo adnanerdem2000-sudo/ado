@@ -1676,7 +1676,7 @@
         cv = $('cv2d'); if (!cv) return; S.cvVisT = 0;
         var wrap = cv.parentNode, host = wrap.parentNode, wide = document.body.classList.contains('l2d-wide'), grid = document.querySelector('.match-grid'), bw = wrap.offsetWidth - wrap.clientWidth, w = host ? host.clientWidth - bw : wrap.clientWidth;   // [ui2] kap tuvale sarılı (max-content): genişlik üst kaptan okunur
         var pcd = wrap.closest ? wrap.closest('.pitch-card') : null, padx = (pcd && host ? Math.max(0, pcd.offsetWidth - host.clientWidth) : 30) + bw;    // kart dolgusu + kenarlıklar
-        var fsOn = !!(document.fullscreenElement || document.webkitFullscreenElement);     // [ui] tam ekran: tuval kartın içini doldurur (geniş düzen sütun hesabı yok)
+        var fsOn = !!(document.fullscreenElement || document.webkitFullscreenElement || S.pfs);     // [ui] tam ekran ([v150] sözde tam ekran da): tuval kartın içini doldurur (geniş düzen sütun hesabı yok)
         S.hudChk = 1;
         if (wide && grid && !fsOn) w = Math.max(240, grid.clientWidth - Math.max(320, Math.min(460, Math.round(grid.clientWidth * .3))) - 16 - padx);   // [ui2] sağ sütun %30 (320–460 px): sahne büyür   // geniş düzen: sağ sütun (ilk 11'ler + kritik anlar) genişliğin %34'ü (340–500 px), sütun aralığı 16 px, kart dolgusu 30 px
         if (!w) return;
@@ -1686,7 +1686,7 @@
         if (G.innerWidth >= 700 || G.innerHeight < G.innerWidth) {          // sahayı ekran yüksekliğine sığdır (aşağı kaydırmadan izlenebilsin) [ui2] 960x600 gibi küçük pencerelerde ve yatay telefonda da
             var pv = $('view-2d'), below = pv && pv.offsetHeight ? Math.max(0, pv.offsetHeight - wrap.offsetHeight) : 60;
             var top = wrap.getBoundingClientRect().top + (G.scrollY || 0); room = G.innerHeight - Math.min(top, G.innerHeight * .55) - below - 30;
-            if (fsOn && pv && pv.clientHeight > 100) room = pv.clientHeight - 4;     // [ui22] tam ekran: sahne alanı esnek kutudan (eski hesap tuvali her seferinde küçültüyordu)
+            if (fsOn && pv && pv.clientHeight > 100) room = pv.clientHeight - 4; if (fsOn && pcd && pv) { var oth = 0; for (var ci = 0; ci < pcd.children.length; ci++) { var ch = pcd.children[ci]; if (ch !== pv && ch.offsetParent !== null && getComputedStyle(ch).position !== 'absolute' && getComputedStyle(ch).position !== 'fixed') oth += ch.offsetHeight; } var pcs = getComputedStyle(pcd); var rr = pcd.clientHeight - oth - (parseFloat(pcs.paddingTop) || 0) - (parseFloat(pcs.paddingBottom) || 0) - 12; if (rr > 100) room = Math.min(room, rr); }     // [v150] tam ekranda sahne kartın kalan yüksekliğine sığar (taşma yok)     // [ui22] tam ekran: sahne alanı esnek kutudan (eski hesap tuvali her seferinde küçültüyordu)
             var kh = (room - 2 * M - MB) / PH;
             if (kh < k) { k = Math.max(kh, k * .72); cw = Math.round(k * PW + 2 * M); }
         }
@@ -1697,7 +1697,7 @@
         if (wrap.classList.contains('cv-narrow') !== nar) wrap.classList.toggle('cv-narrow', nar);
         if (wrap.classList.contains('cv-tiny') !== tiny) wrap.classList.toggle('cv-tiny', tiny);
         K = k; var h = Math.round(PH * K + 2 * M + MB);
-        if (bc && room > h) h = Math.round(fsOn ? room : Math.min(room, cw / 1.2));      // [ui22] 3B Yayın: yükseklik ekrana göre (TV görüntüsü kenardan kenara)
+        if (bc && (room > h || (fsOn && room > 100))) h = Math.round(fsOn ? room : Math.min(room, cw / 1.2));      // [ui22] 3B Yayın: yükseklik ekrana göre (TV görüntüsü kenardan kenara)
         S.szw = cw; S.szh = h; sync3dSize();
         if (S.rp) S.rp.by = rpBadgeY();                                      // [rp] tekrar rozeti sekmelerin altında kalsın
         if (cv._cw === cw && cv._ch === h && cv._dpr === dpr && g) return;
@@ -3098,6 +3098,14 @@
     function fsToggle() {
         var card = fsCard(); if (!card) return;
         var pseudo = function (on) { S.pfs = on; document.body.classList.toggle('ab-pfs', on); fsApply(); };      /* [port] tam ekran izni yoksa (iç çerçeve, iPhone) sahne pencereyi kaplar */
+        /* [v150] oyun sayfası içindeysek tam ekranı ana sayfa yapar (iç çerçevenin izni olmasa da): ana sayfa maç katmanını
+           pencereye yayar ve belgeyi tam ekrana almayı dener; burada saha kartı iç çerçeveyi doldurur. */
+        var host = null; try { host = (G.parent && G.parent !== G && G.parent.abHostFS) ? G.parent.abHostFS : null; } catch (e) { host = null; }
+        if (host) {
+            G.abFsOff = function () { if (S.pfs) pseudo(false); };
+            if (S.pfs) { pseudo(false); try { host(false); } catch (e) { } return; }
+            try { host(true); } catch (e) { } pseudo(true); return;
+        }
         if (S.pfs) { pseudo(false); return; }
         if (document.fullscreenElement || document.webkitFullscreenElement) { var ex = document.exitFullscreen || document.webkitExitFullscreen; if (ex) { try { ex.call(document); } catch (e) { } } return; }
         var rq = card.requestFullscreen || card.webkitRequestFullscreen, ok = !!(rq && (document.fullscreenEnabled || document.webkitFullscreenEnabled));

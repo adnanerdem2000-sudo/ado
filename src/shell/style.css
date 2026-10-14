@@ -2321,3 +2321,7 @@ html.dro-on,html.dro-on body{overflow:hidden}
 .ag-line>span{color:var(--chalk-3);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.ag-line small{color:var(--chalk-3)}
 .tw-p .pi{display:none}
 .ib-read .tw-box{max-width:560px}
+/* v150: maç ekranı tam ekran (iç çerçeve izni olmasa da pencereyi kaplar) */
+#fx.ab-hostfs{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;border-radius:0!important;z-index:2147483000!important;transform:none!important}
+#fx.ab-hostfs #abWrap,#fx.ab-hostfs #abIf{position:absolute;inset:0;width:100%;height:100%}
+body.ab-hostfs-on{overflow:hidden}
