@@ -2191,3 +2191,6 @@ html.dro-on,html.dro-on body{overflow:hidden}
 .pz-br li em{font-style:normal;font-size:11.5px;background:rgba(255,255,255,.05);border-radius:5px;padding:1px 6px;color:var(--chalk-2)}.pz-br li em.p{color:#9df0bd}.pz-br li em.n{color:#ffb0ac}
 .pz-br li strong{font-variant-numeric:tabular-nums;font-weight:800}
 .pz-rolf .chips{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+/* v141: ipucu ilk girdide kaybolur; hoca rozeti ipucu kalkınca görünür (üst üste binmez) */
+.mv-stage .mg-hint.gone{animation:none;opacity:0;transform:translateY(-6px);transition:opacity .25s,transform .25s}
+.mv-stage .mg-coach.wait{opacity:0!important}

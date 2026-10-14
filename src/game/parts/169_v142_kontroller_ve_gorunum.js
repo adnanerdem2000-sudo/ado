@@ -330,7 +330,7 @@ mgDraw=function(){const S=MG.S,c=MG.ctx,W=MG.W,H=MG.H;if(!S||!c)return;const fl=
   const list=S.all.map(e=>({e,k:CAMV.s*e.y}));if(fl||b.y>=0)list.push({e:b,k:CAMV.s*b.y+(b.owner||b.held?0.7:0)});list.sort((p,q)=>p.k-q.k);
   trailStep(b);
   for(const it of list){if(it.e===b){drawTrail(c);drawBall(c,b);}else{drawStreak(c,it.e);drawPlayer(c,it.e);}}
-  if(fl){c.globalAlpha=0.55;drawGoalBack(c);c.globalAlpha=1;drawPosts(c);drawBoards(c,-4.2);}
+  if(fl){c.globalAlpha=0.55;drawGoalBack(c);c.globalAlpha=1;drawPosts(c);}/* v141: ters kamerada yakın pano çizilmez (kumandanın arkasında şerit gibi görünüyordu) */
   drawFog(c);drawParts(c);drawWeather(c);
   if(typeof mgDrawExtra==='function'){try{mgDrawExtra(c);}catch(e){}}
   drawOverlay(c);drawGoalFlash(c);

@@ -347,6 +347,8 @@ ACTX.selrol=el=>{SEL.rol=el.dataset.v;const y=window.scrollY;showStart();window.
 /* ---------- maç planı: anlar mevkiye göre ---------- */
 buildMatch=(old=>function(us,opp,usHome,role,comp,national){const cfg=old.apply(this,arguments);try{if(pzOn()&&cfg&&cfg.chances)pzPlan(cfg);}catch(e){console.warn('pozisyon planı',e);}return cfg;})(buildMatch);
 function pzPlan(cfg){const g=pzGrp(),isDef=t=>t==='savunma'||t==='dkorner',o=cfg.chances,oA=o.filter(c=>!isDef(c.type)).length,oD=o.length-oA,vis=cfg.national?null:clubVision(cfg.us);
+  /* yedek kaleci yalnızca ilk kaleci sakatlanırsa (nadiren) oyuna girer; yoksa maç anlatımla akar */
+  if(g==='KL'&&cfg.role==='sub'){if(Math.random()<0.05){cfg.entry=rint(25,80);cfg.gkInj=1;}else{cfg.gkBench=1;cfg.entry=999;cfg.lamUs+=oA*0.2;cfg.lamOpp+=oD*0.22;cfg.chances=[];cfg.pz=1;return;}}
   const n=cfg.role==='start'?(PZ_N[g]||5)+(Math.random()<.35?1:0)+(vis==='hucum'&&['FORVET','KANAT','OOS'].includes(g)?1:0)+(vis==='savunma'&&['STP','BEK','DM','KL'].includes(g)?1:0):rint(2,3);
   const e0=cfg.entry||0,mins=[];let guard=0;while(mins.length<n&&guard++<300){const m=rint(Math.max(4,e0+3),88);if(!mins.some(x=>Math.abs(x-m)<5))mins.push(m);}mins.sort((a,b)=>a-b);
   const rel=(cfg.us.str-cfg.opp.str)/10,keep=PZ.used;PZ.used={};const lst=PZ.lastSc;PZ.lastSc=null;
@@ -366,13 +368,14 @@ function pzPreCard(cfg){const old=$('#pzPre');if(old)old.remove();const sub=cfg.
   const gk=g==='KL'?`<p class="pz-gk">Kalecilikte özelliklerin: <b>Refleks</b> (Defans ${Math.round(a.def)}) · <b>Çıkış</b> (Hız ${Math.round(a.hiz)}) · <b>Hava topu</b> (Fizik ${Math.round(a.fiz)}) · <b>Pozisyon</b> (Dribling ${Math.round(a.dri)}) · <b>Oyun kurma</b> (Pas ${Math.round(a.pas)}) · <b>Degaj</b> (Şut ${Math.round(a.sut)})</p>`:'';
   const tac={hucum:'Bugün hücum oynuyoruz; öne çıkmaktan korkma.',savunma:'Önce kalemizi koruyacağız, sonra kontra.',genc:'Gençlere güveniyoruz; cesur ol.',sampiyon:'Kazanmak zorundayız, hata kabul etmem.'}[vis]||'Planımıza sadık kal.';
   const el=document.createElement('section');el.id='pzPre';el.className='pz-pre';
-  el.innerHTML=`<div class="pz-pre-h"><span class="kicker">Maç öncesi · ${esc(PZ_GN[g])}</span><h3>${sub?'Yedek kulübesindesin':'İlk 11’desin'}</h3><p>${esc(pzRolName())} · ${esc(opp.name||'')} maçı${sub?' · hoca seni ikinci yarıda düşünüyor':''}</p></div>
+  const bench=!!cfg.gkBench;el.innerHTML=bench?`<div class="pz-pre-h"><span class="kicker">Maç öncesi · Kaleci</span><h3>Yedek kalecisin</h3><p>Bugün forma ilk kalecide. Maç anlatımla akacak; ilk kaleci sakatlanır ya da kırmızı kart görürse oyuna girersin.</p></div><button class="cta" type="button" data-act="pzGo"><span>Maçı izle</span><small>Kulübede ısınmaya hazır ol</small></button>`:`<div class="pz-pre-h"><span class="kicker">Maç öncesi · ${esc(PZ_GN[g])}</span><h3>${sub?'Yedek kulübesindesin':'İlk 11’desin'}</h3><p>${esc(pzRolName())} · ${esc(opp.name||'')} maçı${sub?' · hoca seni ikinci yarıda düşünüyor':''}</p></div>
     <p class="sub-h"><span>Hocanın hedefleri</span><span>her biri +0,15</span></p><ul class="pz-obj">${PZ.obj.map(o=>`<li>${esc(o.t)}</li>`).join('')}</ul>
     <p class="pz-tal"><i>HOCA</i> “${esc(PZ.tal.t)}” <small>${esc(tac)}</small></p>${gk}
     <p class="muted pz-note">Maç anlatımla akar; pozisyon sana gelince kontrol sende. Talimata uyarsan not ve hocanın güveni artar, uymazsan forma kaybedebilirsin.</p>
     <button class="cta" type="button" data-act="pzGo"><span>${sub?'Oyuna gireceğin ana atla':'Maça çık'}</span><small>${sub?'Isınmaya başla':'Hakem düdüğü çalmak üzere'}</small></button>`;
   const bd=$('#mvBoard');if(bd)bd.insertAdjacentElement('afterend',el);}
 function pzGoStart(){if(!PZ.on||!PZ.pre||!MR)return;PZ.pre=false;const el=$('#pzPre');if(el)el.remove();
+  if(MR.gkBench)feed(0,'Yedek kalecisin: maçı kulübeden izliyorsun. İlk kaleci sakatlanırsa oyuna gireceksin.','me');
   if(MR.role==='start'){pzSay(0,true);}else{PZ.zip=true;PZ.zipIn=true;PZ.fast0=!!MR.fast;MR.fast=true;}
   clearTimeout(MR.timer);MR.timer=setTimeout(mrStep,300);pzSkipBtn();}
 ACTX.pzGo=()=>pzGoStart();
@@ -390,7 +393,7 @@ mrStep=(old=>function(){if(!MR||!PZ.on||MR.f3||MR.pro)return old.apply(this,argu
   const gu=MR.gu,go=MR.go,on0=onPitch();
   try{if(onPitch()&&!MR.out){if(!PZ.talShown)pzSay(MR.min);else if(PZ.talAt.length&&MR.min>=PZ.talAt[0]){PZ.talAt.shift();pzSay(MR.min);}}else if(PZ.talAt.length&&MR.min>=PZ.talAt[0])PZ.talAt.shift();}catch(e){}
   const r=old.apply(this,arguments);
-  try{if(MR){if(on0&&onPitch()){PZ.onGu+=MR.gu-gu;PZ.onGo+=MR.go-go;}if(PZ.zip&&PZ.zipIn&&onPitch()){pzStopZip();if(!PZ.talShown)pzSay(MR.min);}pzSkipBtn();}}catch(e){}
+  try{if(MR){if(on0&&onPitch()){PZ.onGu+=MR.gu-gu;PZ.onGo+=MR.go-go;}if(PZ.zip&&PZ.zipIn&&onPitch()){pzStopZip();if(MR.gkInj)feed(MR.min,'İlk kalecimiz sakatlandı! '+esc(meN())+' eldivenleri giydi.','me');if(!PZ.talShown)pzSay(MR.min);}pzSkipBtn();}}catch(e){}
   return r;})(mrStep);
 
 /* ---------- an seçimi ---------- */
@@ -413,8 +416,8 @@ makeChance=(old=>function(type,C){let cur=PZ.cur;PZ.cur=null;
     if(cur&&cur.sc){const sc=cur.sc;S.pz=sc;if(sc.b)sc.b(S,C,pzSide(sc));pzFin(S);const T=sc.tag||'';S.act.fam=sc.fam;S.act.press=/press/.test(T)?1:0;S.act.cross=/cross/.test(T)&&S.ck==='take'?1:0;S.act.gk=S.gkm?1:0;}
     if(PZ.on&&PZ.tal)S.coach=PZ.tal.t;}catch(e){console.warn('senaryo',e);}
   return S;})(makeChance);
-startMoment=(old=>function(type,C,title,done){const r=old.apply(this,arguments);try{const S=MG.S;if(S&&S.pz){const sc=S.pz;const t=$('#mgTitle');if(t)t.textContent=String(title||'').replace(/·.*$/,'· '+sc.n);
-    if(sc.h){const h=$('#mgHint');if(h){h.textContent=sc.h;h.classList.remove('fade');void h.offsetWidth;h.classList.add('fade');}}mgFlash(trUp(sc.n),'',0);}}catch(e){}return r;})(startMoment);
+startMoment=(old=>function(type,C,title,done){try{pzPopHide();const h0=$('#mgHint');if(h0)h0.classList.remove('gone');}catch(e){}const r=old.apply(this,arguments);try{const S=MG.S;if(S&&S.pz){const sc=S.pz;const t=$('#mgTitle');if(t)t.textContent=String(title||'').replace(/·.*$/,'· '+sc.n);
+    if(sc.h){const h=$('#mgHint');if(h){h.classList.remove('gone');h.textContent=sc.h;h.classList.remove('fade');void h.offsetWidth;h.classList.add('fade');}}mgFlash(trUp(sc.n),'',0);}}catch(e){}return r;})(startMoment);
 /* 169 başlık kartı ve ayar önizlemesi için */
 function mgCardInfo(type,C){const S=MG.S;if(S&&S.pz)return {t:S.pz.n,s:S.pz.k||''};return null;}
 
@@ -464,10 +467,10 @@ function pzGkBtn(k){const S=MG.S,h=S.hero,A=S.act;if(h.down>0&&!h.gkD)return;
   if(S.mode==='air'){if(k==='a'||k==='d'){S.gkAct={k:k==='a'?'catch':'punch',t:S.t};A.catchTry=1;if(h.jumpT==null)h.jumpT=S.t;return;}if(k==='b'){h.rush=true;h.rushT=1.0;A.rush++;}return;}
   if(k==='a')return pzDive();if(k==='b'){h.rush=true;h.rushT=0.9;A.rush++;return;}if(k==='d'){h.auto=1.2;}}
 function pzDive(){const S=MG.S,h=S.hero,C=S.C,b=S.ball;if(h.gkD)return;let dir=Math.abs(IN.jx)>0.25?Math.sign(IN.jx):0;
-  if(!dir){let px=b.x;if(!b.owner&&b.kind==='shot'){for(const q of predictPath())if(q.y<=h.y){px=q.x;break;}}const dx=px-h.x;dir=Math.abs(dx)<0.45?0:Math.sign(dx);}
+  const autoD=!dir;if(autoD&&S.pzPen)dir=0;else if(!dir){let px=b.x;if(!b.owner&&b.kind==='shot'){for(const q of predictPath())if(q.y<=h.y){px=q.x;break;}}const dx=px-h.x;dir=Math.abs(dx)<0.45?0:Math.sign(dx);}
   S.act.dive++;h.diveAt=S.t;h.rush=false;
   if(!dir){h.jumpT=S.t;h.gkD={t:0,dir:0,v:0,vy:0,dur:0.3,lie:0.12};return;}
-  h.gkD={t:0,dir,v:5.0+C.a.def*0.035,vy:IN.jy<-0.4?-1.2:IN.jy>0.4?1.5:0,dur:0.36+C.a.def*0.0008,lie:0.65};h.dive={tx:h.x+dir*2.6,x0:h.x,t:0};h.diving=true;vib(15);}
+  h.gkD={t:0,dir,v:(5.0+C.a.def*0.035)*(autoD?0.8:1),vy:IN.jy<-0.4?-1.2:IN.jy>0.4?1.5:0,dur:0.36+C.a.def*0.0008,lie:0.65};h.dive={tx:h.x+dir*2.6,x0:h.x,t:0};h.diving=true;vib(15);}
 function gkMove(dt){const S=MG.S,C=S.C,h=S.hero,b=S.ball;
   if(h.gkD){const d=h.gkD;d.t+=dt;if(h.dive)h.dive.t=d.t;
     if(d.t<d.dur){const v=d.v*(1-d.t/d.dur*0.35);h.x=clamp(h.x+d.dir*v*dt,GL-2.4,GR+2.4);h.y=clamp(h.y+d.vy*dt,0.15,40);h.vx=d.dir*v;h.vy=d.vy;}
@@ -475,9 +478,10 @@ function gkMove(dt){const S=MG.S,C=S.C,h=S.hero,b=S.ball;
   if(h.down>0){h.down-=dt;drift(h,dt,0.01);return;}if(h.stag>0){h.stag-=dt;drift(h,dt,0.2);return;}
   if(S.sprint)S.stam=Math.max(0,S.stam-dt/(2.4+C.a.fiz*0.022));else S.stam=Math.min(stamCap(S.cond),S.stam+dt/4.2);
   const max=(3.4+C.a.hiz*0.032)*(S.sprint?1.3:1)*(h.rush?1.35:1)*condSpeed(S.cond);let jx=IN.jx,jy=IN.jy;
-  if(h.rush||h.auto>0){let tx,ty;if(h.rush){const T=S.mode==='air'&&S.drop?S.drop:(b.owner||b);tx=T.x;ty=T.y;h.rushT-=dt;if(h.rushT<=0)h.rush=false;}
-    else{h.auto-=dt;const dd=Math.hypot(b.x-34,b.y)||1,k=clamp(0.7+dd*0.065,0.7,3.6);tx=34+(b.x-34)/dd*k;ty=Math.max(0.4,b.y/dd*k);}
-    const dx=tx-h.x,dy=ty-h.y,dl=Math.hypot(dx,dy);if(dl>0.15){jx=dx/dl*Math.min(1,dl);jy=dy/dl*Math.min(1,dl);}else{jx=jy=0;}}
+  const idle=!h.rush&&!(h.auto>0)&&Math.hypot(IN.jx,IN.jy)<0.2;
+  if(h.rush||h.auto>0||idle){let tx,ty;if(h.rush){const T=S.mode==='air'&&S.drop?S.drop:(b.owner||b);tx=T.x;ty=T.y;h.rushT-=dt;if(h.rushT<=0)h.rush=false;}
+    else{if(h.auto>0)h.auto-=dt;const dd=Math.hypot(b.x-34,b.y)||1,k=clamp(0.7+dd*0.065,0.7,3.6);tx=34+(b.x-34)/dd*k;ty=Math.max(0.4,b.y/dd*k);}
+    const dx=tx-h.x,dy=ty-h.y,dl=Math.hypot(dx,dy),kk=idle?0.6:1;if(dl>0.15){jx=dx/dl*Math.min(1,dl)*kk;jy=dy/dl*Math.min(1,dl)*kk;}else{jx=jy=0;}}
   const k=1-Math.pow(0.002,dt);h.vx+=(jx*max-h.vx)*k;h.vy+=(jy*max-h.vy)*k;h.x=clamp(h.x+h.vx*dt,0.3,67.7);h.y=clamp(h.y+h.vy*dt,0.15,40);
   if(S.pzPen&&!S.kicked0)h.y=Math.min(h.y,0.8);
   faceAnim(h,dt);{const dx=b.x-h.x,dy=b.y-h.y,dl=Math.hypot(dx,dy);if(dl>0.3&&Math.hypot(h.vx,h.vy)<2.5){h.fx=dx/dl;h.fy=dy/dl;}}
@@ -497,8 +501,8 @@ gkAir=(old=>function(g){if(g&&g.isC)return;return old.apply(this,arguments);})(g
 function pzGkShot(){const S=MG.S,b=S.ball,h=S.hero,C=S.C;if(b.owner||b.held||b.kind!=='shot'||b.gkChecked||!b.last||b.last.side==='us')return;if(!(b.py>h.y&&b.y<=h.y))return;b.gkChecked=true;
   const f=(b.py-h.y)/((b.py-b.y)||1),cx=b.px+(b.x-b.px)*f,cz=b.pz+(b.z-b.pz)*f,dx=Math.abs(cx-h.x),sp=Math.hypot(b.vx,b.vy),A=C.a,dv=!!(h.gkD&&h.gkD.dir),lying=dv&&h.gkD.t>=h.gkD.dur;
   const tt=b.y/Math.max(1,-b.vy),gx=b.x+b.vx*tt,onT=gx>GL-0.4&&gx<GR+0.4&&cz<GH+0.35;if(!onT&&!dv)return;
-  let rx=0.55+A.dri*0.003+(dv?0.55+A.def*0.004:0)+(h.jumpT!=null?0.1:0),rz=dv?(lying?0.8:1.7+A.fiz*0.006):(1.95+A.fiz*0.004+(h.jumpT!=null?0.35:0));if(h.down>0&&!dv){rx=0.6;rz=0.6;}
-  if(dx<rx&&cz<rz){let p=0.62+A.def*0.0035-(sp-20)*0.025-(dx>rx*0.7?0.12:0)+(dv&&!lying&&Math.abs(S.t-h.diveAt-0.25)<0.2?0.12:0)-(S.pzPen?0.05:0);p=clamp(p,0.2,0.96);
+  const near=Math.hypot(b.px-34,b.py)<11&&!S.pzPen;let rx=0.55+A.dri*0.003+(dv?0.55+A.def*0.004:0)+(h.jumpT!=null?0.1:0)+(near?0.55:0),rz=dv?(lying?0.8:1.7+A.fiz*0.006):(1.95+A.fiz*0.004+(h.jumpT!=null?0.35:0));const auto=!dv&&!h.gkD&&h.down<=0;if(auto){rx+=0.4+A.def*0.004;rz+=0.1;}if(h.down>0&&!dv){rx=0.6;rz=0.6;}
+  if(dx<rx&&cz<rz){let p=0.66+A.def*0.0035-(sp-22)*0.015-(dx>rx*0.75?0.1:0)+(dv&&!lying&&Math.abs(S.t-h.diveAt-0.25)<0.2?0.12:0)-(S.pzPen?0.08:0);if(auto&&dx>1.0)p*=0.75;p=clamp(p,0.2,0.96);
     if(Math.random()<p){if(sp<20.5&&dx<0.55+A.def*0.002&&cz<1.9&&Math.random()<0.4+A.def*0.004){b.held=h;b.owner=null;vib(30);return endChance(S.pzPen?'kPenSave':'kCatch');}
       b.vy=Math.abs(b.vy)*0.3+2;b.vx=(cx<h.x?-1:1)*rnd(3,7);b.vz=rnd(1.5,3.5);b.om=0;b.kind='loose';b.last=h;b.lastT=S.t;vib(30);return endChance(S.pzPen?'kPenSave':'kSave');}
     b.vx*=0.85;b.vy*=0.85;mgFlash('DOKUNDU AMA…','bad',500);}}
@@ -519,7 +523,10 @@ coverAI=(old=>function(t,dt){const S=MG.S;if(t.role==='idle'){drift(t,dt);return
 mgStep=(old=>function(dt){const S=MG.S;
   if(S&&S.phase==='play'&&!S._init){S._init=1;try{if(S.pzInit)S.pzInit(S);}catch(e){console.warn(e);}}
   if(S&&S.gkm==='save'&&S.phase==='play'&&typeof slowWant!=='function'){const b=S.ball;if(!b.owner&&!b.held&&b.kind==='shot'&&b.vy<-3&&b.y>S.hero.y-0.5&&b.last&&b.last.side==='opp')dt*=0.5;}
-  const r=old.call(this,dt);if(S&&MG.S===S&&S.phase==='play'&&S.act){try{pzTick(S,dt);}catch(e){console.warn('pozisyon an',e);}}return r;})(mgStep);
+  const r=old.call(this,dt);if(S&&MG.S===S&&S.phase==='play'&&S.act){try{pzTick(S,dt);}catch(e){console.warn('pozisyon an',e);}}
+  try{if(S&&MG.S===S&&!S._hintOff&&(S.t>3.9||(S.phase==='play'&&(IN.btn.a||IN.btn.b||IN.btn.c||IN.btn.d||Math.hypot(IN.jx,IN.jy)>0.3)))){S._hintOff=1;const h=$('#mgHint');if(h)h.classList.add('gone');}
+    const cc=$('#mgCoach');if(cc&&S)cc.classList.toggle('wait',!S._hintOff);}catch(e){}
+  return r;})(mgStep);
 function pzTick(S,dt){const b=S.ball,h=S.hero,A=S.act;
   if(b.owner===h){A.own+=dt;S.hadBall=true;A.holdCur+=dt;if(A.holdCur>A.hold)A.hold=A.holdCur;if(h.y<25&&Math.abs(h.x-34)<16)A.zone=1;if(h.y<16.5&&Math.abs(h.x-34)<20.16)A.box=1;}else A.holdCur=0;
   if((S.mode==='def'||S.mode==='cp')&&!S.gkm){const o=b.owner;if(o&&o.side==='opp'&&dist(h,o)<2.2)A.pressT+=dt;}
@@ -531,7 +538,10 @@ function pzTick(S,dt){const b=S.ball,h=S.hero,A=S.act;
   if((S.tac||S.pzHands)&&b.owner===h){const R0=S.tac?2.2:4;for(const e of S.opps){const d=dist(e,h);if(d<R0&&d>0.01){e.x=h.x+(e.x-h.x)/d*R0;e.y=h.y+(e.y-h.y)/d*R0;e.vx*=0.3;e.vy*=0.3;}}}else if(S.pzHands&&b.owner!==h)S.pzHands=0;
   if(S.pzClr&&S.t>S.pzClr&&!b.owner)return endChance('uzak');
   if(S.pz&&S.pz.t)S.pz.t(S,dt);
-  if(S.gkm==='save'&&b.kind==='shot'&&!b.owner&&b.last&&b.last.side==='opp'&&!S._shotF){S._shotF=1;mgFlash('ŞUT!','bad',420);}}
+  if(S.gkm==='save'&&b.kind==='shot'&&!b.owner&&b.last&&b.last.side==='opp'&&!S._shotF){S._shotF=1;mgFlash('ŞUT!','bad',420);}
+  /* kaleci yardımı: ortaya hiç girdi yoksa yakın düşen topu kendisi almaya çalışır (yarı yardımlı kaleci) */
+  if(S.gkm==='save'&&S.mode==='air'&&S.kicked&&b.kind==='cross'&&S.drop&&!S.gkAct){if(S._ac==null)S._ac=S.drop.y<6&&Math.abs(S.drop.x-34)<7&&Math.random()<0.45;
+    if(S._ac&&!A.catchTry&&Math.hypot(h.x-b.x,h.y-b.y)<1.5&&b.z<2.7)S.gkAct={k:'catch',t:S.t};}}
 
 /* ---------- sonuç kodlarının mevkiye/senaryoya göre yorumu ---------- */
 function pzMap(S,code){const id=S.pz&&S.pz.id;
@@ -601,11 +611,12 @@ function pzProject(rt,played){const p=G.p,sv={t:p.trust,f:p.form.slice(),e:p.ene
   try{if(played){if(PZ.league)p.trust=clamp(p.trust+(rt-6.4)*5+PZ.fin.trustD,0,100);p.form.push(rt);if(p.form.length>5)p.form.shift();}p.energy=Math.max(p.energy,80);
     p.pzLast=null;base=decideRole();p.pzLast=played?{r:rt,c:PZ.fin.compRate,n:PZ.fin.compN,y:G.s.year,d:G.s.day}:sv.l;role=decideRole();}catch(e){}finally{p.trust=sv.t;p.form=sv.f;p.energy=sv.e;p.pzLast=sv.l;}
   const T={start:rr==='start'?'İlk 11’e devam':'İlk 11’e yükseliyorsun',sub:'Yedek kulübesi',squad:'Kadro dışı'}[role]||'Hoca kararını sonra verecek';
-  const cR=PZ.fin.compRate,cN=PZ.fin.compN;let why=`Not ${dec(rt)}`+(cN?` · talimat uyumu %${Math.round(cR*100)}`:'');
+  const cR=PZ.fin.compRate,cN=PZ.fin.compN;let why=played?`Not ${dec(rt)}`+(cN?` · talimat uyumu %${Math.round(cR*100)}`:''):'Bu maçta süre almadın';
   if(role!==base&&base)why+=role==='start'?' · bu maçla hocayı ikna ettin':' · hoca bu maçtan sonra seni kenara aldı';
   else if(role==='start')why+=rt>=7?' · formun yerinde':' · hoca sana güveniyor';else if(role==='sub')why+=rt<6?' · performans yetmedi':' · kadrodaki rekabet sert';else if(role==='squad')why+=' · antrenmanda kendini göstermelisin';
   return {role,t:T,why};}
-function pzFT(){const z=PZ.fin;if(!z)return;const o=$('#pzFT');if(o)o.remove();const cb=$('#pzCoach');if(cb)cb.remove();
+function pzPopHide(){const el=$('#pzPop');if(el)el.classList.remove('show');clearTimeout(PZ.popT);}
+function pzFT(){const z=PZ.fin;if(!z)return;pzPopHide();const o=$('#pzFT');if(o)o.remove();const cb=$('#pzCoach');if(cb)cb.remove();
   const cls=z.rating>=7.5?'hi':z.rating>=6.5?'mid':'lo',nk=z.next.role||'';
   const row=(m,n,ev)=>{const s=ev.reduce((a,x)=>a+x.v,0);return `<li><i>${m!=null?m+'’':''}</i><div><b>${esc(n)}</b><span>${ev.map(x=>`<em class="${x.v>0.001?'p':x.v<-0.001?'n':''}">${esc(x.t)} ${pzFmt(x.v)}</em>`).join('')}</span></div><strong class="${s>0.001?'p':s<-0.001?'n':''}">${pzFmt(s)}</strong></li>`;};
   const rows=[`<li><i></i><div><b>Başlangıç notu</b></div><strong>6,0</strong></li>`,row(null,'Maç sonucu',[{t:MR.gu>MR.go?'Galibiyet':MR.gu===MR.go?'Beraberlik':'Mağlubiyet',v:z.res}]),
@@ -626,3 +637,13 @@ applyPlayed=(old=>function(res,role,win,draw,notes,tier,league){const r=old.appl
 decideRole=(old=>function(){let r=old.apply(this,arguments);try{const L=G&&G.p&&G.p.pzLast;if(!L||!G.s||L.y!==G.s.year||G.s.day<L.d||G.s.day-L.d>12)return r;
   if(r==='start'&&(L.r<5.3||(L.n>=2&&L.c<0.4&&L.r<6.6)))r='sub';else if(r==='sub'&&L.r>=7.6&&(L.n<2||L.c>=0.5))r='start';else if(r==='squad'&&L.r>=7.2)r='sub';}catch(e){}return r;})(decideRole);
 closeMatchView=(old=>function(){const r=old.apply(this,arguments);try{for(const id of ['pzPre','pzFT','pzCoach','pzPop'])$('#'+id)&&$('#'+id).remove();const b=$('#pzSkip');if(b)b.hidden=true;PZ.pre=false;PZ.zip=false;}catch(e){}return r;})(closeMatchView);
+/* rolü sonradan değiştirme: Ayarlar → "Mevkideki rolün" */
+openSettings=(old=>function(){const r=old.apply(this,arguments);try{if(!G||!G.p||!isPl())return r;const mc=$('#modalCard');if(!mc||mc.querySelector('.pz-rolset'))return r;const L=PZ_ROL[G.p.pos]||[];if(L.length<2)return r;const cur=pzRol();
+  const h=`<div class="pz-rolset"><p class="sub-h" style="margin:14px 0 6px"><span>Mevkideki rolün</span><span>${esc(POS[G.p.pos].name)}</span></p><div class="seg plm-seg">${L.map(([k,n])=>`<button class="chip${cur===k?' on':''}" data-act="pzRolSet" data-v="${k}">${n}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Pozisyon modunda maçta sana gelecek anlar rolüne göre seçilir (ör. bekte orta ve bire bir savunma, stoperde hava topu ve oyun kurma).</p></div>`;
+  const pm=mc.querySelector('.plm-set');if(pm)pm.insertAdjacentHTML('afterend',h);else (mc.lastElementChild||mc).insertAdjacentHTML('beforebegin',h);}catch(e){console.warn('rol ayarı',e);}return r;})(openSettings);
+ACTX.pzRolSet=el=>{const v=el.dataset.v,L=PZ_ROL[G.p.pos]||[],x=L.find(y=>y[0]===v);if(!x)return;G.p.rol=v;save();document.querySelectorAll('[data-act=pzRolSet]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));toast('Yeni rolün: '+x[1]);};
+/* denge: pozisyon anlarında rakip şutları ve kafaları gerçekçi isabet oranında (yaklaşık üçte biri çerçevede) */
+oppShoot=(old=>function(a){const S=MG.S;if(!S||!S.pz)return old.apply(this,arguments);const q=S.C.opp.str,g=S.gk,d=Math.hypot(a.x-34,a.y),far=Math.random()<0.6,side=g.x<34?1:-1;
+  const tx=far?34+side*rnd(1.4,3.5):clamp(g.x+rnd(-1.6,1.6),GL+0.3,GR-0.3),sdA=(0.06+(100-q)*0.001)*(0.9+d/15)*(S.gkm?1:dist(S.hero,a)<2.6?1.3:0.72);
+  kick(a,tx,0,rnd(0.2,2.2),rnd(17,23)+q*0.04,0,sdA,0.6,'shot');})(oppShoot);
+headerBy=(old=>function(e){const S=MG.S;const r=old.apply(this,arguments);try{const b=S&&S.ball;if(S&&S.pz&&e&&e.side==='opp'&&b&&b.kind==='shot'){const a=gauss()*0.15,c=Math.cos(a),sn=Math.sin(a),vx=b.vx*c-b.vy*sn;b.vy=b.vx*sn+b.vy*c;b.vx=vx;b.vz+=gauss()*0.9;}}catch(x){}return r;})(headerBy);
