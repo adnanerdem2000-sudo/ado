@@ -1,6 +1,6 @@
 /* ================= v161: transferler sayfası (sezon sezon tüm transferler, kiralıklar dahil), gelen kutusunda yalnız ses getiren transferler, çok uluslu menajer dünyası ve komisyonla çalışan menajerler =================
    - G.trl: her transfer (YZ↔YZ, kendi kulübün, futbolcunun kendisi, kiralık, kiralıktan dönüş, opsiyonlu kiralık, bonservissiz, altyapıdan) sezon başına sıkıştırılmış satır olarak tutulur.
-     Satır: [gün, oyuncu anahtarı, ad, yaş, mevki, eski kulüp, yeni kulüp, tür, bedel €, opsiyon €]. Son 10 sezon saklanır; 3 sezondan eski sezonlarda yalnız en değerli 250 satır kalır.
+     Satır: [gün, oyuncu anahtarı, ad, yaş, mevki, eski kulüp, yeni kulüp, tür, bedel €, opsiyon €]. Son 10 sezon saklanır; 3 sezondan eski sezonlarda yalnız en değerli 150 satır (ve kendi kulüplerinin satırları) kalır.
    - Gelen kutusu (tüm meslekler): kendi ligin ve kulübün transferleri tek tek gelir; diğerleri yalnız basında ses getirenler (lige göre bedel eşiği, yıldız oyuncu, büyük kulüp)
      ve varsayılan olarak tek bir "Haftanın transferleri" özetinde. Transferler sayfasından "tek tek (haftada en çok 5)" ya da "kapalı" seçilebilir.
    - YZ kulüpleri genç yedeklerini kiralık gönderir (bazıları satın alma opsiyonlu); kiralıklar sezon başında döner ya da opsiyon kullanılır.
@@ -79,7 +79,7 @@ function trlSeason(){const T=trlInit();if(!T||!G.s)return;const y=G.s.year;if(T.
       if(a.o&&Math.random()<0.4){trlPush([G.s.day,a.k,p.name,p.age,p.pos,a.f,a.t,0,a.o,0]);continue;}
       G.tx[a.k]=a.f;txNote(a.k,a.f);syncStr(a.f);syncStr(a.t);}catch(e){}}
   T.al=keep;trlFin();
-  for(const k of Object.keys(T.s)){const sy=+k;if(sy<y-9){delete T.s[k];continue;}if(sy<y-2&&T.s[k].length>250){const R=T.s[k],me=R.filter(r=>r[1]==='ME'),rest=R.filter(r=>r[1]!=='ME').sort((a,b)=>b[8]-a[8]).slice(0,250-me.length);T.s[k]=me.concat(rest).sort((a,b)=>a[0]-b[0]);}}}
+  for(const k of Object.keys(T.s)){const sy=+k;if(sy<y-9){delete T.s[k];continue;}if(sy<y-2&&T.s[k].length>150){const R=T.s[k],mine=r=>r[1]==='ME'||(G.history||[]).some(h=>h&&(h.club===r[5]||h.club===r[6]))||r[5]===G.club||r[6]===G.club,me=R.filter(mine),rest=R.filter(r=>!mine(r)).sort((a,b)=>b[8]-a[8]).slice(0,Math.max(0,150-me.length));T.s[k]=me.concat(rest).sort((a,b)=>a[0]-b[0]);}}}
 nextDay=(old=>function(){const r=old.apply(this,arguments);try{if(G&&G.s){trlSeason();const T=G.trl,wk=wkKey();if(T&&T.wk!==wk){trlDigest();T.wk=wk;T.wn=0;}}}catch(e){console.warn('v161',e);}return r;})(nextDay);
 /* kayıt boyutu: transfer listesindeki oyuncu anahtarları "ilgili oyuncu" sayılmasın (v152 arşivi şişmesin) */
 if(typeof kvRefs==='function')kvRefs=(old=>function(){const t=G&&G.trl;if(!t)return old.apply(this,arguments);try{delete G.trl;return old.apply(this,arguments);}finally{G.trl=t;}})(kvRefs);
@@ -96,7 +96,7 @@ function trlDate(r,y){try{const d=dateOf(r.d,+y);return `${d.getUTCDate()} ${TR_
 function trlClubBtn(id){const c=clubObj(id);if(!c)return '<span class="trl-c">?</span>';return `<button class="trl-c" data-act="club" data-id="${id}">${crestSVG(c,18)}<span>${esc(c.short||c.name)}</span></button>`;}
 function trlFeeTxt(r){return r.ty===0?(r.fee?eur(r.fee):'Açıklanmadı'):r.ty===4?`Kiralık${r.opt?` <small>ops. ${eur(r.opt)}</small>`:''}`:r.ty===1?'Kiralık':r.ty===2?'Bonservissiz':r.ty===3?'Dönüş':'Altyapıdan';}
 function trlRowHTML(r,y){const me=r.k==='ME',cur=(G.tx&&G.tx[r.k])||r.t;
-  const pl=me?`<button class="trl-p" data-act="navGo" data-tab="player"><b>${esc(r.n)}</b><small>${esc(r.pos)} · ${r.age} · sen</small></button>`
+  const pl=me?`<button class="trl-p" data-act="navGo" data-tab="player"><b>${esc(r.n)}</b><small>${esc(POS_TR[r.pos]||r.pos)} · ${r.age} · sen</small></button>`
     :`<button class="trl-p" data-act="pcard" data-id="${esc(cur)}" data-k="${esc(r.k)}"><b>${esc(r.n)}</b><small>${esc(POS_TR[r.pos]||r.pos)} · ${r.age}</small></button>`;
   return `<div class="trl-r ty${r.ty}${me||r.f===G.club||r.t===G.club?' me':''}"><time>${trlDate(r,y)}</time>${pl}<div class="trl-m">${trlClubBtn(r.f)}<i aria-hidden="true">→</i>${trlClubBtn(r.t)}</div><em class="trl-f">${trlFeeTxt(r)}</em></div>`;}
 function trlListHTML(R,y){const s=R.slice().sort(TRLV.sort==='f'?(a,b)=>(b.ty===0?b.fee:-1)-(a.ty===0?a.fee:-1)||b.d-a.d:(a,b)=>b.d-a.d||b.fee-a.fee);

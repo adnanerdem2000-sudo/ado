@@ -2594,7 +2594,7 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .trl{display:flex;flex-direction:column;gap:10px}
 .trl-h1{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.trl-h1 h2{margin:0}
 .trl-h1 .trl-fl{flex:0 1 190px}
-.trl-strip{grid-template-columns:repeat(5,minmax(0,1fr))}.trl-strip b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}.trl-strip span{font-size:11px}
+.trl-strip{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:10px}.trl-strip>div{min-width:0}.trl-strip b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}.trl-strip span{font-size:10.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trl-fil{display:flex;flex-direction:column;gap:8px}
 .trl-fls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .trl-fl{display:flex;flex-direction:column;gap:3px;min-width:0}.trl-fl>span{font-size:11px;color:var(--chalk-3);text-transform:uppercase;letter-spacing:.06em}
@@ -2619,7 +2619,7 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .trl-tb td{text-align:right;padding:5px 2px;border-top:1px solid var(--line);white-space:nowrap}.trl-tb td:first-child{white-space:normal}.trl-tb .pos{color:var(--good)}.trl-tb .neg{color:var(--red)}
 .trl-card .filt{flex-wrap:wrap}.trl-card .chip{padding:7px 10px;font-size:13px}
 @media(min-width:1000px){.trl-grid{grid-template-columns:minmax(0,1fr) 340px;align-items:start}.trl-side{position:sticky;top:12px}
-  .trl-fls{grid-template-columns:repeat(5,minmax(0,1fr))}.trl-strip b{font-size:18px}
+  .trl-fls{grid-template-columns:repeat(5,minmax(0,1fr))}.trl-strip{grid-template-columns:repeat(5,minmax(0,1fr))}.trl-strip b{font-size:18px}
   .trl-r{grid-template-columns:62px minmax(0,1.1fr) minmax(0,1.5fr) 120px;grid-template-areas:"t p m f";padding:7px 4px}.trl-r time{text-align:left;font-size:12.5px}.trl-c span{max-width:160px}}
 .ag-terms{margin:0 0 6px;padding-left:18px;font-size:13.5px;line-height:1.45}.ag-terms li{margin:2px 0}.ag-terms li.ok{color:var(--good)}.ag-terms li.no{color:#ffb38a}
 .ag-nat{margin:6px 0}.ag-nat .lf-sel{min-height:38px;font-size:14px}

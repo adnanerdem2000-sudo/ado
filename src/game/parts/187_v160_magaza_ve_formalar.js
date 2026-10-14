@@ -22,21 +22,22 @@ function v160Kit(shirt,trim,ps,r,o){o=o||{};shirt=v160Hex(shirt);trim=v160Hex(tr
   const socks=v160Hex(o.socks||R([shirt,shirt,trim,shorts]));
   const busy=['halves','stripes','wide','hoops','thin'].includes(ps);
   const num=busy?(lum(trim)>150&&L>150?'#141414':'#ffffff'):(L>150?'#141414':'#ffffff');
-  return {shirt,trim,pat:V160_LEG[ps]||0,shorts,socks,num,ps,p3:V160_3D[ps]||0,col:o.col||R(['crew','crew','v','polo','wrap']),slv:o.slv||(['plain','grad','pin','fade'].includes(ps)&&r()<0.22?'c':''),cuff:R([trim,trim,shirt])};}
+  return {shirt,trim,pat:V160_LEG[ps]||0,shorts,socks,num,ps,p3:V160_3D[ps]||0,col:o.col||R(['crew','crew','v','polo','wrap']),ov:o.ov||'',sw:o.sw||R([5,6,7]),slv:o.slv||(['plain','grad','pin','fade'].includes(ps)&&r()<0.22?'c':''),cuff:R([trim,trim,shirt])};}
 function v160Kits(c,y){y=y||v160Yr();const key=(c.id||c.name||'x')+'@'+y+'@'+c.c1+c.c2;if(V160.kc[key])return V160.kc[key];
   const r=srng((c.id||c.name||'x')+'|forma|'+y),R=a=>a[Math.floor(r()*a.length)];
   const c1=v160Hex(c.c1),c2=v160Hex(c.c2),L1=lum(c1),near=v160D(c1,c2)<90,WH='#f4f5f7',BK='#15171c';
   const id=c.pat;let hps;
   if(id===1)hps='halves';else if(id===2)hps=R(['stripes','stripes','stripes','thin','wide']);else if(id===3)hps='sash';else if(id===4)hps=R(['hoops','hoops','band']);
   else hps=R(['plain','plain','grad','pin','shoulder','band','chev','sides','fade','tone','plain']);
-  const h=v160Kit(c1,near?(L1>150?BK:WH):c2,hps,r);
+  const cy=(arr,k)=>arr[(y+k+hash(String(c.id||c.name||'')))%arr.length];
+  const h=v160Kit(c1,near?(L1>150?BK:WH):c2,hps,r,{col:cy(['crew','v','polo','wrap'],0),ov:id!=null?cy(['','grad','fade','shade'],1):'',sw:cy([5,6,7],2)});
   /* deplasman: ikinci renk ya da kontrast (beyaz/siyah), garnitür ana renk */
   const contrast=L1>165?BK:WH;let as,at;const u=r();
-  if(!near&&u<0.55){as=c2;at=c1;}else if(u<0.85||near){as=contrast;at=c1;}else{as=L1>120?v6L(c1,-0.5):v6L(c2,-0.08);at=near?contrast:c2;}
+  if(!near&&u<0.55){as=c2;at=c1;}else if(u<0.85||near){as=contrast;at=c1;}else{const dk=x=>lum(x)>150?null:v6L(x,-0.4);as=dk(c1)||dk(c2)||'#17213a';at=near?contrast:(lum(c1)>150?c1:c2);}
   if(v160D(as,h.shirt)<120){as=v160D(contrast,h.shirt)>=120?contrast:(L1>128?BK:WH);at=c1;}
   const a=v160Kit(as,at,R(['plain','plain','sash','band','chev','grad','pin','shoulder','sides','hoops']),r);
   /* üçüncü: koyu (lacivert/antrasit/siyah) ya da açık ton, kulüp renklerinde ayrıntı */
-  const opts=[R(['#17213a','#2c3038','#101114','#1e2a24']),v6L(c1,0.62),v6L(c2,-0.35),v160Mix(c1,c2,0.5),R(['#d9dee6','#efe6d2'])];
+  const opts=[R(['#17213a','#2c3038','#101114','#1e2a24']),v6L(c1,0.62),lum(c2)>150?v6L(c2,0.55):v6L(c2,-0.35),lum(c1)>150?'#17213a':v6L(c1,-0.38),R(['#d9dee6','#efe6d2'])];
   let ts=null;for(let i=0;i<8&&!ts;i++){const s=R(opts);if(v160D(s,h.shirt)>=95&&v160D(s,a.shirt)>=95)ts=s;}
   if(!ts)ts=L1>128?'#17213a':'#efe6d2';
   const tt=v160D(ts,c1)>=80?c1:(v160D(ts,c2)>=80?c2:(lum(ts)>150?BK:WH));
@@ -57,14 +58,14 @@ function v160Kits3D(o){try{const S=FX;if(!S||!S.U||!S.O||!o||!o.cols)return null
   const out=[0,1].map(i=>{const t=pickT(nm[i],i);if(!t)return null;const k=t.kit;if(v160D(o.cols[i],k.shirt)>60)return null;return {p3:k.p3,shorts:k.shorts,socks:k.socks,trim:k.trim};});
   return out[0]||out[1]?[out[0],out[1]]:null;}catch(e){return null;}}
 function v160Hook3D(){try{const A=window.Ado3D;if(!A||A.__v160||typeof A.create!=='function')return;const cr=A.create;
-  A.create=function(){const R3=cr.apply(this,arguments);try{if(R3&&typeof R3.setMatch==='function'&&!R3.__v160){const sm=R3.setMatch;R3.setMatch=function(o){try{if(o&&!o.kits){const k=v160Kits3D(o);if(k)o.kits=k;}}catch(e){}return sm.apply(this,arguments);};R3.__v160=1;}}catch(e){}return R3;};A.__v160=1;}catch(e){}}
+  A.create=function(){const R3=cr.apply(this,arguments);try{if(R3&&typeof R3.setMatch==='function'&&!R3.__v160){const sm=R3.setMatch;R3.setMatch=function(o){try{if(o&&!o.kits){const k=v160Kits3D(o);if(k)o.kits=k;}V160.last=o&&o.kits||null;}catch(e){}return sm.apply(this,arguments);};R3.__v160=1;}}catch(e){}return R3;};A.__v160=1;}catch(e){}}
 try{window.addEventListener('load',()=>setTimeout(v160Hook3D,0));}catch(e){}
 /* kulüp sayfası: forma çizimi ve sezon seçici */
 function v160KitSVG(k,lbl,num,sub){const u='v6k'+(++V160.n),sh=k.shirt,tr=k.trim,ps=k.ps||'plain';
   const body='M31 8 18 12 4 30 15 41 24 33 24 86Q50 90 76 86L76 33 85 41 96 30 82 12 69 8C65 15 35 15 31 8Z';
   const R=(x,y,w,h,f,o)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"${o?` opacity="${o}"`:''}/>`;let pt='';
   switch(ps){case 'halves':pt=R(50,0,50,92,tr);break;
-    case 'stripes':pt=[0,1,2,3,4,5].map(i=>R(8+i*15,0,7.5,92,tr)).join('');break;
+    case 'stripes':{const n=k.sw||6,w=100/n;pt=Array.from({length:n},(_,i)=>R(i*w+w*0.5,0,w/2,92,tr)).join('');break;}
     case 'wide':pt=[0,1,2].map(i=>R(15+i*28,0,14,92,tr)).join('');break;
     case 'thin':pt=Array.from({length:12},(_,i)=>R(4+i*8,0,3,92,tr)).join('');break;
     case 'pin':pt=Array.from({length:16},(_,i)=>R(3+i*6,0,.9,92,tr,.55)).join('');break;
@@ -77,13 +78,14 @@ function v160KitSVG(k,lbl,num,sub){const u='v6k'+(++V160.n),sh=k.shirt,tr=k.trim
     case 'sides':pt=R(20,32,8,62,tr)+R(72,32,8,62,tr);break;
     case 'grad':pt=`<rect width="100" height="92" fill="url(#${u}g)"/>`;break;
     case 'fade':pt=`<rect width="100" height="92" fill="url(#${u}f)"/>`;break;}
+  pt+=k.ov==='grad'?`<rect width="100" height="92" fill="url(#${u}g)"/>`:k.ov==='fade'?`<rect width="100" height="92" fill="url(#${u}f)" opacity=".6"/>`:k.ov==='shade'?Array.from({length:10},(_,i)=>R(i*10+3,0,3,92,'#000',.07)).join(''):'';
   const slv=k.slv==='c'?`<path d="M31 8 18 12 4 30 15 41 24 33Z M69 8 82 12 96 30 85 41 76 33Z" fill="${tr}"/>`:'';
   const col=k.col==='v'?`<path d="M38 9 50 22 62 9" fill="${v6L(sh,-0.2)}" stroke="${tr}" stroke-width="3" stroke-linejoin="round"/>`:
     k.col==='polo'?`<path d="M36 8 45 19 50 13 55 19 64 8" fill="${tr}" stroke="${v6L(tr,-0.25)}" stroke-width=".8"/><path d="M50 14V27" stroke="${v6L(sh,-0.3)}" stroke-width="1.2"/><circle cx="50" cy="21" r=".9" fill="${tr}"/>`:
     k.col==='wrap'?`<path d="M38 9 51 21M62 9 48 22" stroke="${tr}" stroke-width="3.2" stroke-linecap="round"/>`:`<path d="M37 9Q50 18 63 9" fill="none" stroke="${tr}" stroke-width="3.4" stroke-linecap="round"/>`;
   const busy=['halves','stripes','wide','hoops','thin','sash'].includes(ps);
   return `<figure class="cp-kit v160k"><svg viewBox="0 0 100 140" width="92" height="128"><defs><clipPath id="${u}c"><path d="${body}"/></clipPath>
-    <linearGradient id="${u}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></linearGradient>
+    <linearGradient id="${u}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="${lum(sh)>150?tr:'#000'}" stop-opacity="${lum(sh)>150?'.55':'.42'}"/></linearGradient>
     <linearGradient id="${u}f" x1="0" y1="0" x2="0" y2="1"><stop offset=".35" stop-color="${tr}" stop-opacity="0"/><stop offset="1" stop-color="${tr}" stop-opacity=".95"/></linearGradient>
     <linearGradient id="${u}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".24"/></linearGradient></defs>
     <path d="${body}" fill="${sh}"/><g clip-path="url(#${u}c)">${pt}${slv}<rect width="100" height="92" fill="url(#${u}s)"/><path d="M24 33Q36 48 30 86M76 33Q66 52 72 86" stroke="#000" stroke-opacity=".1" stroke-width="1" fill="none"/></g>
@@ -113,24 +115,24 @@ const v6Ball=(g,x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${g('#ffffff
 /* krampon: düşük kesim hız silueti, örgü bilek, taban plakası ve çiviler; markasız dinamik şeritler */
 function v6Boot(o){const st=o.s||({1:'klasik',2:'hiz',3:'kontrol',4:'imza'}[o.t]||'hiz');
   return v6Pack((o,g,u)=>{const c=o.c||'#222',a=o.a||'#fff',pl=o.p||(o.t>=4?'#ffd35a':'#e8e8e8');
-    const up='M26 57C20 56 18 50 20 44C21 38 26 34 32 33C40 32 46 36 54 36C60 36 64 30 70 28C78 26 86 28 94 31C108 35 124 40 136 45C146 49 152 53 150 57Z';
-    let s='';const stud=(x,w,h)=>`<path d="M${x} 61L${x+w} 61L${x+w-1.6} ${61+h}L${x+1.6} ${61+h}Z" fill="${v6L(pl,-0.28)}"/>`;
-    if(st==='ag')s+=Array.from({length:13},(_,i)=>`<rect x="${26+i*9.4}" y="60.5" width="4.6" height="5.2" rx="1.8" fill="${v6L(pl,-0.22)}"/>`).join('');
-    else s+=[[30,9,6],[44,9,6],[90,6,7.5],[104,6,7.5],[118,6,7.5],[134,6,6.5]].map(q=>stud(...q)).join('');
-    s+=`<path d="M22 55.5L150 55.5C155.5 56 155.5 61.5 148 62L28 62C21 62 19 58 22 55.5Z" fill="${g(pl,0.3,-0.22)}"/><path d="M30 59.6H146" stroke="${v6L(pl,-0.35)}" stroke-width=".6" opacity=".7"/>`;
-    if(o.k){s+=`<path d="M29 35C28 27 31 19 36 14L60 12C63 18 66 24 69 29C60 34 46 37 29 35Z" fill="${g(o.k,0.22,-0.25)}"/>`+Array.from({length:6},(_,i)=>`<path d="M${30.5+i*0.9} ${31-i*3.3}Q48 ${32-i*3.4} ${67-i*1.5} ${27.5-i*2.6}" stroke="#000" stroke-opacity=".2" stroke-width=".7" fill="none"/>`).join('')+`<path d="M37 15.5Q48 14 59 13.5" stroke="#fff" stroke-opacity=".35" stroke-width="1" fill="none"/>`;}
-    const mid=o.m?`url(#${u}m)`:g(c,0.3,-0.3);
+    const up='M30 58C22 57 18 48 20 40C21 30 23 22 31 18C40 22 50 28 58 28C64 27 68 20 75 18C88 20 100 27 112 33C128 39 143 42 149 49C153 54 151 58 145 58Z';
+    let s='';const stud=(x,w,h)=>`<path d="M${x} 62.5L${x+w} 62.5L${x+w-1.7} ${62.5+h}L${x+1.7} ${62.5+h}Z" fill="${v6L(pl,-0.3)}"/>`;
+    if(st==='ag')s+=Array.from({length:13},(_,i)=>`<rect x="${27+i*9.3}" y="62" width="4.6" height="5" rx="1.8" fill="${v6L(pl,-0.22)}"/>`).join('');
+    else s+=[[29,10,6],[44,10,6],[90,6.5,7],[105,6.5,7],[120,6.5,7],[135,6,6]].map(q=>stud(...q)).join('');
+    s+=`<path d="M24 56.5L147 56.5C154 57 154 63 147 63.4L30 63.4C21 63.4 19 58.5 24 56.5Z" fill="${g(pl,0.3,-0.22)}"/><path d="M32 61H146" stroke="${v6L(pl,-0.35)}" stroke-width=".6" opacity=".7"/>`;
+    if(o.k){s+=`<path d="M30 20C29 13 32 8 36 5.5L67 4.5C71 9 73 14 75 18.5C64 23 48 26 30 20Z" fill="${g(o.k,0.25,-0.3)}"/>`+Array.from({length:10},(_,i)=>`<path d="M${36+i*3.6} ${5.5-i*0.1}L${35+i*4} ${21+i*0.6}" stroke="#000" stroke-opacity=".16" stroke-width=".8"/>`).join('')+`<ellipse cx="51.5" cy="5.4" rx="15.5" ry="2.1" fill="${v6L(o.k,-0.55)}"/><path d="M37 7.5Q51 6.4 65 6.8" stroke="#fff" stroke-opacity=".35" stroke-width=".9" fill="none"/>`;}
+    else s+=`<path d="M31 18C40 22 50 28 58 28C64 27 68 20 75 18C66 14.5 44 13.5 31 18Z" fill="${v6L(c,-0.62)}"/>`;
     if(o.m)s+=`<defs><linearGradient id="${u}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${v6L(c,0.6)}"/><stop offset=".35" stop-color="${v6L(c,-0.25)}"/><stop offset=".55" stop-color="${v6L(c,0.5)}"/><stop offset=".8" stop-color="${v6L(c,-0.3)}"/><stop offset="1" stop-color="${v6L(c,0.25)}"/></linearGradient></defs>`;
-    s+=`<path d="${up}" fill="${mid}"/><path d="M20 44C21 38 26 34 32 33C36 40 38 48 38 56L26 57C20 56 18 50 20 44Z" fill="${v6L(c,-0.4)}" opacity=".5"/><path d="M21.5 41L27 35.5" stroke="${a}" stroke-width="2.4" stroke-linecap="round"/>`;
-    if(st==='hiz'||st==='imza'||st==='ag')s+=`<path d="M40 53C66 51 92 44 122 35L117.5 41.5C94 49 70 55 44 56Z" fill="${a}"/><path d="M62 47.5C84 43 102 38 119 33" stroke="${a}" stroke-width="1.1" opacity=".55" fill="none"/>`;
-    if(st==='kontrol')s+=Array.from({length:6},(_,i)=>`<path d="M${104+i*7} ${37+i*1.7}q2.2 4 0 8" stroke="${a}" stroke-width="1.4" opacity=".75" fill="none" stroke-linecap="round"/>`).join('')+`<path d="M42 54C62 50 78 46 94 40" stroke="${a}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
-    if(st==='guc')s+=`<path d="M62 54.5L80 36H88.5L70.5 54.5Z" fill="${a}"/><path d="M76 54.5L94 36H102.5L84.5 54.5Z" fill="${a}" opacity=".85"/><path d="M117 40.5l10 4M121 38.6l10 4M125.5 37.2l8 3.4" stroke="${v6L(c,0.4)}" stroke-width="1.6" stroke-linecap="round"/>`;
-    if(st==='klasik')s+=`<path d="M117 39C128 41.5 136 46 142.5 50.5" stroke="${v6L(c,0.5)}" stroke-width=".9" stroke-dasharray="2 1.6" fill="none"/><path d="M65.5 29.5C67 23 74 20.5 81 23L79 28.5Z" fill="${v6L(c,-0.12)}"/>`+Array.from({length:6},(_,i)=>`<path d="M${72+i*5.6} ${27.6+i*0.95}l2.6 4.3" stroke="${a}" stroke-width="1.7" stroke-linecap="round"/>`).join('')+`<path d="M44 52.5C62 50 80 46 98 40" stroke="${a}" stroke-width="2" fill="none" opacity=".9"/>`;
-    else s+=`<path d="M70 29C82 29 94 32 106 36" stroke="#000" stroke-opacity=".22" stroke-width="1" fill="none"/>`;
-    s+=`<path d="M33 34.6C42 34 50 37.6 56 36.6" stroke="#fff" stroke-opacity=".5" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M96 32C112 36 126 41 140 47" stroke="#fff" stroke-opacity=".38" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="139" cy="49.5" rx="7" ry="2.3" transform="rotate(22 139 49.5)" fill="#fff" opacity=".38"/><path d="${up}" fill="none" stroke="#000" stroke-opacity=".28" stroke-width=".8"/>`;
-    if(st==='imza')s+=`<text x="54" y="50" font-family="Saira Extra Condensed,Barlow Condensed,sans-serif" font-weight="900" font-size="8.5" fill="${a}" transform="rotate(-7 54 50)">${esc(trUp(PF()).slice(0,10))}</text>`;
-    if(o.m)s+=`<text x="40" y="50.5" font-family="Barlow Condensed,sans-serif" font-weight="800" font-size="6" fill="${a}" opacity=".85" transform="rotate(-6 40 50)">1/500</text>`;
-    return `<g transform="rotate(-4 86 46)">${s}</g>`;},o);}
+    s+=`<path d="${up}" fill="${o.m?`url(#${u}m)`:g(c,0.32,-0.3)}"/><path d="M20 40C21 30 23 22 31 18C36 28 40 44 40 57L30 58C22 57 18 48 20 40Z" fill="${v6L(c,-0.45)}" opacity=".5"/><path d="M22.5 28L27.5 20.5" stroke="${a}" stroke-width="2.6" stroke-linecap="round"/>`;
+    if(st==='hiz'||st==='imza'||st==='ag')s+=`<path d="M38 54.5C64 52 90 44 117 33L112.5 41C90 50 66 56 42 57.2Z" fill="${a}"/><path d="M60 47.5C82 42 100 35.5 117 29.5" stroke="${a}" stroke-width="1.1" opacity=".55" fill="none"/>`;
+    if(st==='kontrol')s+=Array.from({length:6},(_,i)=>`<path d="M${110+i*6.2} ${35+i*1.9}q2.2 4 0 8" stroke="${a}" stroke-width="1.4" opacity=".75" fill="none" stroke-linecap="round"/>`).join('')+`<path d="M42 55C62 51 80 46 98 37.5" stroke="${a}" stroke-width="3.6" fill="none" stroke-linecap="round"/>`;
+    if(st==='guc')s+=`<path d="M60 56L80 34H89L69 56Z" fill="${a}"/><path d="M75 56L95 34H104L84 56Z" fill="${a}" opacity=".85"/><path d="M120 39l10 3.6M124.5 37.4l10 3.6M129 36.4l8 3" stroke="${v6L(c,0.4)}" stroke-width="1.6" stroke-linecap="round"/>`;
+    if(st==='klasik')s+=`<path d="M116 36.5C128 40 138 43 145 49" stroke="${v6L(c,0.5)}" stroke-width=".9" stroke-dasharray="2 1.6" fill="none"/><path d="M69 21C71 12 79 9.5 87 12.5L84.5 19.5Z" fill="${v6L(c,-0.1)}"/>`+Array.from({length:6},(_,i)=>`<path d="M${77+i*5.6} ${19.6+i*2.05}l2.4 4.6" stroke="${a}" stroke-width="1.8" stroke-linecap="round"/>`).join('')+`<path d="M42 54C62 51 82 45 100 37" stroke="${a}" stroke-width="2.2" fill="none" opacity=".9"/>`;
+    else s+=`<path d="M74 19C88 21 100 27 112 33" stroke="#000" stroke-opacity=".22" stroke-width="1" fill="none"/>`;
+    s+=`<path d="M32 19.6C42 23.5 50 27.6 57 27.6" stroke="#fff" stroke-opacity=".5" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M90 23C104 28 120 36 140 43" stroke="#fff" stroke-opacity=".4" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="141" cy="47" rx="6.5" ry="2.3" transform="rotate(25 141 47)" fill="#fff" opacity=".4"/><path d="${up}" fill="none" stroke="#000" stroke-opacity=".28" stroke-width=".8"/>`;
+    if(st==='imza')s+=`<text x="50" y="49.5" font-family="Saira Extra Condensed,Barlow Condensed,sans-serif" font-weight="900" font-size="9" fill="${a}" transform="rotate(-9 50 49.5)">${esc(trUp(PF()).slice(0,10))}</text>`;
+    if(o.m)s+=`<text x="46" y="45" font-family="Barlow Condensed,sans-serif" font-weight="800" font-size="6" fill="${a}" opacity=".85" transform="rotate(-8 46 45)">1/500</text>`;
+    return `<g transform="rotate(-3 86 40)">${s}</g>`;},o);}
 /* otomobiller: gövde geçişi, cam yansıması, alaşım jantlar, LED farlar */
 const V6CAR={hatch:{b:'M18 62 Q20 46 38 44 L52 32 Q60 28 82 28 L104 30 Q114 34 120 46 L132 50 Q140 52 140 62 Z',w:'M44 44 L55 34 Q60 31 80 31 L80 44 Z M84 31 L102 32 Q110 36 114 44 L84 44 Z',x:[38,124],r:10,y:62,f:[132,51],t:[18,51]},
   sedan:{b:'M10 62 Q12 50 28 48 L48 34 Q56 30 86 30 L104 32 Q112 36 122 46 L142 50 Q150 54 150 62 Z',w:'M38 47 L52 36 Q58 33 84 33 L84 47 Z M88 33 L102 34 Q110 38 116 47 L88 47 Z',x:[38,124],r:10,y:62,f:[141,52],t:[11,53]},
@@ -201,7 +203,8 @@ const V6I={
   ceket:(o,g)=>{const c=o.c||'#3a2a20';return `<path d="M58 8 L82 14 L106 8 L130 24 L136 56 L124 58 L120 40 L116 72 H48 L44 40 L40 58 L28 56 L34 24 Z" fill="${g(c,0.3,-0.25,1)}"/><path d="M82 14 L86 72" stroke="#c9ced6" stroke-width="1.6"/><path d="M58 8 L74 22 L68 30 Z M106 8 L92 20 L100 28Z" fill="${g(c,0.5,-0.05)}"/><path d="M54 44 h16 M94 44 h16" stroke="#c9ced6" stroke-width="1.2"/>${v6Hl('M50 26 Q56 20 62 22 L56 60 Q50 60 50 56Z',0.12)}`;},
   esofman:(o,g)=>{const c=o.c||'#1f2a44',a=o.a||'#e63946';return `<path d="M60 8 L82 14 L104 8 L128 22 L142 52 L130 56 L118 34 L116 72 H48 L46 34 L34 56 L22 52 L36 22 Z" fill="${g(c,0.3,-0.25,1)}"/><path d="M82 14 V72" stroke="#c9ced6" stroke-width="1.6"/><path d="M72 10 L82 20 L92 10" stroke="${a}" stroke-width="3" fill="none"/><path d="M36 22 L22 52 M128 22 L142 52" stroke="${a}" stroke-width="4"/><path d="M40 24 L27 52 M124 24 L137 52" stroke="#f4f6f9" stroke-width="1.2"/><path d="M48 66 H116" stroke="${a}" stroke-width="3"/>`;},
   ayakkabi:(o,g)=>{const c=o.c||'#3a2414';return `<path d="M24 58 Q22 44 32 40 L58 38 Q70 28 86 30 L104 36 Q130 42 142 50 Q148 56 144 60 Z" fill="${g(c,0.35,-0.3)}"/><path d="M22 58 H146 Q148 64 140 64 H28 Q22 64 22 58Z" fill="#1b120b"/><path d="M64 34 L92 38" stroke="${v6L(c,-0.45)}" stroke-width="1.2"/>${[0,1,2,3].map(i=>`<path d="M${68+i*6} ${32.5+i*0.8}l3 4" stroke="#e8dccb" stroke-width="1.2"/>`).join('')}<path d="M108 40 Q128 46 138 52" stroke="${v6L(c,0.35)}" stroke-width=".9" stroke-dasharray="1.6 1.4" fill="none"/>${v6Hl('M40 42 Q60 38 74 34 L72 37 Q58 41 42 45Z',0.3)}<ellipse cx="132" cy="50" rx="6" ry="2" transform="rotate(20 132 50)" fill="#fff" opacity=".3"/>`;},
-  sneaker:(o,g)=>{const c=o.c||'#f4f4f6',a=o.a||'#e63946';return `<path d="M24 56 Q20 40 32 34 L52 32 Q62 22 76 24 L96 32 Q126 38 140 48 Q148 54 144 58 Z" fill="${g(c,0.15,-0.25)}"/><path d="M20 56 H148 Q150 62 144 64 H26 Q18 64 20 56Z" fill="${g('#f4f4f6',0,-0.2)}"/><path d="M22 60 H146" stroke="${a}" stroke-width="1.6"/><path d="M40 50 Q70 46 100 34 L104 40 Q72 54 44 54Z" fill="${a}"/>${[0,1,2,3].map(i=>`<path d="M${62+i*7} ${28+i*1.5}l3 4" stroke="${v6L(c,-0.5)}" stroke-width="1.4"/>`).join('')}<path d="M24 46 L32 36" stroke="${a}" stroke-width="2.4" stroke-linecap="round"/>${v6Hl('M98 34 Q120 38 136 46 L134 48 Q118 41 98 37Z',0.4)}`;},
+  sneaker:(o,g)=>{const c=o.c||'#f4f4f6',a=o.a||'#e63946',up='M30 56C22 55 19 47 21 40C22 31 25 24 32 21C41 24 50 29 58 29C64 28 68 22 75 20C88 22 100 28 112 34C128 40 142 43 147 49C150 53 149 56 145 56Z';
+    return `<g transform="rotate(-3 86 40)"><path d="M32 21C41 24 50 29 58 29C64 28 68 22 75 20C66 16.5 45 15.5 32 21Z" fill="${v6L(c,-0.55)}"/><path d="${up}" fill="${g(c,0.2,-0.22)}"/><path d="M22 54L148 54C156 55 156 65 147 65.5L28 65.5C19 65.5 17 57 22 54Z" fill="${g('#ffffff',0,-0.16)}"/><path d="M20 62.5C60 64 110 64 154 61.5" stroke="${v6L(a,-0.2)}" stroke-width="2.2" fill="none"/><path d="M40 52C64 50 90 43 114 33.5L110 40C90 48 66 54 44 55Z" fill="${a}"/><path d="M68 22C70 13 78 11 86 14L83.5 21Z" fill="${v6L(c,-0.08)}"/>${[0,1,2,3,4].map(i=>`<path d="M${77+i*6} ${21.3+i*2.2}l2.4 4.6" stroke="${v6L(c,-0.55)}" stroke-width="1.7" stroke-linecap="round"/>`).join('')}<path d="M23 30L29 22.5" stroke="${a}" stroke-width="2.6" stroke-linecap="round"/><path d="M90 25C104 30 120 37 140 44" stroke="#fff" stroke-opacity=".6" stroke-width="1.4" fill="none"/><path d="${up}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width=".8"/></g>`;},
   gozluk:(o,g)=>`<path d="M30 30 Q50 22 82 28 Q114 22 134 30" stroke="#b8892e" stroke-width="2.4" fill="none"/><path d="M36 30 Q34 54 52 56 Q72 56 74 34 Q72 28 56 28 Q40 28 36 30Z" fill="${g('#2a4a6a',0.3,-0.4)}" stroke="#b8892e" stroke-width="2"/><path d="M128 30 Q130 54 112 56 Q92 56 90 34 Q92 28 108 28 Q124 28 128 30Z" fill="${g('#2a4a6a',0.3,-0.4)}" stroke="#b8892e" stroke-width="2"/><path d="M74 33 Q82 29 90 33" stroke="#b8892e" stroke-width="2" fill="none"/>${v6Hl('M42 32 Q50 30 58 31 L44 46Z',0.3)}${v6Hl('M96 32 Q104 30 112 31 L98 46Z',0.3)}`,
   canta2:(o,g)=>{const c=o.c||'#7a4a2a';return `<path d="M58 26 Q58 10 82 10 Q106 10 106 26" stroke="${v6L(c,-0.35)}" stroke-width="4" fill="none"/><path d="M30 30 Q30 24 38 24 H126 Q134 24 134 30 L130 66 Q130 70 124 70 H40 Q34 70 34 66 Z" fill="${g(c,0.3,-0.3)}"/><path d="M34 36 H130" stroke="#d8b34a" stroke-width="1.6"/><rect x="76" y="32" width="12" height="9" rx="2" fill="#d8b34a"/><path d="M40 62 H124" stroke="${v6L(c,0.3)}" stroke-width=".9" stroke-dasharray="2 1.5"/>${v6Hl('M38 28 H90 L86 32 H40Z',0.2)}`;},
   onluk:(o,g)=>`<path d="M60 8 L82 16 L104 8 L126 20 L122 76 H42 L38 20 Z" fill="${g('#ffffff',0,-0.16,1)}"/><path d="M60 8 L80 40 L74 76 M104 8 L84 40 L90 76" stroke="#c9d3dd" stroke-width="1.4" fill="none"/><rect x="50" y="52" width="16" height="12" rx="1" fill="none" stroke="#c9d3dd" stroke-width="1.2"/><rect x="96" y="30" width="14" height="10" rx="1" fill="none" stroke="#c9d3dd" stroke-width="1.2"/><path d="M100 26 v8 M106 26 v8" stroke="#1f6feb" stroke-width="1.6"/><path d="M70 14 Q66 30 76 34 Q86 30 82 14" stroke="#30363f" stroke-width="2" fill="none"/>`,
