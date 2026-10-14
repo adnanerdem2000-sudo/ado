@@ -37,12 +37,12 @@ fs.mkdirSync(OUT, { recursive: true });
     const st = await fr.evaluate(() => { try { const s = window.ado2d && ado2d.state; return { dk: s && s.sim ? Math.floor((s.sim.t || 0) / 60) : null, mod: document.body.className.slice(0, 80) }; } catch (e) { return { e: e.message }; } });
     await p.screenshot({ path: path.join(OUT, `3b_${PROF}_${s}.png`) });
     console.log('kare', s, JSON.stringify(st));
-    if(s===0){console.log('DBG',await p.evaluate(()=>JSON.stringify({h:!!(window.Ado3D&&Ado3D.__v160)})),await fr.evaluate(()=>JSON.stringify({same:window.Ado3D===parent.Ado3D,r3:!!(window.ado2d&&ado2d.state&&ado2d.state.r3),w:!!(ado2d.state&&ado2d.state.r3&&ado2d.state.r3.__v160)})));console.log('KITS',await p.evaluate(()=>JSON.stringify({U:FX.U.kit,O:FX.O.kit,last:V160.last})));
+    if(s===0){await fr.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.offsetParent&&/MAÇI BAŞLAT/i.test(x.textContent));if(b)b.click();});await p.waitForTimeout(6000);await p.screenshot({path:path.join(OUT,'3b_full.png')});console.log('DBG',await p.evaluate(()=>JSON.stringify({h:!!(window.Ado3D&&Ado3D.__v160)})),await fr.evaluate(()=>JSON.stringify({same:window.Ado3D===parent.Ado3D,r3:!!(window.ado2d&&ado2d.state&&ado2d.state.r3),w:!!(ado2d.state&&ado2d.state.r3&&ado2d.state.r3.__v160)})));console.log('KITS',await p.evaluate(()=>JSON.stringify({U:FX.U.kit,O:FX.O.kit,last:V160.last})));
       await p.screenshot({path:path.join(OUT,'zoom.png'),clip:{x:250,y:250,width:420,height:260}});
       if(await clk('#v3-2d')||await clk('[data-mode="2d"]')){await p.waitForTimeout(1500);await p.screenshot({path:path.join(OUT,'2b.png')});}}
   }
   const ft = await fr.evaluate(() => { const a = window.__ft.slice(5).sort((x, y) => x - y), n = a.length; return n ? { n, med: a[n >> 1].toFixed(1), p95: a[Math.floor(n * .95)].toFixed(1), max: a[n - 1].toFixed(1) } : null; });
-  console.log('LAST',await p.evaluate(()=>JSON.stringify(V160.last)),await fr.evaluate(()=>JSON.stringify({cols:ado2d.state.cols,tn:ado2d.state.tnames})));
+  console.log('LAST',await p.evaluate(()=>JSON.stringify(V160.last)),await fr.evaluate(()=>JSON.stringify({sm:String(ado2d.state.r3.setMatch).slice(0,120),key:ado2d.state.r3key,cols:ado2d.state.cols,tn:ado2d.state.tnames})));
   console.log('kare süreleri (ms):', JSON.stringify(ft));
   console.log(errs.length ? 'HATALAR:\n  ' + errs.slice(0, 15).join('\n  ') : 'hata yok');
   await b.close();
