@@ -97,6 +97,18 @@
         BL_AERO: 1, BL_SPIN: 6,
         // BL_FIFA: sekme FIFA çim deneylerine göre (2 m'den dikey sekme .60-1.00 m; 50 km/sa, 15° açılı sekmede yatay hız payı %45-70): BL_E2 / BL_HRET2 (0 = BL_E / BL_HRET aynen)
         BL_FIFA: 1, BL_E2: .60, BL_HRET2: .68,
+        // [v137] CURL: yan dönüş (falso) uçuşu. Ayak içiyle vuruşta sağ ayaklı topu soluna, sol ayaklı sağına kıvırır (devir/sn, işaret > 0 = gidişin soluna).
+        //   Büyüklük = taban × beceri (orta: cor/pas, uzun pas: pas, frikik şutu: fk, uzaktan şut: lon) × zayıf ayak CU_WEAK; yanal Magnus ivmesi ½ρC_L·A·v²/m
+        //   (C_L = .9·rω/v ≤ .35, BL_AERO ile aynı model). Yüksek topta aeSolve iniş noktasını, şutta cuShotAim kale çizgisindeki hedefi korur (yalnız eğri yol).
+        //   CU_CROSS orta/korner, CU_LONG uzun havadan pas (≥ CU_LD m), CU_FK doğrudan frikik şutu, CU_LS uzaktan şut (CU_LS0 m'den başlar, +10 m'de tam); CU_GND yerde sürünen şuttaki pay.
+        //   CURL=0 → eski düz uçuş BAYT BAYT AYNI. Top durumu B.sps (devir/sn) - çizici kullanabilir.
+        CURL: 1, CU_CROSS: 7, CU_LONG: 4, CU_LD: 25, CU_FK: 8, CU_LS: 5, CU_LS0: 14, CU_GND: .4, CU_WEAK: .7,
+        // [v137] AGIL: dönüş hızı (MV_TURN0/1) ve yanal ivme (MV_LAT0) oyuncunun çevikliğiyle (a.agi; yoksa .4·hızlanma + .35·denge + .25·top sürme) ölçeklenir:
+        //   k = 1 + AG_K·(çeviklik − AG_C), ±AG_MAX ile sınırlı; kaleci 1. AGIL=0 → eski hareket BAYT BAYT AYNI.
+        AGIL: 1, AG_C: 70, AG_K: .012, AG_MAX: .2,
+        // [v137] WX: hava / zemin seti ('dry' = bugünkü değerler aynen; 'wet' ıslak: top kayar ve hızlı akar, alçak seker; 'heavy' ağır/çamurlu: çabuk durur, ölü seker;
+        //   'wind' rüzgâr: yüksek topta göreli hava hızıyla sürüklenme, WX_WS m/sn, yön tohumdan ya da create({wind:{x,y}})). create({weather}) ile seçilir.
+        WX: 'dry', WX_WS: 7,
         // --- [gk] fiziksel kaleci: GKP=0 → eski (kaleci topun geleceği yeri şut anında bilir, kurtarış olasılığı xG formülünden) ---
         // yer tutma: top ile kale ortası arasındaki çizgi üzerinde (açı ortası) · tepki GK_REACT sn (refleksle ±) · plonjon uzanması GK_DIVE m/sn hızla en fazla GK_DMAX m, ayakta erişim GK_R0 m
         // top kalecinin düzleminden geçerken erişim içindeyse kurtarış olasılığı = GK_S0 + GK_S1·(1 − uzaklık/erişim) + beceri − hız cezası (vücuda yakın top kolay, uç köşe zor)
@@ -198,6 +210,13 @@
     };
     var hyp = Math.hypot;
     function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+    /* [v137] hava / zemin setleri: ['*', k] çarpan, ['=', v] değer. Islak çim: yuvarlanma direnci ve kayma sürtünmesi düşer (top kayar, hızlı akar),
+       sekme alçak ve yatay hız daha çok korunur (top sekip kaçar). Ağır/çamurlu: direnç yüksek, sekme ölü. Rüzgâr: yalnız yüksek topta göreli hava hızı. */
+    var WX_SET = {
+        wet: { BL_RD: ['*', .78], BL_MUK: ['=', .28], BL_LOWD: ['*', .7], BL_E2: ['=', .50], BL_HRET2: ['=', .80], CR_RD: ['*', .82], CR_MUG: ['*', .75] },
+        heavy: { BL_RD: ['*', 1.45], BL_MUK: ['=', .52], BL_LOWD: ['*', 1.5], BL_E2: ['=', .42], BL_HRET2: ['=', .56], CR_RD: ['*', 1.4], CR_MUG: ['*', 1.15] },
+        wind: {}
+    };
     function mulberry(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
     function segDist(px, py, ax, ay, bx, by) { var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0; t = clamp(t, 0, 1); return hyp(px - (ax + t * dx), py - (ay + t * dy)); }
 
@@ -288,6 +307,14 @@
     function create(opts) {
         opts = opts || {};
         var PRM = {}; for (var pk in DEFAULTS) PRM[pk] = opts.params && opts.params[pk] != null ? opts.params[pk] : DEFAULTS[pk];
+        /* [v137] hava / zemin: seçilen setin çarpanları (ya da değerleri) PRM'ye işlenir; params ile açıkça verilen anahtara dokunulmaz. 'dry' hiçbir şeyi değiştirmez. */
+        var WXN = opts.weather != null ? String(opts.weather) : String(PRM.WX || 'dry'), WXS = WX_SET[WXN] || null, WX_X = 0, WX_Y = 0;
+        if (WXS) for (var wk0 in WXS) if (!(opts.params && opts.params[wk0] != null)) { var wv0 = WXS[wk0]; PRM[wk0] = wv0[0] === '*' ? PRM[wk0] * wv0[1] : wv0[1]; }
+        if (WXN === 'wind') {      // rüzgâr yönü: verilmediyse tohumdan (ana rastgele diziyi tüketmez)
+            var wd0 = opts.wind && isFinite(+opts.wind.x) && isFinite(+opts.wind.y) ? opts.wind : null, wa0 = ((((opts.seed || 1) * 2654435761) >>> 0) % 3600) / 3600 * 2 * Math.PI;
+            WX_X = wd0 ? +wd0.x : Math.cos(wa0) * PRM.WX_WS; WX_Y = wd0 ? +wd0.y : Math.sin(wa0) * PRM.WX_WS;
+        }
+        var WXON = WX_X !== 0 || WX_Y !== 0;
         var INT_REACT = PRM.INT_REACT, INT_SPEED = PRM.INT_SPEED, INT_SLACK = PRM.INT_SLACK, REC_R = PRM.REC_R, LONG_PEN = PRM.LONG_PEN, LANE_PEN = PRM.LANE_PEN, PASS_ARR = PRM.PASS_ARR,
             SAVE_A = PRM.SAVE_A, SAVE_XG = PRM.SAVE_XG, BLOCK_R = PRM.BLOCK_R, JD_MOVE = PRM.JD_MOVE, JD_HOLD = PRM.JD_HOLD, COVER_D = PRM.COVER_D, MARK_R = PRM.MARK_R, MARK_GS = PRM.MARK_GS, MARK_W = PRM.MARK_W,
             SHOT_SD = PRM.SHOT_SD, SHOT_BASE = PRM.SHOT_BASE, SHOT_RANGE = PRM.SHOT_RANGE, DRIB_SF = PRM.DRIB_SF, JOCKEY = PRM.JOCKEY, ENGAGE = PRM.ENGAGE,
@@ -324,6 +351,9 @@
         var AICAL = !!PRM.AICAL, AC_HSH = PRM.AC_HSH, AC_ST = PRM.AC_ST, AC_AF = PRM.AC_AF, AC_AFY = PRM.AC_AFY, AC_SBV = PRM.AC_SBV, AC_AGD = PRM.AC_AGD, AC_SBB = PRM.AC_SBB, AC_SBL = PRM.AC_SBL, AC_SBR = PRM.AC_SBR, AC_HV = PRM.AC_HV, AC_IBX = PRM.AC_IBX, AC_CH = PRM.AC_CH, AC_CB = PRM.AC_CB, AC_IS = PRM.AC_IS, AC_IP = PRM.AC_IP, AC_LOWD = PRM.AC_LOWD, AC_PL = PRM.AC_PL, AC_PK = PRM.AC_PK, AC_PV = PRM.AC_PV, AC_QK = PRM.AC_QK, AC_IR = PRM.AC_IR, AC_IC = PRM.AC_IC, AC_XRX = PRM.AC_XRX, AC_GKW = PRM.AC_GKW, AC_GKD = PRM.AC_GKD, AC_XB = PRM.AC_XB, AC_LT = PRM.AC_LT, AC_LI = PRM.AC_LI;
         var SH_VFIX = !!PRM.SH_VFIX && BALL3D, SH_TMAX = PRM.SH_TMAX, SH_ZMAX = PRM.SH_ZMAX, SH_VZMAX = PRM.SH_VZMAX, BL_HFIX = !!PRM.BL_HFIX && BALL3D, POSTN = !!PRM.POSTN && BALL3D, BL_EDGE = !!PRM.BL_EDGE && BALL3D;
         var BL_AERO = !!PRM.BL_AERO && BL_HFIX, BL_SPIN = +PRM.BL_SPIN || 0;
+        var CURL = !!PRM.CURL && BL_AERO, CU_CROSS = PRM.CU_CROSS, CU_LONG = PRM.CU_LONG, CU_LD = PRM.CU_LD, CU_FK = PRM.CU_FK, CU_LS = PRM.CU_LS, CU_LS0 = PRM.CU_LS0, CU_GND = PRM.CU_GND, CU_WEAK = PRM.CU_WEAK;      // [v137]
+        var AGIL = !!PRM.AGIL && MOVE, AG_C = PRM.AG_C, AG_K = PRM.AG_K, AG_MAX = PRM.AG_MAX;      // [v137]
+        WXON = WXON && BL_AERO;      // [v137] rüzgâr yalnız hava kuvvetli yüksek topta
         if (PRM.BL_FIFA && BALL3D) { BL_E = PRM.BL_E2; BL_HRET = PRM.BL_HRET2; }      // [ball] FIFA çim sekmesi
         var GK_CPA = !!PRM.GK_CPA && GKP, GK_BOX = !!PRM.GK_BOX, GK_SET = !!PRM.GK_SET && MOVE, GK_SETD = PRM.GK_SETD, GK_SETT = PRM.GK_SETT, GK_SETB = PRM.GK_SETB, GK_SETA = PRM.GK_SETA, TC_SLINE = !!PRM.TC_SLINE && BALL3D, TC_RCV = !!PRM.TC_RCV && TOUCH, TC_SNAPV = PRM.TC_SNAPV, TC_OFF = !!PRM.TC_OFF && TOUCH;
         var TC_PHYS = !!PRM.TC_PHYS && TOUCH && BALL3D, CR_MUG = PRM.CR_MUG, CR_RD = PRM.CR_RD, CR_KD = PRM.CR_KD, CR_SPIN = PRM.CR_SPIN, CR_G0 = PRM.CR_G0, CR_G1 = PRM.CR_G1, CR_OPEN = PRM.CR_OPEN, CR_REACH = PRM.CR_REACH, CR_LOSE = PRM.CR_LOSE, CR_STEER = PRM.CR_STEER != null ? +PRM.CR_STEER : 1, CR_KV = +PRM.CR_KV || 0;
@@ -375,6 +405,7 @@
             var p = { id: tm * 11 + i, team: tm, role: role, num: i + 1, ft: ft, wf: wf, name: ro ? ro.name : NAMES[tm][i], short: ro && ro.short ? ro.short : (ro ? ro.name : NAMES[tm][i]), db: ro ? ro.db : null, a: a, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sf: .6, fx: tm === 0 ? 1 : -1, fy: 0,
                 maxV: CURVE ? 6.2 + .0395 * a.pac : 5.6 + 0.032 * a.pac, acc: CURVE ? 4.8 + .028 * (a.acc != null ? a.acc : a.pac) : 6.5, stam: 1, think: 0, cd: 0, tcd: 0, stunT: -9, run: null, runCd: 0, boxT: null, ix: 0, iy: 0, tInt: 99, mark: null, off: false, yc: 0, nf: 0, rx: R() * .25 - (CURVE && /B$|CB|DM/.test(role) ? clamp((a.mar * .7 + a.tac * .3 - 70) * .006, -.1, .14) : 0) };
             p.br = makeBrain(a, role, !!(ro && ro.db), BR_ON, opts.brainBase); trApply(p, ro); var hm = opts.homes && opts.homes[tm] && opts.homes[tm][i]; p.home = hm ? [role, hm[0], hm[1]] : null; /* [port] diziliş ev konumu */ p.n = { dec: 0, pass: 0, fwd: 0, long: 0, sw: 0, drib: 0, take: 0, shot: 0, clear: 0, ovl: 0, run: 0, kick: 0, weak: 0 }; p.dec = null;
+            p.agK = agilK(a, role);      // [v137]
             if (FATIGUE) { p.stamCap = 1; p.ana = 1; p.staK = clamp(1 - FT_STA * ((a.sta != null ? a.sta : 80) - 80) / 15, .5, 1.6) * Math.pow(FT_EM / (FT_ROLE[role] || FT_EM), FT_RN); p.anaD = 0; }      // [fatigue] dayanıklılık: yüksek sta yavaş yorulur; kondisyon rolün yüküne göre
             S.players.push(p);
         }); });
@@ -522,6 +553,7 @@
             var ownK = TOUCH && B.owner === p && hyp(B.x - p.x, B.y - p.y) < (TC_PHYS ? 2.4 : 1.2);
             if (keepBall) { ownK = true; keepBall = false; }      // [dead]/[air] top yerinde: duran top noktası / kafa teması
             B.owner = null; if (!ownK) { B.x = p.x + vx / sp * .75; B.y = p.y + vy / sp * .75; } B.vx = vx; B.vy = vy; B.last = p; S.lastTeam = p.team;
+            if (CURL) B.sps = opt.sps || 0;      // [v137] yan dönüş (aeSolve bunu okur)
             B.high = opt.high || null; B.shotFlag = !!opt.shot; p.cd = .55; p.think = 0; B.slv = BL_SLIDE && !B.high && !B.shotFlag ? hyp(vx, vy) * BL_R57 : 0;
             S.chain[1 - p.team] = 0;
             if (BALL3D) {      // [ball] yerden pas/şut z=0 (şutun dikey hızı doShot verir) · yüksek top: hedefe tf sn sonra BL_HZ yükseklikte varacak balistik yay
@@ -578,7 +610,13 @@
                 var err = gauss() * (1.2 + d * .05) * (pkE ? .5 * Math.pow(pkE, .6) : 1 - p.a.pas / 160) * fk;
                 var lx = clamp(p.x + Math.cos(ang) * dd + err * .7, .5, PW - .5), ly = clamp(p.y + Math.sin(ang) * dd + err, .5, PH - .5);
                 var dl = hyp(lx - p.x, ly - p.y) || 1;
-                kick(p, (lx - p.x) / tf, (ly - p.y) / tf, { high: { tLand: S.t + tf, t0: S.t, x: lx, y: ly, h: Math.min(9, 1.5 + dd / 7) } });
+                var cuS = 0;      // [v137] yan dönüş: orta / korner / frikik ortası tam, uzun havadan pas CU_LD m'den uzunsa
+                if (CURL && fo && kindTag !== 'GOALKICK' && kindTag !== 'GKD' && kindTag !== 'KICKOFF') {
+                    var pa = p.a, crs = kindTag === 'CORNER' || kindTag === 'FREEKICK' || !!(info && info.cross);
+                    cuS = crs ? cuSpin(fo.foot, fo.weak, CU_CROSS, kindTag === 'CORNER' ? (pa.cor != null ? pa.cor : pa.pas) : kindTag === 'FREEKICK' && pa.fk != null ? .5 * pa.fk + .5 * pa.pas : pa.cor != null ? .5 * pa.cor + .5 * pa.pas : pa.pas)
+                        : d >= CU_LD ? cuSpin(fo.foot, fo.weak, CU_LONG, pa.pas) : 0;
+                }
+                kick(p, (lx - p.x) / tf, (ly - p.y) / tf, { high: { tLand: S.t + tf, t0: S.t, x: lx, y: ly, h: Math.min(9, 1.5 + dd / 7) }, sps: cuS });
             } else {
                 var v0 = rollSpeed(dd, clamp(PASS_ARR + .12 * dd, PASS_ARR, PASS_ARR + 3) * (1 + TP_PSPD * tacOf(p.team).tempo));
                 kick(p, Math.cos(ang) * v0, Math.sin(ang) * v0);
@@ -589,7 +627,7 @@
             S.shot = null;
             if (OFFS2) { if (setPc) S.offSnap = null; else offSnapTake(p.team, B.x, p, q); }
             S.teams[p.team].st.passes++;
-            emit('PASS', { team: p.team, p: p.id, p2: q.id, x: p.x, y: p.y, x2: q.x, y2: q.y, meta: { dist: d, prog: prog, high: !!high, tag: kindTag || null, lane: info ? info.lane : null, free: info ? info.free : null, pd: pd, pr: info && info.pr != null ? info.pr : null, ev: info && info.ev != null ? info.ev : null, run: !!(info && info.run), cross: !!(info && info.cross), foot: fo ? fo.foot : null, weak: !!(fo && fo.weak) } });
+            emit('PASS', { team: p.team, p: p.id, p2: q.id, x: p.x, y: p.y, x2: q.x, y2: q.y, meta: { dist: d, prog: prog, high: !!high, tag: kindTag || null, lane: info ? info.lane : null, free: info ? info.free : null, pd: pd, pr: info && info.pr != null ? info.pr : null, ev: info && info.ev != null ? info.ev : null, run: !!(info && info.run), cross: !!(info && info.cross), sps: CURL ? B.sps || 0 : 0, foot: fo ? fo.foot : null, weak: !!(fo && fo.weak) } });
         }
         function doShot(p, xg, pd, kindTag, wall) {
             var T = S.teams[p.team], dir = T.dir, gx = dir === 1 ? PW : 0;
@@ -634,10 +672,16 @@
             var cy = oy + Math.tan(ang) * (gx - ox);
             var onT = Math.cos(ang) * dir > 0 && cy > GY0 + .05 && cy < GY1 - .05;
             var pl = kindTag === 'HEAD' ? 0 : 0;
-            kick(p, Math.cos(ang) * v0, Math.sin(ang) * v0, { shot: true });
+            var cuS = 0;      // [v137] yan dönüş: doğrudan frikik şutu (fk), uzaktan şut (lon; CU_LS0 m'den +10 m'ye artar) · kafa, penaltı ve baraja giden vuruş düz
+            if (CURL && fo && kindTag !== 'PEN' && kindTag !== 'HEAD' && wHit < 0) {
+                var dsc = hyp(gx - ox, CY - oy);
+                cuS = kindTag === 'FK' ? cuSpin(fo.foot, fo.weak, CU_FK, p.a.fk != null ? p.a.fk : p.a.lon) : cuSpin(fo.foot, fo.weak, CU_LS * clamp((dsc - CU_LS0) / 10, 0, 1), p.a.lon);
+            }
+            kick(p, Math.cos(ang) * v0, Math.sin(ang) * v0, { shot: true, sps: cuS });
             if (FG) { ang = Math.atan2(aimY - B.y, gx - B.x); B.vx = Math.cos(ang) * v0; B.vy = Math.sin(ang) * v0; cy = aimY; onT = true; }
             var cz = 0;
             if (BALL3D) { cz = shotVert(p, kindTag, gx, ang, v0, sd); if (cz >= (TC_SLINE ? GH : GH - BRAD * .5)) onT = false; }      // [ball] üstten giden şut isabetli değildir ([touch] TC_SLINE: gol koşuluyla aynı eşik)
+            if (CURL && B.sps) cuShotAim(gx, B.y + Math.tan(Math.atan2(B.vy, B.vx)) * (gx - B.x));      // [v137] kıvrılan şut kale çizgisini düz yoldaki noktada geçer
             S.pass = null;
             S.shot = { t0: S.t, shooter: p, team: p.team, xg: xg, on: onT, cy: cy, cz: cz, gkTried: false, pen: kindTag === 'PEN', blockChecked: false, hd: kindTag === 'HEAD', ox: ox, oy: oy, dist0: hyp(gx - ox, CY - oy), wall: wl ? wl.ids : null, wallHit: wHit };
             if (FG) { S.shot.force = true; S.shot.on = true; onT = true; } if (NG) S.shot.ng = true;
@@ -649,7 +693,7 @@
             if (onT) { var yy = oy + Math.tan(ang) * (gk.x - ox); gk.saveY = yy; gk.saveT = S.t; }
             var shM = { xg: XG_REP ? xgR : xg, xgi: xg, xf: xgF, on: onT, dist: hyp(gx - ox, CY - oy), inBox: inBox(p.x, p.y, p.team), tag: kindTag || null, speed: v0, cy: cy };
             if (BALL3D) { shM.cz = cz; shM.over = cz >= (TC_SLINE ? GH : GH - BRAD * .5); }      // [ball] dikey hedef ve üstten giden şut yalnız 3B topta (BALL3D=0: eski olay verisi aynen)
-            shM.wall = wl ? wl.n : 0; shM.foot = fo ? fo.foot : null; shM.weak = !!(fo && fo.weak);
+            shM.wall = wl ? wl.n : 0; shM.foot = fo ? fo.foot : null; shM.weak = !!(fo && fo.weak); if (CURL && B.sps) shM.sps = B.sps;      // [v137] yan dönüş (devir/sn)
             emit('SHOT', { team: p.team, p: p.id, x: p.x, y: p.y, meta: shM });
             if (kindTag === 'PEN') S.shot.pen = true;
         }
@@ -1013,20 +1057,64 @@
            kaldırma ½ρCLA|v|²/m hıza dik ve düşey düzlemde yukarı (ters dönüş) - yanal sapma yok, top hedef doğrusunda kalır. BL_AERO=0: eski adım. */
         var AE_K = .5 * 1.2 * Math.PI * .11 * .11 / .43, AE_Q = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 };
         function aeCd(v) { if (v <= 10) return .45; if (v >= 14) return .25; var u = (v - 10) / 4; u = u * u * (3 - 2 * u); return .45 - .2 * u; }
+        /* [v137] AGIL: çeviklik çarpanı (dönüş hızı ve yanal ivme); a.agi yoksa .4·hızlanma (yoksa hız) + .35·denge + .25·top sürme */
+        function agilK(a, role) {
+            if (!AGIL || role === 'GK' || !a) return 1;
+            var ag = a.agi != null ? +a.agi : .4 * (a.acc != null ? +a.acc : +a.pac || 70) + .35 * (a.bal != null ? +a.bal : 70) + .25 * (a.dri != null ? +a.dri : 70);
+            return isFinite(ag) ? clamp(1 + AG_K * (ag - AG_C), 1 - AG_MAX, 1 + AG_MAX) : 1;
+        }
+        /* [v137] yan dönüşün yanal Magnus ivmesi (m/sn², işaretli): ½ρ·C_L·A·v²/m, C_L = .9·rω/v ≤ .35 (BL_AERO kaldırmasıyla aynı) */
+        function cuAcc(v, sps) { var a = AE_K * Math.min(.35, .9 * .11 * Math.abs(sps) * 2 * Math.PI / Math.max(v, 1)) * v * v; return sps > 0 ? a : -a; }
+        /* [v137] şutta yan dönüş: hız vektörü (büyüklük aynı) yanal ivme/v açısal hızla döner - şutun süresi ve dikey çözümü değişmez */
+        function cuRot(q, k) { var v = hyp(q.vx, q.vy); if (v < 1) return; var th = -cuAcc(v, q.sps) * k / v * DT, c = Math.cos(th), sn = Math.sin(th), vx = q.vx; q.vx = vx * c - q.vy * sn; q.vy = vx * sn + q.vy * c; }
+        /* [v137] vuruşun yan dönüşü (devir/sn): ayak içi - sağ ayak soluna (+), sol ayak sağına (−); büyüklük taban × (.55 + .45·beceri) × zayıf ayak */
+        function cuSpin(foot, weak, base, tech) { if (!CURL || !(base > 0) || !foot) return 0; var t = clamp(((tech != null ? tech : 60) - 40) / 50, 0, 1), m = base * (.55 + .45 * t) * (weak ? CU_WEAK : 1); return foot === 'L' ? -m : m; }
+        /* [v137] kıvrılan şut: başlangıç yönü, top kale çizgisini (gx) yine düz yoldaki noktada (cy) geçecek şekilde döndürülür (ballStep3D ile aynı adım) */
+        var CU_Q = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, sps: 0 };
+        function cuShotAim(gx, cy) {
+            var dir = gx > CX ? 1 : -1, it, i, nMax = Math.ceil(SH_TMAX / DT) + 10;
+            for (it = 0; it < 4; it++) {
+                var q = CU_Q; q.x = B.x; q.y = B.y; q.z = B.z || 0; q.vx = B.vx; q.vy = B.vy; q.vz = B.vz || 0; q.sps = B.sps; var yc = null, xc = 0;
+                for (i = 0; i < nMax; i++) {
+                    var v = hyp(q.vx, q.vy), x0 = q.x, y0 = q.y;
+                    if (q.z > 0 || q.vz > 0) { q.vz -= BL_G * DT; q.z += q.vz * DT; if (v > .02) { var n0 = Math.max(0, v - .10 * v * DT); q.vx *= n0 / v; q.vy *= n0 / v; } if (q.z <= 0) { q.z = 0; if (-q.vz > BL_BMIN) { q.vz = -q.vz * BL_E; q.vx *= BL_HRET; q.vy *= BL_HRET; } else q.vz = 0; } }
+                    else if (v > .02) { var nv = Math.max(0, v - .10 * v * DT); q.vx *= nv / v; q.vy *= nv / v; }
+                    cuRot(q, q.z > 0 ? 1 : CU_GND);
+                    q.x += q.vx * DT; q.y += q.vy * DT;
+                    if ((q.x - gx) * dir >= 0) { var u = (gx - x0) / ((q.x - x0) || 1e-9); yc = y0 + (q.y - y0) * u; xc = gx; break; }
+                    if (q.y < 0 || q.y > PH || hyp(q.vx, q.vy) < 1.2) break;
+                }
+                if (yc == null) return;
+                var e = yc - cy; if (Math.abs(e) < .02) return;
+                var d0 = Math.atan2(cy - B.y, xc - B.x) - Math.atan2(yc - B.y, xc - B.x), c = Math.cos(d0), sn = Math.sin(d0), vx = B.vx; B.vx = vx * c - B.vy * sn; B.vy = vx * sn + B.vy * c;
+            }
+        }
         function hiStep(q) {
             if (!BL_AERO) { q.x += q.vx * DT; q.y += q.vy * DT; q.vz -= BL_G * DT; q.z += q.vz * DT; return q; }
             var vh = hyp(q.vx, q.vy), v = Math.sqrt(vh * vh + q.vz * q.vz), ax = 0, ay = 0, az = -BL_G;
             if (v > .05) {
                 var kd = AE_K * aeCd(v) * v, kl = AE_K * Math.min(.35, .9 * .11 * BL_SPIN * 2 * Math.PI / v) * v;
-                ax = -kd * q.vx; ay = -kd * q.vy; az -= kd * q.vz;
+                if (WXON) { var wrx = q.vx - WX_X, wry = q.vy - WX_Y, vr = Math.sqrt(wrx * wrx + wry * wry + q.vz * q.vz), kdr = AE_K * aeCd(vr) * vr; ax = -kdr * wrx; ay = -kdr * wry; az -= kdr * q.vz; }      // [v137] rüzgâr: göreli hava hızıyla sürüklenme
+                else { ax = -kd * q.vx; ay = -kd * q.vy; az -= kd * q.vz; }
                 if (vh > 1e-6) { ax -= kl * q.vz * q.vx / vh; ay -= kl * q.vz * q.vy / vh; az += kl * vh; }
+                if (q.sps && vh > .5) { var kc = cuAcc(v, q.sps) / vh; ax += kc * q.vy; ay -= kc * q.vx; }      // [v137] yan dönüş: yatay hıza dik (sps > 0 → gidişin soluna)
             }
             q.vx += ax * DT; q.vy += ay * DT; q.vz += az * DT; q.x += q.vx * DT; q.y += q.vy * DT; q.z += q.vz * DT;
             return q;
         }
-        function aeRun(x0, y0, z0, ux, uy, s, vz, n) { var q = AE_Q, i; q.x = x0; q.y = y0; q.z = z0; q.vx = ux * s; q.vy = uy * s; q.vz = vz; for (i = 0; i < n; i++) hiStep(q); return q; }
+        function aeRun(x0, y0, z0, ux, uy, s, vz, n) { var q = AE_Q, i; q.x = x0; q.y = y0; q.z = z0; q.vx = ux * s; q.vy = uy * s; q.vz = vz; q.sps = CURL ? B.sps || 0 : 0; for (i = 0; i < n; i++) hiStep(q); return q; }
         // fırlatma hızı: n adım sonra top (hx, hy) noktasında BL_HZ yükseklikte (Newton, sonlu fark; boşluk çözümünden başlar)
+        /* [v137] yan dönüşte / rüzgârda iniş noktası yanal kayar: nişan noktası kaymanın tersine taşınarak çözüm yinelenir (gerçek iniş = ilan edilen iniş noktası) */
         function aeSolve(hx, hy, n) {
+            aeSolve0(hx, hy, n); if (!((CURL && B.sps) || WXON)) return;
+            var mx = hx, my = hy, it, q;
+            for (it = 0; it < 5; it++) {
+                q = aeRun(B.x, B.y, B.z || 0, 1, 0, 0, B.vz, 0); q.vx = B.vx; q.vy = B.vy; for (var j = 0; j < n; j++) hiStep(q);
+                var ex = q.x - hx, ey = q.y - hy; if (ex * ex + ey * ey < 1e-4) break;
+                mx -= ex; my -= ey; aeSolve0(mx, my, n);
+            }
+        }
+        function aeSolve0(hx, hy, n) {
             var dx = hx - B.x, dy = hy - B.y, D = hyp(dx, dy); if (D < .5) return;
             var ux = dx / D, uy = dy / D, s = hyp(B.vx, B.vy), vz = B.vz, z0 = B.z || 0, it, q, ex, ez, h = .05;
             for (it = 0; it < 10; it++) {
@@ -1048,11 +1136,12 @@
                 for (s = 0; s < 5; s++) {
                     tt += .04;
                     var v = hyp(vx, vy);
-                    if (hi && (hn >= 0 ? hn-- > 0 : tt < hi.tLand)) { if (BL_AERO) { var aq = AE_Q; aq.x = x; aq.y = y; aq.z = z; aq.vx = vx; aq.vy = vy; aq.vz = vz; hiStep(aq); x = aq.x; y = aq.y; z = aq.z; vx = aq.vx; vy = aq.vy; vz = aq.vz; } else { x += vx * .04; y += vy * .04; vz -= BL_G * .04; z += vz * .04; } continue; }
+                    if (hi && (hn >= 0 ? hn-- > 0 : tt < hi.tLand)) { if (BL_AERO) { var aq = AE_Q; aq.x = x; aq.y = y; aq.z = z; aq.vx = vx; aq.vy = vy; aq.vz = vz; aq.sps = CURL ? B.sps || 0 : 0; hiStep(aq); x = aq.x; y = aq.y; z = aq.z; vx = aq.vx; vy = aq.vy; vz = aq.vz; } else { x += vx * .04; y += vy * .04; vz -= BL_G * .04; z += vz * .04; } continue; }
                     hi = null;
                     if (z > 0 || vz > 0) { vz -= BL_G * .04; z += vz * .04; if (sf && v > .02) { var n0 = Math.max(0, v - .1 * v * .04); vx *= n0 / v; vy *= n0 / v; } if (z <= 0) { z = 0; if (-vz > BL_BMIN) { vz = -vz * BL_E; vx *= BL_HRET; vy *= BL_HRET; } else { vz = 0; sl = BL_SLIDE ? hyp(vx, vy) * BL_R57 : 0; } } }
                     else if (v > .05) { var dv = (sf ? .1 * v : gdec(v, sl)) * .04, nv = Math.max(0, v - dv); vx *= nv / v; vy *= nv / v; }
                     else if (BL_EDGE) { vx = 0; vy = 0; }      // [ball] çok yavaş top durur
+                    if (sf && CURL && B.sps) { var cq = CU_Q; cq.vx = vx; cq.vy = vy; cq.sps = B.sps; cuRot(cq, z > 0 ? 1 : CU_GND); vx = cq.vx; vy = cq.vy; }      // [v137] kıvrılan şut
                     x += vx * .04; y += vy * .04;
                 }
             }
@@ -1527,7 +1616,7 @@
                 var faceBall = !own && live && bl > .8 && sp < 4.5 && (want < 3 || (d < 7 && p.sf < .9 && (mx * bx + my * by) / bl < .2));
                 if (faceBall || want < .3) hd = Math.atan2(by, bl > .01 ? bx : 1);
                 else hd = Math.atan2(my, mx);
-                var wk = Math.max(0, 1 - sp / 5), w = MV_TURN1 + (MV_TURN0 - MV_TURN1) * wk * wk, dA = angDiff(hd, p.fa), mxA = w * DT;
+                var wk = Math.max(0, 1 - sp / 5), w = (MV_TURN1 + (MV_TURN0 - MV_TURN1) * wk * wk) * (AGIL ? p.agK : 1), dA = angDiff(hd, p.fa), mxA = w * DT;      // [v137] AGIL: çeviklik
                 p.fa += dA > mxA ? mxA : dA < -mxA ? -mxA : dA;
                 p.fx = Math.cos(p.fa); p.fy = Math.sin(p.fa);
                 // gövdeye göre hareket açısı: geri ve yan adımlar daha yavaş
@@ -1537,7 +1626,7 @@
                 if (sp > .8) {
                     var ux = p.vx / sp, uy = p.vy / sp, L = ddx * ux + ddy * uy, Tn = -ddx * uy + ddy * ux;
                     var aF = Math.max(.35, A0 * (1 - Math.pow(sp / (MV_TAPER * p.maxV), 2)));
-                    var Lm = (L > 0 ? aF : brk) * DT, Tm = MV_LAT0 * (1 - MV_LATV * Math.min(1, Math.pow(sp / p.maxV, 2))) * DT;
+                    var Lm = (L > 0 ? aF : brk) * DT, Tm = MV_LAT0 * (AGIL ? p.agK : 1) * (1 - MV_LATV * Math.min(1, Math.pow(sp / p.maxV, 2))) * DT;
                     var s = hyp(L / Lm, Tn / Tm); if (s > 1) { L /= s; Tn /= s; }
                     ax = ux * L - uy * Tn; ay = uy * L + ux * Tn;
                 } else {
@@ -2065,6 +2154,7 @@
                 if (B.z <= 0) { B.z = 0; if (-B.vz > BL_BMIN) { B.vz = -B.vz * BL_E; B.vx *= BL_HRET; B.vy *= BL_HRET; } else { B.vz = 0; B.slv = BL_SLIDE && !B.shotFlag ? hyp(B.vx, B.vy) * BL_R57 : 0; } }
             } else if (v > .02) { var dv = B.shotFlag ? .10 * v * DT : gdec(v, B.slv || 0) * DT; var nv = Math.max(0, v - dv); B.vx *= nv / v; B.vy *= nv / v; }
             else if (BL_EDGE) { B.vx = 0; B.vy = 0; }      // [ball] çok yavaş top durur (sonsuza dek sürünmez)
+            if (CURL && B.sps && B.shotFlag) cuRot(B, B.z > 0 ? 1 : CU_GND);      // [v137] kıvrılan şut (cuShotAim ile aynı sıra)
             B.x += B.vx * DT; B.y += B.vy * DT;
             v = hyp(B.vx, B.vy); if (v > S.audit.maxBallV) S.audit.maxBallV = v;
             if (v < 1.2 && B.shotFlag && B.z <= 0) B.shotFlag = false;
@@ -2677,7 +2767,7 @@
             if (p.role === 'GK' && !(a.gk > 0)) a.gk = 45;
             p.a = a; p.name = ro.name; p.short = ro.short || ro.name; p.db = ro.db || null;
             if (ro.ft === 'L' || ro.ft === 'R') p.ft = ro.ft; if (ro.wf >= 1 && ro.wf <= 5) p.wf = Math.round(ro.wf);
-            p.maxV = CURVE ? 6.2 + .0395 * a.pac : 5.6 + .032 * a.pac; p.acc = CURVE ? 4.8 + .028 * a.pac : 6.5;
+            p.maxV = CURVE ? 6.2 + .0395 * a.pac : 5.6 + .032 * a.pac; p.acc = CURVE ? 4.8 + .028 * a.pac : 6.5; p.agK = agilK(a, p.role);      // [v137]
             p.stam = 1; p.yc = 0; p.nf = 0; p.dec = null; p.run = null;
             p.br = makeBrain(a, p.role, !!ro.db, BR_ON, opts.brainBase); trApply(p, ro);
             if (FATIGUE) { p.stamCap = 1; p.ana = 1; p.anaD = 0; p.staK = clamp(1 - FT_STA * ((a.sta != null ? a.sta : 80) - 80) / 15, .5, 1.6) * Math.pow(FT_EM / (FT_ROLE[p.role] || FT_EM), FT_RN); }
