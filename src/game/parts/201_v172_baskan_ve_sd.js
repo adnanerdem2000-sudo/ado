@@ -414,7 +414,7 @@ function locaPhone(W,k){const bsk=isBsk(),H=G.m.hc||{},S=LOCA.S;if(k==='a'){if(b
     else{let best=null;try{best=squadOf(S.o.opp.id).filter(p=>p.age<=27).sort((a,b)=>b.ovr-a.ovr)[0];}catch(e){}if(best)locaCard(W,`📱 Scout şefi: “Rakipte ${best.name} (${best.age}) çok iyi oynuyor. Listeye ekleyelim mi?”`,[['Evet, listeye ekle',()=>rlTgtAdd(best.k,S.o.opp.id,'maç')],['Hayır',()=>{}]]);}}
   else locaCard(W,`📱 ${H.n||'Hoca'}: “Oyunu değiştirmek için hücum oyuncusu sokacağım.”`,[['“Sana güveniyorum”',()=>rlHc(2)],['“Bence sabırlı ol”',()=>{if(rlMood()>=55){rlHc(-1);}else rlHc(-3);}]]);}
 function locaFG(W){const d=W.document;if(d.getElementById('loca-fg'))return;const st=d.createElement('style');st.id='loca-css';st.textContent=`
-#loca-fg{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+#loca-fg{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
 #loca-fg .lc-vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 55%,rgba(5,8,12,.55) 100%)}
 #loca-fg .lc-gl{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,240,200,0) 30%,rgba(255,240,200,.07) 38%,rgba(255,240,200,0) 46%);background-size:300% 100%;animation:lcgl 30s linear infinite}
 @keyframes lcgl{0%{background-position:100% 0}100%{background-position:-100% 0}}
@@ -428,24 +428,24 @@ function locaFG(W){const d=W.document;if(d.getElementById('loca-fg'))return;cons
 #lcHeads{position:absolute;left:0;right:0;bottom:7%;height:26px;display:flex;justify-content:space-around;transition:transform .2s}
 #lcHeads i{width:46px;height:30px;border-radius:24px 24px 0 0;background:#07090c;opacity:.8}
 #lcHeads.jump{transform:translateY(-10px)}
-#loca-wall{position:fixed;left:10px;top:10px;z-index:41;pointer-events:none;background:#050607;border:3px solid #23272d;border-radius:6px;padding:4px 10px;font:700 15px/1.2 ui-monospace,monospace;color:#ffb347;text-shadow:0 0 6px rgba(255,160,40,.7);display:flex;gap:10px;align-items:center}
+#loca-wall{position:absolute;left:10px;bottom:calc(7% + 30px);z-index:41;pointer-events:none;background:#050607;border:3px solid #23272d;border-radius:6px;padding:4px 10px;font:700 15px/1.2 ui-monospace,monospace;color:#ffb347;text-shadow:0 0 6px rgba(255,160,40,.7);display:flex;gap:10px;align-items:center}
 #loca-wall i{font-style:normal;color:#9fd3ff;text-shadow:0 0 6px rgba(80,170,255,.6)}
 #loca-wall.flash{animation:lcfl .5s steps(2) 6}@keyframes lcfl{50%{opacity:.25}}
-#lcBub{position:fixed;left:12px;bottom:calc(7% + 34px);z-index:42;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:min(320px,70vw)}
+#lcBub{position:absolute;left:10px;top:48px;z-index:42;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:min(320px,70vw)}
 #lcBub .lc-b{background:rgba(250,248,240,.94);color:#1b1d21;border-radius:12px 12px 12px 3px;padding:5px 9px;font:13px/1.3 system-ui;box-shadow:0 3px 10px rgba(0,0,0,.35);animation:lcin .25s ease-out}
 #lcBub .lc-b b{display:block;font-size:11px;color:#7a5a2a}
 @keyframes lcin{from{transform:translateY(8px);opacity:0}}
-#lcPal{position:fixed;right:12px;bottom:calc(7% + 34px);z-index:43;pointer-events:auto;max-width:min(330px,80vw)}
+#lcPal{position:absolute;right:8px;bottom:calc(7% + 6px);z-index:43;pointer-events:auto;max-width:min(330px,62%);max-height:calc(100% - 56px);overflow:auto}
 #lcPal .lc-card{background:rgba(18,22,28,.94);color:#f2f2f2;border:1px solid rgba(255,200,120,.35);border-radius:12px;padding:10px;box-shadow:0 6px 22px rgba(0,0,0,.5);font:13px/1.35 system-ui}
 #lcPal .lc-card p{margin:0 0 8px;font-weight:600}
 #lcPal .lc-card button{display:block;width:100%;margin:5px 0 0;padding:7px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font:13px system-ui;text-align:left;cursor:pointer}
 #lcPal .lc-card button:hover{background:rgba(255,190,90,.22)}
 .lc-ht{margin:10px 0;display:grid;gap:6px}.lc-ht p{margin:0;font-weight:700}.lc-ht .abh-tr{font-size:13px;opacity:.85}
-@media (max-width:700px){#loca-fg .lc-bar{display:none}#loca-wall{font-size:13px}}`;
+@media (max-width:700px){#loca-fg .lc-bar{display:none}#loca-wall{font-size:12px}#lcPal .lc-card{padding:7px;font-size:12px}#lcPal .lc-card button{padding:5px 7px;margin-top:4px}#lcBub .lc-b{font-size:12px}#lcHeads i{width:34px;height:22px}}`;
   d.head.appendChild(st);const fg=d.createElement('div');fg.id='loca-fg';fg.setAttribute('aria-hidden','true');let cr='';try{cr=crestSVG(myClub(),28);}catch(e){}
   fg.innerHTML=`<div class="lc-vig"></div><div class="lc-gl"></div><div class="lc-top"></div><i class="lc-bar l"></i><i class="lc-bar r"></i><div id="lcHeads"><i></i><i></i><i></i><i></i><i></i></div><div class="lc-desk">${cr}<span class="lc-tea"></span><span class="lc-prog">MAÇ PROGRAMI · ${esc((myClub().short||'').toLocaleUpperCase('tr-TR'))}</span></div>`;
-  d.body.appendChild(fg);const wl=d.createElement('div');wl.id='loca-wall';wl.innerHTML='<b id="lcSc">0–0</b><i id="lcMn">0’</i>';d.body.appendChild(wl);
-  const bb=d.createElement('div');bb.id='lcBub';d.body.appendChild(bb);const pl=d.createElement('div');pl.id='lcPal';pl.hidden=true;d.body.appendChild(pl);d.body.classList.add('ab-loca');}
+  const cv=d.getElementById('cv3d'),host=(cv&&cv.parentElement)||d.body;try{if(host!==d.body&&W.getComputedStyle(host).position==='static')host.style.position='relative';}catch(e){}host.appendChild(fg);const wl=d.createElement('div');wl.id='loca-wall';wl.innerHTML='<b id="lcSc">0–0</b><i id="lcMn">0’</i>';host.appendChild(wl);
+  const bb=d.createElement('div');bb.id='lcBub';host.appendChild(bb);const pl=d.createElement('div');pl.id='lcPal';pl.hidden=true;host.appendChild(pl);d.body.classList.add('ab-loca');}
 function locaClean(){const W=LOCA.W;LOCA.on=0;if(!W)return;try{W.__abLoca&&W.__abLoca(false);}catch(e){}try{const d=W.document;['loca-fg','loca-wall','lcBub','lcPal','loca-css'].forEach(id=>{const e=d.getElementById(id);if(e)e.remove();});d.body.classList.remove('ab-loca');}catch(e){}
   try{const P=LOCA.prev;if(P&&W.ado2d.view.supported()){if(P.view!=='3d')W.ado2d.view.set('2d');else W.ado2d.view.set(P.cam3==='loca'?'bcast':(P.cam3||'bcast'));}}catch(e){}LOCA.W=null;}
 /* devre arası (113: abHalf → S.bsk) */
