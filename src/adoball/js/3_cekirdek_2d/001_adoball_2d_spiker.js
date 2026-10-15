@@ -6,7 +6,7 @@
    ===================================================================== */
 (function (root) {
     'use strict';
-    var PRIO = { GOAL: 10, PEN: 9, POST: 8, SAVE: 8, SHOT: 6, OFF: 5, BLOCK: 5, FOUL: 6, CORNER: 4, HALFTIME: 9, FULLTIME: 9, KICKOFF: 7, HEADER: 4, INTERCEPT: 3, TACKLE: 4, CHAIN: 2, THROUGH: 3, CROSS: 3, CLEAR: 2, THROWIN: 1, GOALKICK: 1, CLAIM: 3, OFFSIDE: 5, CARD: 7, VAR: 9, VARCHK: 9 };
+    var PRIO = { GOAL: 10, PEN: 9, POST: 8, SAVE: 8, SHOT: 6, OFF: 5, BLOCK: 5, FOUL: 6, CORNER: 4, HALFTIME: 9, FULLTIME: 9, KICKOFF: 7, HEADER: 4, INTERCEPT: 3, TACKLE: 4, CHAIN: 2, THROUGH: 3, CROSS: 3, CLEAR: 2, THROWIN: 1, GOALKICK: 1, CLAIM: 3, OFFSIDE: 5, ADV: 5, CARD: 7, VAR: 9, VARCHK: 9 };
     var MAX_LAG = { 10: 99, 9: 99, 8: 6, 7: 99, 6: 5, 5: 5, 4: 4, 3: 3, 2: 3, 1: 2 };
 
     // Türkçe ek uyumu: ünlü uyumu, kaynaştırma harfi (y/n), sert ünsüz (d→t)
@@ -147,7 +147,8 @@
                     if (oxg >= .12) pr = 6;
                     break;
                 case 'CORNER': out = pick([tn(ev.team) + ' lehine korner.', 'Korner! ' + tn(ev.team) + ' ceza sahasını dolduruyor.', tn(ev.team) + ' köşe vuruşu kazandı, uzun boylular öne çıkıyor.'], memo, 'crn'); break;
-                case 'FOUL': out = m.pen ? 'Ceza sahası içinde faul! ' + p + ' rakibini düşürdü, hakem PENALTI diyor!' : m.air ? 'Hava topunda faul! ' + p + ', ' + sfx(q, 'acc') + ' itti. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.' : m.slide ? pick(['Kayarak girdi ama topa değil adama! ' + p + ' ' + sfx(q, 'acc') + ' biçti. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.', p + ' kayarak müdahalede geç kaldı, faul. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.'], memo, 'slf') : 'Faul! ' + p + ', ' + sfx(q, 'acc') + ' durdurdu. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.'; if (m.pen) pr = 9; break;
+                case 'ADV': out = m.back ? 'Avantaj gerçekleşmedi; hakem geri dönüp serbest vuruşu ' + tn(ev.team) + ' lehine verdi.' : m.ok ? 'Avantaj tamam, oyun devam ediyor.' : ''; if (m.ok) pr = 2; break;      // [v186]
+                case 'FOUL': if (m.adv) { out = 'Faul! ' + p + ', ' + sfx(q, 'acc') + ' durdurmaya çalıştı ama hakem avantaj verdi, oyun devam ediyor.'; break; } out = m.pen ? 'Ceza sahası içinde faul! ' + p + ' rakibini düşürdü, hakem PENALTI diyor!' : m.air ? 'Hava topunda faul! ' + p + ', ' + sfx(q, 'acc') + ' itti. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.' : m.slide ? pick(['Kayarak girdi ama topa değil adama! ' + p + ' ' + sfx(q, 'acc') + ' biçti. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.', p + ' kayarak müdahalede geç kaldı, faul. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.'], memo, 'slf') : 'Faul! ' + p + ', ' + sfx(q, 'acc') + ' durdurdu. Serbest vuruş ' + tn(1 - ev.team) + ' lehine.'; if (m.pen) pr = 9; break;
                 case 'TACKLE': out = m.slide ? pick(['Harika kayarak müdahale! ' + p + ' topu ' + sfx(q, 'abl') + ' temizce aldı.', p + ' kayarak girdi ve topu kaptı!', 'Zamanlaması kusursuz: ' + p + ' kayarak ' + sfx(q, 'acc') + ' durdurdu.'], memo, 'slk') : p + ' topu ' + sfx(q, 'abl') + ' kaptı!'; break;
                 case 'INTERCEPT': if (m.tag === 'CORNER' || m.high) out = p + ' ortayı kesti, ' + tm + ' topa sahip.'; else out = p + ' araya girdi, top artık ' + sfx(tm, 'loc') + '.'; break;
                 case 'HEADER': out = m.clear ? p + ' ortayı kafayla uzaklaştırdı.' : m.inFront ? p + ' ceza sahasında kafa mücadelesini kazandı!' : p + ' havadaki topu aldı.'; break;

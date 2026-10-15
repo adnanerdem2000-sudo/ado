@@ -222,6 +222,9 @@
         AV_XG: 1, AV_SHOT: 1, AV_SMIN: .0027, AV_SLON: .012, AV_HSH: 1, AV_GKS0: 0, AV_SV0: 15, AV_SV1: .1, AV_SVSD: 3.5, AV_GKV: 20, AV_DRAG: 1,
         AV_PASS: 1, AV_PL0: 25, AV_PL1: .045, AV_PHH: .62, AV_PC0: .8, AV_PERR: .07, AV_PMISS: .045, AV_ISLK: .8, AV_XERR: 2,
         AV_GK: 1, AV_MOVE: 1, AV_OUT: 1, AV_ATTR: 1, AV_TRIG5: 1, AV_LATE: 1,
+        // AV_ADV: avantaj (IFAB Kural 5): tehlikeli bölgede faulü yapılan takım topu tutuyorsa oyun sürer; AV_ADVT sn içinde top kaybedilirse faulün yerinden serbest vuruş,
+        //   kart (varsa) topun ilk ölüşünde (gecikmeli kart). Olay: FOUL meta.adv, ADV meta.ok / meta.back
+        AV_ADV: 1,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
     // [av] gerçek şut verisinden lojistik xG (IRLS; test log-kayıp .2412, AUC .804 — StatsBomb'un kendi xG'si .2400 / .806)
@@ -382,14 +385,14 @@
         var DEADB = !!PRM.DEADB, PEN14 = !!PRM.PEN14, DEADGK = !!PRM.DEADGK, DEADSH = !!PRM.DEADSH, KO_DIST = !!PRM.KO_DIST, DEADFB = !!PRM.DEADFB, TI_FIX = !!PRM.TI_FIX, PEN_END = !!PRM.PEN_END, CARRYOUT = !!PRM.CARRYOUT && BALL3D;
         var FKD = !!PRM.FKD, FKD_A = PRM.FKD_A, FKD_SK = PRM.FKD_SK, FKD_W = PRM.FKD_W, FKD_MAX = PRM.FKD_MAX;
         // [av] açık veri bayrakları (DEFAULTS [av]); RA: yeni rastgelelik akışı (yalnız bayrak açıkken tüketilir)
-        var AV_XG = !!PRM.AV_XG, AV_SHOT = !!PRM.AV_SHOT, AV_DRAG = !!PRM.AV_DRAG && BALL3D, AV_PASS = !!PRM.AV_PASS, AV_GK = !!PRM.AV_GK, AV_MOVE = !!PRM.AV_MOVE && MOVE, AV_OUT = !!PRM.AV_OUT, AV_ATTR = !!PRM.AV_ATTR, AV_TRIG5 = !!PRM.AV_TRIG5, AV_LATE = !!PRM.AV_LATE;
+        var AV_XG = !!PRM.AV_XG, AV_SHOT = !!PRM.AV_SHOT, AV_DRAG = !!PRM.AV_DRAG && BALL3D, AV_PASS = !!PRM.AV_PASS, AV_GK = !!PRM.AV_GK, AV_MOVE = !!PRM.AV_MOVE && MOVE, AV_OUT = !!PRM.AV_OUT, AV_ATTR = !!PRM.AV_ATTR, AV_TRIG5 = !!PRM.AV_TRIG5, AV_LATE = !!PRM.AV_LATE, AV_ADV = !!PRM.AV_ADV;
         var RA = mulberry(((opts.seed || 1) ^ 0x3c6ef372) >>> 0);
         function gaussA() { return (RA() + RA() + RA() + RA() - 2) * 1.732; }
         function avp(k, d) { return opts.params && opts.params[k] != null ? +opts.params[k] : d; }      // [av] ince ayar anahtarı (laboratuvar; DEFAULTS dışında)
         if (AV_SHOT) { KY_MIN = PRM.AV_SMIN; KY_LON = PRM.AV_SLON; AC_HSH = PRM.AV_HSH; GK_S0 = PRM.AV_GKS0; SHOT_SD = avp('AV_SSD', .29); AC_SBL = avp('AV_SBL', .75); AC_SBR = avp('AV_SBR', 1.35); KY_SW = avp('AV_KSW', 1.7); }
         if (AV_PASS) { PP_C0 = PRM.AV_PC0; PP_HH = PRM.AV_PHH; PASS_MISS = PRM.AV_PMISS; INT_SLACK = PRM.AV_ISLK; }
         if (AV_MOVE) { MV_BRK = avp('AV_BRK', 5.5); MV_LAT0 = avp('AV_LAT0', 5.2); MV_LATV = avp('AV_LATV', .1); AIS_EFF = avp('AV_EFF', .25); }
-        if (AV_OUT) { DEAD_T = avp('AV_DT', 3); DEAD_G = avp('AV_DG', 4.5); DEAD_F = avp('AV_DF', 5.5); DEAD_C = avp('AV_DC', 7); }
+        if (AV_OUT) { DEAD_T = avp('AV_DT', 4); DEAD_G = avp('AV_DG', 6); DEAD_F = avp('AV_DF', 5.5); DEAD_C = avp('AV_DC', 7); }
         var keepBall = false, ballPending = false, hdZ = null;      // [dead]/[air] bir sonraki vuruşta top yerinde kalır · [ball] bu adımda top adımı henüz işlemedi · [air] kafa temasındaki top yüksekliği
         var GH = 2.44, BRAD = .11;      // kale yüksekliği, top yarıçapı (m)
         var BS = { x: CX, y: CY };      // [ais] takım bloğunun izlediği (gecikmeli) top konumu
@@ -488,6 +491,7 @@
             var ix = ms.indexOf(p); return ix < 0 ? koSpotRaw(p, kicking) : sp[ix];
         }
         function startDead(kind, team, spot, extra) {
+            if (AV_ADV && S.adv && !S.advIn) { var avd = S.adv; S.adv = null; if (!avd.d.off) { S.advIn = 1; try { tkG = avd.g; referee(avd.d, avd.o, false); } finally { S.advIn = 0; } } }      // [av] avantajdan sonra kart topun ilk ölüşünde
             var d = { kind: kind, team: team, x: spot.x, y: spot.y, timer: 0, wait: { kickoff: DEAD_K, throw: DEAD_T, goalkick: DEAD_G, corner: DEAD_C, freekick: DEAD_F, penalty: 5 }[kind], taker: null };
             for (var k in extra) d[k] = extra[k];
             var best = null, bd = 1e9;
@@ -2543,6 +2547,12 @@
                 S.teams[d.team].st.fouls++;
                 var pen = inBox(o.x, o.y, o.team), pv = null, edge = VAR2 && !pen && penEdge(o);      // [var] edge: hakem çizginin hemen dışındaki faulü penaltı sandı
                 if (edge) pen = true;
+                if (AV_ADV && !pen && !S.userRef && !S.adv && B.owner === o && o.role !== 'GK' && Math.abs(atkGoalX(o.team) - o.x) < avp('AV_ADVD', 40) && RA() < avp('AV_ADVP', .5)) {      // [av] avantaj: oyun sürer
+                    S.adv = { t: S.t, team: o.team, x: clamp(o.x, 1, PW - 1), y: clamp(o.y, 1, PH - 1), d: d, o: o, g: tkG, ok: false };
+                    d.stunT = Math.max(d.stunT || 0, S.t + .6); o.cd = Math.max(o.cd || 0, .2);
+                    emit('FOUL', { team: d.team, p: d.id, p2: o.id, x: o.x, y: o.y, meta: { pen: false, slide: slNow, adv: true } });
+                    return 'beaten';
+                }
                 emit('FOUL', { team: d.team, p: d.id, p2: o.id, x: o.x, y: o.y, meta: { pen: pen, slide: slNow } }); S._edge = !!edge;
                 S.chain = [0, 0];
                 if (pen && VAR_ON && VAR_OG && !S.userRef && penAppOff(d, o)) return 'foul';      // [offs] VAR: hücum evresinde kaçan ofsayt → penaltı iptal
@@ -2856,6 +2866,13 @@
                 S._pt = ntm; }
             if (S.ctr && (S.t > S.ctr.until || S.mode === 'dead')) S.ctr = null;      /* [port] kontra penceresi */
             if ((OFFS2 || VAR2) && B.owner && S.app) S.app[1 - B.owner.team] = null;      // [offs] rakip topu kontrol etti: hücum evresi bitti ([var] faul kayıtları da)
+            if (AV_ADV && S.adv && !S.adv.ok && S.mode === 'live') {      // [av] avantaj penceresi: top kaybı → geri dönüp serbest vuruş; süre doldu → avantaj oluştu (kart sonraki duruşta)
+                var av = S.adv, lost = B.owner && B.owner.team !== av.team;
+                if (lost && S.t - av.t < avp('AV_ADVT', 3)) { S.adv = null; S.chain = [0, 0]; S.pass = null; S.shot = null; B.owner = null; B.high = null;
+                    startDead('freekick', av.team, { x: av.x, y: av.y }); emit('ADV', { team: av.team, p: av.o.id, p2: av.d.id, x: av.x, y: av.y, meta: { back: true } });
+                    if (!av.d.off) { tkG = av.g; referee(av.d, av.o, false); } }
+                else if (S.t - av.t >= avp('AV_ADVT', 3)) { av.ok = true; emit('ADV', { team: av.team, p: av.o.id, p2: av.d.id, x: av.x, y: av.y, meta: { ok: true } }); }
+            }
             if (S.mode === 'dead') {
                 var d = S.dead; d.timer += DT;
                 if (d.wall && d.kind === 'freekick') for (var wi = 0; wi < d.wall.ids.length; wi++) if (S.players[d.wall.ids[wi]].off) { planWall(d); if (d.wall) d.wait = Math.max(d.wait, d.timer + 3); break; }      // faulü yapan barajda yer almışken kırmızı kart görürse (sahadan atılır) baraj yeniden kurulur
@@ -2949,7 +2966,7 @@
         S.footFor = footFor;
         S._lab = { setOwner: function (p) { S.mode = 'live'; S.dead = null; B.owner = p; B.x = p.x + p.fx * .55; B.y = p.y; B.vx = B.vy = 0; B.high = null; B.last = p; S.lastTeam = p.team; S.pass = null; S.shot = null; }, movePlayers: movePlayers, doPass: doPass, doShot: doShot, resolveAerial: resolveAerial, duels: duels, gkOf: gkOf, fgOpen: fgOpen };
         S.ball3d = BALL3D;
-        S.av = { XG: AV_XG, SHOT: AV_SHOT, DRAG: AV_DRAG, PASS: AV_PASS, GK: AV_GK, MOVE: AV_MOVE, OUT: AV_OUT, ATTR: AV_ATTR, TRIG5: AV_TRIG5, LATE: AV_LATE, HL: !!PRM.AV_HL };      // [av] görüntü / köprü katmanı için
+        S.av = { XG: AV_XG, SHOT: AV_SHOT, DRAG: AV_DRAG, PASS: AV_PASS, GK: AV_GK, MOVE: AV_MOVE, OUT: AV_OUT, ATTR: AV_ATTR, TRIG5: AV_TRIG5, LATE: AV_LATE, ADV: AV_ADV, HL: !!PRM.AV_HL };      // [av] görüntü / köprü katmanı için
         S.cardsOn = CARDS_ON; S.varOn = VAR_ON; S.ctxUrg = function (tm) { return BR_ON ? ctxUrg(tm) : 0; }; S.passOptions = passOptions; S.rdec = rdec; S.posValue = posValue; S.xgAt = xgAt; S.xgRepAt = function (x, y, tm, pd, kind) { return xgRep(xgFeat(x, y, tm, pd, kind), kind); }; S.inBox = inBox; S.bestPass = bestPass; S.atkGoalX = atkGoalX; S.ownGoalX = ownGoalX; S.rollSpeed = rollSpeed; S.hiStep = hiStep; S.aero = BL_AERO; S.ballE = BL_E; S.ballHret = BL_HRET;
         if (AICAL) calcQ();      // [aical] takım güçleri
         placeKickoff(0); startDead('kickoff', 0, { x: CX, y: CY }, { first: true });
