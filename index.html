@@ -3211,6 +3211,317 @@ body.fut table thead th,body.fut table thead tr{background:#0f3a22;color:#f4f7ee
 .v174-ic-b{width:22px;height:22px;vertical-align:-3px;margin-right:8px}
 #modalCard .v5ag button{display:grid !important;grid-template-columns:96px minmax(0,auto) minmax(0,1fr);text-align:left;align-items:center;min-height:0;height:auto;padding:7px 8px;transform:none}
 #modalCard .v5ag .dt{display:block;text-align:left}#modalCard .v5ag .dt small{display:block;position:static}#modalCard .v5ag em{display:block;text-align:left}
+/* v175: tema seçici — dört seçenek, profesyonel temanın yeşil ve lacivert renk örnekleri */
+.thm-chips{grid-template-columns:repeat(2,minmax(0,1fr))}
+.thm-pro-yesil .thm-sw{background:linear-gradient(90deg,#62f0b0 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#15603d,#0a2e1d)}
+.thm-pro-lacivert .thm-sw{background:linear-gradient(90deg,#62b8f0 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#16386b,#0a1a33)}
+/* Otomatik üretildi: node tools/tema_renk.js — elle düzenleme. Profesyonel tema renk seçenekleri (mor → yeşil / lacivert). */
+/* yesil */
+body.pro.pv-yesil .tline .ms-td i{background:#2c4338;color:#c5fde3}
+body.pro.pv-yesil .t-event .msg-tag{background:#2e825b}
+body.pro.pv-yesil{--night:#0d3422;--turf:#12482f;--turf-hi:#19593b;--panel:#185237;--panel-2:#1e6343;--chalk-2:#c6e8d8;--chalk-3:#8ec2aa;--led-ink:#0d3422;background-image:repeating-linear-gradient(125deg,rgba(255,255,255,.025) 0 90px,rgba(255,255,255,0) 90px 180px),radial-gradient(ellipse 90% 50% at 80% 0%,rgba(97,248,178,.35),transparent 70%),linear-gradient(160deg,#15603d 0%,#0d3a25 55%,#0a2e1d 100%)}
+body.pro.pv-yesil .panel{background:rgba(24,82,55,.92)}
+body.pro.pv-yesil .panel>.sub-h:first-child{color:#144e33}
+body.pro.pv-yesil .sub-h{color:#ade0c8}
+body.pro.pv-yesil .cta{color:#0d3422}
+body.pro.pv-yesil .cta small{color:#195d3d}
+body.pro.pv-yesil .btn{color:#144e33}
+body.pro.pv-yesil .chip{background:#23704c;color:#dff9ed}
+body.pro.pv-yesil .chip[aria-pressed="true"]{background:#63f8b2}
+body.pro.pv-yesil .top{background:linear-gradient(90deg,color-mix(in srgb,var(--club,#21744d) 35%,#144d32) 0%,#12482f 60%)}
+body.pro.pv-yesil .top .led{color:#144e33}
+body.pro.pv-yesil .top-meta span:not(.led){color:#c6e8d8}
+body.pro.pv-yesil .icon-btn,body.pro.pv-yesil .fs-btn{background:#23704c}
+body.pro.pv-yesil .tabs{background:#092719}
+body.pro.pv-yesil .tab{color:#8ec2aa}
+body.pro.pv-yesil .ticket{background:#185237}
+body.pro.pv-yesil .ticket-head{color:#144e33}
+body.pro.pv-yesil .modal-card{background:linear-gradient(180deg,#195d3d,#10422b)}
+body.pro.pv-yesil .stabs{background:#12482f}
+body.pro.pv-yesil .stabs button{color:#c6e8d8}
+body.pro.pv-yesil .stabs button.on{color:#144e33;box-shadow:inset 0 -3px 0 #63f8b2}
+body.pro.pv-yesil .sqrow,body.pro.pv-yesil .trrow,body.pro.pv-yesil .stf-row,body.pro.pv-yesil .rel{background:#1d5f40}
+body.pro.pv-yesil .sqrow:nth-child(even),body.pro.pv-yesil .trrow:nth-child(even),body.pro.pv-yesil .stf-row:nth-child(even){background:#185237}
+body.pro.pv-yesil .fp-row div,body.pro.pv-yesil .stc-st div,body.pro.pv-yesil .stf-sum div{background:#1e6343}
+body.pro.pv-yesil .pill.warn{color:#144e33}
+body.pro.pv-yesil .ng-steps span.on{color:#0d3422}
+body.pro.pv-yesil .today{background:rgba(24,82,55,.92)}
+body.pro.pv-yesil .wallet{background:#185237}
+body.pro.pv-yesil .fx{background:linear-gradient(160deg,#15603d,#0a301e)}
+body.pro.pv-yesil .fx-top{background:#0b100e}
+body.pro.pv-yesil .fx-sc b{background:linear-gradient(90deg,#3157d6,#63f8b2)}
+body.pro.pv-yesil .fx-sc small{background:#21744d}
+body.pro.pv-yesil .fx-ban.tac{background:#63f8b2}
+body.pro.pv-yesil .fx-ctl button{background:#23704c}
+body.pro.pv-yesil .fx-ctl button.on{color:#0d3422}
+body.pro.pv-yesil .fx-ctl .fx-info{color:#c6e8d8}
+body.pro.pv-yesil .fx-tabs{background:#092719}
+body.pro.pv-yesil .fx-body{background:rgba(13,52,34,.6)}
+body.pro.pv-yesil .fx-pl button,body.pro.pv-yesil .fx-r{background:#185237}
+body.pro.pv-yesil .fx-pl button:nth-child(even){background:#1d5f40}
+body.pro.pv-yesil .fx-pl button.on{background:#63f8b2}
+body.pro.pv-yesil .fx-sh button{background:#23704c}
+body.pro.pv-yesil .fx-sh button.on{background:#63f8b2}
+body.pro.pv-yesil .fx-adv div{background:#185237}
+body.pro.pv-yesil .fx-goal{color:#144e33}
+body.pro.pv-yesil .fx-goal .gt small{color:#4d876c}
+body.pro.pv-yesil #fxFF.on{color:#0d3422}
+body.pro.pv-yesil #fxSm.on{background:#63f8b2}
+body.pro.pv-yesil .cl-m.cup{background:rgba(99,248,178,.3)}
+body.pro.pv-yesil .fmp-id{background:linear-gradient(180deg,#1c5038,#113424)}
+body.pro.pv-yesil .fmp-name{color:#21744d}
+body.pro.pv-yesil .fmp-tabs button{color:#a1c7b5}
+body.pro.pv-yesil .fmp-ovr{color:#c2e4d4}
+body.pro.pv-yesil .fmi>span{color:#a1c7b5}
+body.pro.pv-yesil .fmi>b small{color:#d1ede0}
+body.pro.pv-yesil .fmi.two span{color:#a1c7b5}
+body.pro.pv-yesil .fm-st{color:#415f51}
+body.pro.pv-yesil .fmp-sec small{color:#a1c7b5}
+body.pro.pv-yesil .fmr b.v3{color:#c2e4d4}
+body.pro.pv-yesil .fm-feet b{color:#d1ede0}
+body.pro.pv-yesil .fmx p{color:#dff4ea}
+body.pro.pv-yesil .fmpos-l{color:#c2e4d4}
+body.pro.pv-yesil .ng-cols .bo{color:#dff4ea}
+body.pro.pv-yesil .fmp-ss b small{color:#a1c7b5}
+body.pro.pv-yesil .fmp-ss span{color:#a1c7b5}
+body.pro.pv-yesil .cmp th small{color:#a1c7b5}
+body.pro.pv-yesil .cmp .l{color:#c2e4d4}
+body.pro.pv-yesil .cmp-v{color:#dff4ea}
+body.pro.pv-yesil .sqt th{background:rgba(11,43,28,.95);color:#a1c7b5}
+body.pro.pv-yesil .sqt .num{color:#a1c7b5}
+@media (min-width:1000px){body.pro.pv-yesil .sc-tabs{background:rgba(11,43,28,.9)}
+}
+body.pro.pv-yesil table.lgt .frm i{color:#091f15}
+body.pro.pv-yesil .fm-d{background:#c4dbd0}
+body.pro.pv-yesil .cl-c.tw{box-shadow:inset 0 -3px 0 #71f9ba}
+body.pro.pv-yesil .tw-key{background:#71f9ba}
+body.pro.pv-yesil .eu-hd{background:linear-gradient(110deg,var(--euc) 0%,rgba(11,43,28,.6) 70%)!important}
+body.pro.pv-yesil .kr-loan{background:#63f8b2}
+body.pro.pv-yesil .kr-tx em.ln{color:#a8fbd4}
+body.pro.pv-yesil .nav-cat>p{color:#82bda1}
+body.pro.pv-yesil .nav-i{color:#c8ecdb}
+body.pro.pv-yesil .pg-crumb{color:#82bda1}
+body.pro.pv-yesil .ib-i button{color:#d2f4e4}
+body.pro.pv-yesil .ib-i:not(.unread) .ib-t b{color:#b2d6c5}
+body.pro.pv-yesil [data-tip]:hover::after,body.pro.pv-yesil [data-tip]:focus::after{background:#091f15}
+body.pro.pv-yesil [data-tip]:hover::before,body.pro.pv-yesil [data-tip]:focus::before{border-top-color:#091f15}
+body.pro.pv-yesil .fmr b.vr.unk{color:#82bda1}
+body.pro.pv-yesil .tr-day small{color:#a1c7b5}
+body.pro.pv-yesil #view select,body.pro.pv-yesil .modal select{background:#143626}
+body.pro.pv-yesil .prep-opp i{color:#a1c7b5}
+body.pro.pv-yesil .fin-kpi span{color:#a1c7b5}
+body.pro.pv-yesil .aw span{color:#a1c7b5}
+body.pro.pv-yesil .qs-res{background:#0d2f1f}
+body.pro.pv-yesil .hub-cust{color:#d2f4e4}
+body.pro.pv-yesil .post .av{background:#2d6b4e}
+body.pro.pv-yesil .dz-p b{color:#123424}
+body.pro.pv-yesil #fx [data-fx=ov].on{color:#123424}
+body.pro.pv-yesil .cz-gm{background:linear-gradient(160deg,#2c0a16,#06150e)}
+body.pro.pv-yesil .cz-tbl.dark{background:linear-gradient(180deg,#152f23,#0b1b14);border-color:#3d775c}
+body.pro.pv-yesil .cz-tbl.slm,body.pro.pv-yesil .cz-tbl.at{background:linear-gradient(180deg,#11231b,#08120d)}
+body.pro.pv-yesil .sl-win{background:#0d1411}
+body.pro.pv-yesil .mn-info span{color:#abd6c2}
+body.pro.pv-yesil .dt-tw{background:linear-gradient(180deg,#214836,#0f251b);border:2px solid #488d6d}
+body.pro.pv-yesil .dt-r em{color:#c9fde5}
+body.pro.pv-yesil .dt-t{background:#315a47}
+body.pro.pv-yesil .dt-r.cur .dt-t{background:#57a581;box-shadow:0 0 10px rgba(135,250,196,.5)}
+body.pro.pv-yesil .trp-age i{background:linear-gradient(180deg,#63f8b2,#39a0ff)}
+body.pro.pv-yesil .pi-pl{background:#346e53}
+body.pro.pv-yesil .cmp-b:hover,body.pro.pv-yesil .cmp-b.on{background:#63f8b2;border-color:#63f8b2}
+body.pro.pv-yesil .cmp-tray{background:#173728;border:1px solid #63f8b2}
+body.pro.pv-yesil .pl-tg.on{background:#63f8b2;border-color:#63f8b2}
+body.pro.pv-yesil .bdg input[type=range]{accent-color:#63f8b2}
+body.pro.pv-yesil .leg-card{background:var(--panel,#163e2b)}
+body.pro.pv-yesil .leg-face{background:radial-gradient(circle at 50% 30%,#306b4f,#0f2b1e)}
+body.pro.pv-yesil .leg-job.j-quit,body.pro.pv-yesil .leg-now.j-quit{color:#b4cec2}
+body.pro.pv-yesil .bdc{background:#030a07}
+body.pro.pv-yesil .bdc-stage{background:radial-gradient(ellipse at 50% 18%,#1f533b 0%,#0c291b 45%,#030c08 80%)}
+body.pro.pv-yesil .bdc-crowd i{background:#040d09;box-shadow:0 1.2vw 0 .7vw #040d09}
+body.pro.pv-yesil .bdc-sub{background:linear-gradient(180deg,#091f15,#040f0a)}
+body.pro.pv-yesil .bdc-ctl{background:#040f0a}
+body.pro.pv-yesil .ss-pot .ss-pf{background:radial-gradient(circle at 50% 30%,#306b4f,#0f2b1e)}
+body.pro.pv-yesil .scn-card{background:var(--panel,#163e2b)}
+body.pro.pv-yesil .fxl-rt.n{background:#527e69}
+body.pro.pv-yesil .fxt-card{background:linear-gradient(160deg,#134f33,#082819)}
+body.pro.pv-yesil .fxt-p small i.n{background:#527e69}
+body.pro.pv-yesil .fxt-tabs{background:#0e3c27}
+body.pro.pv-yesil .jub{background:radial-gradient(ellipse at top,#184e35,#040f0a 70%)}
+body.pro.pv-yesil .sm-av{background:linear-gradient(135deg,#ff6b9a,#63f8b2)}
+body.pro.pv-yesil #fx3b.on{background:linear-gradient(135deg,#63f8b2,#4cc9f0)}
+body.pro.pv-yesil .kr2-hd small{color:var(--chalk-2,#d1ede0)}
+body.pro.pv-yesil .sm2-av{background:linear-gradient(135deg,#f9ce34,#ee2a7b,#2fd085)}
+body.pro.pv-yesil [data-tip].tip-on::after{background:#091f15}
+body.pro.pv-yesil [data-tip].tip-on::before{border-top-color:#091f15}
+body.pro.pv-yesil #modalCard .ctl-box>.offer-btns:last-child{background:linear-gradient(180deg,rgba(16,66,43,.85),#10422b 40%)}
+body.pro.pv-yesil .grp-t:not(.on){color:#ecfef6}
+body.pro.pv-yesil .chip[aria-pressed="true"]{background:#4de9a0}
+body.pro.pv-yesil .v5d.tw{box-shadow:inset 0 -3px 0 #71f9ba}
+body.pro.pv-yesil .v5c.c,body.pro.pv-yesil .v5c.e{background:rgba(99,248,178,.32)}
+body.pro.pv-yesil .v5i i.t{background:rgba(113,249,186,.45)}
+body.pro.pv-yesil .v5i i.k{background:rgba(99,248,178,.35)}
+body.pro.pv-yesil .v5lg .lg.c{background:#63f8b2}
+body.pro.pv-yesil .v5lg .lg.t{background:#71f9ba}
+body.pro.pv-yesil .v5szban{background:linear-gradient(135deg,rgba(255,179,32,.25),rgba(99,248,178,.22))}
+body.pro.pv-yesil .v5szk span{background:rgba(99,248,178,.22)}
+body.pro.pv-yesil .v5tlm.t{border-left-color:#71f9ba}
+body.pro.pv-yesil .v163-tone.t-O{background:#50bd8a}
+body.pro.pv-yesil .rl-kpi span{color:#a1c7b5}
+body.pro.pv-yesil .rl-plan th{color:#a1c7b5}
+body.pro.pv-yesil .ticket-head .pr172-rol{background:#172f24}
+body.pro.pv-yesil .thm-pro .thm-sw{background:linear-gradient(90deg,#62f0de 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#15603d,#0d3a25)}
+/* lacivert */
+body.pro.pv-lacivert .tline .ms-td i{background:#2c3443;color:#c6dafc}
+body.pro.pv-lacivert .t-event .msg-tag{background:#2f4d81}
+body.pro.pv-lacivert{--night:#0d1b34;--turf:#132647;--turf-hi:#193159;--panel:#182d52;--panel-2:#1f3762;--chalk-2:#c6d2e8;--chalk-3:#8fa1c1;--led-ink:#0d1b34;background-image:repeating-linear-gradient(125deg,rgba(255,255,255,.025) 0 90px,rgba(255,255,255,0) 90px 180px),radial-gradient(ellipse 90% 50% at 80% 0%,rgba(98,153,247,.35),transparent 70%),linear-gradient(160deg,#16315f 0%,#0d1e3a 55%,#0a172e 100%)}
+body.pro.pv-lacivert .panel{background:rgba(24,45,82,.92)}
+body.pro.pv-lacivert .panel>.sub-h:first-child{color:#152a4d}
+body.pro.pv-lacivert .sub-h{color:#aec0df}
+body.pro.pv-lacivert .cta{color:#0d1b34}
+body.pro.pv-lacivert .cta small{color:#1a325c}
+body.pro.pv-lacivert .btn{color:#152a4d}
+body.pro.pv-lacivert .chip{background:#24406f;color:#dfe9f9}
+body.pro.pv-lacivert .chip[aria-pressed="true"]{background:#649af7}
+body.pro.pv-lacivert .top{background:linear-gradient(90deg,color-mix(in srgb,var(--club,#224073) 35%,#15294c) 0%,#132647 60%)}
+body.pro.pv-lacivert .top .led{color:#152a4d}
+body.pro.pv-lacivert .top-meta span:not(.led){color:#c6d2e8}
+body.pro.pv-lacivert .icon-btn,body.pro.pv-lacivert .fs-btn{background:#24406f}
+body.pro.pv-lacivert .tabs{background:#0a1426}
+body.pro.pv-lacivert .tab{color:#8fa1c1}
+body.pro.pv-lacivert .ticket{background:#182d52}
+body.pro.pv-lacivert .ticket-head{color:#152a4d}
+body.pro.pv-lacivert .modal-card{background:linear-gradient(180deg,#1a325c,#112341)}
+body.pro.pv-lacivert .stabs{background:#132647}
+body.pro.pv-lacivert .stabs button{color:#c6d2e8}
+body.pro.pv-lacivert .stabs button.on{color:#152a4d;box-shadow:inset 0 -3px 0 #649af7}
+body.pro.pv-lacivert .sqrow,body.pro.pv-lacivert .trrow,body.pro.pv-lacivert .stf-row,body.pro.pv-lacivert .rel{background:#1e355e}
+body.pro.pv-lacivert .sqrow:nth-child(even),body.pro.pv-lacivert .trrow:nth-child(even),body.pro.pv-lacivert .stf-row:nth-child(even){background:#182d52}
+body.pro.pv-lacivert .fp-row div,body.pro.pv-lacivert .stc-st div,body.pro.pv-lacivert .stf-sum div{background:#1f3762}
+body.pro.pv-lacivert .pill.warn{color:#152a4d}
+body.pro.pv-lacivert .ng-steps span.on{color:#0d1b34}
+body.pro.pv-lacivert .today{background:rgba(24,45,82,.92)}
+body.pro.pv-lacivert .wallet{background:#182d52}
+body.pro.pv-lacivert .fx{background:linear-gradient(160deg,#16315f,#0a1830)}
+body.pro.pv-lacivert .fx-top{background:#0b0d10}
+body.pro.pv-lacivert .fx-sc b{background:linear-gradient(90deg,#3157d6,#649af7)}
+body.pro.pv-lacivert .fx-sc small{background:#224073}
+body.pro.pv-lacivert .fx-ban.tac{background:#649af7}
+body.pro.pv-lacivert .fx-ctl button{background:#24406f}
+body.pro.pv-lacivert .fx-ctl button.on{color:#0d1b34}
+body.pro.pv-lacivert .fx-ctl .fx-info{color:#c6d2e8}
+body.pro.pv-lacivert .fx-tabs{background:#0a1426}
+body.pro.pv-lacivert .fx-body{background:rgba(13,27,52,.6)}
+body.pro.pv-lacivert .fx-pl button,body.pro.pv-lacivert .fx-r{background:#182d52}
+body.pro.pv-lacivert .fx-pl button:nth-child(even){background:#1e355e}
+body.pro.pv-lacivert .fx-pl button.on{background:#649af7}
+body.pro.pv-lacivert .fx-sh button{background:#24406f}
+body.pro.pv-lacivert .fx-sh button.on{background:#649af7}
+body.pro.pv-lacivert .fx-adv div{background:#182d52}
+body.pro.pv-lacivert .fx-goal{color:#152a4d}
+body.pro.pv-lacivert .fx-goal .gt small{color:#4d6287}
+body.pro.pv-lacivert #fxFF.on{color:#0d1b34}
+body.pro.pv-lacivert #fxSm.on{background:#649af7}
+body.pro.pv-lacivert .cl-m.cup{background:rgba(100,154,247,.3)}
+body.pro.pv-lacivert .fmp-id{background:linear-gradient(180deg,#1d2f4f,#111e34)}
+body.pro.pv-lacivert .fmp-name{color:#224073}
+body.pro.pv-lacivert .fmp-tabs button{color:#a1afc7}
+body.pro.pv-lacivert .fmp-ovr{color:#c2cee4}
+body.pro.pv-lacivert .fmi>span{color:#a1afc7}
+body.pro.pv-lacivert .fmi>b small{color:#d2dbec}
+body.pro.pv-lacivert .fmi.two span{color:#a1afc7}
+body.pro.pv-lacivert .fm-st{color:#424c5e}
+body.pro.pv-lacivert .fmp-sec small{color:#a1afc7}
+body.pro.pv-lacivert .fmr b.v3{color:#c2cee4}
+body.pro.pv-lacivert .fm-feet b{color:#d2dbec}
+body.pro.pv-lacivert .fmx p{color:#dfe7f4}
+body.pro.pv-lacivert .fmpos-l{color:#c2cee4}
+body.pro.pv-lacivert .ng-cols .bo{color:#dfe7f4}
+body.pro.pv-lacivert .fmp-ss b small{color:#a1afc7}
+body.pro.pv-lacivert .fmp-ss span{color:#a1afc7}
+body.pro.pv-lacivert .cmp th small{color:#a1afc7}
+body.pro.pv-lacivert .cmp .l{color:#c2cee4}
+body.pro.pv-lacivert .cmp-v{color:#dfe7f4}
+body.pro.pv-lacivert .sqt th{background:rgba(12,23,42,.95);color:#a1afc7}
+body.pro.pv-lacivert .sqt .num{color:#a1afc7}
+@media (min-width:1000px){body.pro.pv-lacivert .sc-tabs{background:rgba(12,23,42,.9)}
+}
+body.pro.pv-lacivert table.lgt .frm i{color:#09111f}
+body.pro.pv-lacivert .fm-d{background:#c4ccdb}
+body.pro.pv-lacivert .cl-c.tw{box-shadow:inset 0 -3px 0 #72a3f8}
+body.pro.pv-lacivert .tw-key{background:#72a3f8}
+body.pro.pv-lacivert .eu-hd{background:linear-gradient(110deg,var(--euc) 0%,rgba(12,23,42,.6) 70%)!important}
+body.pro.pv-lacivert .kr-loan{background:#649af7}
+body.pro.pv-lacivert .kr-tx em.ln{color:#a9c7fa}
+body.pro.pv-lacivert .nav-cat>p{color:#8298bd}
+body.pro.pv-lacivert .nav-i{color:#c8d5ec}
+body.pro.pv-lacivert .pg-crumb{color:#8298bd}
+body.pro.pv-lacivert .ib-i button{color:#d3dff3}
+body.pro.pv-lacivert .ib-i:not(.unread) .ib-t b{color:#b2bfd6}
+body.pro.pv-lacivert [data-tip]:hover::after,body.pro.pv-lacivert [data-tip]:focus::after{background:#09111f}
+body.pro.pv-lacivert [data-tip]:hover::before,body.pro.pv-lacivert [data-tip]:focus::before{border-top-color:#09111f}
+body.pro.pv-lacivert .fmr b.vr.unk{color:#8298bd}
+body.pro.pv-lacivert .tr-day small{color:#a1afc7}
+body.pro.pv-lacivert #view select,body.pro.pv-lacivert .modal select{background:#142036}
+body.pro.pv-lacivert .prep-opp i{color:#a1afc7}
+body.pro.pv-lacivert .fin-kpi span{color:#a1afc7}
+body.pro.pv-lacivert .aw span{color:#a1afc7}
+body.pro.pv-lacivert .qs-res{background:#0e1a2e}
+body.pro.pv-lacivert .hub-cust{color:#d3dff3}
+body.pro.pv-lacivert .post .av{background:#2d446b}
+body.pro.pv-lacivert .dz-p b{color:#121e34}
+body.pro.pv-lacivert #fx [data-fx=ov].on{color:#121e34}
+body.pro.pv-lacivert .cz-gm{background:linear-gradient(160deg,#2c0a16,#060b15)}
+body.pro.pv-lacivert .cz-tbl.dark{background:linear-gradient(180deg,#151f2f,#0b111b);border-color:#3d5277}
+body.pro.pv-lacivert .cz-tbl.slm,body.pro.pv-lacivert .cz-tbl.at{background:linear-gradient(180deg,#111823,#080c12)}
+body.pro.pv-lacivert .sl-win{background:#0d1014}
+body.pro.pv-lacivert .mn-info span{color:#abbbd6}
+body.pro.pv-lacivert .dt-tw{background:linear-gradient(180deg,#212f48,#0f1725);border:2px solid #49618c}
+body.pro.pv-lacivert .dt-r em{color:#cadcfc}
+body.pro.pv-lacivert .dt-t{background:#31405a}
+body.pro.pv-lacivert .dt-r.cur .dt-t{background:#5874a4;box-shadow:0 0 10px rgba(136,177,249,.5)}
+body.pro.pv-lacivert .trp-age i{background:linear-gradient(180deg,#649af7,#39a0ff)}
+body.pro.pv-lacivert .pi-pl{background:#354a6d}
+body.pro.pv-lacivert .cmp-b:hover,body.pro.pv-lacivert .cmp-b.on{background:#649af7;border-color:#649af7}
+body.pro.pv-lacivert .cmp-tray{background:#182336;border:1px solid #649af7}
+body.pro.pv-lacivert .pl-tg.on{background:#649af7;border-color:#649af7}
+body.pro.pv-lacivert .bdg input[type=range]{accent-color:#649af7}
+body.pro.pv-lacivert .leg-card{background:var(--panel,#16253e)}
+body.pro.pv-lacivert .leg-face{background:radial-gradient(circle at 50% 30%,#30466b,#0f192b)}
+body.pro.pv-lacivert .leg-job.j-quit,body.pro.pv-lacivert .leg-now.j-quit{color:#b4bece}
+body.pro.pv-lacivert .bdc{background:#03060a}
+body.pro.pv-lacivert .bdc-stage{background:radial-gradient(ellipse at 50% 18%,#203252 0%,#0d1728 45%,#03060c 80%)}
+body.pro.pv-lacivert .bdc-crowd i{background:#04070d;box-shadow:0 1.2vw 0 .7vw #04070d}
+body.pro.pv-lacivert .bdc-sub{background:linear-gradient(180deg,#09111f,#05080e)}
+body.pro.pv-lacivert .bdc-ctl{background:#05080e}
+body.pro.pv-lacivert .ss-pot .ss-pf{background:radial-gradient(circle at 50% 30%,#30466b,#0f192b)}
+body.pro.pv-lacivert .scn-card{background:var(--panel,#16253e)}
+body.pro.pv-lacivert .fxl-rt.n{background:#52627e}
+body.pro.pv-lacivert .fxt-card{background:linear-gradient(160deg,#13294f,#091427)}
+body.pro.pv-lacivert .fxt-p small i.n{background:#52627e}
+body.pro.pv-lacivert .fxt-tabs{background:#0e1f3c}
+body.pro.pv-lacivert .jub{background:radial-gradient(ellipse at top,#192c4d,#05080e 70%)}
+body.pro.pv-lacivert .sm-av{background:linear-gradient(135deg,#ff6b9a,#649af7)}
+body.pro.pv-lacivert #fx3b.on{background:linear-gradient(135deg,#649af7,#4cc9f0)}
+body.pro.pv-lacivert .kr2-hd small{color:var(--chalk-2,#d2dbec)}
+body.pro.pv-lacivert .sm2-av{background:linear-gradient(135deg,#f9ce34,#ee2a7b,#316ace)}
+body.pro.pv-lacivert [data-tip].tip-on::after{background:#09111f}
+body.pro.pv-lacivert [data-tip].tip-on::before{border-top-color:#09111f}
+body.pro.pv-lacivert #modalCard .ctl-box>.offer-btns:last-child{background:linear-gradient(180deg,rgba(17,35,65,.85),#112341 40%)}
+body.pro.pv-lacivert .grp-t:not(.on){color:#ecf3fe}
+body.pro.pv-lacivert .chip[aria-pressed="true"]{background:#4f87e8}
+body.pro.pv-lacivert .v5d.tw{box-shadow:inset 0 -3px 0 #72a3f8}
+body.pro.pv-lacivert .v5c.c,body.pro.pv-lacivert .v5c.e{background:rgba(100,154,247,.32)}
+body.pro.pv-lacivert .v5i i.t{background:rgba(114,163,248,.45)}
+body.pro.pv-lacivert .v5i i.k{background:rgba(100,154,247,.35)}
+body.pro.pv-lacivert .v5lg .lg.c{background:#649af7}
+body.pro.pv-lacivert .v5lg .lg.t{background:#72a3f8}
+body.pro.pv-lacivert .v5szban{background:linear-gradient(135deg,rgba(255,179,32,.25),rgba(100,154,247,.22))}
+body.pro.pv-lacivert .v5szk span{background:rgba(100,154,247,.22)}
+body.pro.pv-lacivert .v5tlm.t{border-left-color:#72a3f8}
+body.pro.pv-lacivert .v163-tone.t-O{background:#5178bc}
+body.pro.pv-lacivert .rl-kpi span{color:#a1afc7}
+body.pro.pv-lacivert .rl-plan th{color:#a1afc7}
+body.pro.pv-lacivert .ticket-head .pr172-rol{background:#17202f}
+body.pro.pv-lacivert .thm-pro .thm-sw{background:linear-gradient(90deg,#62f0de 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#16315f,#0d1e3a)}
 </style>
 </head>
 <body>
@@ -23119,22 +23430,25 @@ ACTX.wgPer=el=>{const v=el.dataset.v;if(!WGP[v])return;const s=setsGet();s.wgp=v
   document.querySelectorAll('[data-act=wgPer]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
   toast(`Maaşlar ${WGP[v][0]} gösteriliyor`);try{render();}catch(e){}};
 /* ================= v173: futbol teması — oyuna özgü görünüm (gece maçı çimi, tebeşir çizgileri, skorbord) ve Ayarlar → Görünüm'de tema seçici ================= */
-/* Üç tema: 'futbol' (yeni, varsayılan), 'pro' (profesyonel, mor paneller), 'klasik'.
-   Kayıt: setsGet().theme. Hiç seçilmemişse (undefined) futbol; daha önce açıkça seçilmiş 'klasik' ya da 'pro' korunur.
+/* v175: Temalar: Profesyonel · Yeşil (varsayılan), Profesyonel · Lacivert, Futbol, Klasik. Profesyonelin eski mor rengi kalktı;
+   renk seçenekleri src/shell/tema_renk.css'te (tools/tema_renk.js üretir; body.pro.pv-yesil / pv-lacivert).
+   Kayıt: setsGet().theme ('pro'|'futbol'|'klasik') ve setsGet().pv ('yesil'|'lacivert'). Hiç seçilmemişse Profesyonel · Yeşil.
    Yalnız görünüm katmanı: body'ye .fut / .pro sınıfı verilir, gerisi style.css'teki "v173 tema" bloklarında. */
-const TEMA_L=[['futbol','Futbol','yeni'],['pro','Profesyonel','mevcut'],['klasik','Klasik','']];
-function temaAd(){const t=setsGet().theme;return t==='klasik'||t==='pro'?t:'futbol';}
+const TEMA_L=[['pro-yesil','Profesyonel · Yeşil',''],['pro-lacivert','Profesyonel · Lacivert',''],['futbol','Futbol',''],['klasik','Klasik','']];
+function temaAd(){const t=setsGet().theme;return t==='klasik'||t==='futbol'?t:'pro';}
+function temaPv(){return setsGet().pv==='lacivert'?'lacivert':'yesil';}
+function temaSecim(){const t=temaAd();return t==='pro'?'pro-'+temaPv():t;}
 applyTheme=(old=>function(){let r;try{r=old.apply(this,arguments);}catch(e){}
-  try{const t=temaAd(),b=document.body;if(b){b.classList.toggle('pro',t==='pro');b.classList.toggle('fut',t==='futbol');}document.documentElement.setAttribute('data-tema',t);}catch(e){}return r;})(applyTheme);
+  try{const t=temaAd(),b=document.body;if(b){const pv=temaPv();b.classList.toggle('pro',t==='pro');b.classList.toggle('fut',t==='futbol');b.classList.toggle('pv-yesil',t==='pro'&&pv==='yesil');b.classList.toggle('pv-lacivert',t==='pro'&&pv==='lacivert');}document.documentElement.setAttribute('data-tema',t);}catch(e){}return r;})(applyTheme);
 /* Ayarlar: eski "Profesyonel arayüz" onay kutusu yerine tek seçimli tema düğmeleri (Görünüm başlığı altında, v171 düzeni korunur) */
-function temaSecHTML(){const k=temaAd();
+function temaSecHTML(){const k=temaSecim();
   return `<div class="thm-set" role="radiogroup" aria-label="Arayüz teması"><span class="field-label">Arayüz teması</span><div class="thm-chips">${TEMA_L.map(([v,a,n])=>`<button type="button" class="chip thm-c thm-${v}" role="radio" data-act="temaSec" data-v="${v}" aria-pressed="${k===v}" aria-checked="${k===v}"><i class="thm-sw" aria-hidden="true"></i><span>${a}${n?` <small>(${n})</small>`:''}</span></button>`).join('')}</div></div>`;}
 openSettings=(old=>function(){const r=old.apply(this,arguments);try{const mc=$('#modalCard');if(!mc||mc.querySelector('.thm-set'))return r;
     const i=mc.querySelector('input[data-act=themeTog]'),lab=i&&i.closest('label');
     if(lab)lab.insertAdjacentHTML('afterend',temaSecHTML()),lab.remove();
     else{const h=[...mc.querySelectorAll('p.sub-h')].find(p=>/Görünüm/i.test(p.textContent));if(!h)return r;
       const w=mc.querySelector('.wgp-set');(w&&w.previousElementSibling===h?w:h).insertAdjacentHTML('afterend',temaSecHTML());}}catch(e){console.warn('v173 tema ayarı',e);}return r;})(openSettings);
-ACTX.temaSec=el=>{const v=el.dataset.v,T=TEMA_L.find(x=>x[0]===v);if(!T)return;const s=setsGet();s.theme=v;setsPut(s);applyTheme();
+ACTX.temaSec=el=>{const v=el.dataset.v,T=TEMA_L.find(x=>x[0]===v);if(!T)return;const s=setsGet();if(v.startsWith('pro-')){s.theme='pro';s.pv=v.slice(4);}else s.theme=v;setsPut(s);applyTheme();
   document.querySelectorAll('[data-act=temaSec]').forEach(b=>{const on=b.dataset.v===v;b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-checked',String(on));});
   try{toast(`Tema: ${T[1]}`);}catch(e){}};
 try{applyTheme();}catch(e){}
@@ -23155,6 +23469,9 @@ renderTop=(old=>function(){old.apply(this,arguments);try{if(!G||!G.s||G.phase===
     box.dataset.act='v174Takvim';box.classList.add('v174-tarih');box.setAttribute('role','button');box.setAttribute('tabindex','0');box.title='Takvim: önümüzdeki günler';
     led.insertAdjacentHTML('afterbegin','<svg class="v174-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>');}catch(e){}})(renderTop);
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('v174-tarih')){e.preventDefault();e.stopPropagation();ACTX.v174Takvim();}},true);
+/* ================= v175: normal kenar çubuğu geri döndü (v172 menü sadeleştirmesi ve sayfa üstü alt sekmeler kaldırıldı; güç ölçeği kalıyor) ================= */
+if(typeof window.v172UiEski==='function')uiGroups=window.v172UiEski;
+v172Alt=function(){};
 /* ================= TAKVİM: ligin gerçek takım sayısına göre fikstür ================= */
 const BREAK={TR:[[11,21],[0,10]],DE:[[11,21],[0,10]],FR:[[11,21],[0,3]],IT:[[11,29],[0,3]],ES:[[11,22],[0,2]],EN:null,PT:[[11,23],[0,2]],NL:[[11,21],[0,9]],BE:[[11,27],[0,14]],SA:[[11,20],[0,3]],BR:null,SC:[[11,30],[0,12]],GR:[[11,23],[0,3]],AT:[[11,14],[1,5]],CH:[[11,20],[0,25]],DK:[[11,8],[1,15]]};
 function dayOfDate(y,m,dd){return Math.round((Date.UTC(y+(m<6?1:0),m,dd)-seasonStartTs(y))/DAY_MS);}
