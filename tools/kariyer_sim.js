@@ -43,6 +43,9 @@ const PROFILES = {
         if (ms && !ms.hidden) { for (const sel of ['#mgTut:not([hidden]) [data-act="tutGo"]', '#mvSkip:not([hidden])', '#mvDone:not([hidden])', '#mvFast']) { const x = document.querySelector(sel); if (x && vis(x)) { x.click(); return 'sahne:' + sel; } } try { if (typeof MR !== 'undefined' && MR) MR.fast = true; } catch (e) { } return 'sahne'; }
         if (G && G.phase === 'tryout') { const s = document.querySelector('[data-act="trySkip"]'); if (s) { s.click(); return 'seçme-atla'; } const t = document.querySelector('[data-act="trySign"]'); if (t) { t.click(); return 'seçme-imza'; } }
         const y = G && G.s ? G.s.year : 0, d = G && G.s ? G.s.day : 0;
+        /* maç günü: oyuncunun kendisinin oynaması gereken anlar simülasyonda oynanamaz; oyundaki hızlı sonuç düğmesi kullanılır */
+        try { const t = typeof fmContTarget === 'function' ? fmContTarget() : null, a = t && t.dataset.act, q = a && typeof V165_QUICK !== 'undefined' && V165_QUICK[a];
+          const qb = q && document.querySelector('#view [data-act="' + q + '"]'); if (qb && !qb.disabled && TAB === 'hub') { qb.click(); return 'maç'; } } catch (e) { }
         try { fmCont(); } catch (e) { return 'devam-hata ' + e.message; }
         return 'gün ' + y + '/' + d;
       });
