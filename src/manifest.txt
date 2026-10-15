@@ -209,6 +209,7 @@ game/parts/192_v165_takvim_tatil_zaman_cizelgesi.js
 game/parts/190_v163_dinamikler_ve_gorusmeler.js
 game/parts/194_v169_cevrimici_oda.js
 game/parts/196_v170_hata_duzeltmeleri.js
+game/parts/195_v170_meslek_metinleri.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
