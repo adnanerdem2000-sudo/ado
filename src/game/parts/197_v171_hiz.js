@@ -106,6 +106,7 @@ function hzToEnd(){const S=ABM.fx,W=ABM.win,sim=ABM.sim;if(!S||!W||!sim||ABM.ff)
     /* son dilimde gelen senaryolu goller */
     const left=hzForced(sim);if(left.length){o.to=sim.t+1;o.forced=()=>left.splice(0);try{hzSynth(sim,o);}catch(e){}o.forced=()=>hzForced(sim);}
     sim.finished=true;ABM.hzMs=Math.round(performance.now()-t0);
+    try{W.ado2d.flush&&W.ado2d.flush();}catch(e){}   /* çerçevenin reyting listesi ve maç sonu özeti (eskiden 700 ms'lik döngü yazıyordu) */
     try{sim.eid=(sim.eid||0)+1;const ev={id:sim.eid,t:sim.t,type:'FULLTIME',team:-1,p:-1,p2:-1,x:52.5,y:34,meta:{},score:[sim.teams[0].score,sim.teams[1].score],min:Math.floor(sim.t*sim.C.CK/60),tc:sim.t*sim.C.CK,dir:0,hz:1};
       try{sim.events.push(ev);}catch(e){}if(sim.onEvent)sim.onEvent(ev);}catch(e){console.warn('hz bitiş',e);}
     if(!ABM.done){try{abFullTime();}catch(e){console.warn(e);}}};
