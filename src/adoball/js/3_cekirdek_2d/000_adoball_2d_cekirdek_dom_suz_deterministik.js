@@ -651,13 +651,13 @@
             var tx = q.x + q.vx * Math.min(tf, 1.4) * .8, ty = q.y + q.vy * Math.min(tf, 1.4) * .8;
             tx = clamp(tx, 1, PW - 1); ty = clamp(ty, 1, PH - 1);
             var pkE = AICAL && CURVE ? Math.exp(-AC_PK * (p.a.pas - 80) / 10) : 0;      // [aical] pas becerisinin elit eğrisi (80 = eski ortalama)
-            var ang = Math.atan2(ty - p.y, tx - p.x) + gauss() * (.014 + (pkE ? .017 * pkE : (100 - p.a.pas) / 100 * .085) + (AV_PASS ? (pd < 3 ? avp('AV_PPE', .05) * (3 - pd) / 3 : 0) : (pd < 2 ? .03 : 0)) + d * .0007 + TP_ERR * tacOf(p.team).tempo) * fk;      // [av] AV_PASS: baskı altında sapma (StatsBomb baskı altında %70, baskısız %81)
+            var ang = Math.atan2(ty - p.y, tx - p.x) + gauss() * (.014 + (pkE ? .017 * pkE : (100 - p.a.pas) / 100 * .085) + (AV_PASS ? (pd < 3 ? avp('AV_PPE', .05) * (3 - pd) / 3 : 0) + avp('AV_PANG', .015) : (pd < 2 ? .03 : 0)) + d * .0007 + TP_ERR * tacOf(p.team).tempo) * fk;      // [av] AV_PASS: baskı altında sapma (StatsBomb baskı altında %70, baskısız %81)
             var mish = R() < clamp((PASS_MISS + (pkE ? .016 * pkE : (100 - p.a.pas) / 100 * .08) + (AV_PASS ? (pd < 3 ? avp('AV_PPM', .05) * (3 - pd) / 3 : 0) : (pd < 2 ? .03 : 0)) + (d > 30 ? .03 : 0) + TP_MISS * tacOf(p.team).tempo) * fk, 0, .3);
             if (mish) ang += (R() < .5 ? -1 : 1) * (.3 + .55 * R());     // kötü vuruş: yön şaşar
             var dd = hyp(tx - p.x, ty - p.y);
             var prog = (q.x - p.x) * S.teams[p.team].dir;
             if (high) {
-                var err = gauss() * (1.2 + d * (AV_PASS ? PRM.AV_PERR : .05)) * (pkE ? .5 * Math.pow(pkE, .6) : 1 - p.a.pas / 160) * fk * (AV_PASS && ((info && info.cross) || kindTag === 'CORNER') ? PRM.AV_XERR : 1);
+                var err = gauss() * (1.2 + d * (AV_PASS ? PRM.AV_PERR : .05)) * (pkE ? .5 * Math.pow(pkE, .6) : 1 - p.a.pas / 160) * fk * (AV_PASS && ((info && info.cross) || kindTag === 'CORNER') ? PRM.AV_XERR : 1) * (AV_PASS && kindTag !== 'GOALKICK' && kindTag !== 'GKD' ? avp('AV_HERR', 2) : 1);
                 if (S.forceAir != null && S.forceAir === q.id) err *= .2;      // [v186] zorla gol kurgusu: golcüye orta      // [av] AV_PASS: uzun top / orta düşme noktası sapması
                 var lx = clamp(p.x + Math.cos(ang) * dd + err * .7, .5, PW - .5), ly = clamp(p.y + Math.sin(ang) * dd + err, AV_OUT && !/^(CORNER|GOALKICK|KICKOFF|THROW)$/.test(kindTag || '') ? -4 : .5, AV_OUT && !/^(CORNER|GOALKICK|KICKOFF|THROW)$/.test(kindTag || '') ? PH + 4 : PH - .5);      // [av] AV_OUT: kaçan uzun top taç çizgisini geçebilir
                 var dl = hyp(lx - p.x, ly - p.y) || 1;
@@ -907,6 +907,7 @@
                 var vq = posValue(lx, ly, p.team) * (.55 + .45 * Math.min(free, 6) / 6);
                 var sw = 0; if (BR_ON) { if (d > 24 && Math.abs(ly - p.y) > 18) sw += BR_LONG * .004 * p.br.vz; if (q.run && q.run.until > S.t && prog > 8) sw += BR_LONG * .003 * p.br.vz; }     // vizyon: oyun değiştirme ve koşucuya ara pas
                 var ev = pr * vq - (1 - pr) * lossCost(p.x + (lx - p.x) * .7, p.y + (ly - p.y) * .7, p.team, bk.loss) + PROG_W * bk.prog * pr * clamp(prog, -12, 40) + sw + (noNoise ? 0 : gauss() * nz);
+                if (AV_PASS && cross) ev += avp('AV_XV', .01);      // [av] ortanın değeri: dönen top / korner / kafa şansı (gerçekte takım başına ~12 orta, %28 tamamlanır)
                 var s = ev * 100;
                 if (wantProg && prog < wantProg) s -= 4;
                 list.push({ q: q, s: s, ev: ev, pr: pr, vq: vq, d: d, prog: prog, lane: lane, free: free, high: high, cross: cross, run: !!(q.run && q.run.until > S.t) });
@@ -1501,6 +1502,7 @@
         function gkDepthAV(bdx, sd) {
             var i = 1; while (i < GK_DX.length - 1 && bdx > GK_DX[i]) i++;
             var v = GK_DY[i - 1] + (GK_DY[i] - GK_DY[i - 1]) * clamp((bdx - GK_DX[i - 1]) / (GK_DX[i] - GK_DX[i - 1]), 0, 1);
+            v *= avp('AV_GKK', .85);      // kaleci yer değişiminde topun gerisinde kalır: hedef ölçülen ortalamaya göre
             return sd != null && sd < 32 ? Math.min(v, 1.35 + .028 * sd) : v;
         }
         function gkReact(g) { return clamp(GK_REACT - .003 * ((g.a.gk_ref != null ? g.a.gk_ref : g.a.gk) - 75), .15, .4); }
