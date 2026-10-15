@@ -2948,8 +2948,6 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .v172-at small{font-size:10px;font-weight:600;opacity:.75}
 .v172-at.bos:not(.on){opacity:.55}
 [data-bos]:not([aria-current]){opacity:.5}
-.ui-mi[data-bos]{flex-wrap:wrap}.ui-mi[data-bos]::after{content:'henüz veri yok';flex:1 0 100%;font-size:10px;opacity:.85;padding-left:24px;margin-top:-4px}
-.nav-i[data-bos]::after{content:'boş';margin-left:auto;font-size:10px;opacity:.8}
 .v172-ip{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:4px;padding:0;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.08);color:inherit;font-size:10px;font-weight:800;line-height:1;cursor:help;vertical-align:middle}
 /* v172 yarim: maaş gösterimi — yapay zekâ oyuncusu maaşı "tahmini" işareti (kaynak açıklaması title'da) */
 .wg-est{font-size:.7em;font-weight:600;opacity:.72;margin-left:2px;border-bottom:1px dotted currentColor;cursor:help;white-space:nowrap}

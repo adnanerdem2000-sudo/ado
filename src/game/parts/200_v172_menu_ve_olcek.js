@@ -35,7 +35,7 @@ const v172Key=a=>a?a.tab+(a.k?':'+a.k:'')+(a.l?':'+a.l:''):'';
 /* meslek bazında aileden çıkan ya da gizlenen öğeler */
 function v172Kural(){const pl=isPl(),ref=typeof isRef==='function'&&isRef(),td=typeof isTD==='function'&&isTD();
   return {ayri:new Set([...(td?['nt']:[]),...(pl?['sm']:[])]),gizle:new Set(ref?['_cz']:[])};}
-/* veri yokken boş kalan ekranlar (menüde soluk, "henüz veri yok") */
+/* veri yokken boş kalan ekranlar (menüde hafif soluk) */
 function v172Bos(key){try{const m=G.m||{},n=o=>Object.keys(o||{}).length;
   switch(key){case 'sezon':return !n(v165().sz);case 'ssum':return !n(G.ssum);case 'awards':return !n(G.awards);case 'bdo':return !n(bdoAll());
     case 'loans':return !(n(m.lout)||n(m.loans));case 'mrep':return !((m.an)||[]).length;case 'nt':return G.mode==='mgr'&&!(m.nt||m.ntOff);
@@ -62,11 +62,11 @@ uiGroups=(old=>{window.v172UiEski=old;return function(){const L=old.apply(this,a
 /* aile öğesi: üyelerinden biri açıksa etkin sayılır */
 function v172FamCur(){if(!V172_SON)return null;for(const id in V172_SON)if(V172_SON[id].mem.some(x=>x[2].tab!=='_cz'&&navOn(x[2])))return id;return null;}
 navOn=(old=>function(a){if(a&&a.fam){const S=V172_SON&&V172_SON[a.fam];if(S)return S.mem.some(x=>x[2].tab!=='_cz'&&old(x[2]));}return old.apply(this,arguments);})(navOn);
-uiGoAttrs=(old=>function(a){let s=old.apply(this,arguments);try{if(a&&a.fam)s+=` data-fam="${a.fam}"`;if(a&&a.bos)s+=' data-bos="1" title="Henüz veri yok"';}catch(e){}return s;})(uiGoAttrs);
+uiGoAttrs=(old=>function(a){let s=old.apply(this,arguments);try{if(a&&a.fam)s+=` data-fam="${a.fam}"`;if(a&&a.bos)s+=' data-bos="1"';}catch(e){}return s;})(uiGoAttrs);
 /* sayfa üstündeki alt sekmeler */
 function v172AltHTML(id,skip){const S=V172_SON&&V172_SON[id];if(!S)return '';const mem=S.mem.filter(x=>!skip||!skip(x));if(!mem.length)return '';
   return `<nav class="v172-alt" aria-label="${esc(S.l)}">${mem.map(([,l,a])=>{const k=v172Key(a),on=a.tab!=='_cz'&&navOn(a),bos=v172Bos(k);
-    return `<button class="v172-at${on?' on':''}${bos?' bos':''}" ${uiGoAttrs(a)} ${on?'aria-current="page"':''}${bos?' title="Henüz veri yok"':''}>${esc(V172_ALTAD[k]||l)}${bos?'<small>henüz veri yok</small>':''}</button>`;}).join('')}</nav>`;}
+    return `<button class="v172-at${on?' on':''}${bos?' bos':''}" ${uiGoAttrs(a)} ${on?'aria-current="page"':''}>${esc(V172_ALTAD[k]||l)}</button>`;}).join('')}</nav>`;}
 function v172Alt(){try{const v=$('#view');if(!v||v.querySelector(':scope > .v172-alt'))return;uiGroups();const id=v172FamCur();if(!id)return;
     if(TAB==='league'){/* lig sayfasının kendi sekmeleri var; yalnız lig dışı üyeler (Avrupa, İstatistikler) eklenir */
       const st=v.querySelector('.lg-tabs, .filt');if(!st||!st.querySelector('[data-act=ltab]')||st.querySelector('.v172-lx'))return;const mem=V172_SON[id].mem,has=k=>!!st.querySelector(`[data-act=ltab][data-k="${k}"]`);let h='';

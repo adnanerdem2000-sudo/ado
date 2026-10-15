@@ -5,7 +5,7 @@ function v174TakvimHTML(){const td=v165Today();let E={};try{E=v165Events(td,td+1
   const gun=[];for(let i=0;i<14;i++){const d=td+i,dt=dateOf(d),ev=(E[d]||[]).filter(e=>e.k!=='bay'&&e.k!=='yas'),wd=wdOf(dt);
     const chip=ev.length?v165Chip(ev[0]):`<span class="v174-dl">${esc(v174Gun(d))}</span>`;
     gun.push(`<button class="v174-g${i===0?' bugun':''}${ev.some(e=>/^(mac|kupa|avr|nat|fifa)$/.test(e.k))?' mac':''}" data-act="v165Day" data-d="${d}"><span class="v174-dn">${TR_DAYS[wd]}</span><b>${dt.getUTCDate()}</b><small>${i===0?'bugün':V174_AY[dt.getUTCMonth()]}</small>${chip}</button>`);}
-  return `<h3><svg class="v174-ic v174-ic-b" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Önümüz</h3><p class="muted">${esc(fmtLong(dateOf(td)))} · önümüzdeki iki hafta. Bir güne dokunursan ayrıntısı açılır.</p>
+  return `<h3><svg class="v174-ic v174-ic-b" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Takvim</h3><p class="muted">${esc(fmtLong(dateOf(td)))} · önümüzdeki iki hafta. Bir güne dokunursan ayrıntısı açılır.</p>
     <div class="v174-serit">${gun.join('')}</div>${v165AgendaHTML()}
     <div class="offer-btns"><button class="btn" data-act="v174Tam">Tam takvim</button><button class="cta" data-act="closeModal">Kapat</button></div>`;}
 ACTX.v174Takvim=()=>{if(!G||!G.s||G.phase==='tryout')return;try{openModal(v174TakvimHTML());$('#modalCard').classList.add('v174-m');}catch(e){console.warn('v174 takvim',e);}};
