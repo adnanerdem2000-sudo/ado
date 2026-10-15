@@ -27,6 +27,7 @@ game/parts/014_kadrolar_gercek_oyuncular_super_lig_5.js
 game/parts/014_kadrolar_gercek_oyuncular_super_lig_5_2.js
 game/parts/015_teknik_direktorluk.js
 @zy game/data/flags.js
+game/data/flags_ek.js
 game/parts/016_v10_gorunus_hiyerarsi_teknik_direktorler.js
 game/parts/017_v11_kupalar_avrupa_milli_turnuvalar.js
 game/parts/018_milli_takim_uluslar_ligi_elemeler.js
@@ -228,6 +229,8 @@ game/parts/210_v174_sozlesme_karti.js
 game/parts/212_v175_tema_ve_menu.js
 game/parts/213_v176_oda_duzeltmeleri.js
 game/parts/215_v178_oda_dugmesi.js
+game/parts/216_v179_lig_baglantilari.js
+game/parts/217_v180_bayraklar.js
 game/parts/214_v177_canli_mac_tutarliligi.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js

@@ -3255,3 +3255,6 @@ body.pro .sz74-box{background:rgba(255,255,255,.03)}
 .v178-log{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:12px}.v178-log time{display:inline-block;min-width:44px;opacity:.55;font-variant-numeric:tabular-nums;margin-right:6px}
 .v178-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 @media (max-width:560px){.mp-pill.v178-oda{padding:0 8px}.mp-pill .v178-n{display:none}}
+/* v179: lig bağlantıları */
+.lglink{color:inherit;text-decoration:underline dotted rgba(90,168,255,.8);text-underline-offset:3px;cursor:pointer;font-weight:inherit}.lglink:hover{color:var(--led)}
+#top .lglink.lg-top{text-decoration:none}#top .lglink.lg-top:hover{text-decoration:underline dotted;text-underline-offset:3px}
