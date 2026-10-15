@@ -3192,3 +3192,7 @@ body.fut table thead th,body.fut table thead tr{background:#0f3a22;color:#f4f7ee
 .v174-ic-b{width:22px;height:22px;vertical-align:-3px;margin-right:8px}
 #modalCard .v5ag button{display:grid !important;grid-template-columns:96px minmax(0,auto) minmax(0,1fr);text-align:left;align-items:center;min-height:0;height:auto;padding:7px 8px;transform:none}
 #modalCard .v5ag .dt{display:block;text-align:left}#modalCard .v5ag .dt small{display:block;position:static}#modalCard .v5ag em{display:block;text-align:left}
+/* v175: tema seçici — dört seçenek, profesyonel temanın yeşil ve lacivert renk örnekleri */
+.thm-chips{grid-template-columns:repeat(2,minmax(0,1fr))}
+.thm-pro-yesil .thm-sw{background:linear-gradient(90deg,#62f0b0 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#15603d,#0a2e1d)}
+.thm-pro-lacivert .thm-sw{background:linear-gradient(90deg,#62b8f0 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#16386b,#0a1a33)}

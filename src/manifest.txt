@@ -4,6 +4,7 @@
 shell/head.html
 | <style>
 shell/style.css
+shell/tema_renk.css
 | </style>
 shell/body.html
 | <script>
@@ -223,6 +224,7 @@ game/parts/206_v172_mac_sonu_ve_kariyer.js
 game/parts/209_v173_maas_gosterimi.js
 game/parts/208_v173_futbol_temasi.js
 game/parts/211_v174_ust_takvim.js
+game/parts/212_v175_tema_ve_menu.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
