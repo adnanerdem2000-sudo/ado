@@ -207,6 +207,7 @@ game/parts/193_v166_canli_diger_skorlar.js
 game/parts/191_v164_idman_ve_duran_toplar.js
 game/parts/192_v165_takvim_tatil_zaman_cizelgesi.js
 game/parts/190_v163_dinamikler_ve_gorusmeler.js
+game/parts/194_v169_cevrimici_oda.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js

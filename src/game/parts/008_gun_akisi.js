@@ -52,7 +52,7 @@ function prepAdj(){const p=G.p,s=G.s;return (s.prep&&s.prep.w===s.week?(s.prep.v
 function finishDay(){const t=dayType(G.s.day);if(t==='mac'||t==='milli'||t==='kupa')return;autoPlan();if(trSceneOn(t))return startTraining(t);if(DT[t].team&&!G.p.injury)teamSession(t);nextDay();save();render();window.scrollTo(0,0);}
 function autoFree(){const p=G.p;if(G.slot)return;if(p.injury)return doFree('rehab',null,true);if(p.energy<55)return doFree('rest',null,true);return doFree('indiv',{k:G.plan.focus,int:G.plan.int==='yogun'?'normal':G.plan.int},true);}
 function autoAdvance(){const g0={...G.p.a},inj0=!!G.p.injury;let n=0;
-  while(n<90&&G.phase==='season'){const t=dayType(G.s.day);if(t==='mac'||t==='milli'||t==='kupa')break;autoPlan();if(DT[t].team&&!G.p.injury)teamSession(t);nextDay();n++;}
+  while(n<90&&G.phase==='season'&&(typeof mpStep!=='function'||mpStep())){const t=dayType(G.s.day);if(t==='mac'||t==='milli'||t==='kupa')break;autoPlan();if(DT[t].team&&!G.p.injury)teamSession(t);nextDay();n++;}
   const gains=Object.keys(ATTR).map(k=>[k,G.p.a[k]-g0[k]]).filter(x=>x[1]>=0.05).map(([k,v])=>`${ATTR[k]} +${dec(v)}`);
   save();render();window.scrollTo(0,0);
   if(n)openModal(`<h3>${n} gün geçti</h3><p>Bugün ${fmtLong(today())}: ${DT[dayType(G.s.day)].n}.</p>${gains.length?`<ul class="notes">${gains.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}<p>${G.p.injury&&!inj0?'Bu sürede sakatlandın, gelen kutuna bak.':'Gelen kutunda yeni mesajlar olabilir.'}</p><button class="cta" data-act="closeModal">Tamam</button>`);}

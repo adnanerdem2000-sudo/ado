@@ -23,7 +23,7 @@ function mgrSign(id){const c=CLUBS[id],firstTime=G.mode!=='mgr';closeModal();
   G.phase='season';newSeason(G.s.year+1);applyBoosts();syncStr(id);licTick();mgrInit();TAB='hub';
   msg('board',`${c.name} ile anlaştın`,`Teknik direktör olarak ${c.name} yönetimiyle 3 yıllık sözleşme imzaladın. Yönetimin hedefi: ${G.m.obj.txt}. Transfer bütçen ${money(G.m.budget)}.`);
   save();render();window.scrollTo(0,0);if(firstTime)toast(('Yeni dönem: teknik direktör '+meN()));}
-function mgrAdvance(){let g=0;while(g++<120&&G.phase==='season'){const t=dayType(G.s.day);if(t==='mac'||t==='kupa')break;nextDay();}save();render();window.scrollTo(0,0);}
+function mgrAdvance(){let g=0;while(g++<120&&G.phase==='season'&&(typeof mpStep!=='function'||mpStep())){const t=dayType(G.s.day);if(t==='mac'||t==='kupa')break;nextDay();}save();render();window.scrollTo(0,0);}
 function mgrPlay(sim){const f=ourFixture();if(!f)return;if(!sim){const uh=f[0]===G.club;return pressConf(CLUBS[uh?f[1]:f[0]],()=>fxStart({opp:CLUBS[uh?f[1]:f[0]],usHome:uh,neutral:false,onEnd:(gu,go,sc)=>mgrFinish(gu,go,f,sc)}));}const usHome=f[0]===G.club,opp=CLUBS[usHome?f[1]:f[0]],me=myClub(),T=tacT(opp),S=xiStr();
   const tpf=(G.m.tp&&G.m.tp.f)||'denge',[lh,la]=lambdas(usHome?S:opp.str,usHome?opp.str:S),lu=(usHome?lh:la)*T.f*(tpf==='hucum'?1.06:1),lo=(usHome?la:lh)*T.a*(tpf==='savunma'?0.93:1);
   if(sim){const _M=typeof mgrMods==='function'?mgrMods(opp):{u:1,o:1};const gu=poisson(lu*_M.u),go=poisson(lo*_M.o);return mgrFinish(gu,go,f,[]);}

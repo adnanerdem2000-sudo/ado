@@ -171,7 +171,7 @@ function v165Step(){const H=HOL5;H.steps++;
   const q=V165_QUICK[a];
   if(q&&(H.opt.m==='hizli'||a==='play'||a==='ref3'||a==='stWatch'||a==='v155Watch')&&host.querySelector(`[data-act="${q}"]`)){v165Click(q);return 'mac';}
   if(a==='mgrAdv'){/* maç gününe ilerle: hedef tarihi aşmasın */const tg=v165DayOfTs(H.tgt);const nm=nextMatchDay(G.s.day);
-    if(nm!=null&&tg<nm){try{if(typeof v155Gate==='function'&&v155Gate())return 'karar-kuyruk';}catch(e){}let g=0;while(g++<120&&G.phase==='season'&&G.s.day<tg){const t=dayType(G.s.day);if(t==='mac'||t==='kupa')break;nextDay();}return 'gun';}}
+    if(nm!=null&&tg<nm){try{if(typeof v155Gate==='function'&&v155Gate())return 'karar-kuyruk';}catch(e){}let g=0;while(g++<120&&G.phase==='season'&&G.s.day<tg&&(typeof mpStep!=='function'||mpStep())){const t=dayType(G.s.day);if(t==='mac'||t==='kupa')break;nextDay();}return 'gun';}}
   if(a==='stAdv'){v165Click('stDay');return 'gun';}
   const k=G.s.year+'/'+G.s.day+'/'+G.phase;if(k===H.key)H.same++;else{H.key=k;H.same=0;}
   if(H.same>40)return v165End('karar','İlerleme durdu; ana sayfaya bak');
