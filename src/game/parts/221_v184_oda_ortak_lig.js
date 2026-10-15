@@ -38,7 +38,7 @@ olSync=(old=>function(lid){try{const S=G.s;if(mpOn()&&S&&!(S.ol&&S.ol[lid])&&LEA
 /* ---------- arkadaşın futbolcuysa gol/asist krallığında o da görünür ---------- */
 mpSt=(old=>function(){const o=old.apply(this,arguments);try{if(isPl()&&G.s&&G.s.stats){const s=G.s.stats;o.pst={g:s.goals||0,a:s.assists||0,ap:s.apps||0,rs:s.rsum||0,pos:(G.p&&G.p.pos)||'FW'};}}catch(e){}return o;})(mpSt);
 function v184Ark(lid){try{const P=MP.peer;if(!mpOn()||!P||!P.pst||!P.club||!G.s)return null;if(P.y!==G.s.year||P.L!==lid)return null;return P;}catch(e){return null;}}
-leaders=(old=>function(k){const arr=old.apply(this,arguments);try{const P=v184Ark(G.s.league);if(P){arr.push({n:P.n,c:P.club,v:k==='g'?P.pst.g:P.pst.a,mp:true});arr.sort((x,y)=>y.v-x.v);}}catch(e){}return arr;})(leaders);
+leaders=(old=>function(k){const arr=old.apply(this,arguments);try{const P=v184Ark(G.s.league);if(P){arr.push({n:P.n,c:P.club,v:k==='g'?P.pst.g:P.pst.a,mp:true});arr.sort((x,y)=>y.v-x.v||String(x.n||'').localeCompare(String(y.n||'')));}}catch(e){}return arr;})(leaders);
 lgLeaders=(old=>function(lid,k){const out=old.apply(this,arguments);try{const P=v184Ark(lid);if(P){out.push({mp:true,c:P.club,p:{k:'__mp',name:P.n||'Arkadaşın',pos:P.pst.pos||'FW'},ap:P.pst.ap,g:P.pst.g,a:P.pst.a,rt:P.pst.rs});
-      const key=k==='g'?'g':'a',alt=k==='g'?'a':'g';out.sort((x,y)=>y[key]-x[key]||y[alt]-x[alt]||x.ap-y.ap);}}catch(e){}return out;})(lgLeaders);
+      const key=k==='g'?'g':'a',alt=k==='g'?'a':'g';out.sort((x,y)=>y[key]-x[key]||y[alt]-x[alt]||x.ap-y.ap||String(x.p&&x.p.name||'').localeCompare(String(y.p&&y.p.name||'')));}}catch(e){}return out;})(lgLeaders);
 leadersViewHTML=(old=>function(){const h=old.apply(this,arguments);try{return h.replace(/ data-act="pcard" data-id="[^"]*" data-k="__mp"/g,' title="Çevrimiçi odadaki arkadaşın"');}catch(e){return h;}})(leadersViewHTML);

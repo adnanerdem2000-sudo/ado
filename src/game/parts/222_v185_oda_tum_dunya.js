@@ -239,6 +239,8 @@ bdoPool=(old=>function(){const P=old.apply(this,arguments);try{const O=v185O();i
       const sc=M.ovr*1.15+st.goals*(M.p.pos==='FW'?0.85:1.05)+st.assists*0.6+r*12+(pm[0]===1?12:pm[0]===2?6:pm[0]<=4?3:0)+(P.euW===O.club?16:0)+big+c.str*0.15+(L.tier<8?-12:0);
       if(M.ovr>=72||st.goals>=18){P.rows.push({k:'mp',n:M.p.name||O.n,c:O.club,nat:'TUR',pos:M.p.pos,age:M.p.age,g:st.goals,a:st.assists,ap:st.apps,r:+r.toFixed(2),cs:0,ovr:M.ovr,sc,mp:1});P.rows.sort((a,b)=>b.sc-a.sc);}}}}catch(e){}return P;})(bdoPool);
 bdoCompute=(old=>function(){if(!v185On()||!G.s)return old.apply(this,arguments);const mr=Math.random;Math.random=srng('bdo:'+G.mp.code+':'+G.s.year);try{return old.apply(this,arguments);}finally{Math.random=mr;}})(bdoCompute);
+/* milli turnuva şampiyonu iki cihazda aynı (oda kodu + turnuva tohumu) */
+tourNews=(old=>function(T,Y){if(!v185On()||!T)return old.apply(this,arguments);const mr=Math.random;Math.random=srng('tour:'+G.mp.code+':'+Y+':'+T.name);try{return old.apply(this,arguments);}finally{Math.random=mr;}})(tourNews);
 /* ================= kupalar: iki cihazda aynı ağaç (aynı tohum, iki insanın gerçek sonuçları) ================= */
 function v185Insan(type,key){const H=[];const add=(club,list,me)=>{if(!club||!Array.isArray(list))return;const k=list.find(x=>type==='dom'?(x.id==='dom'&&x.cc===key):(x.type==='eu'&&x.id===key));if(k)H.push({c:club,k,me});};
   try{const s=G.s;if(s&&s.cups&&s.cups.club===G.club)add(G.club,s.cups.list,1);}catch(e){}
@@ -259,12 +261,12 @@ function v185NatCup(cc){const D=DOMC[cc];if(!D||!G||!G.s)return null;const Y=G.s
     const isH=id=>{const h=hOf[id];return !!h&&(h.k.alive||h.k.won||h.k.res.some(z=>z.n===nm));};
     const act=alive.filter(id=>isH(id)&&i>=startOf(hOf[id])),late=alive.filter(id=>isH(id)&&i<startOf(hOf[id]));
     const pool=alive.filter(id=>!isH(id));const ord=pool.map(id=>[id,(eOf[id]?eOf[id].e:0)*10+(CLUBS[id]?CLUBS[id].str:60)/10+r()*2]).sort((a,b)=>a[1]-b[1]||(a[0]<b[0]?-1:1)).map(x=>x[0]);
-    let need=Math.max(0,m*2-act.length);if((act.length+need)%2)need++;const players=act.concat(ord.slice(0,need)),byes=ord.slice(need).concat(late);
+    let need=Math.min(ord.length,Math.max(0,m*2-act.length));if((act.length+need)%2){if(need<ord.length)need++;else if(need>0)need--;}const players=act.concat(ord.slice(0,need)),byes=ord.slice(need).concat(late);if(players.length%2)byes.push(players.pop());
     const sh=players.slice();for(let j=sh.length-1;j>0;j--){const q=Math.floor(r()*(j+1));const t=sh[j];sh[j]=sh[q];sh[q]=t;}
     /* oynanmış insan maçlarının eşleşmesi korunur */
-    for(const id of act){const z=recOf(hOf[id],nm);if(!z)continue;const ia=sh.indexOf(id),ib=sh.indexOf(z.opp);if(ia<0||ib<0)continue;const pa=ia^1;if(pa===ib)continue;const t=sh[pa];sh[pa]=sh[ib];sh[ib]=t;}
+    for(const id of act){const z=recOf(hOf[id],nm);if(!z)continue;const ia=sh.indexOf(id),ib=sh.indexOf(z.opp);if(ia<0||ib<0)continue;const pa=ia^1;if(pa===ib||pa>=sh.length)continue;const t=sh[pa];sh[pa]=sh[ib];sh[ib]=t;}
     const ties=[],nx=[];byes.forEach(x=>{ties.push({a:x,bye:1,w:x});nx.push(x);});let open=false;
-    for(let j=0;j+1<sh.length;j+=2){const a=sh[j],b=sh[j+1],A=clubObj(a),B=clubObj(b),neutral=nm==='Final',[la,lb]=lambdas(A.str+(neutral?0:1.5),B.str);
+    for(let j=0;j+1<sh.length;j+=2){const a=sh[j],b=sh[j+1],A=clubObj(a)||{str:60},B=clubObj(b)||{str:60},neutral=nm==='Final',[la,lb]=lambdas(A.str+(neutral?0:1.5),B.str);
       let x=sPois(la,r),y=sPois(lb,r),p=0,q=0;for(let t=0;t<5;t++){if(r()<0.76+(A.str-B.str)*0.003)p++;if(r()<0.76+(B.str-A.str)*0.003)q++;}const coin=r();
       const me=(a===G.club||b===G.club)?1:undefined,ha=isH(a)?hOf[a]:null,hb=isH(b)?hOf[b]:null;
       if(ha||hb){let z=null;const za=ha?recOf(ha,nm):null,zb=hb?recOf(hb,nm):null;if(za&&za.h&&za.opp===b)z=za;else if(zb&&zb.h&&zb.opp===a)z=zb;else if(za&&za.opp===b)z=za;else if(zb&&zb.opp===a)z=zb;

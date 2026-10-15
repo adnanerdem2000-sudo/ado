@@ -56,6 +56,7 @@
                   mar: v.mar, posi: v.posi, lon: v.lon, bal: bal, agg: agg, gk: 0 };
             var pn = num(rec.pen, null), fk = num(rec.fk, null), co = num(rec.cor, null);
             if (pn != null) a.pen = pn; if (fk != null) a.fk = fk; if (co != null) a.cor = co;
+            ['dec', 'ant', 'cmp', 'wr'].forEach(function (k) { var x = num(rec[k], null); if (x != null) a[k] = x; });      // [v186] Karar Alma / Önsezi / Soğukkanlılık / Çalışkanlık (motorda AV_ATTR; yoksa eski bileşik özellik)
         }
         // güçlü ayak / zayıf ayak yıldızı: oyuncu profilinden (fm_appearance_v1; gerçek oyuncuda FC 27 verisi) - 2D/3D motoru kullanır
         var ap = getAppearance(rec), ft = ap && ap.ft === 'L' ? 'L' : 'R', wf = ap && ap.wf >= 1 && ap.wf <= 5 ? ap.wf : 3;

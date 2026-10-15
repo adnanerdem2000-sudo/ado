@@ -3267,3 +3267,7 @@ body.pro .sz74-box{background:rgba(255,255,255,.03)}
 .v182-not{margin:6px 0 10px;padding:8px 11px;border-radius:10px;background:rgba(90,168,255,.1);border:1px solid rgba(90,168,255,.3);font-size:13px;line-height:1.4}
 .v182-not.k{font-size:12px;margin:4px 0 8px}
 .v182-uy{margin:9px 0 0;padding:7px 9px;border-radius:9px;background:rgba(255,179,32,.12);border:1px solid rgba(255,179,32,.4);font-size:12px}
+/* v185 oda: arkadaşın kulübü ve kartı */
+.v185-ark small{font-weight:500;opacity:.75;font-size:11px}
+.v185-kn{font-size:10.5px;color:var(--warn,#e0a020);margin-left:4px;font-weight:600}
+.v185-kasa b{color:var(--good,#36c27a)}

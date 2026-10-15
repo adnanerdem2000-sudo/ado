@@ -39,7 +39,7 @@ function abAttrs(p,role,boost,fam){let R={};try{R=fmAttrs(p).raw||{};}catch(e){}
   return {pos,pac:c(g('Hız')*.8+g('Hızlanma')*.2),acc:c(g('Hızlanma')*.7+g('Çeviklik',o-4)*.3),str:c(g('Güç')),sta:c((g('Dayanıklılık')*.7+g('Vücut Zindeliği',o-4)*.3)),dri:c((g('Dripling')*.5+g('İlk Kontrol')*.3+g('Teknik')*.2)),
     pas:c(g('Pas')*.8+g('Takım Oyunu',o-4)*.2+tf*.3),lon:c(g('Uzaktan Şut')),fin:c(g('Bitiricilik')*.8+g('Soğukkanlılık',o-4)*.2),sho:c(g('Uzaktan Şut')*.45+g('Bitiricilik')*.25+g('Güç')*.3),
     hea:c(g('Kafa Vuruşu')*.7+g('Zıplama')*.3),tac:c(g('Top Kapma')),mar:c(g('Markaj')*.8+g('Konsantrasyon',o-5)*.2),posi:c(posi+tf),vis:c(g('Vizyon')*.6+g('Karar Alma')*.4+tf*.5),
-    bal:c(g('Denge')),agg:Math.round(clamp((AB_AGG[pos]||40)+(aggRaw-aggRef)*0.8,8,92)),pen:c(g('Penaltı Kullanma',o-10)),fk:c(g('Serbest Vuruş Kullanma',o-14)),cor:c(g('Korner',o-14)),lead:c(g('Liderlik',o-10),0)};}
+    bal:c(g('Denge')),agg:Math.round(clamp((AB_AGG[pos]||40)+(aggRaw-aggRef)*0.8,8,92)),pen:c(g('Penaltı Kullanma',o-10)),fk:c(g('Serbest Vuruş Kullanma',o-14)),cor:c(g('Korner',o-14)),lead:c(g('Liderlik',o-10),0),dec:c(g('Karar Alma')),ant:c(g('Önsezi')),cmp:c(g('Soğukkanlılık',o-4)),wr:c(g('Çalışkanlık',o-4))};}
 function abLook(p,T){try{const q=Object.assign({spos:p.pos==='KL'?'KL':(p.spos||''),T},p);const r=f3Look(q,0);const M=pMetaX(q);
   return {h:r.h||180,w:r.w||75,sk:r.sk!=null?r.sk:1,hs:r.hs!=null?r.hs:1,hc:r.hc!=null?r.hc:0,bd:r.bd!=null?r.bd:0,ft:M.ft==='Sol'?'L':'R',wf:clamp(M.wf||3,1,5),v:2};}catch(e){return null;}}
 let AB_ID=1000000;
