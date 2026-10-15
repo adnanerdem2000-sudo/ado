@@ -2944,6 +2944,8 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 @media (max-width:560px){.mp-pill span{display:none}.mp-pill{padding:0 9px}#mpbar{bottom:8px}}
 .mp-code-in .cta{flex:0 0 auto;width:auto;min-width:120px;margin:0}.mp-code-in input{flex:1 1 60%;width:100%}
 .mp-pill span{display:none}.mp-pill{padding:0 9px}@media (min-width:1100px){.mp-pill span{display:inline}.mp-pill{padding:0 10px}}
+/* v170: iletilerdeki ekran bağlantısı */
+.ib-go{display:inline;padding:0;border:0;background:none;color:#7fd4ff;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -10462,7 +10464,7 @@ fxClose=(old=>function(){try{const S=FX;if(S&&G.mode==='mgr'&&G.m&&!S.watch){con
     G.m.an=(G.m.an||[]);G.m.an.unshift(rec);if(G.m.an.length>5)G.m.an.length=5;}}catch(e){console.warn(e);}return old.apply(this,arguments);})(fxClose);
 let ANI=0;ACTX.anSel=el=>{ANI=+el.dataset.i;render();};let ANV='sh';ACTX.anV=el=>{ANV=el.dataset.k;render();};
 function pitchSVG(inner){return `<svg viewBox="-2 -2 109 72" class="an-pitch"><rect x="-2" y="-2" width="109" height="72" fill="#1d6b3f"/>${[...Array(10)].map((_,i)=>`<rect x="${i*10.5}" y="0" width="5.25" height="68" fill="rgba(255,255,255,.035)"/>`).join('')}<g fill="none" stroke="rgba(255,255,255,.75)" stroke-width=".35"><rect x="0" y="0" width="105" height="68"/><line x1="52.5" y1="0" x2="52.5" y2="68"/><circle cx="52.5" cy="34" r="9.15"/><rect x="0" y="13.84" width="16.5" height="40.32"/><rect x="88.5" y="13.84" width="16.5" height="40.32"/><rect x="0" y="24.84" width="5.5" height="18.32"/><rect x="99.5" y="24.84" width="5.5" height="18.32"/></g>${inner}</svg>`;}
-function viewMrep(){const L=(G.m&&G.m.an)||[];if(!L.length)return `<h2 class="h">Maç analizi</h2><section class="panel"><p class="muted">2B olarak izlediğin maçların analizi burada görünür: şut haritası, pas ağı, ortalama pozisyonlar, istatistik karşılaştırması, momentum ve oyuncu notları. Bir maçı “Maçı izle” ile oyna.</p></section>`;
+function viewMrep(){const L=(G.m&&G.m.an)||[];if(!L.length)return `<h2 class="h">Maç analizi</h2><section class="panel"><p class="muted">2B olarak izlediğin maçların analizi burada görünür: şut haritası, pas ağı, ortalama pozisyonlar, istatistik karşılaştırması, momentum ve oyuncu notları. Bir maçı “Maçı yönet” ile oyna.</p></section>`;
   ANI=Math.min(ANI,L.length-1);const R=L[ANI],S0=R.st[0],S1=R.st[1];
   const shots=R.shots.map(s=>{const x=s.s===0?s.x:105-s.x,y=s.s===0?s.y:68-s.y,g=s.r==='g',rr=1.1+Math.sqrt(s.xg)*4.5;return `<circle cx="${x}" cy="${y}" r="${rr}" fill="${g?(s.s===0?'#4ad27f':'#ff6b62'):'none'}" stroke="${s.s===0?'#4ad27f':'#ff6b62'}" stroke-width=".5" opacity="${g?1:.85}"><title>${s.m}’ ${esc(s.n)} · xG ${dec(s.xg,2)} · ${({g:'GOL',sv:'kurtarış',off:'dışarı',bl:'blok',post:'direk'})[s.r]||s.r}</title></circle>`;}).join('');
   const byK={};R.nodes.forEach(n=>byK[n.k]=n);const mxE=Math.max(1,...R.edges.map(e=>e.v));
@@ -14895,14 +14897,16 @@ buyPlayer=function(id,k){try{if(typeof negStart==='function')return negStart(id,
 /* ================= v123: üst çubukta “Maç gününe git” — Devam'ın yanında küçük düğme =================
    Günleri art arda ilerletir; maç/kupa/milli maç gününe gelince, bir karar penceresi açılınca ya da gün ilerlemeyince durur. */
 const MD_STOP=new Set(['mac','kupa','milli']);
-function mdLeft(){try{if(!G||!G.s||G.phase!=='season')return null;const d=G.s.day;for(let k=d;k<d+120;k++){let t='';try{t=dayType(k);}catch(e){}if(MD_STOP.has(t))return k-d;}return null;}catch(e){return null;}}
+/* hakemin görevi yalnız lig maçlarında: kulübün kupa günü onun için durak değil */
+function mdStopT(t){try{if(typeof isRef==='function'&&isRef())return t==='mac';}catch(e){}return MD_STOP.has(t);}
+function mdLeft(){try{if(!G||!G.s||G.phase!=='season')return null;const d=G.s.day;for(let k=d;k<d+120;k++){let t='';try{t=dayType(k);}catch(e){}if(mdStopT(t))return k-d;}return null;}catch(e){return null;}}
 let MD_RUN=false;
 function mdGo(){if(MD_RUN||!G||!G.s)return;if(!$('#modal').hidden)return toast('Önce açık pencereyi kapat');
-  try{if(MD_STOP.has(dayType(G.s.day)))return fmCont();}catch(e){}
+  try{if(mdStopT(dayType(G.s.day)))return fmCont();}catch(e){}
   MD_RUN=true;let n=0;const btn=$('#top .md-go');if(btn)btn.classList.add('run');
   const stop=(why)=>{MD_RUN=false;const b=$('#top .md-go');if(b)b.classList.remove('run');if(why)toast(why);try{renderTop();}catch(e){}};
   const step=()=>{try{if(!G||!G.s||G.phase!=='season')return stop();if(!$('#modal').hidden)return stop('Bir karar seni bekliyor');if([...document.querySelectorAll('#fx,#match,#mvStage')].some(x=>!x.hidden&&getComputedStyle(x).display!=='none'))return stop();
-      const t=dayType(G.s.day);if(MD_STOP.has(t))return stop();if(n++>70)return stop();
+      const t=dayType(G.s.day);if(mdStopT(t))return stop();if(n++>70)return stop();
       const d0=G.s.day,y0=G.s.year;fmCont();
       setTimeout(()=>{if(!G||!G.s)return stop();const busy=[...document.querySelectorAll('#fx,#match,#mvStage')].some(x=>!x.hidden&&getComputedStyle(x).display!=='none');if(G.s.day===d0&&G.s.year===y0)return stop(busy?null:$('#modal').hidden?'İlerlemeden önce bekleyen bir iş var':'Bir karar seni bekliyor');step();},30);}catch(e){console.warn('mdGo',e);stop();}};
   step();}
@@ -14949,7 +14953,7 @@ careerHTML=(old=>function(s,live){try{if(s&&snapKind(s)==='staff')return staffCa
 /* sekme: “Diğer kariyerlerim” — her biri ayrı karakter */
 viewCareer=(old=>function(){let h=old.apply(this,arguments);try{h=h.replace(/>Geçmiş kariyerler(<em>|<\/button>| <em>)/,'>Diğer kariyerlerim$1');
   if(CTAB==='arc'){const arc=archList().filter(a=>a.id!==G.cid);if(arc.length){const list=`<p class="muted arc-note">Bunlar bu cihazda oynadığın <b>başka kariyerler</b>; her biri ayrı bir karakterdir, ${esc((G.p&&G.p.name)||'bu karakter')}in geçmişi değildir.</p><ul class="arcs">${arc.map(a=>{const k=CLUBS[a.club],kd=snapKind(a),pf=a.prof||(kd==='mgr'?'td':kd==='pl'?'oyuncu':'');const st=a.st||{};
-      const line=kd==='staff'?(st.ref?`${st.rn||0} maç · ort. not ${st.avg?dec(st.avg,1):'—'}`:`${st.seasons||0} sezon · itibar ${st.rep||0}`):`${a.totals.apps} maç · ${a.totals.goals} gol · ${a.trophies.length} ödül${a.mt&&a.mt.s?` · ${a.mt.s} sezon TD`:''}`;
+      const line=kd==='staff'?(st.ref?`${st.rn||0} maç · ort. not ${st.avg?dec(st.avg,1):'—'}`:`${st.seasons||0} sezon · itibar ${st.rep||0}`):kd==='mgr'?`${a.totals.apps?`${a.totals.apps} maç · ${a.totals.goals} gol · `:''}${a.mt&&a.mt.s?`${a.mt.s} sezon ${pf==='sd'?'sportif direktör':pf==='bsk'?'kulüp başkanı':'teknik direktör'} · `:''}${a.trophies.length} ödül`:`${a.totals.apps} maç · ${a.totals.goals} gol · ${a.trophies.length} ödül${a.mt&&a.mt.s?` · ${a.mt.s} sezon TD`:''}`;
       return `<li><button class="arc" data-act="arcOpen" data-id="${a.id}">${k&&!st.ref?crestSVG(k,34):`<span class="arc-ic">${carProfIc(pf)}</span>`}<div><b>${esc(a.name||'')} <small class="arc-pf">${carProfIc(pf)} ${esc(carProfN(pf))}</small></b><small>${a.from}${a.to&&a.to!==a.from?' – '+a.to:''} · ${esc(a.status)}</small><span>${line}</span></div></button></li>`;}).join('')}</ul>`;
       h=h.replace(/<ul class="arcs">[\s\S]*<\/ul>/,list);}
     else h=h.replace(/Henüz tamamlanmış bir kariyer yok\.[^<]*/,'Bu cihazda başka bir kariyer yok. Yeni bir kariyere başladığında ya da emekli olduğunda kariyer burada ayrı bir karakter olarak saklanır.');}}catch(e){console.warn('viewCareer',e);}return h;})(viewCareer);
@@ -16690,7 +16694,7 @@ const IB_FROM={board:'Yönetim kurulu',squad:'Soyunma odası',coach:'Teknik ekip
   gundem:'Gündem',news:'Haber merkezi',press:'Basın',event:'Kişisel',nat:'Milli takım',agent:'Menajerin',menajer:'Menajerin'};
 const IB_RES_COL={w:'#4ad27f',l:'#ff5a52',d:'#a3b8ab'};
 const IB_MEMO=new WeakMap();
-function ibResult(m){const s=(m.title||'')+' '+(m.body||'');
+function ibMacSonuc(m){const s=(m.title||'')+' '+(m.body||'');
   const x=/([^:·]+?)\s(\d+)-(\d+)\s(.+)$/.exec(m.title||'');
   if(x&&G&&CLUBS[G.club]){const me=CLUBS[G.club].name,h=x[1].trim(),a=x[4].trim(),hg=+x[2],ag=+x[3];const us=h.endsWith(me)?1:a.startsWith(me)?2:0;
     if(us){const u=us===1?hg:ag,o=us===1?ag:hg;return u>o?'w':u<o?'l':'d';}}
@@ -16705,7 +16709,7 @@ function ibCat(m){if(!m)return {k:'other'};let c=IB_MEMO.get(m);if(c&&c.ti===m.t
   else if(t==='report'||/maç raporu|maç sonu|değerlendirme|derbi|galibiyet|mağlubiyet|beraberlik|skor/i.test(T))k='match';
   else if(t==='nat')k='nat';else if(t==='press'||t==='news')k='press';else if(t==='coach'||t==='squad')k='staff';
   else if(t==='board')k='board';else if(t==='scout')k='scout';else if(t==='event')k='event';else if(t==='gundem')k='gundem';else k='other';
-  const res=k==='match'?ibResult(m):'';const D=IB_CATS[k];
+  const res=k==='match'?ibMacSonuc(m):'';const D=IB_CATS[k];
   c={k,ti:m.title,res,lab:D[0],ic:D[1],col:res?IB_RES_COL[res]:D[2]};IB_MEMO.set(m,c);return c;}
 function ibFrom(m){if(m.from)return String(m.from);if(m.totw)return (LEAGUES[m.totw.lg]||{}).short||'Lig';
   if(m.offer&&CLUBS[m.offer.club])return CLUBS[m.offer.club].name;return IB_FROM[m.t]||'Gelen kutusu';}
@@ -20936,6 +20940,164 @@ window.addEventListener('online',()=>{try{for(const c of MP.cons)if(c.st!=='bağ
 document.addEventListener('visibilitychange',()=>{try{if(document.visibilityState==='visible'&&MP.code){for(const c of MP.cons)if(c.st!=='bağlı'&&c.st!=='bağlanıyor'){clearTimeout(c.rt);mqOpen(c);}mpPubState(true);}}catch(e){}});
 /* test kancası */
 window.__mp={MP,state:()=>({on:mpOn(),code:G&&G.mp&&G.mp.code,role:G&&G.mp&&G.mp.role,mem:G&&G.mp&&G.mp.mem,peer:MP.peer&&{n:MP.peer.n,e:MP.peer.e,club:MP.peer.club,rd:MP.peer.rd},live:mpPeerLive(),conn:mpConnected(),ready:MP.ready,lim:MP.lim,e:mpEpoch(),club:G&&G.club,prof:G&&G.prof})};
+/* ================= v170: denetim hataları — hakemin kulüp kimliği, milli arada lig maçı, kapanan dönemde bekleyen teklifler, iletilerdeki ekran yolları, yardımcı antrenörün tek haftalık programı ================= */
+/* ---------- hakem: kulübe bağlı değil (MHK iletileri, taraftar akışı, kupa günleri) ---------- */
+IB_CATS.mhk=['MHK','⚖️','#8c9cff'];if(!IB_ORDER.includes('mhk'))IB_ORDER.splice(IB_ORDER.indexOf('board'),0,'mhk');
+const V170_MHK=/^MHK|kokart|klasman|hakem kadrosu|hakem kariyeri|hakemlik|kural kursu|gözlemci notu|maç ataması/i;
+function v170RefMsg(m){return !!(m&&!m.offer&&(m.t==='board'||V170_MHK.test(m.title||'')));}
+ibCat=(old=>function(m){const c=old.apply(this,arguments);try{if(isRef()&&v170RefMsg(m)&&c&&c.k!=='award'){const D=IB_CATS.mhk;return Object.assign({},c,{k:'mhk',lab:D[0],ic:D[1],col:D[2]});}}catch(e){}return c;})(ibCat);
+ibFrom=(old=>function(m){try{if(isRef()&&!m.from&&v170RefMsg(m))return 'MHK';}catch(e){}return old.apply(this,arguments);})(ibFrom);
+ibCrestOf=(old=>function(m){const c=old.apply(this,arguments);try{if(isRef()&&c&&c.id===G.club&&!(m.cid===G.club&&m.offer))return null;}catch(e){}return c;})(ibCrestOf);
+/* hakeme kulübünün taraftar paylaşımları ve forma tanıtımı gelmez */
+fanPosts=(old=>function(){try{if(isRef())return;}catch(e){}return old.apply(this,arguments);})(fanPosts);
+msg=(old=>function(t,title,body){try{if(isRef()&&G.club&&CLUBS[G.club]&&/formalarını tanıttı/.test(String(title||''))&&String(title).startsWith(CLUBS[G.club].name))return;}catch(e){}return old.apply(this,arguments);})(msg);
+/* hakem: kulübün kupa günü sessizce geçer (o gün başka hakemler görevli) */
+function v170RefCup(){const cu=cupToday();if(cu){try{const {c:k,r}=cu,me=myClub(),opp=clubObj(k.opp),usHome=r.neutral?true:!!r.home,S=me.str;const [x,y]=simPair(usHome?{str:S}:opp,usHome?opp:{str:S},r.neutral);
+    (G.s.cupDays=G.s.cupDays||[]).push(G.s.day);cupApply(k,usHome?x:y,usHome?y:x,[]);}catch(e){console.warn('hakem kupa',e);}}
+  try{staffDay();}catch(e){}nextDay();}
+staffCup=(old=>function(){if(!isRef())return old.apply(this,arguments);v170RefCup();save();render();toast('Bugün kupa maçlarında başka hakemler görevliydi');})(staffCup);
+staffAdvance=(old=>function(){if(!isRef())return old.apply(this,arguments);let g=0;
+  while(g++<60&&G.phase==='season'&&(typeof mpStep!=='function'||mpStep())){const t=dayType(G.s.day);if(t==='mac')break;if(t==='kupa'){v170RefCup();continue;}staffDay();nextDay();}
+  save();render();window.scrollTo(0,0);})(staffAdvance);
+/* ---------- takvim: FIFA milli arasında lig maçı oynanmaz ---------- */
+function v170NtWins(y){const W=[];try{for(let i=0;i+1<NT_DAYS.length;i+=2){const a=dayOfDate(y,NT_DAYS[i][0],NT_DAYS[i][1]),b=dayOfDate(y,NT_DAYS[i+1][0],NT_DAYS[i+1][1]);W.push([Math.min(a,b)-1,Math.max(a,b)]);}}catch(e){}return W;}
+buildCal=(old=>function(lid,y){const days=old.apply(this,arguments);try{const L=LEAGUES[lid];if(!L||L.youth||!Array.isArray(days)||!days.length)return days;
+    const W=v170NtWins(y),inW=d=>W.some(([a,b])=>d>=a&&d<=b);if(!days.some(inW))return days;
+    const used=new Set(days.filter(d=>!inW(d))),out=[];
+    for(const d of days){if(!inW(d)){out.push(d);continue;}const w=W.find(([a,b])=>d>=a&&d<=b);let c=null;
+      /* önce aradan hemen sonraki hafta içi (Çarşamba/Perşembe), sonra ileriye doğru boş gün */
+      for(let k=1;k<=24&&c==null;k++){const x=w[1]+k;if(!used.has(x)&&!used.has(x-1)&&!used.has(x+1)&&!inW(x))c=x;}
+      if(c==null)c=d;used.add(c);out.push(c);}
+    return out.sort((a,b)=>a-b);}catch(e){console.warn('v170 takvim',e);return days;}})(buildCal);
+/* ---------- transfer dönemi kapanınca kulübe gelen teklifler düşer ---------- */
+nextDay=(old=>function(){const r=old.apply(this,arguments);try{const m=G&&G.m;if(m&&G.mode==='mgr'&&G.s&&Array.isArray(m.bids)&&m.bids.length&&!inWindow()){const n=m.bids.length;m.bids=[];
+      msg('board','Transfer dönemi kapandı',`Oyuncuların için gelen ${n} teklifin süresi doldu. Yeni teklifler bir sonraki transfer döneminde gelebilir.`);}}catch(e){}return r;})(nextDay);
+/* ---------- iletilerdeki ekran yolları tıklanabilir bağlantı ---------- */
+const V170_YOL=[[/Takım › Transfer › Gelen teklifler ekranından yanıtla\.?/g,'<button type="button" class="ib-go" data-act="v170Git" data-k="bids">Gelen teklifleri aç</button> ve yanıtla.'],
+  [/Kadro › Dinamik ekranından görüşebilirsin/g,'<button type="button" class="ib-go" data-act="v170Git" data-k="din">Dinamikler ekranından</button> görüşebilirsin'],
+  [/Kariyer › Menajer ve sponsorlar ekranından yanıtla\.?/g,'<button type="button" class="ib-go" data-act="v170Git" data-k="agent">Menajer ve sponsorlar ekranından</button> yanıtla.']];
+function v170Yol(s){if(typeof s!=='string'||s.indexOf('›')<0)return s;for(const [re,h] of V170_YOL)s=s.replace(re,h);return s;}
+/* ileti kartı çizilirken ekran yolu bağlantıya döner (gövde metni kaçışlı yazılır; eski iletilerde de çalışır) */
+msgHTML=(old=>function(m){const h=old.apply(this,arguments);try{if(h.indexOf('msg-body')>0)return v170Yol(h);}catch(e){}return h;})(msgHTML);
+function v170NavItem(id){try{for(const [,its] of navCats())for(const it of its)if(it[0]===id)return it[2];}catch(e){}return null;}
+ACTX.v170Git=el=>{const k=el.dataset.k;try{if(!$('#modal').hidden)closeModal();}catch(e){}
+  if(k==='bids'){TAB='squad';KTAB='transfer';try{STB.trf='gel';}catch(e){}}
+  else if(k==='din'){const a=v170NavItem('din');if(a){TAB=a.tab;if(a.k)KTAB=a.k;}else{TAB='squad';KTAB='iliski';}}
+  else if(k==='agent'){TAB='agent';}
+  render();window.scrollTo(0,0);};
+/* ---------- yardımcı antrenör: haftanın idman odağı seçildiyse haftalık program da uygulanmış sayılır ---------- */
+function v170YrBagla(){try{if(!isStaff()||G.staff!=='yrd'||!G.s||G.phase!=='season')return;const j=stG();if((j.tr||0)<40)return;const w=(j.wk&&j.wk[G.s.week])||{};const Y=v164YrState();
+    /* hocanın idman sorusu kuyruktaysa yanıt beklenir: hoca kendi programına geçmez */
+    if(!w.tr){try{if((Y.st==='taslak'||Y.st==='red')&&v155().q.some(x=>x.k==='yr_tr'))Y.late=1;}catch(e){}return;}if(Y.st!=='taslak'&&Y.st!=='red')return;let q=.55;try{q=Math.max(.55,v164Eval(Y.g).q);}catch(e){}
+    Y.st='onay';Y.q=q;Y.late=1;Y.oto=1;try{v164YrPrw(j,Y);}catch(e){}
+    msg('coach','Haftalık program uygulandı',`${coachOf(G.club).n}: “Bu hafta ${esc(YR_TR[w.tr]||'seçtiğin')} odağıyla standart programı uyguluyoruz.” Günleri ayrıntılı düzenlemek istersen Antrenman sekmesinden programını sunabilirsin.`);}catch(e){console.warn('v170 yrd',e);}}
+nextDay=(old=>function(){v170YrBagla();const r=old.apply(this,arguments);v170YrBagla();return r;})(nextDay);
+/* ================= v170: meslek metinleri · SD/başkan unvanı, kariyer başlangıç sezonu, meslek bazlı yardım/ayarlar/sayaçlar =================
+   U1: sportif direktör ve kulüp başkanı kariyerleri ana sayfa sezon kartında, Kariyerim'de, kariyer anlarında ve pazarlık penceresinde
+       "Teknik direktör" görünüyordu; unvan artık meslekten türetilir, eski kayıtlardaki yanlış G.ms metinleri yüklemede düzeltilir.
+   U7: futbolcu dışı mesleklerde başlangıç anı, kariyerin açıldığı 2025 yaz arasının etiketine (2025/26) yazılıyordu (startManagerCareer /
+       startStaffCareer G.s.year=2025 yapıp save() → msSync çağırıyor; ilk sezon newSeason(2026) ile 2026/27'dir). Başlangıç anı ilk
+       oynanan sezona taşınır; eski kayıtlarda da düzelir.
+   U6: kulüp vizyonu, "Nasıl oynanır", Ayarlar ve Kariyerim sayaçları futbolcu dışındaki mesleklerde mesleğe göre. */
+
+/* sd/bsk rolü (kayıt nesnesi üzerinden; yüklenen kayıtta da çalışsın diye G'ye bağlı değil) */
+function v170Rol(g){if(!g||g.mode!=='mgr')return null;const r=(g.m&&g.m.role)||g.prof;return r==='sd'||r==='bsk'?r:null;}
+function v170PlG(g){return !!g&&(!g.mode||g.mode==='player');}
+const V170_RT={sd:{bas:'Sportif direktörlüğe başladı',gorev:n=>`Yeni görev: ${n} sportif direktörü`,bit:'Sportif direktörlüğü bıraktı',kis:'SD',emk:'Emekli sportif direktör'},
+  bsk:{bas:'Kulüp başkanlığına başladı',gorev:n=>`Yeni görev: ${n} başkanı`,bit:'Kulüp başkanlığını bıraktı',kis:'BŞK',emk:'Emekli kulüp başkanı'}};
+const V170_BAS=/^(Teknik direktörlüğe başladı|Sportif direktörlüğe başladı|Kulüp başkanlığına başladı|Hakemliğe başladı|.+ olarak kariyerine başladı)$/;
+/* kayıt düzeltmesi: hem canlı kariyerde (msSync sonrası) hem yüklemede */
+function v170Fix(g){try{if(!g||!g.p||!Array.isArray(g.ms)||!g.ms.length||v170PlG(g))return g;
+    const rol=v170Rol(g);
+    if(rol){const T=V170_RT[rol];for(const m of g.ms){if(!m||typeof m.t!=='string')continue;
+        if(m.t==='Teknik direktörlüğe başladı')m.t=T.bas;
+        else if(/^Teknik direktörlüğe başladı: /.test(m.t))m.t=m.t.replace(/^Teknik direktörlüğe başladı/,T.bas);
+        else{const k=/^Yeni görev: (.+) teknik direktörü$/.exec(m.t);if(k)m.t=T.gorev(k[1]);else if(m.t==='Teknik direktörlüğü bıraktı')m.t=T.bit;}}}
+    /* başlangıç anı: ilk oynanan sezona */
+    const m0=g.ms[0];if(m0&&m0.ic==='td'&&V170_BAS.test(m0.t||'')&&g.s){const h=g.history||[];let hedef;
+      if(h.length&&h[0].year)hedef=h[0].year;
+      else if(g.phase==='off'&&g.mustMove&&g.ms.length===1)hedef=seasonLabel(g.s.year+1);/* henüz kulüp yok: ilk sezon gelecek sezon */
+      else hedef=seasonLabel(g.s.year);
+      if(hedef&&String(m0.y||'')<String(hedef))m0.y=hedef;}}catch(e){}return g;}
+msSync=(old=>function(){const r=old.apply(this,arguments);try{v170Fix(G);}catch(e){}return r;})(msSync);
+slotLoad=(old=>function(){return v170Fix(old.apply(this,arguments));})(slotLoad);
+load=(old=>function(){return v170Fix(old.apply(this,arguments));})(load);
+/* kariyere başlamadan önceki yaz arası (2025) — futbolcu dışı, henüz kulüp yok */
+function v170Bekleme(){return !!G&&!isPl()&&G.s&&!(G.history||[]).length&&G.phase==='off'&&G.mustMove&&(G.ms||[]).length<=1;}
+
+/* ---------- Kariyerim: unvan ve sayaçlar ---------- */
+careerSnap=(old=>function(){const s=old.apply(this,arguments);try{if(isPl())return s;const rol=v170Rol(G);
+    if(rol)s.status=G.phase==='retired'?V170_RT[rol].emk:ROLE_N[rol];
+    if(G.mode==='mgr'){const t=G.totals||{};if(!t.apps)s.peak=0;
+      const mt=G.mt||{w:0,d:0,l:0,s:0},st=(G.m&&G.m.st)||{},cur=G.phase==='season'||(G.phase==='off'&&G.m&&G.m.sacked);
+      s.mg={w:(mt.w||0)+(cur?st.w||0:0),d:(mt.d||0)+(cur?st.d||0:0),l:(mt.l||0)+(cur?st.l||0:0),s:mt.s||0};}
+    if(v170Bekleme()){const y=seasonLabel(G.s.year+1);s.from=y;s.to=y;}}catch(e){}return s;})(careerSnap);
+careerHTML=(old=>function(s){let h=old.apply(this,arguments);try{if(!s||snapKind(s)!=='mgr')return h;
+    const rol=s.prof==='sd'||s.prof==='bsk'?s.prof:null;
+    if(rol){const k=V170_RT[rol].kis;h=h.replace(/(<div class="car-av"><svg[\s\S]*?<text[^>]*>)[^<]*(<\/text>)/,`$1${k}$2`).replace(/<u class="rt r-xi">TD<\/u>/g,`<u class="rt r-xi">${k}</u>`).replace(/ \(TD\)<\/span>/g,` (${k})</span>`);}
+    const g=s.mg||(s.mt?{w:s.mt.w||0,d:s.mt.d||0,l:s.mt.l||0,s:s.mt.s||0}:{w:0,d:0,l:0,s:0}),n=g.w+g.d+g.l,t=s.totals||{};
+    const ad=rol==='bsk'?'başkanlık döneminde oynanan maçlar':rol==='sd'?'görev süresince oynanan maçlar':'yönettiği maçlar';
+    const strip=`<section class="panel"><div class="strip v170-str"><div><b>${n}</b><span>Maç</span></div><div><b>${g.w}</b><span>G</span></div><div><b>${g.d}</b><span>B</span></div><div><b>${g.l}</b><span>M</span></div><div><b>${(s.trophies||[]).length}</b><span>Kupa/ödül</span></div></div><p class="muted" style="margin-top:10px;text-align:center">Maç: ${ad}${g.s?` · ${g.s} sezon tamamlandı`:''}${n?` · galibiyet oranı %${Math.round(g.w/n*100)}`:''}</p>${t.apps?`<p class="muted" style="margin-top:6px;text-align:center">Futbolculuk dönemi: ${t.apps} maç · ${t.goals||0} gol · ${t.assists||0} asist${s.caps?` · ${s.caps} milli maç`:''}</p>`:''}</section>`;
+    h=h.replace(/<section class="panel"><div class="strip">[\s\S]*?<\/section>/,strip);}catch(e){console.warn('v170 kariyer',e);}return h;})(careerHTML);
+
+/* ---------- ana sayfa sezon kartı (SD/başkan) ---------- */
+viewMgrHub=(old=>function(){let h=old.apply(this,arguments);try{const rol=v170Rol(G);if(rol)h=h.replace(/(<span>\d{4}\/\d{2}) · teknik direktör<\/span>/,`$1 · ${ROLE_N[rol].toLocaleLowerCase('tr-TR')}</span>`);}catch(e){}return h;})(viewMgrHub);
+
+/* ---------- zaman çizelgesi: kariyer öncesi yaz arası ayrı sezon sayılmasın ---------- */
+v165ViewTl=(old=>function(){if(!v170Bekleme())return old.apply(this,arguments);const y0=G.s.year;G.s.year=y0+1;try{return old.apply(this,arguments);}finally{G.s.year=y0;}})(v165ViewTl);
+try{V165_V.zaman=v165ViewTl;}catch(e){}/* görünüm tablosu eski başvuruyu tutuyordu */
+
+/* ---------- pazarlık: kendi kulübünde SD/başkan konuşuyorsa unvanı doğru yaz ---------- */
+negOpen=(old=>function(){const r=old.apply(this,arguments);try{const rol=v170Rol(G),n=G.m&&G.m.neg;if(rol&&n&&n.from===G.club){const c=CLUBS[G.club],eski=`${c.name} · sportif direktör`,yeni=`${c.name} · ${ROLE_N[rol].toLocaleLowerCase('tr-TR')}`;
+      document.querySelectorAll('#modalCard .ng-log i').forEach(i=>{if(i.textContent===eski)i.textContent=yeni;});}}catch(e){}return r;})(negOpen);
+
+/* ---------- kulüp vizyonu: futbolcu dışındaki mesleklerde yönetici gözüyle ---------- */
+const V170_VIS={genc:'Genç oyunculara süre verir; 21 yaş ve altındaki oyuncular kadroda bir basamak üst role yerleşir.',
+  sampiyon:'Sonuç odaklı ve sabırsız. Bütçe ve maaşlar yüksek, forma rekabeti sert; kötü sonuçlar çabuk sorgulanır.',
+  altyapi:'Antrenman kalitesi yüksek; oyuncular takım idmanlarından daha fazla gelişir.',
+  vitrin:'Oyuncularını büyük kulüplere satar; gözlemciler bu takımın maçlarını daha çok izler.',
+  hucum:'Topa sahip olur, sürekli atak yapar; forvet ve kanat oyuncuları maçta daha çok pozisyona girer.',
+  savunma:'Kompakt ve disiplinli; savunma ve orta saha oyuncuları maçta daha çok sorumluluk alır.',
+  tutumlu:'Bütçe kısıtlı, maaşlar düşük; kadro dar tutulur.'};
+function v170VisD(c){try{if(!G||isPl())return null;return V170_VIS[clubVision(c)]||null;}catch(e){return null;}}
+visLine=(old=>function(c){let h=old.apply(this,arguments);try{const d=v170VisD(c),v=VISIONS[clubVision(c)];if(d&&v)h=h.replace(`<p>${v.d}</p>`,`<p>${d}</p>`);}catch(e){}return h;})(visLine);
+showClub=(old=>function(id){const r=old.apply(this,arguments);try{const d=v170VisD(CLUBS[id]);if(d){const p=document.querySelector('#modalCard .vis-d');if(p)p.textContent=d;}}catch(e){}return r;})(showClub);
+
+/* ---------- Nasıl oynanır: meslek bazlı ---------- */
+/* futbolcunun maç kontrolleri ve futbolcu günlüğü (yalnız futbolcu kariyerinde gösterilir) */
+const V170_HLP_PL=['Takvim','Bireysel idman','Maç','Takım arkadaşların','Rakipler','Savunma','Korner','Takım idmanı ve seçmeler','Maçta değişiklik ve darbe','Pazarlık ve kiralık','İdman zorunluluğu','Ayarlar','Kişisel plan','Futbolcu maçında Pro modu','Futbolcu maçında rakip hoca','Pro modunda yapay zekâ yardımı','Şut çeşitleri','Pres','Kondisyon','Oynanış ayrıntıları','Maçın akışı ve hava','Futbolcu: takım arkadaşları, menajer, sponsor, yaşam','Geç kariyer hedefleri ve jübile'];
+/* mesleğe ait mevcut yardım başlıkları (en üste taşınır) */
+const V170_HLP_PR={
+  td:['Teknik direktörlük','Takım kurma (teknik direktör)','2B maç motoru (teknik direktör)','2B maç motoru ve taktik ekranı','Antrenman','Maç hazırlığı ve basın','Sözleşmeler (teknik direktör)','Altyapı ve newgen (teknik direktör)','Teknik direktör: rakip planı, duran toplar, kültür, seçim','Soyunma odası hiyerarşisi'],
+  yrd:['Yardımcı antrenör, gözlemci, doktor','Yardımcı antrenör maçı','Teknik ekip meslekleri','Teknik ekip görev panosu'],
+  scout:['Yardımcı antrenör, gözlemci, doktor','Gözlem haritası','Gözlemci raporu','Gözlemci ağı','Transferlerim (gözlemci)','Yönetime baskı (gözlemci)'],
+  dr:['Yardımcı antrenör, gözlemci, doktor','Doktor gelişimi','Doktor: muayene odası'],
+  sd:['Yeni meslekler: sportif direktör, kulüp başkanı, hakem','Transfer merkezi, kadro planlayıcı, maç analizi','Transfer ve kiralık görüşmeleri','Transfer dönemleri'],
+  bsk:['Yeni meslekler: sportif direktör, kulüp başkanı, hakem','Yönetim','Finans, kiralıklar, ödüller','Transfer dönemleri'],
+  ref:['Yeni meslekler: sportif direktör, kulüp başkanı, hakem','Hakem modu: canlı karar','Hakem: ciddi kararlar ya da tüm kararlar','Hakem hataları: türüne göre eksi puan','Hakem teknolojileri','VAR: monitöre yürüyüş ve nihai karar','VAR ve tartışmalı kararlar','MHK: uyarı, görevden uzaklaştırma, men','Kart kuralları ve cezalar']};
+const V170_HLP_GIR={
+  td:'Teknik direktör olarak maçta topu sen kontrol etmezsin: kadroyu, dizilişi ve talimatları belirlersin, maçı izler ya da sonucunu alırsın. Takım menüsünden kadro, taktik, antrenman ve transferleri yönetirsin; lisansını yükselttikçe büyük kulüplere ulaşırsın.',
+  sd:'Sportif direktör olarak maç günü kadroyu ve taktiği teknik direktör belirler; sen maç sonucunu alır ya da maçı tribünden izlersin. Transferler, sözleşmeler ve altyapı senin elinde; teknik direktörü sen seçer, gerekirse görevden alırsın.',
+  bsk:'Kulüp başkanı olarak bütçe, bilet fiyatları, sponsorlar, krediler, tesisler ve hoca seçimi senin elinde; üç yılda bir seçime girersin. Maçlarda kadroyu ve taktiği teknik direktör belirler.',
+  yrd:'Yardımcı antrenör olarak maç öncesi idman planı ve rakip analizi hazırlarsın; isabetli hazırlık takımı güçlendirir ve hocanın güvenini artırır. Altyapı antrenörlüğünden as hocalığa ve teknik direktörlüğe yükselebilirsin.',
+  scout:'Gözlemci olarak kulübün için yetenek ararsın: ülke ülke gezer, oyuncuları izler ve raporlarsın; keşfettiğin oyuncular yıldızlaştıkça itibarın artar.',
+  dr:'Takım doktoru olarak sakat oyunculara teşhis koyar, tedavi seçer ve onları sahaya döndürürsün. Fizyoterapistlikten sağlık şefliğine yükselirsin.',
+  ref:'Hakem olarak atandığın maçlarda pozisyonlarda karar verirsin; doğru kararlar maç notunu yükseltir, klasman atlatır ve FIFA kokartına götürür.'};
+showHelp=(old=>function(){const r=old.apply(this,arguments);try{if(!G||!G.p||isPl())return r;const box=document.querySelector('#modalCard .help');if(!box)return r;
+    const pr=v170Rol(G)||G.prof||(G.mode==='mgr'?'td':G.staff);
+    /* başlık + ardından gelen paragraflar = bir bölüm */
+    const sec={};let cur=null;for(const el of Array.from(box.children)){if(el.tagName==='H4'){cur={h:el,els:[el]};const k=el.textContent.trim();(sec[k]=sec[k]||[]).push(cur);}else if(cur)cur.els.push(el);}
+    for(const k of V170_HLP_PL)for(const s of sec[k]||[])for(const el of s.els)el.hidden=true;
+    const top=document.createElement('div');top.className='v170-hlp';
+    top.innerHTML=`<p class="kicker">${esc(carProfIc(pr))} ${esc(carProfN(pr))} kariyeri</p><p>${esc(V170_HLP_GIR[pr]||'')}</p><p class="muted">Devam düğmesi (ya da boşluk tuşu) günü ilerletir. Futbolcunun maç kontrolleri (joystick, şut, pas) bu kariyerde kullanılmadığı için burada gösterilmez.</p>`;
+    for(const k of V170_HLP_PR[pr]||[])for(const s of sec[k]||[])for(const el of s.els)top.appendChild(el);/* taşınır, kopyalanmaz */
+    box.insertBefore(top,box.firstChild);
+    const h3=document.querySelector('#modalCard h3');if(h3)h3.textContent=`Nasıl oynanır · ${carProfN(pr)}`;}catch(e){console.warn('v170 yardım',e);}return r;})(showHelp);
+
+/* ---------- Ayarlar: futbolcuya özel bölümler yalnız futbolcuda ---------- */
+openSettings=(old=>function(){const r=old.apply(this,arguments);try{if(!G||!G.p||isPl())return r;const mc=document.querySelector('#modalCard');if(!mc)return r;
+    const ce=mc.querySelector('.ctl-entry');if(ce){const p=ce.previousElementSibling;if(p&&p.classList.contains('sub-h')&&/Kontroller/i.test(p.textContent))p.remove();ce.remove();}
+    mc.querySelectorAll('.plm-set,.pl3-set').forEach(e=>e.remove());}catch(e){}return r;})(openSettings);
 /* ================= TAKVİM: ligin gerçek takım sayısına göre fikstür ================= */
 const BREAK={TR:[[11,21],[0,10]],DE:[[11,21],[0,10]],FR:[[11,21],[0,3]],IT:[[11,29],[0,3]],ES:[[11,22],[0,2]],EN:null,PT:[[11,23],[0,2]],NL:[[11,21],[0,9]],BE:[[11,27],[0,14]],SA:[[11,20],[0,3]],BR:null,SC:[[11,30],[0,12]],GR:[[11,23],[0,3]],AT:[[11,14],[1,5]],CH:[[11,20],[0,25]],DK:[[11,8],[1,15]]};
 function dayOfDate(y,m,dd){return Math.round((Date.UTC(y+(m<6?1:0),m,dd)-seasonStartTs(y))/DAY_MS);}
