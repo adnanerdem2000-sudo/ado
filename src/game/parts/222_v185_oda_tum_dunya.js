@@ -67,7 +67,7 @@ function v185OYap(){const S=G.s;if(!S)return null;const mgr=G.mode==='mgr'&&G.m&
   try{o.cups=(S.cups&&S.cups.club===G.club&&S.cups.year===S.year?S.cups.list:[]).map(k=>{const x=Object.assign({},k);delete x.table;delete x.st;return x;});}catch(e){o.cups=[];}
   const J=v185J(),j={tx:{},txh:{},trl:[],ts:{}};for(const k of Object.keys(J.tx)){j.tx[k]=G.tx&&G.tx[k]!=null?G.tx[k]:null;j.ts[k]=J.tx[k];if(G.txh&&G.txh[k])j.txh[k]=G.txh[k];}
   try{const T=G.trl,y=String(S.year);for(const r of ((T&&T.s&&T.s[y])||[]))if(r[1]==='ME'||J.tx[r[1]])j.trl.push(r[1]==='ME'?Object.assign(r.slice(),{1:'@'+mpPid()}):r);}catch(e){}
-  j.ng=v185SahipNg();for(const k in j.ng)if(G.tx&&G.tx[k]===G.club&&!(k in j.tx)){j.tx[k]=G.club;j.ts[k]=1;}o.j=j;o.of=(G.mp.of||[]).slice(-40);return o;}
+  o.oev=(G.mp.oev||[]).slice(-30);j.ng=v185SahipNg();for(const k in j.ng)if(G.tx&&G.tx[k]===G.club&&!(k in j.tx)){j.tx[k]=G.club;j.ts[k]=1;}o.j=j;o.of=(G.mp.of||[]).slice(-40);return o;}
 /* ---------- gönder ---------- */
 function v185Planla(ms){if(!v185On())return;ms=ms==null?700:ms;const at=Date.now()+ms;if(V185.t&&V185.tAt<=at)return;clearTimeout(V185.t);V185.tAt=at;V185.t=setTimeout(()=>{V185.t=null;v185Gonder().catch(e=>console.warn('v185 gönder',e));},ms);}
 async function v185Gonder(){if(!v185On()||!mpConnected()||!G.s)return;if(V185.busy){v185Planla(900);return;}V185.busy=1;
@@ -93,7 +93,9 @@ function v185Isle(){if(!G||!G.s||!v185On())return;if(v185Mesgul()){clearTimeout(
 /* ---------- misafir: sunucunun dünyasını benimse (kendi kulübü/kariyeri kendisinde kalır) ---------- */
 function v185WAl(g,b,h){const S=G.s,own=G.club,mgr=G.mode==='mgr'&&G.m;
   if(g==='gen'){const lm=Object.assign({},b.lgMove||{});if(own&&CLUBS[own]){const ben=(G.lgMove||{})[own];if(ben!==undefined)lm[own]=ben;else delete lm[own];}
-    G.lgMove=lm;try{lgApply.k=null;lgApply();}catch(e){}
+    const lm0=JSON.stringify(G.lgMove||{});G.lgMove=lm;try{lgApply.k=null;lgApply();}catch(e){}
+    /* lig değiştiyse ligine göre üretilen (önbellekteki) yedek oyuncular ve takvimler yeniden kurulur */
+    if(lm0!==JSON.stringify(lm)){try{for(const k in SLC)delete SLC[k];for(const k in SQC)delete SQC[k];}catch(e){}V185.cal={};try{HZ_SQ=HZ_SQ?{}:HZ_SQ;}catch(e){}}
     G.lgHist=b.lgHist||[];G.qual=b.qual||G.qual;G.qualPrev=b.qualPrev||G.qualPrev;if(b.coef){G.coef=b.coef;try{coefApply();}catch(e){}}G.cupW=b.cupW||[];G.cupWin=b.cupWin||{};G.cpChamps=b.cpChamps||[];G.chm=b.chm||{};G.dh=b.dh||{};return true;}
   if(g==='co'){let n0=null;try{if(isPl()&&own)n0=coachRaw(own).n;}catch(e){}const keep=G.co&&own&&G.co[own];
     G.co=b.co||{};G.coFree=b.coFree||[];G.coT=b.coT||{};G.coY=b.coY;if(mgr&&own){if(keep)G.co[own]=keep;else delete G.co[own];}
@@ -111,7 +113,10 @@ function v185WAl(g,b,h){const S=G.s,own=G.club,mgr=G.mode==='mgr'&&G.m;
     for(const yy in s)s[yy].sort((a,c)=>a[0]-c[0]);
     T.s=s;T.al=b.al||[];T.ly=b.ly;if(b.bf)T.bf=b.bf;
     /* transfer haberleri sunucuda üretilir ve gündem iletisi olarak gelir (wn) */V185.trlIlk=1;return true;}
-  if(g==='wd'){const W=b.wd;if(W&&G.wd&&G.wd.y===W.y){if(own&&G.wd.cl&&G.wd.cl[own]){W.cl=W.cl||{};W.cl[own]=G.wd.cl[own];}if(G.wd.pw)W.pw=G.wd.pw;if(G.wd.tap)W.tap=G.wd.tap;}if(W)G.wd=W;return true;}
+  if(g==='wd'){const W=b.wd;if(W&&G.wd&&G.wd.y===W.y){if(own&&G.wd.cl&&G.wd.cl[own]){W.cl=W.cl||{};W.cl[own]=G.wd.cl[own];}if(G.wd.pw)W.pw=G.wd.pw;if(G.wd.tap)W.tap=G.wd.tap;}
+    /* sunucuya henüz ulaşmamış kendi kulübümle ilgili olaylar en üstte */
+    if(W&&Array.isArray(W.ev)){const seen=new Set(W.ev.map(x=>JSON.stringify(x))),ben=(G.mp.oev||[]).filter(x=>x.y===W.y&&!seen.has(JSON.stringify(x.e))).map(x=>x.e);W.ev=ben.reverse().concat(W.ev).slice(0,60);}
+    if(W)G.wd=W;return true;}
   if(g==='feed'){const F=(b.feed||[]).slice(),seen=new Set(F.map(x=>JSON.stringify(x))),ben=(G.mp.of||[]).filter(x=>!seen.has(JSON.stringify(x)));
     /* sunucuya henüz ulaşmamış kendi paylaşımlarım en üstte; gerisi sunucudaki sırayla */
     const y0=G.s?G.s.year:0,d0=G.s?G.s.day:0;G.feed=ben.filter(x=>x.y===y0&&d0-x.d<=10).reverse().concat(F).slice(0,120);return true;}
@@ -128,7 +133,7 @@ function v185WAl(g,b,h){const S=G.s,own=G.club,mgr=G.mode==='mgr'&&G.m;
 function v185StrUygula(){const M=G&&G.mp&&G.mp.str;if(!M||!v185Guest())return;for(const c of Object.values(CLUBS)){if(c.id===G.club)continue;const v=M[c.id];c.str=v!=null?v:c.str0;}
   const pc=v185PC(),O=v185O();if(pc&&O&&O.str)CLUBS[pc].str=O.str;}
 /* ---------- karşı tarafın kendi verisi ---------- */
-function v185OAl(O){if(!O||!O.p)return;const prev=G.mpO;G.mpO=O;const pc=O.club&&CLUBS[O.club]&&O.club!==G.club?O.club:null;
+function v185OAl(O){if(!O||!O.p)return;G.mpO=O;const pc=O.club&&CLUBS[O.club]&&O.club!==G.club?O.club:null;
   if(pc&&O.str)CLUBS[pc].str=O.str;
   if(G.mp.role==='host'){const S=G.s,j=O.j||{};let ch=0;
     /* misafirin kendi kulübüne yaptığı transferler sunucunun dünyasına işlenir */
@@ -141,8 +146,9 @@ function v185OAl(O){if(!O||!O.p)return;const prev=G.mpO;G.mpO=O;const pc=O.club&
     if(S&&O.y===S.year&&O.L===S.league&&O.ps&&pc){for(const [k,x] of Object.entries(O.ps)){S.ps=S.ps||{};S.ps[k]=x;}}
     if(Array.isArray(O.of)&&O.of.length){const F=G.feed=G.feed||[],seen=new Set(F.map(x=>JSON.stringify(x))),hs=G.mp.ofH=G.mp.ofH||[];
       for(const x of O.of){const j=JSON.stringify(x);if(seen.has(j)||hs.includes(j))continue;if(G.s&&x.y===G.s.year&&G.s.day-x.d<=10)F.unshift(x);hs.push(j);}if(hs.length>80)hs.splice(0,hs.length-80);if(F.length>120)F.length=120;}
-    if(pc&&O.str)CLUBS[pc].str=O.str;v185Planla(400);}
-  try{if(prev&&prev.td&&O.td&&prev.club===O.club&&prev.td.co&&O.td.co&&prev.td.co.n!==O.td.co.n){}}catch(e){}}
+    if(Array.isArray(O.oev)&&O.oev.length&&G.wd){const W=G.wd,hs=G.mp.oevH=G.mp.oevH||[],seen=new Set((W.ev||[]).map(x=>JSON.stringify(x)));
+      for(const x of O.oev){const j=JSON.stringify(x.e);if(x.y!==W.y||seen.has(j)||hs.includes(j))continue;(W.ev=W.ev||[]).unshift(x.e);hs.push(j);}if(hs.length>80)hs.splice(0,hs.length-80);if(W.ev&&W.ev.length>60)W.ev.length=60;}
+    if(pc&&O.str)CLUBS[pc].str=O.str;v185Planla(400);}}
 /* ---------- misafirde dünya üreten rastgele işler durur; sunucuda kendi işlerinin gündem iletileri misafire iletilir ---------- */
 function v185Durdur(name,keep){const f=window[name];if(typeof f!=='function')return;window[name]=(old=>function(){if(v185Guest()){try{if(keep)keep();}catch(e){}return;}
     if(v185Host()){const K=v185KoruBas();V185.cap++;let r;try{r=old.apply(this,arguments);}finally{V185.cap--;try{v185KoruSon(K);}catch(e){console.warn('v185 koru',e);}}return r;}
@@ -182,8 +188,13 @@ txNote=(old=>function(k,to){let from=null;try{const L=G&&G.txh&&G.txh[k];const p
   try{if(v185Guest()&&V185.cap===0&&G.mode==='mgr'&&G.club&&(to===G.club||from===G.club))v185J().tx[k]=Date.now();}catch(e){}return r;})(txNote);
 /* misafirin kendi haber akışı (taraftar paylaşımları vb.) sunucuya da gider */
 feedAdd=(old=>function(){const r=old.apply(this,arguments);try{if(v185On()&&V185.cap===0&&G.feed&&G.feed[0]){const L=G.mp.of=G.mp.of||[];L.push(G.feed[0]);if(L.length>40)L.splice(0,L.length-40);}}catch(e){}return r;})(feedAdd);
+/* kendi kulübünle ilgili dünya olayları (rakip temasları, olay transferler) da ortak olay akışına gider */
+wdEv=(old=>function(){const r=old.apply(this,arguments);try{if(v185On()&&V185.cap===0&&G.wd&&G.wd.ev&&G.wd.ev[0]){const L=G.mp.oev=G.mp.oev||[];L.push({y:G.wd.y,e:G.wd.ev[0]});if(L.length>30)L.splice(0,L.length-30);}}catch(e){}return r;})(wdEv);
 /* misafirde güç değerleri sunucudan: sezon başı sıfırlamasından sonra yeniden uygula */
 applyBoosts=(old=>function(){const r=old.apply(this,arguments);try{v185StrUygula();const pc=v185PC(),O=v185O();if(pc&&O&&O.str)CLUBS[pc].str=O.str;}catch(e){}return r;})(applyBoosts);
+/* lig sonuçları: arkadaşın sonucu senin o haftayı oynamandan önce geldiyse, sen oynayınca yeniden birleştirilir */
+mpMerge=(old=>function(o){try{if(o&&o.k==='res')V185.lastRes=o;}catch(e){}return old.apply(this,arguments);})(mpMerge);
+nextDay=(old=>function(){const r=old.apply(this,arguments);try{const n=G&&G.s&&G.s.results?G.s.year*100+G.s.results.length:0;if(v185On()&&V185.lastRes&&n!==V185.resN){V185.resN=n;const o=V185.lastRes;setTimeout(()=>{try{if(V185.lastRes===o&&!v185Mesgul())mpMerge(o);}catch(e){}},60);}}catch(e){}return r;})(nextDay);
 /* ---------- tetikleyiciler ---------- */
 nextDay=(old=>function(){const r=old.apply(this,arguments);try{if(v185On()){v185Planla(500);v185Isle();}}catch(e){}return r;})(nextDay);
 save=(old=>function(){const r=old.apply(this,arguments);try{if(v185On()&&!V185.busy)v185Planla(1500);}catch(e){}return r;})(save);
