@@ -450,9 +450,9 @@ function locaFG(W){const d=W.document;if(d.getElementById('loca-fg'))return;cons
 function locaClean(){const W=LOCA.W;LOCA.on=0;if(!W)return;try{W.__abLoca&&W.__abLoca(false);}catch(e){}try{const d=W.document;['loca-fg','loca-wall','lcBub','lcPal','loca-css'].forEach(id=>{const e=d.getElementById(id);if(e)e.remove();});d.body.classList.remove('ab-loca');}catch(e){}
   try{const P=LOCA.prev;if(P&&W.ado2d.view.supported()){if(P.view!=='3d')W.ado2d.view.set('2d');else W.ado2d.view.set(P.cam3==='loca'?'bcast':(P.cam3||'bcast'));}}catch(e){}LOCA.W=null;}
 /* devre arası (113: abHalf → S.bsk) */
-function v158Half(S){const W=ABM.win;if(!W)return;const ho=W.document.getElementById('halftime-overlay');if(!ho||ho.querySelector('.lc-ht'))return;const bsk=isBsk(),ft=W.document.getElementById('ht-foot')||ho;
+function v158Half(S){const W=ABM.win;if(!W)return;const ho=W.document.getElementById('halftime-overlay');if(!ho)return;{const o=ho.querySelector('.lc-ht');if(o){if(o.__fx===S)return;o.remove();}}const bsk=isBsk(),ft=W.document.getElementById('ht-foot')||ho;
   const opts=bsk?[['oda','Soyunma odasına in, konuş'],['prim','İkinci yarı için prim sözü ver'],['hoca','Hocaya bırak']]:[['oda','Hocayla kısa görüş'],['hoca','Hocaya bırak']];
-  const box=W.document.createElement('div');box.className='abh-talk lc-ht';box.innerHTML=`<p>${bsk?'Devre arası · loca':'Devre arası · sportif direktör'}</p><div class="abh-tb">${opts.map(([k,l])=>`<button type="button" class="btn btn-ghost" data-lk="${k}">${l}</button>`).join('')}</div><p class="abh-tr" hidden></p>`;
+  const box=W.document.createElement('div');box.className='abh-talk lc-ht';box.__fx=S;box.innerHTML=`<p>${bsk?'Devre arası · loca':'Devre arası · sportif direktör'}</p><div class="abh-tb">${opts.map(([k,l])=>`<button type="button" class="btn btn-ghost" data-lk="${k}">${l}</button>`).join('')}</div><p class="abh-tr" hidden></p>`;
   ft.parentNode.insertBefore(box,ft);box.addEventListener('click',ev=>{const b=ev.target.closest('[data-lk]');if(!b||box.dataset.done)return;box.dataset.done=1;const k=b.dataset.lk;let txt='';
     try{if(k==='hoca'){rlHc(2);txt='Hoca ikinci yarıyı kendi planıyla hazırlıyor.';S.htDone=true;}
       else if(k==='prim'){rlKasa(-rlR(bskGy()*0.002),0,'diger');txt=abTalk('ovgu');}
