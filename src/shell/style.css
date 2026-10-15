@@ -3061,3 +3061,6 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .res-board{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.res-board .team{min-width:0}
 .res-board .team b{overflow-wrap:normal;word-break:normal;hyphens:manual;font-size:clamp(11px,3.6vw,17px)}
 .ib-eski{color:var(--chalk-3,#9fb3a6);font-style:italic}
+/* v172 macsonu: "Diğer maçlar" şeridi/paneli maç ekranının alt düğmelerini (Maç sonu) örtmesin */
+html.v172-lcv .match{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px + var(--lcv-h,44px))}
+html.v172-lcvp .match .mv-ctrl{padding-right:var(--lcv-w,330px)}

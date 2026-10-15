@@ -14,8 +14,17 @@ const v172Gl=S=>S.gl||(S.gl=[]);
 abEv=(old=>function(e){const r=old.apply(this,arguments);
   try{const S=ABM.fx,sim=ABM.sim;if(e&&e.type==='GOAL'&&S&&FX===S&&sim&&(e.team===0||e.team===1)){const side=abE2S(e.team),m=e.meta||{},own=!!m.own,p=abFxP(e.p),
       a=!own&&m.assist!=null&&m.assist>=0?abFxP(m.assist):null,CK=(sim.C&&sim.C.CK)||1,mn=Math.max(1,Math.floor((e.t!=null?e.t:sim.t)*CK/60));
-    v172Gl(S).push({s:side,m:mn,k:p?p.k:null,n:p?p.name:'',cid:p&&p.T?p.T.id:S.T[side].id,own,pen:!!m.pen,ak:a?a.k:null,an:a?a.name:null});}}catch(x){console.warn('v172 gol',x);}
+    v172Gl(S).push({s:side,m:mn,k:p?p.k:null,n:p?p.name:'',cid:p&&p.T?p.T.id:S.T[side].id,own,pen:!!m.pen,ak:a?a.k:null,an:a?a.name:null});
+    if(S.pl3)v172PlFeed(side,own?null:p);}}catch(x){console.warn('v172 gol',x);}
   return r;})(abEv);
+/* futbolcu (3B/Adoball): maç akışındaki gol satırı MR'de motorun golünden önce yazılır; golcü adı motorun golcüsüyle değiştirilir (en eski bağlanmamış satır) */
+function v172PlFeed(side,p){try{const f=$('#mvFeed');if(!f)return;const L=[...f.querySelectorAll('li')].reverse();
+    const isG=li=>{const t=(li.querySelector('span')||li).textContent||'';return side===0?/^GOL!|^Penaltıyı .+ GOL!/.test(t):/^Gol\. |^Rakip golü buldu/.test(t);};
+    const li=L.find(x=>!x.dataset.v172g&&isG(x));if(!li)return;li.dataset.v172g='1';if(!p||p.k==='ME')return;const sp=li.querySelector('span');if(!sp)return;const nm=esc(p.name);
+    let h=sp.innerHTML;const h0=h;
+    h=h.replace(/^(GOL! .+? — ).+?( ağları buldu\.)$/,`$1${nm}$2`).replace(/^(Penaltıyı ).+?( kullandı: GOL!)$/,`$1${nm}$2`).replace(/takım arkadaşı attı/,`${nm} attı`)
+      .replace(/^(Gol\. .+? — ).+?( skoru değiştirdi\.)$/,`$1${nm}$2`).replace(/^Rakip golü buldu\.$/,`Rakip golü buldu: ${nm}.`);
+    if(h!==h0)sp.innerHTML=h;}catch(e){}}
 /* eski 2B motor: gol (VAR iptali kapanışta skorla eşitlenir) */
 fxShotEnd=(old=>function(f){const S=FX;let c=null,as=null,s0=null;
   try{if(S&&!S.ab&&f&&f.res==='g'&&f.from&&f.from.T){c=f.from;as=c.lastFrom&&S.pt-c.lfT<6&&c.lastFrom.T===c.T?c.lastFrom:null;s0=S.score.slice();}}catch(e){}
@@ -50,6 +59,12 @@ mgrFinish=(old=>function(gu,go,f){let M=null;try{M=v172MsFor(f,gu,go);
         cl[cid]={R,goals:M.goals.filter(g=>g.s===sd).map(g=>({k:g.own?null:g.k,ak:g.own?null:g.ak,me:false,as:false}))};});
       G.s.v154ft={w,cl};}}catch(e){console.warn('v172 lig istatistiği',e);M=null;}
   V172_CUR=M;try{return old.apply(this,arguments);}finally{V172_CUR=null;V172_MS=null;}})(mgrFinish);
+/* futbolcu lig maçı (Adoball/3B): lig istatistiği motorun golcüleriyle; oyuncumuzun kendi gol/asisti MR sonucundan (181 creditGoals) */
+finishLeague=(old=>function(res,f,role){try{const M=V172_MS;if(isPl()&&res&&M&&M.day===G.s.day&&M.goals&&f&&M.ids[0]===G.club&&f.includes(M.ids[1])&&M.score[0]===res.us&&M.score[1]===res.opp&&G.s.fixtures[G.s.week-1]){
+      const cl={};M.T.forEach((rows,sd)=>{const R={};for(const x of rows)if(x.k!=='ME')R[x.k]=x.rt;
+        cl[M.ids[sd]]={R,goals:M.goals.filter(g=>g.s===sd).map(g=>({k:g.own||g.k==='ME'?null:g.k,ak:g.own||g.ak==='ME'?null:g.ak,me:g.k==='ME',as:g.ak==='ME'}))};});
+      G.s.v154ft={w:G.s.results.length,cl};}}catch(e){console.warn('v172 futbolcu lig istatistiği',e);}
+  try{return old.apply(this,arguments);}finally{V172_MS=null;}})(finishLeague);
 /* "Maç sonucu" penceresi: goller ve reytingler motor kaydından (yoksa eski üretim) */
 v155RichFT=(old=>function(gu,go,f){const M=V172_CUR;if(!M)return old.apply(this,arguments);try{if(v172RichFT(gu,go,f,M)!==false)return;}catch(e){console.warn('v172 maç sonu',e);}return old.apply(this,arguments);})(v155RichFT);
 function v172RichFT(gu,go,f,M){const mc=$('#modalCard');if(!mc||$('#modal').hidden||!G.m||G.m.shadow)return;const h3=mc.querySelector('h3');if(!h3||!/Maç sonucu/i.test(h3.textContent)||mc.querySelector('.ms-cols'))return;
@@ -94,7 +109,9 @@ abFullTime=(old=>function(){try{const S=ABM.fx;if(S&&FX===S&&!ABM.done&&ABM.win)
    ===================================================================== */
 lcvTick=(old=>function(){const r=old.apply(this,arguments);
   try{const el=document.getElementById('lcv'),ms=document.getElementById('match'),on=!!(el&&!el.hidden&&ms&&!ms.hidden),de=document.documentElement;
-    de.classList.toggle('v172-lcv',on);if(on){const h=Math.ceil(el.getBoundingClientRect().height)||44;if(de.style.getPropertyValue('--lcv-h')!==h+'px')de.style.setProperty('--lcv-h',h+'px');}
+    const R=on?el.getBoundingClientRect():null,bar=!!(R&&R.width>=innerWidth*0.8);   /* telefonda alt şerit; masaüstünde sağ altta panel */
+    de.classList.toggle('v172-lcv',on&&bar);de.classList.toggle('v172-lcvp',on&&!bar);
+    if(on){const h=Math.ceil(R.height)||44,w=Math.ceil(innerWidth-R.left)||330;if(de.style.getPropertyValue('--lcv-h')!==h+'px')de.style.setProperty('--lcv-h',h+'px');if(de.style.getPropertyValue('--lcv-w')!==w+'px')de.style.setProperty('--lcv-w',w+'px');}
     /* kendi maçımız bittiyse diğer maçların gol uyarıları sırayla akmaya devam etmesin (şerit son durumu gösterir) */
     const d=document.getElementById('mvDone');if(on&&d&&!d.hidden&&LCV.fl&&LCV.fl.length)LCV.fl.length=0;}catch(e){}
   return r;})(lcvTick);
@@ -123,7 +140,11 @@ wizGo=(old=>function(){const lv=W.lvl,pl=W.prof==='oyuncu'&&lv&&lv!=='sifir';con
    V13 · "Görevdeki ilk maç" / "İlk galibiyet" anları: kayıt yeni sürümde açılınca daha önce oynanmış maçlar sayılır
    (G.mt: önceki sezonlar, G.m.st: bu sezon; anı yazan 192 v165Tick'tir)
    ===================================================================== */
-v165Tick=(old=>function(){try{if(G&&G.s&&G.p&&G.mode==='mgr'&&G.m&&G.m.st&&v165Kind()==='mgr'){const V=v165(),R=V.rec=V.rec||{bw:0,bl:0,w:0},mt=G.mt||{},st=G.m.st;
+/* eski kayıt: orta/zirve seviyede kulüpte başlamış futbolcunun ilk anı "Seçmelerin ardından … altyapısına" yazılmıştı (seçme 12 yaşta olur;
+   17 yaş ve üstünde yazılmış bu an kulüpte başlangıçtır). Yalnız metin düzeltilir; eski kayıttaki sayaçlara dokunulmaz. */
+function v172MsFix(){try{if(!G||!G.ms||!G.ms.length||G.v172msf||!isPl())return;G.v172msf=1;const m=G.ms[0];
+    if(m&&m.ic==='start'&&(m.a||0)>=17){const x=/^Seçmelerin ardından (.+) altyapısına imza attı$/.exec(m.t||'');if(x)m.t=`${x[1]} ile profesyonel sözleşme imzaladı`;}}catch(e){}}
+v165Tick=(old=>function(){v172MsFix();try{if(G&&G.s&&G.p&&G.mode==='mgr'&&G.m&&G.m.st&&v165Kind()==='mgr'){const V=v165(),R=V.rec=V.rec||{bw:0,bl:0,w:0},mt=G.mt||{},st=G.m.st;
       const n=(mt.w||0)+(mt.d||0)+(mt.l||0)+(st.w||0)+(st.d||0)+(st.l||0),w=(mt.w||0)+(st.w||0);
       if(n>1&&!R.m1)R.m1=1;if(w>1&&!R.w1)R.w1=1;}}catch(e){}
   return old.apply(this,arguments);})(v165Tick);
