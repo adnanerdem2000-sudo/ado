@@ -13,7 +13,7 @@
 /* F: [geçen motor sn, şut mesafesi m, kaleci-yol aralığı m, yan açı sınırı (|y−orta| / uzaklık)] · BP: rakip hatası [başlangıç sn, aralık sn] · TK: dış şut zorlaması (sn)
    Görüntüsüz ölçüm (scratchpad/fizik/lab.js, 6 maç × 8 gol): şut mesafesi medyan 39,6 → 19,3 m (25 m+ şut 45 → 8, kale ortasından yan uzaklık medyan 3,1 m), topun kalecinin 1 m yakınından
    (içinden) geçtiği gol 32 → 0, ışınlanma 444 → 0, gole kadar süre medyan 37 → 62 motor sn (~2,4 → ~4 oyun dk). */
-const V183={F:[[0,18,2.0,.75],[20,22,1.7,.85],[40,24,1.3,.95],[60,26,.8,1.05],[90,28,0,1.2]],BP:[25,7],TK:60};
+const V183={F:[[0,18,2.0,.75],[20,22,1.7,.85],[40,24,1.3,.95],[60,26,.8,1.05],[90,28,0,1.2],[120,32,0,1.4]],BP:[25,7],TK:60,OWN:110};
 function v183Win(el){let r=V183.F[0];for(const f of V183.F)if(el>=f[0])r=f;return r;}
 function v183GoalX(sim,tm){return sim.teams[tm].dir>0?105:0;}
 function v183ForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fcur){sim.forceGoal=null;sim.forceGap=0;sim.forceAng=0;}return;}
@@ -33,6 +33,8 @@ function v183ForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fc
       const c=sim.players.filter(p=>p.team===sim.forceGoal&&!p.off&&p.role!=='GK');const near=c.slice().sort((a,b)=>Math.hypot(a.x-o0.x,a.y-o0.y)-Math.hypot(b.x-o0.x,b.y-o0.y))[0];
       const to=fp&&!fp.off&&fp.team===sim.forceGoal&&Math.hypot(fp.x-o0.x,fp.y-o0.y)<30?fp:near;
       if(to&&Math.hypot(to.x-o0.x,to.y-o0.y)<38){q.lp=sim.t;try{sim._lab.doPass(o0,to,Math.hypot(to.x-o0.x,to.y-o0.y)>22,null);}catch(e){}}}}
+  /* çok uzun bekleme (110 sn+): top golcü adayında değil ama takımdan biri kaleye yakın taşıyorsa golcü o olur (defter ve anlatım satırı da; oyuncumuzun golü hariç) */
+  if(el>V183.OWN&&q.k!=='ME'&&sim.mode==='live'&&!sim.shot){const o=sim.ball.owner;if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&o.id!==sim.forceBy&&Math.abs(gx-o.x)<w[1]){const fo=abFxP(o.id);if(fo&&fo.k&&fo.k!=='ME'){q.k=fo.k;const L=q.v177;if(L&&!L.done&&!L.me){L.k=fo.k;try{v177FeedSet(L);}catch(e){}}sim.forceBy=o.id;q.tr=sim.t;}}}
   /* uzun bekleme (60 sn+): golcü top ayağındayken şut mesafesindeyse motorun karar sırasını beklemeden vurur */
   if(el>V183.TK&&sim.mode==='live'&&!sim.shot){const o=sim.ball.owner;if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&(sim.forceBy==null||o.id===sim.forceBy)&&Math.abs(gx-o.x)<w[1]&&Math.abs(o.y-34)<w[3]*Math.max(1,Math.abs(gx-o.x))&&Math.abs(o.y-34)<22){try{sim._lab.doShot(o,sim.xgAt(o.x,o.y,sim.teams[o.team].dir,3),3,null);}catch(e){}}}}
 abForceTick=function(S,sim){if(ABM.hz)return;return v183ForceTick(S,sim);};
