@@ -19,7 +19,7 @@ const V177_WAIT=9000;   /* MR bitince bekleyen golü motorun canlandırması iç
 function v177On(){try{const S=FX;return !!(S&&S.ab&&S.pl3&&ABM.fx===S&&MR&&MR.f3&&!MR.pro&&!(typeof PRO!=='undefined'&&PRO.on)&&V177.mid===PL3.mid);}catch(e){return false;}}
 const v177Pend=()=>V177.led.filter(L=>!L.done).length;
 /* her maçın başında defter sıfırlanır */
-pl3Start=(old=>function(cfg){const r=old.apply(this,arguments);try{if(MR&&MR.f3){Object.assign(V177,{led:[],fd:{gu:MR.gu||0,go:MR.go||0,q:[[],[]]},mid:PL3.mid,rb:0,w0:0,force:0,rec:0,log:[]});}}catch(e){}return r;})(pl3Start);
+pl3Start=(old=>function(cfg){const r=old.apply(this,arguments);try{if(MR&&MR.f3){Object.assign(V177,{led:[],fd:{gu:MR.gu||0,go:MR.go||0,q:[[],[]]},mid:PL3.mid,rb:0,w0:0,force:0,rec:0,settled:0,log:[]});}}catch(e){}return r;})(pl3Start);
 /* anlatım: MR'nin skoru her arttığında yazdığı satır o golün satırıdır */
 feed=(old=>function(m,txt,cls){const r=old.apply(this,arguments);try{if(MR&&MR.f3&&!MR.pro&&V177.mid===PL3.mid){const li=($('#mvFeed')||{}).firstElementChild||null,F=V177.fd;
     while(F.gu<MR.gu){F.gu++;F.q[0].push(li);}while(F.go<MR.go){F.go++;F.q[1].push(li);}}}catch(e){}return r;})(feed);
@@ -45,8 +45,10 @@ pl3Goal=(old=>function(T,sc,as,meta){if(!v177On())return old.apply(this,argument
     const L={s:side,m,k:meta.mine?'ME':(q&&q.k)||(sc&&sc.k)||null,ak:meta.asst?'ME':null,me:!!meta.mine,as:!!meta.asst,done:false,li};
     if(q){q.v177=L;if(meta.mine)q.k='ME';}V177.led.push(L);v177FeedSet(L);}catch(e){console.warn('v177 plan',e);}
   return r;})(pl3Goal);
-/* 113 abForceTick: planlanan golcü sahadan çıktıysa yeni golcü */
-function v177Replan(q){const L=q&&q.v177;const p=v177PickSc(q.side);if(p){q.k=p.k;if(L&&!L.done&&!L.me){L.k=p.k;v177FeedSet(L);}}return p;}
+/* 113 abForceTick: planlanan golcü sahadan çıktıysa ya da ~3 dk'da bitiremezse yeni golcü (near: o an kaleye en yakın arkadaş); anlatım satırı da değişir */
+function v177Near(side){try{const S=FX,sim=ABM.sim,te=abS2E(side),gx=sim.teams[te].dir>0?105:0;const c=fxOn(S.T[side]).filter(p=>p.k!=='ME'&&p.spos!=='KL'&&p.pos!=='KL'&&p.ei!=null&&!p.subbed&&sim.players[p.ei]&&!sim.players[p.ei].off);
+    return c.sort((a,b)=>Math.abs(gx-sim.players[a.ei].x)-Math.abs(gx-sim.players[b.ei].x))[0]||null;}catch(e){return null;}}
+function v177Replan(q,near){const L=q&&q.v177;const p=(near?v177Near(q.side):null)||v177PickSc(q.side);if(p){q.k=p.k;if(L&&!L.done&&!L.me){L.k=p.k;v177FeedSet(L);}}return p;}
 /* planlanmamış motor golü: MR'ye eklenir (MR bittiyse null → olay yok sayılır) */
 function v177Adopt(side,e){if(!MR||MR.fin||PL3.end)return null;const S=FX,m=e.meta||{};let p=abFxP(e.p);if(!p||m.own||p.T!==S.T[side]||p.k==='ME')p=v177PickSc(side);
   if(side===0){MR.gu++;PL3.gu=MR.gu;}else{MR.go++;PL3.go=MR.go;}
@@ -65,10 +67,13 @@ function v177Pre(e){if(!e||e.__v177p||e.type!=='GOAL')return;e.__v177p=1;if(!v17
   m.own=false;
   if(L.as){const me=pl3Me();m.assist=me&&me.ei!=null&&me.ei!==e.p?me.ei:-1;}
   else{const a=m.assist!=null&&m.assist>=0?abFxP(m.assist):null;if(!a||a.k==='ME'||a.T!==S.T[side]||a.ei===e.p)m.assist=-1;}}
+/* gol/kart olayına o anki oyuncu adı (yuvaya sonradan giren oyuncunun adı 206 v172FrameSync'te gole yazılmasın) */
+function v177Nm0(sim,e){if(!e||e.__nm!=null||(e.type!=='GOAL'&&e.type!=='CARD'))return;const P=sim.players||[],q=e.p>=0?P[e.p]:null,m=e.meta||{};e.__nm=q?q.name:'';
+  if(e.type==='GOAL'){const a=m.assist!=null&&m.assist>=0?P[m.assist]:null;e.__an=a?a.name:'';}}
 /* sim.onEvent önüne kanca: kim atarsa atsın (çerçeve, abHook, hızlı sonuç, hzSynth) GOAL önce deftere uğrar */
 function v177Wrap(sim){if(!sim||sim.__v177)return;let fn=sim.onEvent;
   try{Object.defineProperty(sim,'onEvent',{configurable:true,enumerable:true,
-    get(){const f=fn;if(!f)return f;return function(e){try{v177Pre(e);}catch(x){console.warn('v177 olay',x);}if(e&&e.__v177drop)return;return f.apply(this,arguments);};},
+    get(){const f=fn;if(!f)return f;return function(e){try{v177Pre(e);v177Nm0(sim,e);}catch(x){console.warn('v177 olay',x);}if(e&&e.__v177drop)return;return f.apply(this,arguments);};},
     set(v){fn=v;}});sim.__v177=1;}catch(e){}}
 /* olay işlendikten sonra: FX istatistiği, 206 FX.gl ve skorer listesi defterdeki golcüye; anlatım satırı */
 abEv=(old=>function(e){const r=old.apply(this,arguments);try{const L=e&&e.__v177e;if(L&&e.type==='GOAL'&&!L.post){L.post=1;v177Post(e,L);}}catch(x){console.warn('v177 gol',x);}return r;})(abEv);
@@ -95,7 +100,11 @@ function v177Synth(){const S=FX,sim=ABM.sim;if(!S||!sim)return 0;let n=0;const C
 /* kapanışta son güvence: skor ve gol listesi defterden */
 function v177Settle(){if(!v177On())return;const S=FX;
   try{const n0=V177.led.filter(L=>L.s===0).length,n1=V177.led.filter(L=>L.s===1).length;if(MR&&(MR.gu>n0||MR.go>n1))pl3Sync();}catch(e){}
-  try{v177Synth();}catch(e){console.warn('v177',e);}
+  let n=0;try{n=v177Synth();}catch(e){console.warn('v177',e);}
+  try{const sim=ABM.sim;ABM.fq=[];ABM.fcur=null;if(sim){sim.forceGoal=null;sim.forceBy=null;}}catch(e){}   /* defter kapandı: motor artık gol zorlamaz */
+  /* üretilen gol çerçevenin tabelasına da (hızlı sonuçta çerçeve döngüsü durmuş olur) */
+  if(n){try{const sim=ABM.sim,W=ABM.win,d=W.document,st=W.ado2d.state;if(st)st.scHold=null;const sh=d.getElementById('score-home'),sa=d.getElementById('score-away');if(sh)sh.textContent=String(sim.teams[0].score);if(sa)sa.textContent=String(sim.teams[1].score);}catch(e){}
+    try{if(ABM.ff){S.score=[ABM.sim.teams[abS2E(0)].score,ABM.sim.teams[abS2E(1)].score];abFfUI(true);}if(ABM.ff||V177.force)v172FrameSync();}catch(e){}}   /* hızlı sonuçta (ya da hemen kapanışta) çerçeve olayı işleyemez: Olaylar listesi 206 ile eşitlenir */
   try{const sim=ABM.sim;if(sim)S.score=[sim.teams[abS2E(0)].score,sim.teams[abS2E(1)].score];}catch(e){}
   const want=[MR.gu,MR.go],gl=S.gl||[];
   const ok=S.score[0]===want[0]&&S.score[1]===want[1]&&gl.filter(g=>g.s===0).length===want[0]&&gl.filter(g=>g.s===1).length===want[1];
@@ -103,15 +112,18 @@ function v177Settle(){if(!v177On())return;const S=FX;
     S.score=want.slice();S.gl=V177.led.map(L=>({s:L.s,m:L.mm||L.m,k:L.k,n:v177Nm(L.s,L.k),cid:S.T[L.s].id,own:false,pen:false,ak:L.ak||null,an:L.ak?v177Nm(L.s,L.ak):null}));
     for(const T of S.T)for(const p of T.P){p.s.g=0;p.s.as=0;}
     for(const L of V177.led){const a=v177ByK(L.s,L.k);if(a)a.s.g++;const b=L.ak?v177ByK(L.s,L.ak):null;if(b)b.s.as=(b.s.as||0)+1;}
-    try{S.scorers=V177.led.filter(L=>L.s===0).map(L=>L.k);}catch(e){}}}
+    try{S.scorers=V177.led.filter(L=>L.s===0).map(L=>L.k);}catch(e){}}
+  return n;}
 /* kapanış: bekleyen gol varsa motor biraz daha oynar, sonra defterle kapanır */
 pl3Close=(old=>function(mid){try{if(!PL3.closed&&(mid==null||mid===PL3.mid)&&v177On()){const sim=ABM.sim,now=performance.now();if(!V177.w0)V177.w0=now;
       if(!V177.force&&v177Pend()&&sim&&!sim.finished&&!ABM.ff&&now-V177.w0<V177_WAIT){setTimeout(()=>pl3Close(mid),250);return;}
-      v177Settle();}}catch(e){console.warn('v177 kapanış',e);}
+      if(!V177.settled){V177.settled=1;const n=v177Settle();
+        /* canlı izlerken üretilen gol çerçevenin skor tabelasında da görünsün (bir kare çizilsin), sonra kapanır */
+        if(n&&!V177.rec&&!V177.force&&!ABM.ff){setTimeout(()=>pl3Close(mid),1500);return;}}}}catch(e){console.warn('v177 kapanış',e);}
   return old.apply(this,arguments);})(pl3Close);
 /* "Maç sonu" 3B kapanmadan basılırsa önce kapanış (lig kaydı defter + FX görüntüsünden) */
 mrFinish=(old=>function(){const pl=!!(MR&&MR.f3);const r=old.apply(this,arguments);
-  try{if(pl){const d=$('#mvDone'),oc=d&&d.onclick;if(oc&&!oc.__v177){const f=function(){try{if(PL3.on&&!PL3.closed){V177.force=1;pl3Close(PL3.mid);}}catch(e){console.warn(e);}return oc.apply(this,arguments);};f.__v177=1;d.onclick=f;}}}catch(e){}
+  try{if(pl){const d=$('#mvDone'),oc=d&&d.onclick;if(oc&&!oc.__v177){const f=function(){if(!MR)return;try{if(PL3.on&&!PL3.closed){V177.force=1;pl3Close(PL3.mid);}}catch(e){console.warn(e);}return oc.apply(this,arguments);};f.__v177=1;d.onclick=f;}}}catch(e){}
   return r;})(mrFinish);
 /* çerçeve maçı yeniden kurarsa (yeni sim): durum taşınır */
 abHook=(old=>function(){const W=ABM.win;let s1=null;try{s1=W&&W.ado2d&&W.ado2d.sim();}catch(e){}const s0=ABM.sim;if(s1&&s1!==s0)v177Wrap(s1);
@@ -123,4 +135,14 @@ function v177Carry(a,b){V177.rb++;V177.log.push('yeniden kurma '+Math.round(a.t)
   for(let i=0;i<2;i++){const A=a.teams[i],B=b.teams[i];B.dir=A.dir;B.score=A.score;B.st=A.st;}
   for(let i=0;i<Math.min(a.players.length,b.players.length);i++){const p=a.players[i],q=b.players[i];if(!p||!q)continue;if(p.stam!=null)q.stam=p.stam;if(p.stamCap!=null)q.stamCap=p.stamCap;if(p.off&&!q.off){try{b.sendOff(i);}catch(e){q.off=true;}}}
   try{for(const k of ['noGoal','forceDist','holdEnd'])if(a[k]!=null)b[k]=a[k];}catch(e){}
+  /* olay geçmişi: eski olaylar yeni simin başına; çerçevenin reytingi olaylardan hesaplandığı için yeniden işlenir */
+  try{const old=(a.events||[]).slice();if(b.events&&old.length){b.events.unshift(...old);const R=ABM.win&&ABM.win.ado2d.state.rt;if(R&&R.onEvent)for(const e of old){try{R.onEvent(e);}catch(x){}}}}catch(e){}
   ABM.fcur=null;try{b.forceGoal=null;b.forceBy=null;}catch(e){}}
+/* Pro modu: goller ve anlar yalnız motordan (120). Rakip hocanın hamleleri (097) ve an zincirleri (172) maç sırasında MR'ye yeni gol/an
+   ekliyordu; bunlar motorda olmadığı için MR skoru motordan sapıyordu (ör. motor 5-0, MR 7-0). Pro'da bu olaylar ayıklanır. */
+mrStep=(old=>function(){try{if(MR&&MR.pro&&MR.f3&&MR.events){for(let i=MR.events.length-1;i>=(MR.ei||0);i--){const k=MR.events[i].k;if(k==='us'||k==='opp'||k==='ch')MR.events.splice(i,1);}}}catch(e){}return old.apply(this,arguments);})(mrStep);
+/* Pro modu kapanış güvencesi: maçı oyuncu motorda oynadı, kayıt motordan */
+pl3Close=(old=>function(mid){try{const S=FX,sim=ABM.sim;if(!PL3.closed&&(mid==null||mid===PL3.mid)&&S&&S.ab&&S.pl3&&MR&&MR.pro&&sim){const sc=[sim.teams[abS2E(0)].score,sim.teams[abS2E(1)].score],gl=S.gl||[];
+      S.score=sc.slice();if(MR.gu!==sc[0]||MR.go!==sc[1]){V177.rec=1;V177.log.push('pro uzlaştırma MR '+MR.gu+'-'+MR.go+' → '+sc.join('-'));MR.gu=sc[0];MR.go=sc[1];PL3.gu=MR.gu;PL3.go=MR.go;}
+      const g=gl.filter(x=>x.s===0&&x.k==='ME').length,a=gl.filter(x=>x.s===0&&x.ak==='ME').length;if(gl.filter(x=>x.s===0).length===sc[0]&&(MR.goals!==g||MR.assists!==a)){V177.log.push('pro G/A '+MR.goals+'/'+MR.assists+' → '+g+'/'+a);MR.goals=g;MR.assists=a;}}}catch(e){console.warn('v177 pro',e);}
+  return old.apply(this,arguments);})(pl3Close);

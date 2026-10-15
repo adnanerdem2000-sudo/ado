@@ -100,10 +100,12 @@ function v172FrameSync(){const W=ABM.win,S=ABM.fx,sim=ABM.sim;if(!W||!S||!sim||!
   const md=W.ABH&&W.ABH.md&&W.ABH.md();if(!md||!md.h||!md.a||!md.highlights)return 0;const CK=(sim.C&&sim.C.CK)||1,nm=i=>i!=null&&i>=0&&sim.players[i]?sim.players[i].name:'';
   const rows=W.ado.km.rows(),used=new Set();let add=0;
   for(const e of (sim.events||[])){if(e.type!=='GOAL'&&e.type!=='CARD')continue;const T=e.team;if(T!==0&&T!==1)continue;const m=e.meta||{},b=Math.max(1,Math.floor(e.t*CK/60));let km,txt,ty;
-    if(e.type==='GOAL'){const own=!!m.own,ast=m.assist!=null&&m.assist>=0?m.assist:-1;km={k:'goal',s:T,n:nm(e.p),a:!own&&ast>=0?nm(ast):'',pen:!!m.pen,fk:false,cor:false,og:own,v:null,b,x:0};
+    if(e.type==='GOAL'){const own=!!m.own,ast=m.assist!=null&&m.assist>=0?m.assist:-1;km={k:'goal',s:T,n:e.__nm!=null?e.__nm:nm(e.p),a:!own&&ast>=0?(e.__an!=null?e.__an:nm(ast)):'',pen:!!m.pen,fk:false,cor:false,og:own,v:null,b,x:0};
       txt=own?'⚽ Kendi kalesine - '+km.n:'⚽ '+km.n+(km.a?' (Asist: '+km.a+')':'')+(m.pen?' (P)':'');ty='goal';}
-    else{const red=m.card==='R';km=red?{k:'red',s:T,n:nm(e.p),y2:!!m.second,v:null,b,x:0}:{k:'yellow',s:T,n:nm(e.p),b,x:0};txt=(red?'🟥 Kırmızı Kart - ':'🟨 Sarı Kart - ')+km.n;ty=red?'card-red':'card-yellow';}
+    else{const red=m.card==='R';const cn=e.__nm!=null?e.__nm:nm(e.p);km=red?{k:'red',s:T,n:cn,y2:!!m.second,v:null,b,x:0}:{k:'yellow',s:T,n:cn,b,x:0};   /* v177: __nm = olay anındaki ad (214) */txt=(red?'🟥 Kırmızı Kart - ':'🟨 Sarı Kart - ')+km.n;ty=red?'card-red':'card-yellow';}
     let hit=-1;for(let j=0;j<rows.length;j++){const r=rows[j];if(!used.has(j)&&r&&r.k===km.k&&r.s===km.s&&r.n===km.n&&Math.abs((r.b||0)-b)<=1){hit=j;break;}}
+    /* v177: o yuvaya sonradan oyuncu girdiyse ad değişir (sim.players[i] yeni oyuncu); aynı dakikadaki aynı tür satır yine eşleşir, çift satır yazılmaz */
+    if(hit<0)for(let j=0;j<rows.length;j++){const r=rows[j];if(!used.has(j)&&r&&r.k===km.k&&r.s===km.s&&Math.abs((r.b||0)-b)<=1){hit=j;break;}}
     if(hit>=0){used.add(hit);continue;}
     try{W.ado.km.next(km);W.addHighlight(T===0?md.h:md.a,txt,ty,b);add++;}catch(x){console.warn('v172 olay',x);}}
   try{const d=W.document,a=d.getElementById('score-home'),b=d.getElementById('score-away');if(a)a.textContent=String(sim.teams[0].score);if(b)b.textContent=String(sim.teams[1].score);}catch(x){}   /* hızlı sonuçta üst skor tabelası da */
