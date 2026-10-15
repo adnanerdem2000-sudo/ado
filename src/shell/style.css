@@ -3258,3 +3258,12 @@ body.pro .sz74-box{background:rgba(255,255,255,.03)}
 /* v179: lig bağlantıları */
 .lglink{color:inherit;text-decoration:underline dotted rgba(90,168,255,.8);text-underline-offset:3px;cursor:pointer;font-weight:inherit}.lglink:hover{color:var(--led)}
 #top .lglink.lg-top{text-decoration:none}#top .lglink.lg-top:hover{text-decoration:underline dotted;text-underline-offset:3px}
+/* v181: genel ses ayarı */
+.ses-set{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px 10px;margin:4px 0 8px}
+.ses-set .ses-ic{font-size:20px;width:26px;text-align:center}
+.ses-set input[type=range]{width:100%;accent-color:var(--led,#38d27a);height:28px}
+.ses-set .ses-hz{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+/* v182: lig başlangıcı notu, oda sürüm uyarısı */
+.v182-not{margin:6px 0 10px;padding:8px 11px;border-radius:10px;background:rgba(90,168,255,.1);border:1px solid rgba(90,168,255,.3);font-size:13px;line-height:1.4}
+.v182-not.k{font-size:12px;margin:4px 0 8px}
+.v182-uy{margin:9px 0 0;padding:7px 9px;border-radius:9px;background:rgba(255,179,32,.12);border:1px solid rgba(255,179,32,.4);font-size:12px}
