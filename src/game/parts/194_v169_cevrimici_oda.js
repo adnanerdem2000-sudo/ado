@@ -84,7 +84,7 @@ async function mpPubState(force){if(!mpOn()||!MP.code||!mpConnected())return;con
   mqPub(MP.base+'/s/'+s.p,await mpEnc(s),true);}
 async function mpPubRes(force){if(!mpOn()||!MP.code||!mpConnected()||!G.s)return;const S=G.s;
   const o={k:'res',p:mpPid(),r:G.mp.role,y:S.year,L:S.league,club:G.club||'',fh:mpH53(JSON.stringify(S.fixtures||[]),3),rs:(S.results||[]).map(rd=>rd.map(m=>[m[0],m[1],m[2],m[3]])),ts:Date.now()};
-  if(G.mp.role==='host')o.fx=S.fixtures;const sig=JSON.stringify([o.y,o.L,o.fh,o.rs,o.club]);if(!force&&sig===MP.lastRes)return;MP.lastRes=sig;
+  if(G.mp.role==='host'){o.fx=S.fixtures;o.lm=G.lgMove||{};}const sig=JSON.stringify([o.y,o.L,o.fh,o.rs,o.club,o.lm]);if(!force&&sig===MP.lastRes)return;MP.lastRes=sig;
   mqPub(MP.base+'/r/'+o.p,await mpEnc(o),true);}
 async function mpPubMsg(o){if(!MP.code)return 0;o.p=mpPid();o.i=o.p+'-'+Date.now().toString(36)+'-'+(++MP.seq);o.ts=Date.now();MP.seen.add(o.i);return mqPub(MP.base+'/m',await mpEnc(o),false);}
 /* ---------- al ---------- */
@@ -232,6 +232,7 @@ function mpUI(flash){try{const pill=$('#top .mp-pill');if(pill){const s=mpStatus
       h=!live?`<b>⏳ ${nm} çevrimdışı</b><span>Gün, arkadaşın da “Hazırım” deyince ilerler. Döndüğünde kendiliğinden devam edilir.</span><button class="btn sm" data-act="mpSolo">Tek devam et (çevrimiçini kapat)</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`
         :P.e<me?`<b>⏳ ${nm} geride</b><span>${esc(mpDateTxt(P.e))} tarihinde; seninle aynı güne gelince birlikte ilerlersiniz.</span><button class="btn ghost sm" data-act="mpNudge">🔔 Dürt</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`
         :`<b>✅ Hazırsın</b><span>${nm} da “Hazırım” deyince gün ilerleyecek.</span><button class="btn ghost sm" data-act="mpNudge">🔔 Dürt</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`;}
+    else if(P.rd&&P.rd.k==='tatil')h=`<b>☀ ${nm} tatilde</b><span>${esc(mpDateTxt(P.rd.stop))} tarihine kadar onu bekletmiyorsun: sen Devam’a bastıkça o aralık onun için kendiliğinden simüle edilir.</span>`;
     else h=P.e>me?`<b>🟢 ${nm} ileride bekliyor</b><span>${esc(mpDateTxt(P.e))} · Devam’a basarak ona yetişebilirsin.</span>`:`<b>🟢 ${nm} hazır</b><span>Sen de Devam’a (Hazırım) basınca gün ilerler.</span>`;
     if(bar.__h!==h){bar.innerHTML=h;bar.__h=h;}bar.className=(MP.ready?'rdy':'peer')+(flash?' fl':'');if(flash){setTimeout(()=>{bar.classList.remove('fl');},700);}
     const pn=$('#mpPanelBody');if(pn&&!$('#modal').hidden&&!pn.__busy){const nh=mpPanelBody();if(pn.__h!==nh){pn.innerHTML=nh;pn.__h=nh;}}}catch(e){}}
