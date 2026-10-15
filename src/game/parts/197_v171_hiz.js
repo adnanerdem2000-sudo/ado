@@ -131,5 +131,11 @@ const HZ_AI_N=2;
 aiTransfers=(old=>function(){if(!G||!G.s||!G.s.cal||G.phase!=='season')return old.apply(this,arguments);
   let last=false;try{last=!twOpenAt(G.s.day+1);}catch(e){last=true;}
   G.s.aiq=(G.s.aiq||0)+1;if(G.s.aiq<HZ_AI_N&&!last)return;
-  const k=Math.min(4,G.s.aiq);G.s.aiq=0;const own=!AITX_LC;if(own){AITX_LC={};AITX_CV=null;}
-  try{for(let i=0;i<k;i++)old.apply(this,arguments);}finally{if(own){AITX_LC=null;AITX_CV=null;}}})(aiTransfers);
+  const k=Math.min(4,G.s.aiq);G.s.aiq=0;const own=!AITX_LC;if(own){AITX_LC={};AITX_CV=null;HZ_SQ={};}
+  try{for(let i=0;i<k;i++)old.apply(this,arguments);}finally{if(own){AITX_LC=null;AITX_CV=null;HZ_SQ=null;}}})(aiTransfers);
+/* toplu çalışmada kadro önbelleği: aynı gün içinde aynı kulübün kadrosu bir kez kurulur; her transfer/kiralık (txNote) ve güç güncellemesinden
+   (syncStr) sonra önbellek boşaltılır. Önbellekten dönen dizi kopyadır (syncStr sıralayarak değiştiriyor). */
+let HZ_SQ=null;
+squadOf=(old=>function(id){if(HZ_SQ&&arguments.length===1){const c=HZ_SQ[id];if(c)return c.slice();const r=old.apply(this,arguments);if(Array.isArray(r))HZ_SQ[id]=r.slice();return r;}return old.apply(this,arguments);})(squadOf);
+txNote=(old=>function(){if(HZ_SQ)HZ_SQ={};return old.apply(this,arguments);})(txNote);
+syncStr=(old=>function(){const r=old.apply(this,arguments);if(HZ_SQ)HZ_SQ={};return r;})(syncStr);

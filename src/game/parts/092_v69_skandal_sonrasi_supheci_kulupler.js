@@ -1,6 +1,6 @@
 /* ================= v69: skandal sonrası şüpheci kulüpler · ezeli rakipler arası YZ transferleri çok nadir ================= */
 /* v171: toplu YZ transferi sırasında lig kulüp listeleri ve kulüp dizisi önbellekten (197_v171_hiz); önbellek yoksa eskisi gibi */
-var AITX_LC=null,AITX_CV=null;function aiLC(l){if(!AITX_LC)return leagueClubs(l);return AITX_LC[l]||(AITX_LC[l]=leagueClubs(l));}function aiClubs(){if(!AITX_LC)return Object.values(CLUBS);return AITX_CV||(AITX_CV=Object.values(CLUBS));}
+var AITX_LC=null,AITX_CV=null;function aiLC(l){if(!AITX_LC)return leagueClubs(l);if(!AITX_LC.__ix){const M=Object.create(null);for(const c of aiClubs())(M[c.league]||(M[c.league]=[])).push(c);AITX_LC.__ix=M;}return AITX_LC.__ix[l]||[];}function aiClubs(){if(!AITX_LC)return Object.values(CLUBS);return AITX_CV||(AITX_CV=Object.values(CLUBS));}
 aiTransfers=function(){const I=twInfo(),summer=G.s.day<=I.sc,n=summer?(Math.random()<0.5?3:2):(Math.random()<0.4?1:0);const lgs=WORLD.filter(l=>LEAGUES[l]&&!LEAGUES[l].youth&&LEAGUES[l].tier>=7);
   let done=0;for(let i=0;i<n*6&&done<n;i++){const bl=pick(lgs),buyer=pick(aiLC(bl));if(!buyer||buyer.id===G.club)continue;const bsq=squadOf(buyer.id);if(bsq.length>=30)continue;
     const pos=pick(['KL','DF','DF','OS','OS','KN','FW','FW']);const need=bsq.filter(p=>p.pos===pos).sort((a,b)=>b.ovr-a.ovr);const tgt=(need[1]||need[0]||{ovr:buyer.str-4}).ovr+rint(1,5);
