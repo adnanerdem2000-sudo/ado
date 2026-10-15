@@ -223,6 +223,7 @@ render=(old=>function(){const r=old.apply(this,arguments);try{mpEnsure();mpUI();
 function mpUI(flash){try{const pill=$('#top .mp-pill');if(pill){const s=mpStatus();pill.className='mp-pill mp-'+s.c;pill.title='Çevrimiçi oda · '+s.t;const em=pill.querySelector('em');
       if(MP.unread&&!em)pill.insertAdjacentHTML('beforeend',`<em>${MP.unread}</em>`);else if(em){if(MP.unread)em.textContent=MP.unread;else em.remove();}}
     const fb=$('#top .fm-cont');if(fb){fb.classList.toggle('mp-rdy',!!MP.ready);const sp=fb.querySelector('span');if(sp){const want=MP.ready?'Bekleniyor…':(mpPartnerExists()?'Hazırım':'Devam');if(sp.textContent!==want)sp.textContent=want;}}
+    const bc=document.querySelector('#tabs .tab.cont');if(bc){bc.classList.toggle('mp-rdy',!!MP.ready);const bb=bc.querySelector('b');if(bb){const want=MP.ready?'BEKLENİYOR':(mpOn()&&mpPartnerExists()?'HAZIRIM':'DEVAM');if(bb.textContent!==want)bb.textContent=want;}}
     let bar=$('#mpbar');const show=mpOn()&&mpPartnerExists()&&G&&(MP.ready||(MP.peer&&MP.peer.rd&&mpPeerLive()));
     if(!show){if(bar)bar.hidden=true;return;}
     if(!bar){bar=document.createElement('div');bar.id='mpbar';document.body.appendChild(bar);}bar.hidden=false;const P=MP.peer,nm=esc((P&&P.n)||(G.mp.peer&&G.mp.peer.n)||'Arkadaşın');

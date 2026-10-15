@@ -754,12 +754,6 @@ function drawHair(c,e,x,y,r,front){const s=e.hs;
   if(s==='buzz')c.globalAlpha=0.85;c.fill();c.globalAlpha=1;
   if(s==='side'&&front){c.beginPath();c.ellipse(x-r*0.3,y-r*0.62,r*0.62,r*0.3,-0.4,0,7);c.fill();}
   if(lg&&front){c.beginPath();c.ellipse(x-r*0.9,y+r*0.25,r*0.22,r*0.72,0.1,0,7);c.fill();c.beginPath();c.ellipse(x+r*0.9,y+r*0.25,r*0.22,r*0.72,-0.1,0,7);c.fill();}}
-function drawDown(c,e,H){const k=e.kit,lw=Math.max(1.6,H*0.085),a=Math.atan2(e.fy*0.55,e.fx||0.001);c.rotate(a);c.lineCap='round';
-  ln(c,0,-H*0.03,H*0.42,-H*0.05,lw*1.05,k.socks);ln(c,0,H*0.04,H*0.4,H*0.07,lw*1.05,k.socks);
-  c.fillStyle=e.boot||'#14161a';c.beginPath();c.ellipse(H*0.44,-H*0.05,lw*0.8,lw*0.5,0,0,7);c.ellipse(H*0.42,H*0.07,lw*0.8,lw*0.5,0,0,7);c.fill();
-  c.fillStyle=k.shorts;rr(c,-H*0.08,-H*0.07,H*0.14,H*0.15,H*0.03);c.fill();
-  c.fillStyle=k.shirt;rr(c,-H*0.38,-H*0.09,H*0.32,H*0.18,H*0.04);c.fill();
-  drawHairBack(c,e,-H*0.46,-H*0.01,H*0.08);c.fillStyle=e.skin;c.beginPath();c.arc(-H*0.46,-H*0.01,H*0.08,0,7);c.fill();drawHair(c,e,-H*0.46,-H*0.01,H*0.08,false);}
 function limb(c,x1,y1,x2,y2,w1,w2,col){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l;c.fillStyle=col;c.beginPath();c.moveTo(x1+nx*w1/2,y1+ny*w1/2);c.lineTo(x2+nx*w2/2,y2+ny*w2/2);c.lineTo(x2-nx*w2/2,y2-ny*w2/2);c.lineTo(x1-nx*w1/2,y1-ny*w1/2);c.closePath();c.fill();
   c.beginPath();c.arc(x1,y1,w1/2,0,7);c.fill();c.beginPath();c.arc(x2,y2,w2/2,0,7);c.fill();}
 function ik2(hx,hy,fx,fy,L1,L2,bend){let dx=fx-hx,dy=fy-hy,d=Math.hypot(dx,dy);const mx=L1+L2-0.01;if(d>mx){dx*=mx/d;dy*=mx/d;d=mx;}if(d<0.001)d=0.001;

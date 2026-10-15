@@ -201,20 +201,8 @@ function fxShout(k){const S=FX,U=S.U;if(S.t-S.shoutT<240)return toast('Az önce 
   U.sh={k:ok?k:null,until:S.t+600};if(ok&&(k==='cesaret'||k==='ovgu'))for(const p of fxOn(U))p.rt+=0.05;
   fxEv(fxMin(),`Kenardan: “${FX_SHOUT[k][0]}!” ${ok?'Oyuncular olumlu tepki verdi.':'Oyuncular pek etkilenmedi.'}`,'tac');fxUI();}
 /* ---------- arayüz ---------- */
-function fxOpen(){let el=$('#fx');if(!el){el=document.createElement('div');el.id='fx';el.className='fx';document.body.appendChild(el);
-    el.addEventListener('click',e=>{const b=e.target.closest('[data-fx]');if(!b)return;fxAct(b.dataset.fx,b.dataset.k,b.dataset.v);});}
-  el.hidden=false;$('#tabs').hidden=true;document.documentElement.classList.add('playing');
-  el.innerHTML=`<div class="fx-top" id="fxTop"></div><div class="fx-pw"><canvas id="fxCv"></canvas><div id="fxPop"></div></div><div class="fx-ban" id="fxBan"></div>
-   <div class="fx-ctl"><button data-fx="play" id="fxPlay">▶</button>${[1,2,4,10].map(s=>`<button data-fx="spd" data-k="${s}" class="${FX.spd===s?'on':''}">${s}×</button>`).join('')}<button data-fx="names" id="fxNm">İsim</button><span class="fx-info" id="fxInfo"></span></div>
-   <div class="fx-tabs">${[['ev','Olaylar'],['st','İstatistik'],['tk','Taktik'],['ky','Kadro'],['as','Asistan']].map(([k,l])=>`<button data-fx="tab" data-k="${k}" class="${FX.tab===k?'on':''}">${l}</button>`).join('')}</div><div class="fx-body" id="fxBody"></div>`;
-  FX.names=true;FX.phase='pre';fxUI();fxResize();FX.raf=requestAnimationFrame(fxLoop);}
 function fxResize(){const cv=$('#fxCv');if(!cv)return;const desk=window.innerWidth>=1000,tH=(($('#fxTop')||{}).offsetHeight||110)+40,w=Math.round(desk?Math.min(cv.parentNode.clientWidth-28,(window.innerHeight-tH)*FXW/FXL/0.92):Math.min(460,cv.parentNode.clientWidth,window.innerHeight*0.56*FXW/FXL/0.92)),h=Math.round(w*FXL/FXW*0.92);const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';FX.cw=w;FX.ch=h;FX.dpr=dpr;}
 let fxLast=0,fxAcc=0;
-function fxLoop(ts){if(!FX||!$('#fx')||$('#fx').hidden)return;const dt=Math.min(0.1,(ts-(fxLast||ts))/1000);fxLast=ts;
-  if(FX.phase==='play'){fxAcc+=dt*FX.spd*12;let n=0;while(fxAcc>=0.1&&n<200&&FX.phase==='play'){fxStep(0.1);fxAcc-=0.1;n++;}if(FX.phase!=='play'){fxAcc=0;fxUI();}}
-  for(const tr of FX.trail)tr.t-=dt*2.2;FX.trail=FX.trail.filter(t=>t.t>0);if(FX.flash){FX.flash.t-=dt;if(FX.flash.t<=0)FX.flash=null;}if(FX.pop){FX.pop.t-=dt;if(FX.pop.t<=0){FX.pop=null;fxPopUI();}}
-  fxDraw();FX.uiT=(FX.uiT||0)-dt;if(FX.uiT<=0){FX.uiT=0.5;fxTopUI();if(FX.tab==='ev'||FX.tab==='st'||FX.tab==='ky')fxBodyUI();}
-  FX.raf=requestAnimationFrame(fxLoop);}
 function fxPx(x,y){const m=10,pw=FX.cw-m*2,ph=FX.ch-m*2;return [m+(y/FXW)*pw,m+(1-x/FXL)*ph];}
 function fxDraw(){const cv=$('#fxCv');if(!cv)return;const c=cv.getContext('2d'),S=FX,dpr=S.dpr,W=S.cw,H=S.ch;c.setTransform(dpr,0,0,dpr,0,0);
   c.fillStyle='#3f9b46';c.fillRect(0,0,W,H);const m=10,pw=W-m*2,ph=H-m*2;for(let i=0;i<14;i++)for(let j=0;j<10;j++){if((i+j)%2)continue;c.fillStyle='rgba(255,255,255,.06)';c.fillRect(m+pw*j/10,m+ph*i/14,pw/10,ph/14);}

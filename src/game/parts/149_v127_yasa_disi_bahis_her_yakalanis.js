@@ -6,11 +6,7 @@
 function betRisk(own,sameL,amt,caught){const base=own?0.12:sameL?0.035:0.012;const fa=clamp(0.6+0.25*Math.log10(Math.max(20,amt)/100),0.5,1.6);return base*fa*(1+(caught||0)*0.35);}
 function betRepNow(){try{if(G.mode==='mgr'&&G.m)return G.m.rep||40;if(isStaff()&&G.job)return G.job.rep||30;return G.p.fame||0;}catch(e){return 30;}}
 function betRec(e){(G.betRec=G.betRec||[]).unshift(Object.assign({y:G.s?seasonLabel(G.s.year):'',d:G.s?G.s.day:0},e));if(G.betRec.length>30)G.betRec.length=30;}
-/* tek maç bahsi (eski kumarhane sekmesi) */
-betPlace=function(i,sel,amt){const F=betFixtures()[+i];if(!F)return;const o=betOdds(F.h,F.a)[+sel];if(!gbPay(amt))return toast('Bakiyen yetmiyor');const g=gbInit();gbHeat(6);
-  const own=F.h===G.club||F.a===G.club,sameL=F.lid===G.s.league;
-  if(Math.random()<betRisk(own,sameL,amt,g.caught)){betRec({k:'el',t:`${CLUBS[F.h].short}–${CLUBS[F.a].short} · ${['1','X','2'][+sel]}`,amt,o,res:'el konuldu'});betCaught(own,amt);return;}
-  g.bets.push({lid:F.lid,w:F.w,h:F.h,a:F.a,sel:+sel,o,amt,d:G.s.day});save();toast(`Bahis yatırıldı · oran ${o}`);gbModal();};
+
 betSettle=function(){const g=gbInit(),S=G.s;if(!g.bets.length||!S)return;const keep=[];g.bh=g.bh||[];
   for(const b of g.bets){let res=null;if(b.lid===S.league){const rd=S.results[b.w];if(rd)res=rd.find(x=>x[0]===b.h&&x[1]===b.a);}else{const o=LEAGUES[b.lid]&&olSync(b.lid);const rd=o&&o.res[b.w];if(rd)res=rd.find(x=>x[0]===b.h&&x[1]===b.a);}
     if(!res){if(G.phase==='off'){gbWin(b.amt);g.bh.unshift(Object.assign({},b,{res:'iade'}));continue;}keep.push(b);continue;}const r=res[2]>res[3]?0:res[2]===res[3]?1:2;
@@ -53,9 +49,5 @@ const betLowWage=(old)=>function(id){const r=old.apply(this,arguments);try{if(st
 mgrSign=betLowWage(mgrSign);staffSign=betLowWage(staffSign);
 pushOffer=(old=>function(o){try{if(stigNow()&&isPl()&&o&&!o.renew&&o.wage){o.wage=Math.max(50,Math.round(o.wage*0.75/50)*50);}}catch(e){}return old.apply(this,arguments);})(pushOffer);
 /* bahis geçmişi: kumarhane maç bahsi ve iddaa kuponlarım sekmesi */
-function betHistHTML(){const g=gbInit(),H=(g.bh||[]).slice(0,15),R=(G.betRec||[]).slice(0,10);
-  return `${H.length?`<p class="sub-h"><span>Sonuçlanan bahisler</span><span>${H.length}</span></p><ul class="cupres">${H.map(b=>`<li><span>${esc(CLUBS[b.h]?CLUBS[b.h].short:'')}–${esc(CLUBS[b.a]?CLUBS[b.a].short:'')} · ${['1','X','2'][b.sel]}${b.sc?' · '+b.sc:''}</span><b class="${b.res==='kazandı'?'pos':b.res==='kaybetti'?'neg':''}">${b.res==='kazandı'?'+'+eur(b.pay):b.res==='kaybetti'?'−'+eur(b.amt):'iade'}</b></li>`).join('')}</ul>`:''}
-   ${R.length?`<p class="sub-h"><span>Soruşturma sicili</span><span>${R.filter(x=>x.k!=='el').length}</span></p><ul class="cupres">${R.map(x=>`<li><span>${esc(x.y)} · ${esc(x.t)}</span><b class="${x.k==='el'?'':'neg'}">${esc(x.res)}${x.fine?' · '+eur(x.fine):''}</b></li>`).join('')}</ul>`:''}`;}
-gbModal=(old=>function(){const r=old.apply(this,arguments);try{if(typeof GBT!=='undefined'&&GBT==='bh'){const b=$('#modalCard .gb-body');if(b&&!b.querySelector('.bet-hist')){b.insertAdjacentHTML('beforeend',`<div class="bet-hist">${betHistHTML()}</div>`);}const w=$('#modalCard .gb-warn');if(w)w.textContent='⚠ Profesyonel futbol çalışanlarının maçlara bahis oynaması yasaktır. Çoğu bahis fark edilmez ama yakalanırsan uyarı ve para cezası, görevden uzaklaştırma ya da kovulma gelebilir. Kendi takımının maçı ve büyük tutarlar en riskli olanlardır.';}}catch(e){}return r;})(gbModal);
 ibCouponsHTML=(old=>function(){let h=old.apply(this,arguments);try{const R=(G.betRec||[]).filter(x=>x.k!=='el');if(R.length)h+=`<div class="ib-cps-w"><p class="ib-sh">Soruşturma sicili <span>${R.length}</span></p>${R.slice(0,10).map(x=>`<div class="ib-cp lost"><div class="ib-cph"><b>${esc(x.y)} · ${esc(x.t)}</b><span><b class="neg">${esc(x.res)}</b>${x.fine?' · '+eur(x.fine):''}</span></div></div>`).join('')}</div>`;}catch(e){}return h;})(ibCouponsHTML);
 

@@ -2931,3 +2931,9 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .mp-pill span{display:none}.mp-pill{padding:0 9px}@media (min-width:1100px){.mp-pill span{display:inline}.mp-pill{padding:0 10px}}
 /* v170: iletilerdeki ekran bağlantısı */
 .ib-go{display:inline;padding:0;border:0;background:none;color:#7fd4ff;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+/* v171: arayüz sadeliği */
+#top .fm-cont.v171-gizli{display:none}
+.ctl-entry .cta{flex:0 0 auto;width:auto;min-width:96px;margin:0}
+.v171-h{margin:16px 0 6px}.v171-not{display:block;margin-top:4px}
+.v171-q{margin-top:8px}
+#tabs .tab.cont.mp-rdy{background:linear-gradient(180deg,#2fb86a,#1d8a4c)}

@@ -2,9 +2,6 @@
 const TAC={hucum:{n:'Hücum',f:1.2,a:1.15},dengeli:{n:'Dengeli',f:1,a:1},savunma:{n:'Savunma',f:0.8,a:0.76},pres:{n:'Önde pres',f:1.12,a:0.94}};
 function autoXI(sq){const by=pos=>sq.filter(p=>p.pos===pos).sort((a,b)=>b.ovr-a.ovr);const att=[...by('KN'),...by('FW')].sort((a,b)=>b.ovr-a.ovr);
   const xi=[...by('KL').slice(0,1),...by('DF').slice(0,4),...by('OS').slice(0,3),...att.slice(0,3)];const rest=sq.filter(p=>!xi.includes(p)).sort((a,b)=>b.ovr-a.ovr);while(xi.length<11&&rest.length)xi.push(rest.shift());return xi.map(p=>p.k);}
-function mgrXI(){const inj=(G.m&&G.m.inj)||{},sq=squadOf(G.club).filter(p=>!inj[p.k]),ks=new Set(sq.map(p=>p.k));let xi=(G.m.xi||[]).filter(k=>ks.has(k));if(xi.length!==11){xi=autoXI(sq);G.m.xi=xi;}return xi;}
-function xiStr(){const sq=squadOf(G.club),xi=mgrXI().map(k=>sq.find(p=>p.k===k)).filter(Boolean);if(!xi.length)return myClub().str;
-  let s=xi.reduce((a,p)=>a+p.ovr,0)/xi.length;const n=pos=>xi.filter(p=>p.pos===pos).length;if(n('KL')!==1)s-=6;if(n('DF')<3)s-=3;if(n('FW')+n('KN')<1)s-=3;return Math.round((s+((G.m&&G.m.form)||0)*0.5)*10)/10;}
 function syncStr(id){const sq=squadOf(id).sort((a,b)=>b.ovr-a.ovr).slice(0,11),base=natSquad(id).sort((a,b)=>b.ovr-a.ovr).slice(0,11);
   const d=sq.reduce((a,p)=>a+p.ovr,0)/Math.max(1,sq.length)-base.reduce((a,p)=>a+p.ovr,0)/Math.max(1,base.length);const c=CLUBS[id],cs=G.cs&&G.cs[id];c.str=Math.round(c.str0+(cs&&cs.boost||0)+d);}
 function mgrRep(){const t=G.history.reduce((m,h)=>Math.max(m,LEAGUES[h.league].tier),0);return clamp(Math.round(G.p.fame*0.5+t*6+G.trophies.length*1.5),8,92);}
@@ -27,31 +24,7 @@ function mgrAdvance(){let g=0;while(g++<120&&G.phase==='season'&&(typeof mpStep!
 function mgrPlay(sim){const f=ourFixture();if(!f)return;if(!sim){const uh=f[0]===G.club;return pressConf(CLUBS[uh?f[1]:f[0]],()=>fxStart({opp:CLUBS[uh?f[1]:f[0]],usHome:uh,neutral:false,onEnd:(gu,go,sc)=>mgrFinish(gu,go,f,sc)}));}const usHome=f[0]===G.club,opp=CLUBS[usHome?f[1]:f[0]],me=myClub(),T=tacT(opp),S=xiStr();
   const tpf=(G.m.tp&&G.m.tp.f)||'denge',[lh,la]=lambdas(usHome?S:opp.str,usHome?opp.str:S),lu=(usHome?lh:la)*T.f*(tpf==='hucum'?1.06:1),lo=(usHome?la:lh)*T.a*(tpf==='savunma'?0.93:1);
   if(sim){const _M=typeof mgrMods==='function'?mgrMods(opp):{u:1,o:1};const gu=poisson(lu*_M.u),go=poisson(lo*_M.o);return mgrFinish(gu,go,f,[]);}
-  MR={mgr:true,home:usHome?me:opp,away:usHome?opp:me,usHome,us:me,opp,min:0,gu:0,go:0,lu,lo,ev:[],ei:0,fast:false,timer:0,comp:`${curLeague().short} · ${G.s.week}. Hafta`,scorers:[],end:90+rint(1,4),half:1};
-  mgrHalf(1);openMatchView();$('#tabs').hidden=true;$('#mvStage').hidden=true;$('#mvFeed').innerHTML='';$('#mvDone').hidden=true;$('#mvSub').hidden=true;$('#mvFast').hidden=false;$('#mvFast').textContent='Hızlandır';
-  mgrBoard();feed(0,`Hakem başlama düdüğünü çaldı. ${meN()} kenarda; taktik: ${T.n}.`,'');MR.timer=setTimeout(mgrStep,500);}
-function mgrHalf(h){const T=TAC[G.m.tac],a=h===1?1:46,b=h===1?45:MR.end,ratio=(b-a+1)/90,sq=squadOf(G.club),xi=mgrXI().map(k=>sq.find(p=>p.k===k)).filter(Boolean);
-  const lu=MR.lu/T.f*T.f,lo=MR.lo;for(let i=poisson(lu*ratio);i>0;i--)MR.ev.push({m:rint(a,b),k:'us'});for(let i=poisson(lo*ratio);i>0;i--)MR.ev.push({m:rint(a,b),k:'opp'});
-  for(let i=rint(0,2);i>0;i--)MR.ev.push({m:rint(a,b),k:'fl'});if(h===1)MR.ev.push({m:45,k:'ht'});MR.ev.sort((x,y)=>x.m-y.m);MR.xi=xi;}
-function mgrBoard(){const h=MR.home,a=MR.away,hs=MR.usHome?MR.gu:MR.go,as=MR.usHome?MR.go:MR.gu;
-  $('#mvBoard').innerHTML=`<div class="team ${MR.usHome?'me':''}">${crestSVG(h,30)}<b>${esc(h.name)}</b></div><div class="mv-mid"><div class="mv-score">${hs}-${as}</div><div class="mv-min">${Math.min(MR.min,90)}’${MR.min>90?'+'+(MR.min-90):''}</div><div class="mv-comp">${esc(MR.comp)}</div></div><div class="team ${MR.usHome?'':'me'}">${crestSVG(a,30)}<b>${esc(a.name)}</b></div><div class="mv-cond"><span>Taktik</span><b>${TAC[G.m.tac].n}</b></div>`;}
-function mgrStep(){if(!MR||!MR.mgr)return;
-  while(MR.ei<MR.ev.length&&MR.ev[MR.ei].m<=MR.min){const e=MR.ev[MR.ei++];let anim=false;
-    if(e.k==='us'){MR.gu++;const pl=MR.xi.length?wpick(MR.xi.filter(p=>p.pos!=='KL').map(p=>[p,GWP[p.pos]*Math.max(0.3,(p.ovr-60)/10)])):null,n=pl?pl.name:teamScorer(G.club);MR.scorers.push(pl?pl.k:null);
-      const as=pick(mgrNames('us').filter(p=>p.name!==n));e.who=n;e.ast=as?as.name:null;feed(e.m,`GOL! ${esc(MR.us.name)} — ${esc(n)} ağları buldu.${e.ast?` Asist: ${esc(e.ast)}.`:''}`,'us');anim=true;}
-    else if(e.k==='opp'){MR.go++;const n=teamScorer(MR.opp.id),as=pick(mgrNames('opp').filter(p=>p.name!==n));e.who=n;e.ast=as?as.name:null;feed(e.m,`Gol. ${esc(MR.opp.name)} — ${esc(n)} skoru değiştirdi.`,'opp');anim=true;}
-    else if(e.k==='mc'){const sh=pick(mgrNames(e.side));e.who=sh?sh.name:'';const tn=e.side==='us'?MR.us.name:MR.opp.name;feed(e.m,e.res==='save'?`${esc(tn)}: ${esc(e.who)} vurdu, kaleci çıkardı!`:e.res==='post'?`${esc(tn)}: ${esc(e.who)}’in şutu direkten döndü!`:`${esc(tn)}: ${esc(e.who)} az farkla dışarı vurdu.`,'');anim=true;}
-    else if(e.k==='fl'){const n=MR.xi.length?pick(MR.xi).name:'Oyuncu';feed(e.m,pick([`${esc(n)} sarı kart gördü.`,`${esc(n)} sakatlık geçirdi ama devam ediyor.`,`${esc(teamScorer(MR.opp.id))} sert bir faul yaptı.`]),'');}
-    else if(e.k==='ht'){MR.min=45;mgrBoard();clearTimeout(MR.timer);$('#mvFast').hidden=true;
-      feed(45,`İlk yarı bitti: ${MR.gu}-${MR.go}. Soyunma odasında taktik kararı senin.<span class="kn-btns">${Object.entries(TAC).map(([k,t])=>`<button class="${k===G.m.tac?'cta sm':'btn'}" type="button" data-act="mgrHT" data-k="${k}">${t.n}</button>`).join('')}</span>`,'me knock');return;}
-    mgrBoard();if(anim&&!MR.fast&&MR.mp){mpAnim(e,()=>{if(MR&&MR.mgr)MR.timer=setTimeout(mgrStep,200);});return;}}
-  if(MR.min>=MR.end)return mgrEnd();
-  MR.min++;mgrBoard();MR.timer=setTimeout(mgrStep,MR.fast?14:70);}
-function mgrHT(k){if(!MR||!MR.mgr)return;document.querySelectorAll('.kn-btns').forEach(e=>e.remove());const T0=TAC[G.m.tac];G.m.tac=k;const T=TAC[k];MR.lu=MR.lu/T0.f*T.f;MR.lo=MR.lo/T0.a*T.a;
-  MR.ev=MR.ev.filter(e=>e.m<=45);MR.ei=MR.ev.length;mgrHalf(2);MR.ev.sort((x,y)=>x.m-y.m);MR.ei=MR.ev.findIndex(e=>e.m>45);if(MR.ei<0)MR.ei=MR.ev.length;
-  feed(46,`İkinci yarı başladı. Taktik: ${T.n}.`,'');$('#mvFast').hidden=false;MR.min=46;mgrBoard();MR.timer=setTimeout(mgrStep,400);}
-function mgrEnd(){clearTimeout(MR.timer);feed(MR.end,`Maç sona erdi: ${esc(MR.home.name)} ${MR.usHome?MR.gu:MR.go}-${MR.usHome?MR.go:MR.gu} ${esc(MR.away.name)}`,'');
-  $('#mvFast').hidden=true;const d=$('#mvDone');d.hidden=false;d.onclick=()=>{closeMatchView();$('#tabs').hidden=false;const r=MR;MR=null;mgrFinish(r.gu,r.go,ourFixture(),r.scorers);};}
+  }
 function mgrFinish(gu,go,f,scorers){const usHome=f[0]===G.club,hg=usHome?gu:go,ag=usHome?go:gu,opp=CLUBS[usHome?f[1]:f[0]],m=G.m;
   const rd=G.s.fixtures[G.s.week-1].map(([h,a])=>{if(h===f[0]&&a===f[1])return [h,a,hg,ag];const [x,y]=simScore(h,a);return [h,a,x,y];});G.s.results.push(rd);creditRound(rd,null);
   const win=gu>go,draw=gu===go,exp=(xiStr()-opp.str)/20+(usHome?0.1:-0.1);m.st.gf+=gu;m.st.ga+=go;if(win)m.st.w++;else if(draw)m.st.d++;else m.st.l++;

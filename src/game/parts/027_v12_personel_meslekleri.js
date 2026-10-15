@@ -32,7 +32,6 @@ function staffCup(){const cu=cupToday();if(!cu)return;const {c:k,r}=cu,me=myClub
   (G.s.cupDays=G.s.cupDays||[]).push(G.s.day);cupApply(k,gu,go,notes);msg('report',`${k.name} · ${r.n}: ${me.name} ${gu}-${go} ${opp.name}`,notes.join(' '));nextDay();save();render();
   openModal(`<h3>${esc(k.name)} · ${esc(r.n)}</h3><div class="res-board"><div class="team">${crestSVG(me,38)}<b>${esc(me.name)}</b></div><div class="res-score">${gu}-${go}</div><div class="team">${crestSVG(opp,38)}<b>${esc(opp.name)}</b></div></div><ul class="notes">${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><button class="cta" data-act="closeModal">Devam</button>`);}
 function staffAdvance(){let g=0;while(g++<60&&G.phase==='season'&&(typeof mpStep!=='function'||mpStep())){const t=dayType(G.s.day);if(t==='mac'||t==='kupa')break;staffDay();nextDay();}save();render();window.scrollTo(0,0);}
-function staffDay(){if(G.staff==='scout'){const j=jobInit();if(j.trip&&j.trip.days>0){j.trip.days--;if(j.trip.days<=0){scReveal(j.trip.lid,3);j.trip=null;}}}}
 function staffSeasonEnd(){const j=jobInit(),pos=tablePos(),c=myClub(),yl=seasonLabel(G.s.year);G.phase='off';coachSeasonEnd();qualNext();j.seasons++;if(G.lic)G.lic.exp++;
   let score=0;if(G.staff==='yrd')score=(j.pts*1.4+(j.tr-50)*0.6)*(UP('yr_kurs')?1.15:1);else if(G.staff==='scout')score=(j.hits||0)*14+(j.repsN||0)*3+(j.rqOk||0)*12;else score=(j.correct||0)*5-(j.wrong||0)*4-(j.reinj||0)*6+(j.healed||0)*2;
   const prom=score>=26+j.lvl*8&&j.lvl<STF[G.staff].r.length-1;j.rep=clamp(j.rep+score*0.35,0,100);
@@ -65,28 +64,13 @@ function yrSet(kind,k){const j=jobInit(),f=ourFixture();if(!f)return;const w=j.w
 const SC_POS={KL:'kaleci',DF:'defans',OS:'orta saha',KN:'kanat',FW:'forvet'};
 function scTaskNew(){const j=jobInit(),c=myClub(),pos=pick(Object.keys(SC_POS)),age=pick([21,23,25,28]),bud=Math.round(clubBudget(c)*rnd(0.04,0.1)*VALF/EUR_TL/1e5)*1e5;
   j.task={pos,age,bud:Math.max(bud,100000),due:Math.min(G.s.day+70,G.s.cal[G.s.cal.length-1]-5),done:false};msg('board','Yeni gözlem görevi',`Yönetim ${SC_POS[pos]} mevkisi için en fazla ${age} yaşında, ${eur(j.task.bud)} bütçeli bir oyuncu istiyor. Son tarih ${fmtDate(dateOf(j.task.due))}.`);}
-function scLeagues(){const t=curLeague().tier,j=jobInit();return Object.keys(LEAGUES).filter(l=>!LEAGUES[l].youth&&LEAGUES[l].tier>=Math.max(3,t-2)&&LEAGUES[l].tier<=Math.min(9,t+1+j.lvl));}
 function scGo(lid){const j=jobInit();if(j.trip)return toast('Zaten yoldasın');const far=LEAGUES[lid].cc!==curLeague().cc;j.trip={lid,days:far?(UP('sc_ucus')?2:3):1};if(far)G.p.money=Math.max(0,G.p.money-0);toast(`${LEAGUES[lid].short} gözlemine çıktın (${j.trip.days} gün)`);save();render();}
-function scReveal(lid,n){const j=jobInit(),t=j.task;const pool=[];for(const c of leagueClubs(lid))if(c.id!==G.club)for(const p of squadOf(c.id))pool.push(Object.assign({},p,{club:c.id}));
-  pool.sort((a,b)=>((t&&a.pos===t.pos?8:0)+potOf(a)-a.age*0.4)<((t&&b.pos===t.pos?8:0)+potOf(b)-b.age*0.4)?1:-1);const got=pool.slice(0,12).sort(()=>Math.random()-0.5).slice(0,n);
-  for(const p of got){j.kn[p.k]=Math.min(3,(j.kn[p.k]||0)+1);if(!j.short.includes(p.k))j.short.unshift(p.k);}if(j.short.length>18)j.short.length=18;
-  msg('scout','Gözlem dönüşü',`${LEAGUES[lid].short} turunda ${got.map(p=>`${p.name} (${CLUBS[p.club].short}, ${p.age})`).join(', ')} dikkatini çekti.`);}
-function scKnowRange(p){const j=jobInit(),kv=j.kn[p.k]||0,pt=potOf(p);const w=[8,5,3,1][kv];const r=srng(p.k+'sk'),off=Math.floor(r()*(w+1));return [pt-off,pt-off+w];}
-function scVideo(k){const j=jobInit();if(j.vday===G.s.day)return toast('Bugün video analiz yaptın');j.vday=G.s.day;j.kn[k]=Math.min(3,(j.kn[k]||0)+1);toast('Rapor netleşti');save();render();}
 function scReport(k){const j=jobInit(),t=j.task,p=pByKey(k);if(!t||t.done||!p)return;const cid=(G.tx&&G.tx[k])||p.home,price=pValue(p);
   let fit=0;const notes=[];if(p.pos===t.pos)fit+=3;else notes.push('mevki uymuyor');if(p.age<=t.age)fit+=2;else notes.push('yaş sınırı aşıldı');if(price<=t.bud)fit+=2;else notes.push('bütçe aşıldı');const pt=potOf(p);fit+=pt>=myClub().str+3?2:pt>=myClub().str-2?1:0;
   j.repsN=(j.repsN||0)+1;t.done=true;const ok=fit>=6;j.reps.unshift({k,y:seasonLabel(G.s.year),ok,ovr:p.ovr,pot:pt,club:cid});
   if(ok){G.tx=G.tx||{};G.tx[k]=G.club;txNote(k,G.club,typeof price==='number'&&price<1e10?price:undefined);syncStr(G.club);syncStr(cid);j.hits=(j.hits||0)+1;j.rep=clamp(j.rep+4,0,100);msg('board','Raporun kabul edildi',`${p.name} için hazırladığın rapor yönetimi ikna etti. Oyuncu ${eur(price)} bedelle kadromuza katıldı.`);}
   else msg('board','Rapor reddedildi',`Yönetim ${p.name} önerisini uygun bulmadı (${notes.join(', ')||'beklenen kalitede değil'}).`);
   setTimeout(()=>{if(G&&G.staff==='scout'&&G.phase==='season')scTaskNew();save();render();},10);save();render();}
-function scHTML(){const j=jobInit(),t=j.task;
-  const task=t?`<section class="panel"><p class="sub-h"><span>Görev</span><span>${t.done?'Tamamlandı':'Son tarih '+fmtDate(dateOf(t.due))}</span></p><div class="task"><b>${SC_POS[t.pos].toLocaleUpperCase('tr-TR')} · en fazla ${t.age} yaş · bütçe ${eur(t.bud)}</b><small>Uygun oyuncuyu bul, gözlem raporunu netleştir ve yönetime öner.</small></div></section>`:'';
-  const trip=j.trip?`<p class="pill warn">${LEAGUES[j.trip.lid].short} gözlemindesin · ${j.trip.days} gün</p>`:'';
-  const go=`<section class="panel"><p class="sub-h"><span>Gözlem turu</span><span>${trip||'Lig seç'}</span></p><div class="filt">${scLeagues().map(l=>`<button class="chip" data-act="scGo" data-k="${l}">${flagImg(CC3[LEAGUES[l].cc]||'TUR','fl-row')} ${LEAGUES[l].short}</button>`).join('')}</div><p class="muted" style="margin:6px 0 0">Yurt içi tur 1 gün, yurt dışı 3 gün sürer. Döndüğünde gözlem listen güncellenir.</p></section>`;
-  const sl=j.short.map(k=>{const p=pByKey(k);if(!p)return '';const cid=(G.tx&&G.tx[k])||p.home,[lo,hi]=scKnowRange(p),kv=j.kn[k]||0;
-    return `<div class="scrow"><button class="trrow" data-act="pcard" data-id="${cid}" data-k="${k}"><span class="tp">${dpTag(p)}</span><span class="tn"><b>${esc(p.name)}</b><small>${flagImg(p.nat,'fl-row')} ${p.age} · ${CLUBS[cid]?esc(CLUBS[cid].short):''} · ${eur(pValue(p))}</small></span><span class="to"><b>${R200(p.ovr)}</b><small>POT ${potTxt(lo,hi)}</small></span><span class="kn">${'●'.repeat(kv)}${'○'.repeat(3-kv)}</span></button><div class="sc-b"><button class="btn sm" data-act="scVid" data-k="${k}">Video analiz</button>${t&&!t.done?`<button class="cta sm" data-act="scRep" data-k="${k}">Yönetime öner</button>`:''}</div></div>`;}).join('');
-  const reps=j.reps.slice(0,10).map(r=>{const p=pByKey(r.k);return p?`<li><span>${r.y}</span><b>${esc(p.name)}</b><em class="${r.ok?'res-w':'res-l'}">${r.ok?`alındı · şimdi ${R200(p.ovr)}`:'red'}</em></li>`:'';}).join('');
-  return `${task}${go}<section class="panel"><p class="sub-h"><span>Gözlem listesi</span><span>${j.short.length}</span></p>${sl||'<p class="muted">Henüz kimseyi izlemedin. Bir gözlem turuna çık.</p>'}</section>${reps?`<section class="panel"><p class="sub-h"><span>Raporlarım</span></p><ul class="cupres">${reps}</ul></section>`:''}`;}
 /* ---------- doktor ---------- */
 const DR_INJ=[['Arka adale (hamstring) gerilmesi',['Sprint sırasında uyluk arkasında ani batma','Bacağını bükerken ağrı','Topallayarak oyundan çıktı'],[2,4]],
   ['Ayak bileği burkulması',['Dış bilekte şişlik ve morarma','İçe dönüşte keskin ağrı','Basınca ağrı artıyor'],[1,3]],
@@ -130,4 +114,4 @@ function viewStaffClub(){const c=myClub(),cs=cstate(G.club);return `<h2 class="h
   <section class="panel"><p class="sub-h"><span>Sözleşmen</span></p><dl class="offer-terms"><div><dt>Görev</dt><dd>${esc(G.job.title)}</dd></div><div><dt>Haftalık</dt><dd>${money(G.contract.wage)}</dd></div><div><dt>Süre</dt><dd>${G.contract.years} yıl</dd></div><div><dt>Bütçe</dt><dd>${money(clubBudget(c))}</dd></div></dl></section>`;}
 
 ICON.club=ICON.board;
-{const _ov=openMatchView;openMatchView=function(){const c=$('#mpCv');if(c)c.hidden=true;return _ov();};const _mp=mgrPlay;mgrPlay=function(sim){const r=_mp(sim);if(!sim&&MR&&MR.mgr)mpSetup();return r;};const _bp=buyPlayer;buyPlayer=function(id,k){if(!trWin())return toast('Transfer dönemi kapalı · '+twNextTxt());return _bp(id,k);};}
+{const _ov=openMatchView;openMatchView=function(){const c=$('#mpCv');if(c)c.hidden=true;return _ov();};const _bp=buyPlayer;buyPlayer=function(id,k){if(!trWin())return toast('Transfer dönemi kapalı · '+twNextTxt());return _bp(id,k);};}
