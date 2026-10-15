@@ -902,8 +902,14 @@
         var show = function () { return showGoalEffect(nameOf(scorer) + (own ? ' (k.k.)' : ''), teamObj(T).name); };
         Promise.resolve(show()).then(function () {
             if (S.sid !== sidNow || S.hold !== 'goal') return;
-            if (S.replayOn && startReplay()) return;      // gol tekrarı açıksa tekrar oynar, bitince maç devam eder
-            S.hold = null; S.last = performance.now();
+            var go = function () {
+                if (S.sid !== sidNow || S.hold !== 'goal') return;
+                if (S.replayOn && startReplay()) return;      // gol tekrarı açıksa tekrar oynar, bitince maç devam eder
+                S.hold = null; S.last = performance.now();
+            };
+            /* [v186] TV akışı: GOL bandı kalkınca kamera sevinçteki golcü ve arkadaşlarında kalır (sevinç → tekrar → santra); eskiden bant kalkar kalkmaz tekrar başlıyordu, sevinç görünmüyordu */
+            var cm = S.skip || G.__abLive ? 0 : S.preset >= 4 ? 900 : S.preset >= 2 ? 1500 : 2300;
+            if (cm > 0 && !own) setTimeout(go, cm); else go();
         });
     }
     /* KART: sarı kart sessiz geçer (klasik motordaki gibi yalnızca kayıt + ses; hakem kartı kısa süre havaya kaldırır); kırmızıda kısa bir sahne gösterilir ve maç saati durur.
@@ -2394,13 +2400,14 @@
         var m = ev.meta || {};
         switch (ev.type) {
             case 'GOAL': case 'VAR': case 'POST': return ev.type;
-            case 'SHOT': return m.tag === 'PEN' ? 'PEN' : ((m.xg || 0) >= .10 || (m.on && (m.xg || 0) >= .05)) ? 'CCC' : '';      // net gol fırsatı (FM: clear-cut chance)
+            case 'SHOT': var avh = S.sim && S.sim.av && S.sim.av.XG; return m.tag === 'PEN' ? 'PEN' : ((m.xg || 0) >= (avh ? .15 : .10) || (m.on && (m.xg || 0) >= (avh ? .07 : .05))) ? 'CCC' : '';      // net gol fırsatı (FM: clear-cut chance) · [v186] gerçek xG ile eşik .15 (StatsBomb: penaltı dışı şutların %20'si; maç başına ~8–12 an)
+            case 'CORNER': return S.sim && S.sim.av && S.sim.av.HL ? 'COR' : '';      // [v186] önemli an: korner (duran top ayarı)
+            case 'FOUL': if (m.pen) return 'PENF'; if (S.sim && S.sim.av && S.sim.av.HL && ev.team >= 0) { var gxF = S.sim.atkGoalX(1 - ev.team); if (Math.hypot(gxF - ev.x, 34 - ev.y) < 28) return 'FKD'; } return '';      // [v186] kaleye 28 m'den yakın serbest vuruş
             case 'CARD': return m.card === 'R' ? 'RED' : '';
-            case 'FOUL': return m.pen ? 'PENF' : '';
         }
         return '';
     }
-    var FM_LBL = { GOAL: 'GOL', VAR: 'VAR', POST: 'DİREK', PEN: 'PENALTI', PENF: 'PENALTI', CCC: 'GOL FIRSATI', RED: 'KIRMIZI KART', KO: 'BAŞLAMA' };
+    var FM_LBL = { GOAL: 'GOL', VAR: 'VAR', POST: 'DİREK', PEN: 'PENALTI', PENF: 'PENALTI', CCC: 'GOL FIRSATI', RED: 'KIRMIZI KART', KO: 'BAŞLAMA', COR: 'KORNER', FKD: 'SERBEST VURUŞ' };
     function fmStartClip(F, ev, kind) {
         var R = S.ring, f1 = R.n - 1, lo = Math.max(0, R.n - RING + 3), T = ev.team, pl = S.sim.players, b = R.buf, i, run = 0, st = -1;
         while (f1 > lo + 2) { var oq = (f1 % RING) * FS, op = ((f1 - 1) % RING) * FS; if ((b[oq + 5] === 1 && b[op + 5] !== 1) || Math.hypot(b[oq + 1] - b[op + 1], b[oq + 2] - b[op + 2]) > 3) f1--; else break; }      // [fm] olay adiminda olu topa konan top oynatima alinmaz
@@ -2442,7 +2449,8 @@
         if (F.ph === 'clip') {
             F.t += dt; F.fc += dt * 25 * liveSpeed() * .9 * Math.max(.75, Math.min(1.5, Math.sqrt(S.lk || 1)));
             if (F.fc >= F.f1) {                                                                 // olay karesi: ertelenen olaylar işlenir, oyun canlı devam eder
-                F.fc = F.f1; F.ph = 'tail'; F.until = sim.t + FM_TAIL; var pe = F.pend; F.pend = []; F.rp = null;      // [fm] oynatim olay karesinde biter: yeniden kurulan aksiyon durumu canliyla ayni ana gelir, canliya devredilir
+                F.fc = F.f1; F.ph = 'tail'; F.until = sim.t + (F.kind === 'COR' || F.kind === 'FKD' ? 13 : FM_TAIL);      // [v186] duran topta vuruş ve sonucu da canlı gösterilir
+                var pe = F.pend; F.pend = []; F.rp = null;      // [fm] oynatim olay karesinde biter: yeniden kurulan aksiyon durumu canliyla ayni ana gelir, canliya devredilir
                 S.last = performance.now(); S.acc = 0; S.pace = .9;
                 for (var i = 0; i < pe.length; i++) { try { handle(pe[i]); } catch (e) { warn('olay ' + pe[i].type, e); } }
             }
@@ -2901,7 +2909,8 @@
             if (k >= 2 && b[(k % RING) * FS + 5] !== 1 && R.n - 1 - k <= 12) S.gb = gtInit(b, (k % RING) * FS, ((k - 1) % RING) * FS, gi);
         }
         var g2 = S.gb; if (!g2) return;
-        var h = Math.min(.05, dt || .016) * .8; g2.acc = (g2.acc || 0) + h; if (g2.acc < 3) { var st = Math.ceil(h / .01); for (var j = 0; j < st; j++) gtStep(g2, h / st); }
+        var h = Math.min(.05, dt || .016); g2.acc = (g2.acc || 0) + h; if (g2.acc < 4) {      // [v186] file fiziği gerçek zamanlı (eskiden bilerek .8 hızla)
+                 var st = Math.ceil(h / .01); for (var j = 0; j < st; j++) gtStep(g2, h / st); }
         v.bx = g2.x; v.by = g2.y; v.bz = g2.z; v.owner = -1;
     }
     /* [v183] gol sevinci (yalnızca görüntü, canlı 'goal' beklemesinde): motor gol anında durur ve eskiden 22 oyuncu koşunun ortasında donup kalıyordu.
