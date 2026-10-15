@@ -235,6 +235,7 @@ game/parts/218_v181_ses_ayari.js
 game/parts/219_v182_oda_surum_ve_lig_baslangici.js
 game/parts/221_v184_oda_ortak_lig.js
 game/parts/214_v177_canli_mac_tutarliligi.js
+game/parts/220_v183_gol_fizigi.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
