@@ -2967,8 +2967,6 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .v172-at small{font-size:10px;font-weight:600;opacity:.75}
 .v172-at.bos:not(.on){opacity:.55}
 [data-bos]:not([aria-current]){opacity:.5}
-.ui-mi[data-bos]{flex-wrap:wrap}.ui-mi[data-bos]::after{content:'henüz veri yok';flex:1 0 100%;font-size:10px;opacity:.85;padding-left:24px;margin-top:-4px}
-.nav-i[data-bos]::after{content:'boş';margin-left:auto;font-size:10px;opacity:.8}
 .v172-ip{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:4px;padding:0;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.08);color:inherit;font-size:10px;font-weight:800;line-height:1;cursor:help;vertical-align:middle}
 /* v172 yarim: maaş gösterimi — yapay zekâ oyuncusu maaşı "tahmini" işareti (kaynak açıklaması title'da) */
 .wg-est{font-size:.7em;font-weight:600;opacity:.72;margin-left:2px;border-bottom:1px dotted currentColor;cursor:help;white-space:nowrap}
@@ -3201,6 +3199,18 @@ body.fut .staff-card{background:radial-gradient(ellipse 50% 90% at 100% 0%,rgba(
 .team b{overflow-wrap:normal;word-break:normal;hyphens:manual}
 .prep-opp b,.ticket .team b,.mt-teams .team b{font-size:clamp(12px,4.2vw,18px)}
 body.fut table thead th,body.fut table thead tr{background:#0f3a22;color:#f4f7ee;border-color:rgba(244,247,238,.15)}
+/* v174: üst çubukta takvim */
+.v174-tarih{cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}.v174-tarih:hover,.v174-tarih:focus-visible{background:rgba(255,255,255,.08);outline:none}
+.v174-ic{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:5px;opacity:.85}
+.v174-serit{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:10px 0 12px}
+.v174-g{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding:7px 3px;border-radius:9px;border:1px solid var(--line,#2c3b33);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}
+.v174-g b{font-size:17px;line-height:1}.v174-g small,.v174-dn{font-size:10.5px;opacity:.75}.v174-dl{font-size:10px;opacity:.8;text-align:center;overflow-wrap:anywhere}
+.v174-g.bugun{border-color:#ffc21a;box-shadow:0 0 0 1px #ffc21a inset}.v174-g.mac{background:rgba(255,194,26,.12)}
+.v174-g>span:last-child,.v174-g>.v5chip{max-width:100%;font-size:10px}
+@media (max-width:420px){.v174-serit{gap:4px}.v174-g{padding:6px 2px}.v174-g b{font-size:15px}}
+.v174-ic-b{width:22px;height:22px;vertical-align:-3px;margin-right:8px}
+#modalCard .v5ag button{display:grid !important;grid-template-columns:96px minmax(0,auto) minmax(0,1fr);text-align:left;align-items:center;min-height:0;height:auto;padding:7px 8px;transform:none}
+#modalCard .v5ag .dt{display:block;text-align:left}#modalCard .v5ag .dt small{display:block;position:static}#modalCard .v5ag em{display:block;text-align:left}
 </style>
 </head>
 <body>
@@ -7749,7 +7759,7 @@ ACTX.calM=el=>{CALM+=+el.dataset.k;render();};
 function viewStats(){const s=G.s,T=table(),me=T.find(r=>r.id===G.club)||{},pos=T.indexOf(me)+1;let hw=0,hd=0,hl=0,aw=0,ad=0,al=0,big=null;const form=[];
   s.results.forEach(rd=>{const r=rd&&rd.find(x=>x[0]===G.club||x[1]===G.club);if(!r)return;const home=r[0]===G.club,us=home?r[2]:r[3],th=home?r[3]:r[2],k=us>th?'w':us===th?'d':'l';
     if(home){if(k==='w')hw++;else if(k==='d')hd++;else hl++;}else{if(k==='w')aw++;else if(k==='d')ad++;else al++;}form.push(k);if(k==='w'&&(!big||us-th>big[0]))big=[us-th,`${us}-${th} ${esc(CLUBS[home?r[1]:r[0]].short)}`];});
-  const L=(k,w)=>{const ls=leaders(k).slice(0,8);return `<section class="panel"><p class="sub-h"><span>${w} krallığı</span><span>${esc(curLeague().short)}</span></p><ul class="cupres">${ls.map((x,i)=>`<li class="${x.c===G.club?'me':''}"><span>${i+1}.</span><b>${esc(x.n)}<small style="display:block;color:var(--chalk-3);font-size:11.5px">${esc(CLUBS[x.c]?CLUBS[x.c].short:'')}</small></b><em>${x.v}</em></li>`).join('')||'<li><b>Henüz veri yok</b></li>'}</ul></section>`;};
+  const L=(k,w)=>{const ls=leaders(k).slice(0,8);return `<section class="panel"><p class="sub-h"><span>${w} krallığı</span><span>${esc(curLeague().short)}</span></p><ul class="cupres">${ls.map((x,i)=>`<li class="${x.c===G.club?'me':''}"><span>${i+1}.</span><b>${esc(x.n)}<small style="display:block;color:var(--chalk-3);font-size:11.5px">${esc(CLUBS[x.c]?CLUBS[x.c].short:'')}</small></b><em>${x.v}</em></li>`).join('')||'<li><b>Sezon başlayınca dolacak</b></li>'}</ul></section>`;};
   const mine=Object.values(s.ps||{}).filter(p=>p.c===G.club).sort((a,b)=>(b.g||0)-(a.g||0)).slice(0,8);
   const bar=(l,v,mx)=>`<div class="fm-bar"><span>${l}</span><i><em style="width:${Math.min(100,v/Math.max(1,mx)*100)}%"></em></i><b>${v}</b></div>`;
   return `<h2 class="h">İstatistik</h2><section class="panel"><p class="sub-h"><span>${esc(myClub().name)}</span><span>${pos?pos+'. sıra':''}</span></p><div class="strip"><div><b>${me.o||0}</b><span>Maç</span></div><div><b>${me.g||0}-${me.b||0}-${me.m||0}</b><span>G-B-M</span></div><div><b>${me.a||0}:${me.y||0}</b><span>Gol</span></div><div><b>${me.p||0}</b><span>Puan</span></div></div>
@@ -10277,7 +10287,7 @@ function hubAlerts(){if(!G||G.mode!=='mgr'||!G.m||G.phase!=='season')return '';c
 viewMgrHub=(old=>function(){const h=old.apply(this,arguments);try{if(G.phase==='season')return h+hubAlerts();}catch(e){}return h;})(viewMgrHub);
 /* ---------- ödüller: sezon içi yarış ---------- */
 viewAwards=(old=>function(){const h=old.apply(this,arguments);try{if(G&&G.s&&G.phase==='season'){const lid=G.s.league,g=lgLeaders(lid,'g').slice(0,5),a=lgLeaders(lid,'a').slice(0,5),r=lgLeaders(lid,'g').filter(x=>x.ap>=Math.max(3,(G.s.results.length||1)*0.6)).map(x=>Object.assign({},x,{av:x.rt/x.ap})).sort((x,y)=>y.av-x.av).slice(0,5);
-    const nm=x=>x.me?esc(x.p.name):`<span class="plink" data-act="pcard" data-id="${x.c}" data-k="${x.p.k}">${esc(x.p.name)}</span>`;const col=(t,L,f)=>`<div class="aw-race"><p class="sub-h"><span>${t}</span></p><ol>${L.map(x=>`<li>${CLUBS[x.c]?crestSVG(CLUBS[x.c],14):''} ${nm(x)} <b>${f(x)}</b></li>`).join('')||'<li class="muted">Henüz veri yok</li>'}</ol></div>`;
+    const nm=x=>x.me?esc(x.p.name):`<span class="plink" data-act="pcard" data-id="${x.c}" data-k="${x.p.k}">${esc(x.p.name)}</span>`;const col=(t,L,f)=>`<div class="aw-race"><p class="sub-h"><span>${t}</span></p><ol>${L.map(x=>`<li>${CLUBS[x.c]?crestSVG(CLUBS[x.c],14):''} ${nm(x)} <b>${f(x)}</b></li>`).join('')||'<li class="muted">Sezon başlayınca dolacak</li>'}</ol></div>`;
     return h.replace('<h2 class="h">Ödüller</h2>',`<h2 class="h">Ödüller</h2><section class="panel"><p class="sub-h"><span>${esc(curLeague().short)} · ödül yarışı (şu an)</span><span>${G.s.results.length}. hafta</span></p><div class="aw-races">${col('Gol krallığı',g,x=>x.g)}${col('Asist krallığı',a,x=>x.a)}${col('Sezonun oyuncusu adayları',r,x=>dec(x.av,2))}</div></section>`);}}catch(e){console.warn(e);}return h;})(viewAwards);
 /* ---------- kayıt ---------- */
 Object.assign(XV,{trep:()=>viewTrep(),hist:()=>viewHist()});
@@ -21687,7 +21697,7 @@ const v172Key=a=>a?a.tab+(a.k?':'+a.k:'')+(a.l?':'+a.l:''):'';
 /* meslek bazında aileden çıkan ya da gizlenen öğeler */
 function v172Kural(){const pl=isPl(),ref=typeof isRef==='function'&&isRef(),td=typeof isTD==='function'&&isTD();
   return {ayri:new Set([...(td?['nt']:[]),...(pl?['sm']:[])]),gizle:new Set(ref?['_cz']:[])};}
-/* veri yokken boş kalan ekranlar (menüde soluk, "henüz veri yok") */
+/* veri yokken boş kalan ekranlar (menüde hafif soluk) */
 function v172Bos(key){try{const m=G.m||{},n=o=>Object.keys(o||{}).length;
   switch(key){case 'sezon':return !n(v165().sz);case 'ssum':return !n(G.ssum);case 'awards':return !n(G.awards);case 'bdo':return !n(bdoAll());
     case 'loans':return !(n(m.lout)||n(m.loans));case 'mrep':return !((m.an)||[]).length;case 'nt':return G.mode==='mgr'&&!(m.nt||m.ntOff);
@@ -21714,11 +21724,11 @@ uiGroups=(old=>{window.v172UiEski=old;return function(){const L=old.apply(this,a
 /* aile öğesi: üyelerinden biri açıksa etkin sayılır */
 function v172FamCur(){if(!V172_SON)return null;for(const id in V172_SON)if(V172_SON[id].mem.some(x=>x[2].tab!=='_cz'&&navOn(x[2])))return id;return null;}
 navOn=(old=>function(a){if(a&&a.fam){const S=V172_SON&&V172_SON[a.fam];if(S)return S.mem.some(x=>x[2].tab!=='_cz'&&old(x[2]));}return old.apply(this,arguments);})(navOn);
-uiGoAttrs=(old=>function(a){let s=old.apply(this,arguments);try{if(a&&a.fam)s+=` data-fam="${a.fam}"`;if(a&&a.bos)s+=' data-bos="1" title="Henüz veri yok"';}catch(e){}return s;})(uiGoAttrs);
+uiGoAttrs=(old=>function(a){let s=old.apply(this,arguments);try{if(a&&a.fam)s+=` data-fam="${a.fam}"`;if(a&&a.bos)s+=' data-bos="1"';}catch(e){}return s;})(uiGoAttrs);
 /* sayfa üstündeki alt sekmeler */
 function v172AltHTML(id,skip){const S=V172_SON&&V172_SON[id];if(!S)return '';const mem=S.mem.filter(x=>!skip||!skip(x));if(!mem.length)return '';
   return `<nav class="v172-alt" aria-label="${esc(S.l)}">${mem.map(([,l,a])=>{const k=v172Key(a),on=a.tab!=='_cz'&&navOn(a),bos=v172Bos(k);
-    return `<button class="v172-at${on?' on':''}${bos?' bos':''}" ${uiGoAttrs(a)} ${on?'aria-current="page"':''}${bos?' title="Henüz veri yok"':''}>${esc(V172_ALTAD[k]||l)}${bos?'<small>henüz veri yok</small>':''}</button>`;}).join('')}</nav>`;}
+    return `<button class="v172-at${on?' on':''}${bos?' bos':''}" ${uiGoAttrs(a)} ${on?'aria-current="page"':''}>${esc(V172_ALTAD[k]||l)}</button>`;}).join('')}</nav>`;}
 function v172Alt(){try{const v=$('#view');if(!v||v.querySelector(':scope > .v172-alt'))return;uiGroups();const id=v172FamCur();if(!id)return;
     if(TAB==='league'){/* lig sayfasının kendi sekmeleri var; yalnız lig dışı üyeler (Avrupa, İstatistikler) eklenir */
       const st=v.querySelector('.lg-tabs, .filt');if(!st||!st.querySelector('[data-act=ltab]')||st.querySelector('.v172-lx'))return;const mem=V172_SON[id].mem,has=k=>!!st.querySelector(`[data-act=ltab][data-k="${k}"]`);let h='';
@@ -23128,6 +23138,23 @@ ACTX.temaSec=el=>{const v=el.dataset.v,T=TEMA_L.find(x=>x[0]===v);if(!T)return;c
   document.querySelectorAll('[data-act=temaSec]').forEach(b=>{const on=b.dataset.v===v;b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-checked',String(on));});
   try{toast(`Tema: ${T[1]}`);}catch(e){}};
 try{applyTheme();}catch(e){}
+/* ================= v174: üst çubukta takvim — tarih kutusuna dokununca önümüzdeki 14 gün ve yaklaşan olaylar ================= */
+const V174_AY=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+function v174Gun(d){try{const t=dayType(d);return (DT[t]&&DT[t].s)||'';}catch(e){return '';}}
+function v174TakvimHTML(){const td=v165Today();let E={};try{E=v165Events(td,td+13);}catch(e){}
+  const gun=[];for(let i=0;i<14;i++){const d=td+i,dt=dateOf(d),ev=(E[d]||[]).filter(e=>e.k!=='bay'&&e.k!=='yas'),wd=wdOf(dt);
+    const chip=ev.length?v165Chip(ev[0]):`<span class="v174-dl">${esc(v174Gun(d))}</span>`;
+    gun.push(`<button class="v174-g${i===0?' bugun':''}${ev.some(e=>/^(mac|kupa|avr|nat|fifa)$/.test(e.k))?' mac':''}" data-act="v165Day" data-d="${d}"><span class="v174-dn">${TR_DAYS[wd]}</span><b>${dt.getUTCDate()}</b><small>${i===0?'bugün':V174_AY[dt.getUTCMonth()]}</small>${chip}</button>`);}
+  return `<h3><svg class="v174-ic v174-ic-b" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Takvim</h3><p class="muted">${esc(fmtLong(dateOf(td)))} · önümüzdeki iki hafta. Bir güne dokunursan ayrıntısı açılır.</p>
+    <div class="v174-serit">${gun.join('')}</div>${v165AgendaHTML()}
+    <div class="offer-btns"><button class="btn" data-act="v174Tam">Tam takvim</button><button class="cta" data-act="closeModal">Kapat</button></div>`;}
+ACTX.v174Takvim=()=>{if(!G||!G.s||G.phase==='tryout')return;try{openModal(v174TakvimHTML());$('#modalCard').classList.add('v174-m');}catch(e){console.warn('v174 takvim',e);}};
+ACTX.v174Tam=()=>{closeModal();TAB='cal';render();window.scrollTo(0,0);};
+/* üst çubuktaki tarih kutusu dokunulabilir; yanında takvim simgesi */
+renderTop=(old=>function(){old.apply(this,arguments);try{if(!G||!G.s||G.phase==='tryout')return;const led=$('#top .led');if(!led)return;const box=led.parentElement;if(!box||box.dataset.act)return;
+    box.dataset.act='v174Takvim';box.classList.add('v174-tarih');box.setAttribute('role','button');box.setAttribute('tabindex','0');box.title='Takvim: önümüzdeki günler';
+    led.insertAdjacentHTML('afterbegin','<svg class="v174-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>');}catch(e){}})(renderTop);
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('v174-tarih')){e.preventDefault();e.stopPropagation();ACTX.v174Takvim();}},true);
 /* ================= TAKVİM: ligin gerçek takım sayısına göre fikstür ================= */
 const BREAK={TR:[[11,21],[0,10]],DE:[[11,21],[0,10]],FR:[[11,21],[0,3]],IT:[[11,29],[0,3]],ES:[[11,22],[0,2]],EN:null,PT:[[11,23],[0,2]],NL:[[11,21],[0,9]],BE:[[11,27],[0,14]],SA:[[11,20],[0,3]],BR:null,SC:[[11,30],[0,12]],GR:[[11,23],[0,3]],AT:[[11,14],[1,5]],CH:[[11,20],[0,25]],DK:[[11,8],[1,15]]};
 function dayOfDate(y,m,dd){return Math.round((Date.UTC(y+(m<6?1:0),m,dd)-seasonStartTs(y))/DAY_MS);}
