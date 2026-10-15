@@ -40,8 +40,8 @@ function pl3Sync(){const S=FX;if(!S||!MR)return;const U=S.U,O=S.O,me=S.U.P.find(
   if(!on&&me&&!me.off){if(MR.rc){me.off=true;me.red=1;fxEv(MR.min,`${me.name} kırmızı kart gördü!`,'red');}else{const b=U.bench.filter(x=>x.k!=='ME').sort((a,c)=>(c.pos===me.pos)-(a.pos===me.pos)||c.ovr-a.ovr)[0];U.subs=Math.min(U.subs||0,4);if(!(b&&fxSub(U,me,b))){me.off=true;}}}
   /* goller */
   const dg=MR.gu-PL3.gu,dgo=MR.go-PL3.go;
-  for(let i=0;i<dg;i++){const mine=MR.goals>PL3.g,asst=!mine&&MR.assists>PL3.a;if(mine)PL3.g++;if(asst)PL3.a++;pl3Goal(U,mine?pl3Me():null,asst?pl3Me():null);}
-  for(let i=0;i<dgo;i++)pl3Goal(O,null,null);
+  for(let i=0;i<dg;i++){const mine=MR.goals>PL3.g,asst=!mine&&MR.assists>PL3.a;if(mine)PL3.g++;if(asst)PL3.a++;pl3Goal(U,mine?pl3Me():null,asst?pl3Me():null,{mine,asst});}   /* v177: 4. değişken gol planı (kimin golü/asisti) */
+  for(let i=0;i<dgo;i++)pl3Goal(O,null,null,{});
   PL3.gu=MR.gu;PL3.go=MR.go;PL3.g=Math.max(PL3.g,MR.goals);PL3.a=Math.max(PL3.a,MR.assists);pl3Hud();}
 function pl3Goal(T,sc,as){const S=FX;if(!S)return;const on=fxOn(T).filter(p=>p.spos!=='KL');
   const c=sc&&!sc.off?sc:on.filter(p=>p.k!=='ME').sort((a,b)=>((b.spos==='FW')*2+(b.spos==='KN'||b.spos==='OS'?1:0)+Math.random()*2)-((a.spos==='FW')*2+(a.spos==='KN'||a.spos==='OS'?1:0)+Math.random()*2))[0];if(!c){S.score[T.side]++;return;}

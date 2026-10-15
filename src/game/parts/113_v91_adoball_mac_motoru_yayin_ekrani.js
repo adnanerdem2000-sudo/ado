@@ -203,8 +203,9 @@ pl3Goal=(old=>function(T,sc,as){const S=FX;if(!S||!S.ab)return old.apply(this,ar
 function abForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fcur)sim.forceGoal=null;return;}
   const q=ABM.fq[0];if(!ABM.fcur||ABM.fcur!==q){ABM.fcur=q;q.g0=sim.teams[abS2E(q.side)].score;q.t0=sim.t;sim.forceGoal=abS2E(q.side);const me=q.k?abFxPk(q.k):null;sim.forceBy=me&&me.ei!=null?me.ei:null;sim.forceDist=me?30:34;}
   if(sim.teams[abS2E(q.side)].score>q.g0){ABM.fq.shift();ABM.fcur=null;sim.forceGoal=null;sim.forceBy=null;return;}
-  if(sim.forceBy!=null&&sim.t-q.t0>40)sim.forceBy=null;          /* golcü adayı topa ulaşamadıysa takımdan biri atar */
-  if(sim.t-q.t0>70&&sim.mode==='live'&&!sim.shot){const o0=sim.ball.owner;if(!o0||o0.team!==sim.forceGoal){const at=sim.players.filter(p=>p.team===sim.forceGoal&&!p.off&&p.role!=='GK').sort((a,b)=>{const g=sim.teams[sim.forceGoal].dir>0?105:0;return Math.abs(g-a.x)-Math.abs(g-b.x);})[0];if(at){try{sim._lab.setOwner(at);}catch(e){}}}}
+  /* v177: planlanan golcü bırakılmaz (eskiden 40 sn sonra takımdan herhangi biri, oyuncumuz da, atabiliyordu); sahadan çıktıysa yeni golcü seçilir */
+  if(sim.forceBy!=null){const fp=sim.players[sim.forceBy],fo=abFxP(sim.forceBy);if(!fp||fp.off||fp.team!==sim.forceGoal||!fo||(q.k&&fo.k!==q.k)){let np=null;try{if(q.k!=='ME'&&typeof v177Replan==='function')np=v177Replan(q);}catch(e){}sim.forceBy=np&&np.ei!=null?np.ei:null;}}
+  if(sim.t-q.t0>70&&sim.mode==='live'&&!sim.shot){const o0=sim.ball.owner;if(!o0||o0.team!==sim.forceGoal){const fp=sim.forceBy!=null?sim.players[sim.forceBy]:null;const at=fp&&!fp.off&&fp.team===sim.forceGoal?fp:sim.players.filter(p=>p.team===sim.forceGoal&&!p.off&&p.role!=='GK').sort((a,b)=>{const g=sim.teams[sim.forceGoal].dir>0?105:0;return Math.abs(g-a.x)-Math.abs(g-b.x);})[0];if(at){try{sim._lab.setOwner(at);}catch(e){}}}}
   if(sim.t-q.t0>25&&sim.mode==='live'){const o=sim.ball.owner;if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&(sim.forceBy==null||o.id===sim.forceBy)){const dir=sim.teams[o.team].dir,gx=dir>0?105:0;if(Math.abs(gx-o.x)<48){try{sim._lab.doShot(o,sim.xgAt(o.x,o.y,dir,3),3,null);}catch(e){}}}}}
 /* futbolcu modu: MR (maç kaydı) motorun gerisinde kalırsa motor bekler */
 function abLag(S){try{if(!S||!S.pl3||!MR||MR.fin||PL3.end||MR.min>=MR.end)return 0;return abMin()-MR.min;}catch(e){return 0;}}
