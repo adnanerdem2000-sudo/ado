@@ -2,3 +2,4 @@ dist/
 node_modules/
 *.log
 w_*.html
+/fk.html

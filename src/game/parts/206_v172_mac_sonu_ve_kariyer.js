@@ -24,7 +24,10 @@ fxShotEnd=(old=>function(f){const S=FX;let c=null,as=null,s0=null;
   return r;})(fxShotEnd);
 /* reyting: Adoball'da motorun maç notu (çerçevede görünen), eski motorda fxR */
 const v172Rt=(S,p)=>S.ab?Math.round(clamp(+p.rt||6,3,10)*10)/10:fxR(p);
-function v172Best(S){let b=null,bs=0;for(const T of S.T)for(const p of T.P){const r=v172Rt(S,p);if(!b||r>bs){b=p;bs=r;}}return b?{p:b,rt:bs,side:S.T.indexOf(b.T)}:null;}
+/* maçın oyuncusu: en yüksek not; eşitlikte gol, sonra asist, sonra galip taraf */
+function v172Best(S){let b=null,bs=0;const key=p=>[v172Rt(S,p),p.s.g||0,p.s.as||0,S.score[S.T.indexOf(p.T)]-S.score[1-S.T.indexOf(p.T)]];let bk=null;
+  for(const T of S.T)for(const p of T.P){const k=key(p);let gt=!b;if(!gt)for(let i=0;i<4;i++){if(k[i]!==bk[i]){gt=k[i]>bk[i];break;}}if(gt){b=p;bk=k;bs=k[0];}}
+  return b?{p:b,rt:bs,side:S.T.indexOf(b.T)}:null;}
 /* kapanış anının özeti */
 let V172_MS=null,V172_CUR=null,V172_RT=null;
 function v172Snap(S){if(!S||!S.T||!S.T[0]||!S.T[1]||!G||!G.s)return null;
