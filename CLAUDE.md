@@ -3,7 +3,7 @@
 Kullanıcıyla her zaman Türkçe konuş. Oyun Türkçe; arayüz metinleri, yorumlar ve commit mesajları da Türkçe.
 
 ## Derle ve test et
-- `bash build.sh` → `dist/futbol-kariyeri.html` (~13,8 milyon bayt, tek dosya; v151). Son satır `SYNTAX_OK` değilse hata mesajı kaynak dosya:satır verir. Boyut sınırı derlemede denetlenir: 15,5 milyon baytta UYARI, 16.000.000 baytı aşarsa derleme başarısız (artifact sınırı).
+- `bash build.sh` → `dist/futbol-kariyeri.html` (~13,5 milyon bayt, tek dosya; v172). Son satır `SYNTAX_OK` değilse hata mesajı kaynak dosya:satır verir. Boyut sınırı derlemede denetlenir: 15,5 milyon baytta UYARI, 16.000.000 baytı aşarsa derleme başarısız (artifact sınırı).
 - `node tools/mac3b.js <klasör> [--prof td|ref|oyuncu] [--sure sn] [--kare n] [--file oyun.html]` ilk maçı 3B yayında açıp ekran görüntüsü ve kare süresi verir (yazılım WebGL: kare hızı düşük).
 - `node tools/kariyer_sim.js <profil> --sezon 2 --dk 25 [--rapor x.json]` çok sezonluk kariyer simülasyonu (maçlar klasik motorla görüntüsüz); son satır SIM_OK.
 - `node tools/smoke.js [profil...]` → Playwright ile td, oyuncu, yrd, scout, dr, sd, bsk, ref kariyerlerini başlatıp `fmCont()` ile ilerletir. Son satır `SMOKE_OK` olmalı. Komutları 118 saniyenin altında tut (tüm profiller ~65 sn).
