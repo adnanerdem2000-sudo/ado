@@ -25,6 +25,11 @@ function v172PlFeed(side,p){try{const f=$('#mvFeed');if(!f)return;const L=[...f.
     h=h.replace(/^(GOL! .+? — ).+?( ağları buldu\.)$/,`$1${nm}$2`).replace(/^(Penaltıyı ).+?( kullandı: GOL!)$/,`$1${nm}$2`).replace(/takım arkadaşı attı/,`${nm} attı`)
       .replace(/^(Gol\. .+? — ).+?( skoru değiştirdi\.)$/,`$1${nm}$2`).replace(/^Rakip golü buldu\.$/,`Rakip golü buldu: ${nm}.`);
     if(h!==h0)sp.innerHTML=h;}catch(e){}}
+/* futbolcu (Adoball): MR'deki takım arkadaşı golü motora golcüsüz gidiyordu; motor (hızlı sonuçta üreteç) golü oyuncumuza da yazabiliyordu
+   (MR "0 gol" derken çerçevede oyuncumuzun golü). Golcü burada, oyuncumuz hariç sahadaki takım arkadaşlarından mevki ağırlığıyla seçilir. */
+pl3Goal=(old=>function(T,sc,as){try{const S=FX;if(S&&S.ab&&S.pl3&&T===S.U&&!sc){const on=fxOn(T).filter(p=>p.k!=='ME'&&p.spos!=='KL'&&p.pos!=='KL'&&p.ei!=null);
+      if(on.length)sc=wpick(on.map(p=>[p,(GWP[p.pos]||0.1)]));}}catch(e){}
+  return old.call(this,T,sc,as);})(pl3Goal);
 /* eski 2B motor: gol (VAR iptali kapanışta skorla eşitlenir) */
 fxShotEnd=(old=>function(f){const S=FX;let c=null,as=null,s0=null;
   try{if(S&&!S.ab&&f&&f.res==='g'&&f.from&&f.from.T){c=f.from;as=c.lastFrom&&S.pt-c.lfT<6&&c.lastFrom.T===c.T?c.lastFrom:null;s0=S.score.slice();}}catch(e){}
@@ -89,7 +94,8 @@ function v172PatchWin(W){if(!W||W.__v172ms)return;W.__v172ms=1;
   const cm=W.computeMOTM;if(typeof cm==='function')W.computeMOTM=function(){try{const S=ABM.fx,md=W.ABH&&W.ABH.md&&W.ABH.md();if(S&&S.ab&&md&&md.h&&md.a){const b=v172Best(S);
         if(b)return {player:{name:b.p.name},team:abS2E(b.side)===0?md.h:md.a,rating:b.rt};}}catch(e){}return cm.apply(this,arguments);};
   const gh=W.generateHeadline;if(typeof gh==='function')W.generateHeadline=function(h,a,hg,ag){const s=gh.apply(this,arguments);try{return v172Headline(s,h,a,+hg,+ag);}catch(e){return s;}};}
-/* hızlı sonuçta (ve gecikmeli gösterimde kuyrukta kalan) gol/kart olayları çerçevenin "Olaylar" listesine ve zaman çizgisine */
+/* hızlı sonuçta (ve gecikmeli gösterimde kuyrukta kalan) gol/kart olayları çerçevenin "Olaylar" listesine ve zaman çizgisine
+   (futbolcunun canlı oynanan 3B maçında çerçeve kendi olaylarını işler; orada yalnız hızlı sonuçta eşitlenir) */
 function v172FrameSync(){const W=ABM.win,S=ABM.fx,sim=ABM.sim;if(!W||!S||!sim||!W.ado||!W.ado.km||typeof W.addHighlight!=='function')return 0;
   const md=W.ABH&&W.ABH.md&&W.ABH.md();if(!md||!md.h||!md.a||!md.highlights)return 0;const CK=(sim.C&&sim.C.CK)||1,nm=i=>i!=null&&i>=0&&sim.players[i]?sim.players[i].name:'';
   const rows=W.ado.km.rows(),used=new Set();let add=0;
@@ -100,9 +106,10 @@ function v172FrameSync(){const W=ABM.win,S=ABM.fx,sim=ABM.sim;if(!W||!S||!sim||!
     let hit=-1;for(let j=0;j<rows.length;j++){const r=rows[j];if(!used.has(j)&&r&&r.k===km.k&&r.s===km.s&&r.n===km.n&&Math.abs((r.b||0)-b)<=1){hit=j;break;}}
     if(hit>=0){used.add(hit);continue;}
     try{W.ado.km.next(km);W.addHighlight(T===0?md.h:md.a,txt,ty,b);add++;}catch(x){console.warn('v172 olay',x);}}
+  try{const d=W.document,a=d.getElementById('score-home'),b=d.getElementById('score-away');if(a)a.textContent=String(sim.teams[0].score);if(b)b.textContent=String(sim.teams[1].score);}catch(x){}   /* hızlı sonuçta üst skor tabelası da */
   if(add){try{md.highlights.sort((x,y)=>(y.min||0)-(x.min||0));if(typeof W.renderHighlightsList==='function')W.renderHighlightsList();}catch(x){}}
   return add;}
-abFullTime=(old=>function(){try{const S=ABM.fx;if(S&&FX===S&&!ABM.done&&ABM.win){v172PatchWin(ABM.win);v172FrameSync();}}catch(e){console.warn('v172 çerçeve',e);}return old.apply(this,arguments);})(abFullTime);
+abFullTime=(old=>function(){try{const S=ABM.fx;if(S&&FX===S&&!ABM.done&&ABM.win){v172PatchWin(ABM.win);if(ABM.ffDetach||!S.pl3)v172FrameSync();}}catch(e){console.warn('v172 çerçeve',e);}return old.apply(this,arguments);})(abFullTime);
 
 /* =====================================================================
    V8 · Telefonda futbolcu maç sonu: "Diğer maçlar" şeridi Maç sonu düğmesini örtmesin; klavye ipucu telefonda yok
