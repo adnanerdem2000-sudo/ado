@@ -1,7 +1,8 @@
 # Maaş modeli (v156) — kaynaklar ve varsayımlar
 
 Kod: `src/game/parts/183_v156_gercekci_maaslar.js`. Tüm tutarlar **yıllık brüt €**. Oyunda iç birim değişmedi
-(`G.contract.wage` haftalık iç birim, `pWage` haftalık €). Ekranda yıllık + haftalık gösterilir.
+(`G.contract.wage` haftalık iç birim, `pWage` haftalık €). Ekranda yıllık + haftalık gösterilir (v172: tek biçimlendirici
+`wgH`/`wgT`, HTML üretilirken).
 
 ## Lig ortalamaları (oyuncu başı = kulüp başına ortalama oyuncu ücreti ÷ 30 kadro oyuncusu)
 
@@ -46,8 +47,15 @@ TFF 1. Lig 160 bin · TFF 2. Lig 45 bin · TFF 3. Lig 18 bin.
   rol (Yıldız 1,25 · İlk 11 1 · Rotasyon 0,82 · Gelişim 0,6 · A takıma yükselme 0,55) × yaş (17: 0,45 … 23+: 1) ×
   sezon performansı (0,85–1,25) × tanınırlık (0,65–1) × kulübün isteği, ardından kulüp vizyonu ve menajer etkileri.
   Taban: ligin asgarisi.
-- **Kulüp finansı (menajer):** gelir, kadronun yıllık maaşı ÷ ligin ücret/gelir oranına tamamlanır (sponsor ve ticari
-  kalemi); oyuncu dışı giderler gelirin en az %30'u.
+- **Kulüp finansı (menajer):** gelir, bir "gelir tabanı" ÷ ligin ücret/gelir oranına tamamlanır (sponsor ve ticari
+  kalemi); oyuncu dışı giderler gelirin en az %30'u. v172: taban sezon başında kadronun yıllık maaşıyla sabitlenir ve her sezon
+  en çok %15 değişir; sezon içinde maaş bütçesini zorlayan kulüp açık verebilir, gelir uzun vadede kulübün ölçeğine yaklaşır.
+- **Teknik direktör, yönetici, personel, hakem (v172, varsayım):** taban ligin oyuncu başı ortalamasıdır (yukarıdaki tablo);
+  görev oranları kaynak değil, eski oyun modelinin oranlarıdır: TD = ortalama × kulüp zenginliği^2,5 (0,75–1,5 aralığı → ×0,49–×2,76)
+  × itibar (0,75–1,25); sportif direktör ×0,6, başkan ×0,4; yardımcı antrenör/gözlemci/doktor kademeye göre TD'nin %25–76'sı;
+  hakem kulüpten bağımsız, personel oranının %30'u, lig ortalaması yerine √(lig ort. × Süper Lig ort.) ile. Türkiye'de taban
+  asgari ücret. Ekranda bu kişiler için ayrı "tahmini" işareti yok (kendi sözleşmen); yapay zekâ oyuncu maaşlarının yanında
+  "tahmini" yazar ve üzerine gelince lig ortalamasının kaynağı (ya da ortalamanın da tahmini olduğu) görünür.
 - **Eski kayıtlar:** oyuncunun mevcut sözleşmesi bir kez yeni modele göre yeniden hesaplanır (süre ve rol aynı, gelen
   kutusuna bilgi mesajı). Menajer kayıtlarında oyuncu sözleşmeleri eski pazarlık primini koruyarak yeni ölçeğe taşınır,
   maaş bütçesi yeniden hesaplanır.

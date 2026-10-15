@@ -27,6 +27,6 @@ ageP=(old=>function(p){if(!p||p.ng||p.k==='ME'||p.age0==null||p.ovr0==null||!p.k
 function ab200(o){const P=[[30,40],[40,60],[50,80],[60,100],[70,125],[80,150],[90,180],[97,200]];if(o<=30)return 40;for(let i=1;i<P.length;i++)if(o<=P[i][0]){const [a,b]=P[i-1],[c,d]=P[i];return Math.round(b+(o-a)/(c-a)*(d-b));}return 200;}
 pfBuild=(old=>function(mc){const r=old.apply(this,arguments);try{if(!mc||!PF_CUR)return r;const gr=mc.querySelector('.pf-genr');if(!gr||gr.querySelector('.ca-sec'))return r;let p=null;try{p=pByKey(PF_CUR.k);}catch(e){}if(!p)return r;
   const pr=pPot(p),lo=ab200(pr[0]),hi=ab200(pr[1]),ca=ab200(p.ovr),X=pHW(p);const sec=document.createElement('section');sec.className='ca-sec';
-  sec.innerHTML=`<div class="ca-row"><div><span>Mevcut yetenek</span><b>${ca}<small>/200</small></b></div><div><span>Potansiyel</span><b>${lo===hi?lo:`${lo}–${hi}`}<small>/200</small></b></div><div><span>Boy</span><b>${X.h} cm</b></div><div><span>Kilo</span><b>${X.wq?'~':''}${X.w} kg</b>${X.wq?'<small class="ca-q">tahmini</small>':''}</div></div>`;
+  sec.innerHTML=`<div class="ca-row"><div><span>Mevcut yetenek</span><b>${ca}<small>/100</small></b></div><div><span>Potansiyel</span><b>${lo===hi?lo:`${lo}–${hi}`}<small>/100</small></b></div><div><span>Boy</span><b>${X.h} cm</b></div><div><span>Kilo</span><b>${X.wq?'~':''}${X.w} kg</b>${X.wq?'<small class="ca-q">tahmini</small>':''}</div></div>`;
   const t=gr.querySelector('.trt-sec');if(t)t.after(sec);else gr.insertBefore(sec,gr.firstChild);}catch(e){console.warn('ca',e);}return r;})(pfBuild);
 

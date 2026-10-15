@@ -36,7 +36,10 @@ const V170_YOL=[[/Takım › Transfer › Gelen teklifler ekranından yanıtla\.
   [/Kariyer › Menajer ve sponsorlar ekranından yanıtla\.?/g,'<button type="button" class="ib-go" data-act="v170Git" data-k="agent">Menajer ve sponsorlar ekranından</button> yanıtla.']];
 function v170Yol(s){if(typeof s!=='string'||s.indexOf('›')<0)return s;for(const [re,h] of V170_YOL)s=s.replace(re,h);return s;}
 /* ileti kartı çizilirken ekran yolu bağlantıya döner (gövde metni kaçışlı yazılır; eski iletilerde de çalışır) */
-msgHTML=(old=>function(m){const h=old.apply(this,arguments);try{if(h.indexOf('msg-body')>0)return v170Yol(h);}catch(e){}return h;})(msgHTML);
+msgHTML=(old=>function(m){const h=old.apply(this,arguments);try{if(h.indexOf('msg-body')>0){let r=v170Yol(h);
+    /* gelen teklif kalmadıysa "yanıtla" bağlantısı yerine süresinin dolduğu yazılsın */
+    if(r.indexOf('data-k="bids"')>0){const live=G&&G.m&&(G.m.bids||[]).some(b=>b.until>G.s.day);if(!live)r=r.replace(/<button type="button" class="ib-go" data-act="v170Git" data-k="bids">Gelen teklifleri aç<\/button> ve yanıtla\./,'<em class="ib-eski">Bu teklifin süresi doldu.</em>');}
+    return r;}}catch(e){}return h;})(msgHTML);
 function v170NavItem(id){try{for(const [,its] of navCats())for(const it of its)if(it[0]===id)return it[2];}catch(e){}return null;}
 ACTX.v170Git=el=>{const k=el.dataset.k;try{if(!$('#modal').hidden)closeModal();}catch(e){}
   if(k==='bids'){TAB='squad';KTAB='transfer';try{STB.trf='gel';}catch(e){}}
@@ -46,7 +49,8 @@ ACTX.v170Git=el=>{const k=el.dataset.k;try{if(!$('#modal').hidden)closeModal();}
 /* ---------- yardımcı antrenör: haftanın idman odağı seçildiyse haftalık program da uygulanmış sayılır ---------- */
 function v170YrBagla(){try{if(!isStaff()||G.staff!=='yrd'||!G.s||G.phase!=='season')return;const j=stG();if((j.tr||0)<40)return;const w=(j.wk&&j.wk[G.s.week])||{};const Y=v164YrState();
     /* hocanın idman sorusu kuyruktaysa yanıt beklenir: hoca kendi programına geçmez */
-    if(!w.tr){try{if((Y.st==='taslak'||Y.st==='red')&&v155().q.some(x=>x.k==='yr_tr'))Y.late=1;}catch(e){}return;}if(Y.st!=='taslak'&&Y.st!=='red')return;let q=.55;try{q=Math.max(.55,v164Eval(Y.g).q);}catch(e){}
+    if(!w.tr){try{if(Y.st==='taslak'||Y.st==='red'){const nm=nextMatchDay(G.s.day);/* soru kuyruktaysa ya da bu hafta lig maçı yoksa (kamp, milli ara) odak sorusu gelemez: ceza yok */
+      if(v155().q.some(x=>x.k==='yr_tr')||nm==null||nm-G.s.day>6)Y.late=1;}}catch(e){}return;}if(Y.st!=='taslak'&&Y.st!=='red')return;let q=.55;try{q=Math.max(.55,v164Eval(Y.g).q);}catch(e){}
     Y.st='onay';Y.q=q;Y.late=1;Y.oto=1;try{v164YrPrw(j,Y);}catch(e){}
     msg('coach','Haftalık program uygulandı',`${coachOf(G.club).n}: “Bu hafta ${esc(YR_TR[w.tr]||'seçtiğin')} odağıyla standart programı uyguluyoruz.” Günleri ayrıntılı düzenlemek istersen Antrenman sekmesinden programını sunabilirsin.`);}catch(e){console.warn('v170 yrd',e);}}
 nextDay=(old=>function(){v170YrBagla();const r=old.apply(this,arguments);v170YrBagla();return r;})(nextDay);

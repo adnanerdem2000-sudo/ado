@@ -45,7 +45,7 @@ viewHub=(old=>function(){let h=old.apply(this,arguments);try{const U=G&&G.susp;i
 stigNow=(old=>function(){const S=G&&G.stig;if(!S||!G.s)return null;const byYear=old.apply(this,arguments);if(byYear)return byYear;if(S.rep0!=null&&betRepNow()<S.rep0-3&&G.s.year-S.y<=S.lvl+3)return S;return null;})(stigNow);
 mgrJobOffers=(old=>function(rep,n){try{if(stigNow()&&n>1)n=Math.max(1,Math.round(n/2));}catch(e){}return old.call(this,rep,n);})(mgrJobOffers);
 staffOffers=(old=>function(lvl,n){try{if(stigNow()&&n>1)n=Math.max(1,Math.round(n/2));}catch(e){}return old.call(this,lvl,n);})(staffOffers);
-const betLowWage=(old)=>function(id){const r=old.apply(this,arguments);try{if(stigNow()&&G.contract&&!G.contract.stigCut){G.contract.wage=Math.max(50,Math.round(G.contract.wage*0.6/50)*50);G.contract.stigCut=1;msg('board','Düşük maaşlı sözleşme',`Bahis sicilin nedeniyle kulüp ancak düşük bir maaş önerebildi: ${eur(U2E(G.contract.wage))}/hf. İtibarın düzeldikçe teklifler de iyileşecek.`);}}catch(e){}return r;};
+const betLowWage=(old)=>function(id){const r=old.apply(this,arguments);try{if(stigNow()&&G.contract&&!G.contract.stigCut){G.contract.wage=Math.max(50,Math.round(G.contract.wage*0.6/50)*50);G.contract.stigCut=1;msg('board','Düşük maaşlı sözleşme',`Bahis sicilin nedeniyle kulüp ancak düşük bir maaş önerebildi: ${wgTU(G.contract.wage)}. İtibarın düzeldikçe teklifler de iyileşecek.`);}}catch(e){}return r;};
 mgrSign=betLowWage(mgrSign);staffSign=betLowWage(staffSign);
 pushOffer=(old=>function(o){try{if(stigNow()&&isPl()&&o&&!o.renew&&o.wage){o.wage=Math.max(50,Math.round(o.wage*0.75/50)*50);}}catch(e){}return old.apply(this,arguments);})(pushOffer);
 /* bahis geçmişi: kumarhane maç bahsi ve iddaa kuponlarım sekmesi */

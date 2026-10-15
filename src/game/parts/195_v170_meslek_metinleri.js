@@ -74,7 +74,7 @@ showClub=(old=>function(id){const r=old.apply(this,arguments);try{const d=v170Vi
 const V170_HLP_PL=['Takvim','Bireysel idman','Maç','Takım arkadaşların','Rakipler','Savunma','Korner','Takım idmanı ve seçmeler','Maçta değişiklik ve darbe','Pazarlık ve kiralık','İdman zorunluluğu','Ayarlar','Kişisel plan','Futbolcu maçında Pro modu','Futbolcu maçında rakip hoca','Pro modunda yapay zekâ yardımı','Şut çeşitleri','Pres','Kondisyon','Oynanış ayrıntıları','Maçın akışı ve hava','Futbolcu: takım arkadaşları, menajer, sponsor, yaşam','Geç kariyer hedefleri ve jübile'];
 /* mesleğe ait mevcut yardım başlıkları (en üste taşınır) */
 const V170_HLP_PR={
-  td:['Teknik direktörlük','Takım kurma (teknik direktör)','2B maç motoru (teknik direktör)','2B maç motoru ve taktik ekranı','Antrenman','Maç hazırlığı ve basın','Sözleşmeler (teknik direktör)','Altyapı ve newgen (teknik direktör)','Teknik direktör: rakip planı, duran toplar, kültür, seçim','Soyunma odası hiyerarşisi'],
+  td:['Teknik direktörlük','Takım kurma (teknik direktör)','2B maç motoru (teknik direktör)','2B maç motoru ve taktik ekranı','Antrenman','Maç hazırlığı ve basın','Sözleşmeler (teknik direktör)','Altyapı ve genç oyuncular (teknik direktör)','Teknik direktör: rakip planı, duran toplar, kültür, seçim','Soyunma odası hiyerarşisi'],
   yrd:['Yardımcı antrenör, gözlemci, doktor','Yardımcı antrenör maçı','Teknik ekip meslekleri','Teknik ekip görev panosu'],
   scout:['Yardımcı antrenör, gözlemci, doktor','Gözlem haritası','Gözlemci raporu','Gözlemci ağı','Transferlerim (gözlemci)','Yönetime baskı (gözlemci)'],
   dr:['Yardımcı antrenör, gözlemci, doktor','Doktor gelişimi','Doktor: muayene odası'],

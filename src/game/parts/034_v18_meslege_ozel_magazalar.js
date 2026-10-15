@@ -86,7 +86,7 @@ function gearSVG(o){const g=o.g,S=(b)=>`<svg viewBox="0 0 164 80" class="ill"><e
 function itemIll(cat,o){if(o.g)return gearSVG(o);if(o.car)return carSVG(o);return cat==='arac'?carSVG(o):cat==='krampon'?bootSVG(o):cat==='ev'?houseSVG(o):cat==='ekip'?staffSVG(o):styleSVG(o);}
 function viewLife2(){const p=G.p,SH=shopFor();if(!SH[SHOPC])SHOPC=Object.keys(SH)[0];const cat=SH[SHOPC];
   const who=G.mode==='mgr'?'Teknik direktör':isStaff()?STF[G.staff].n:'Futbolcu',wage=G.contract?G.contract.wage:0;
-  return `<h2 class="h">Yaşam</h2><section class="panel wallet"><div><b>${money(p.money)}</b><span>Bakiye · ≈ ${tlOf(p.money)}</span></div><div><b>${money(wage)}</b><span>Haftalık</span></div><div><b>${Math.round(p.fame)}</b><span>Şöhret</span></div></section>
+  return `<h2 class="h">Yaşam</h2><section class="panel wallet"><div><b>${money(p.money)}</b><span>Bakiye · ≈ ${tlOf(p.money)}</span></div>${wgWallet(wage)}<div><b>${Math.round(p.fame)}</b><span>Şöhret</span></div></section>
   <p class="muted" style="margin:8px 2px">${esc(who)} mağazası: işine yarayan ekipman ve eğitimler, ayrıca araç, ev ve stil.</p>
   <div class="filt">${Object.entries(SH).map(([k,v])=>`<button class="chip" data-act="shopc" data-k="${k}" aria-pressed="${SHOPC===k}">${v.n}</button>`).join('')}</div>
   <ul class="shop2">${cat.items.map(([k,n,d,c,f,m,o])=>{const own=!!p.up[k];return `<li class="${own?'own':''}">${itemIll(SHOPC,o)}<div class="si"><b>${n}</b><p>${d}</p><small>${f?`Şöhret +${f} · `:''}Moral +${m}</small></div>${own?'<span class="pill good">Sahipsin</span>':`<button class="btn" data-act="buy2" data-c="${SHOPC}" data-k="${k}" ${p.money<c?'disabled':''}>${money(c)}</button>`}</li>`;}).join('')}</ul>`;}

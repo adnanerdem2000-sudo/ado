@@ -13,7 +13,7 @@ function bidOpen(id){const m=fmInit(),b=(m.bids||[]).find(x=>x.id===+id);if(!b)r
 let BIDO=null;
 function bidModal(){const m=G.m,b=(m.bids||[]).find(x=>x.id===BIDO);if(!b){closeModal();return;}const p=squadOf(G.club).find(x=>x.k===b.k),c=CLUBS[b.club],A=b.ask,de=bidDesire(p,c),st=stepOf(b.fee),L=lookOf(p.k,p.nat,p.age),me=myClub();
   const row=(l,v)=>`<div class="fmi"><span>${l}</span><b>${v}</b></div>`;
-  const offer=`${row('Bonservis',eur(b.fee))}${row('Ödeme',BID_INST[b.inst][0])}${row('Sonraki satıştan pay',b.sell?'%'+b.sell:'Yok')}${row('Performans bonusları',b.bon?eur(b.bon):'Yok')}${row('Oyuncuya önerilen maaş',eur(b.pw)+'/hf')}`;
+  const offer=`${row('Bonservis',eur(b.fee))}${row('Ödeme',BID_INST[b.inst][0])}${row('Sonraki satıştan pay',b.sell?'%'+b.sell:'Yok')}${row('Performans bonusları',b.bon?eur(b.bon):'Yok')}${row('Oyuncuya önerilen maaş',wgH(b.pw))}`;
   const ops=bidOpinions(p,c,b).map(([w,t])=>`<p class="bo"><b>${w}:</b> ${esc(t)}</p>`).join('');
   const log=b.log.map(([w,t])=>`<p class="${w==='Sen'?'ng-me':'ng-club'}"><i>${esc(w)}</i>${esc(t)}</p>`).join('');
   let body='';

@@ -111,7 +111,7 @@ function viewStaffOff(){const j=jobInit(),s=G.summary,c=myClub();
   ${G.p.age+1>=55?`<button class="btn" data-act="mgrRetire">Emekli ol</button>`:''}`;}
 function viewStaffClub(){const c=myClub(),cs=cstate(G.club);return `<h2 class="h">Kulüp</h2><section class="panel"><div class="club-hd">${crestSVG(c,52)}<div><h3>${esc(c.name)}</h3><span>${curLeague().name}</span></div></div>${visLine(c)}</section>
   <button class="btn" data-act="ccard" data-id="${G.club}">Teknik direktör kartı · ${esc(coachOf(G.club).n)}</button><button class="btn" data-act="squad" data-id="${G.club}">Takım kadrosu ve oyuncu kartları</button>
-  <section class="panel"><p class="sub-h"><span>Sözleşmen</span></p><dl class="offer-terms"><div><dt>Görev</dt><dd>${esc(G.job.title)}</dd></div><div><dt>Haftalık</dt><dd>${money(G.contract.wage)}</dd></div><div><dt>Süre</dt><dd>${G.contract.years} yıl</dd></div><div><dt>Bütçe</dt><dd>${money(clubBudget(c))}</dd></div></dl></section>`;}
+  <section class="panel"><p class="sub-h"><span>Sözleşmen</span></p><dl class="offer-terms"><div><dt>Görev</dt><dd>${esc(G.job.title)}</dd></div><div><dt>Maaş</dt><dd>${wgHU(G.contract.wage)}</dd></div><div><dt>Süre</dt><dd>${G.contract.years} yıl</dd></div><div><dt>Bütçe</dt><dd>${money(clubBudget(c))}</dd></div></dl></section>`;}
 
 ICON.club=ICON.board;
 {const _ov=openMatchView;openMatchView=function(){const c=$('#mpCv');if(c)c.hidden=true;return _ov();};const _bp=buyPlayer;buyPlayer=function(id,k){if(!trWin())return toast('Transfer dönemi kapalı · '+twNextTxt());return _bp(id,k);};}

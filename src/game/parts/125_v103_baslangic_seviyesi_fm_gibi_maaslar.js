@@ -1,4 +1,4 @@
-/* ================= v103: başlangıç seviyesi (FM gibi) · maaşlar yıllık ve euro =================
+/* ================= v103: başlangıç seviyesi (FM gibi) · maaşlar yıllık ve euro (v172: gösterim 183'teki wgH/wgT ile) =================
    Her meslekte: Sıfırdan (eski akış) · Orta seviye · Zirve. Orta ve zirvede kulübünü (hakemde ligini) kendin seçersin. */
 W.lvl=W.lvl||'sifir';
 const LVL_TXT={sifir:['Sıfırdan','Alt seviyeden başlar, yükselerek ilerlersin.'],orta:['Orta seviye','Deneyimli başlarsın: orta lisans/seviye, istediğin kulüp.'],zirve:['Zirve','En üst lisans ve seviye; istediğin büyük kulüpten hemen başla.']};
@@ -34,28 +34,9 @@ wizGo=(old=>function(){if(!W.lvl||W.lvl==='sifir')return old.apply(this,argument
   }catch(e){console.warn('seviye başlangıç',e);}W.step='list';})(wizGo);
 /* maaş kulübün büyüklüğüne göre */
 function lvlStrK(c){const s=(c&&c.str)||65;return clamp(Math.pow(s/70,2),.55,2.4);}
-mgrSign=(old=>function(id){const r=old.apply(this,arguments);try{const c=CLUBS[id];if(G.contract&&c&&!G.contract.kAdj){G.contract.wage=Math.round(G.contract.wage*lvlStrK(c)/50)*50;G.contract.kAdj=1;}}catch(e){}return r;})(mgrSign);
-staffSign=(old=>function(id){const r=old.apply(this,arguments);try{const c=CLUBS[id];if(G.contract&&c&&!isRef()){G.contract.wage=Math.round(G.contract.wage*lvlStrK(c)/50)*50;}}catch(e){}return r;})(staffSign);
-/* ---------- maaşlar yıllık gösterilir (euro) ---------- */
-const AMT_RE='−?\\d+(?:,\\d+)?(?: (?:mr|mn|bin))? €';
-function amtParse(s){const m=String(s).match(/^(−?)(\d+(?:,\d+)?)(?: (mr|mn|bin))? €$/);if(!m)return null;let v=parseFloat(m[2].replace(',','.'));v*=m[3]==='mr'?1e9:m[3]==='mn'?1e6:m[3]==='bin'?1e3:1;return m[1]?-v:v;}
+/* v172: TD/yönetici/personel/hakem maaşı 183_v156'nın lig modeline bağlı (wgMyStaffU); eski lvlStrK ölçeği yalnız eski futbolcu başlangıcında */
+mgrSign=(old=>function(id){const r=old.apply(this,arguments);try{if(G.contract&&CLUBS[id]&&G.club===id){G.contract.wage=wgMyStaffU(id);G.contract.kAdj=1;G.contract.v172=1;}}catch(e){console.warn('v172 TD maaşı',e);}return r;})(mgrSign);
+staffSign=(old=>function(id){const r=old.apply(this,arguments);try{if(G.contract&&CLUBS[id]){G.contract.wage=wgMyStaffU(id);G.contract.v172=1;if(isRef())G.contract.refAdj=1;/* hakem oranı modelde: 128'in ×0,3'ü ikinci kez uygulanmasın */}}catch(e){console.warn('v172 personel maaşı',e);}return r;})(staffSign);
+/* ---------- tutar biçimi (euro): wgH/wgT (183) kullanır; maaşlar HTML üretilirken yıllık + haftalık yazılır ---------- */
 function amtFmt(v){const sg=v<0?'−':'';v=Math.abs(Math.round(v));return sg+(v>=1e9?dec(v/1e9,2).replace(/,?0+$/,'')+' mr €':v>=1e6?dec(v/1e6,2).replace(/,?0+$/,'')+' mn €':v>=1e4?Math.round(v/1e3)+' bin €':v>=1e3?dec(v/1e3,1).replace(',0','')+' bin €':v+' €');}
-const yr=s=>{const v=amtParse(s);return v==null?s:amtFmt(v*52);};
-function wageYearly(h){if(!h||typeof h!=='string'||!/aftal|\/hf|\/hafta/.test(h))return h;const A=AMT_RE;
-  h=h.replace(new RegExp('<dt>Haftalık</dt><dd>('+A+')</dd>','g'),(m,a)=>`<dt>Yıllık maaş</dt><dd>${yr(a)}</dd>`);
-  h=h.replace(new RegExp('<b>('+A+')</b><span>Haftalık</span>','g'),(m,a)=>`<b>${yr(a)}</b><span>Yıllık maaş</span>`);
-  h=h.replace(new RegExp('('+A+') ?/ ?(?:hf|hafta)\\b','g'),(m,a)=>`${yr(a)}/yıl`);
-  h=h.replace(new RegExp('('+A+')( / )('+A+') haftalık','g'),(m,a,s,b)=>`${yr(a)}${s}${yr(b)} yıllık`);
-  h=h.replace(new RegExp('('+A+')(</b>)? haftalık','g'),(m,a,b)=>`${yr(a)}${b||''} yıllık`);
-  h=h.replace(new RegExp('([Hh])aftalık( maaşın| maaş| maaşı)?( (?:olarak |da |de )?)('+A+')','g'),(m,H,w,sp,a)=>`${H==='H'?'Y':'y'}ıllık${w||''}${sp}${yr(a)}`);
-  return h;}
-function wageYearlyDom(root){if(!root||!/aftal|\/hf|\/hafta/.test(root.textContent||''))return;
-  root.querySelectorAll('dt').forEach(dt=>{if(dt.textContent.trim()==='Haftalık'){const dd=dt.nextElementSibling;if(dd&&amtParse(dd.textContent.trim())!=null){dt.textContent='Yıllık maaş';dd.textContent=yr(dd.textContent.trim());}}});
-  root.querySelectorAll('span,small').forEach(sp=>{if(sp.textContent.trim()==='Haftalık'){const b=sp.previousElementSibling;if(b&&amtParse(b.textContent.trim())!=null){sp.textContent='Yıllık maaş';b.textContent=yr(b.textContent.trim());}}});
-  const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),L=[];let n;while((n=tw.nextNode()))if(/aftal|\/hf|\/hafta/.test(n.nodeValue))L.push(n);
-  for(const t of L){const v=t.nodeValue;if(/^\s*(\/ ?hf|\/hafta|haftalık)/.test(v)){const pe=t.previousSibling;if(pe&&pe.nodeType===1&&amtParse(pe.textContent.trim())!=null){pe.textContent=yr(pe.textContent.trim());t.nodeValue=v.replace(/^(\s*)\/ ?(hf|hafta)\b/,'$1/yıl').replace(/^(\s*)haftalık/,'$1yıllık');continue;}}
-    const nv=wageYearly(v);if(nv!==v)t.nodeValue=nv;}}
-render=(old=>function(){const r=old.apply(this,arguments);try{wageYearlyDom($('#view'));}catch(e){}return r;})(render);
-openModal=(old=>function(h){try{if(typeof h==='string')h=wageYearly(h);}catch(e){}return old.call(this,h,...[].slice.call(arguments,1));})(openModal);
-toast=(old=>function(t){try{if(typeof t==='string')t=wageYearly(t);}catch(e){}return old.call(this,t,...[].slice.call(arguments,1));})(toast);
 

@@ -7,12 +7,18 @@
    Saç: alnın üstündeki bantta tene benzemeyen pikseller yeterince çoksa medyanı saç paletine (koyu/kahve/açık kahve/sarı/kızıl) eşlenir.
    Etnik köken ya da benzeri hiçbir etiket üretilmez; yalnızca çizim renkleri.
    Kullanım: node tools/veri/7_gorunus.js <oyun.json> <oyuncular.json> <önbellek> <çıktı: gorunus.json> [--yaz src/game/data/ten_fm.js] [--esz 6] [--sinir n]
-   Önbellek: <önbellek>/foto/<id>.png (403/404 için <id>.yok). */
+             [--looks src/game/data/looks.js] [--onbellekten]
+   Önbellek: <önbellek>/foto/<id>.png (403/404 için <id>.yok).
+   v172: --onbellekten  önceki ölçüm (<çıktı>) varsa fotoğraflar yeniden çözülmez, yalnız oyun verisi yazılır (ağ gerekmez).
+         --looks        elle girilmiş LOOKS ten sınıfıyla tutarlılık süzgeci: ikisi de varsa ve ölçüm LOOKS sınıfından 2 ya da daha fazla
+                        uzaksa ölçülen ten YAZILMAZ (stüdyo ışığı/kızarıklık ölçümü saptırabiliyor; LOOKS da hatalı olabiliyor, çelişkide
+                        hiçbiri kesin sayılmaz ve oyun eldeki veriyle kalır). Ölçüm doğruluğu: elle bakılan örneklerde ±1 ton. */
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
 const argv = process.argv.slice(2);
 const opt = (k, d) => { const i = argv.indexOf(k); if (i < 0) return d; const v = argv[i + 1]; argv.splice(i, 2); return v; };
-const YAZ = opt('--yaz', null), ESZ = +opt('--esz', 6), SINIR = +opt('--sinir', 0);
+const YAZ = opt('--yaz', null), ESZ = +opt('--esz', 6), SINIR = +opt('--sinir', 0), LOOKS_F = opt('--looks', null);
+const ONB = argv.includes('--onbellekten'); if (ONB) argv.splice(argv.indexOf('--onbellekten'), 1);
 const [IN, PL, CACHE, OUT] = argv;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -161,30 +167,39 @@ else (async () => {
   const prev = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
   let items = Object.entries(P).filter(([k, e]) => e && e.fm);
   if (SINIR) items = items.slice(0, SINIR);
-  const res = {}; let got = 0, miss = 0, bad = 0;
+  let res = {}; let got = 0, miss = 0, bad = 0;
   console.log('eşlenmiş oyuncu', items.length);
-  await pool(items, ESZ, async ([key, e]) => {
+  if (ONB && Object.keys(prev).length) { res = prev; got = Object.keys(prev).length; console.log('önceki ölçüm kullanılıyor', got); }
+  else await pool(items, ESZ, async ([key, e]) => {
     const buf = await photo(e.fm);
     if (!buf) { miss++; return; }
     got++;
     try { const a = analyse(buf); res[key] = Object.assign({ fm: e.fm }, a); if (!a.ok) bad++; } catch (er) { bad++; res[key] = { fm: e.fm, ok: 0, why: er.message }; }
   }, 500, d => console.log(`${d}/${items.length} · foto ${got} · yok ${miss} · ölçülemedi ${bad}`));
-  fs.writeFileSync(OUT, JSON.stringify(res));
+  if (!(ONB && res === prev)) fs.writeFileSync(OUT, JSON.stringify(res));
   const ok = Object.values(res).filter(r => r.ok), conf = ok.filter(r => r.conf >= 0.6);
   console.log(`BİTTİ · foto ${got} · fotoğrafı yok ${miss} · ölçülen ${ok.length} · güvenli ${conf.length} · saç ${conf.filter(r => r.hair).length}`);
   if (!YAZ) return;
   /* oyun verisi: kulüp başına dize; her oyuncu yuvası 3 karakter: ten (0-8 | '.'), saç (k d b l s r | '.'), ad sağlaması */
   const HK = { black: 'k', dark: 'd', brown: 'b', lbrown: 'l', blond: 's', red: 'r' };
-  const out = {};
+  /* LOOKS ten sınıfı (1–6) → SKN sıraları (047_v29: LK_S) */
+  let LOOKS = null; const LK_S = [[0, 1], [2], [3], [4, 5], [6], [7, 8]], cls = i => LK_S.findIndex(x => x.includes(i)) + 1;
+  if (LOOKS_F) { const vm = require('vm'), cx = {}; vm.createContext(cx); vm.runInContext(fs.readFileSync(LOOKS_F, 'utf8').replace(/^const LOOKS\b/m, 'LOOKS'), cx); LOOKS = cx.LOOKS; }
+  const out = {}; let nSk = 0, nCel = 0;
   for (const [id, c] of Object.entries(D.clubs)) {
     if (!c.sq) continue; let s = '', any = false;
     c.sq.forEach((row, i) => {
       const r = res[id + '#' + i];
-      if (r && r.ok && r.conf >= 0.6) { any = true; s += skinIndex(r.lab) + (r.hair ? HK[r.hair.k] : '.') + nameCk(row[0]); } else s += '...';
+      if (r && r.ok && r.conf >= 0.6) {
+        let si = skinIndex(r.lab); const lk = LOOKS && LOOKS[row[0]];
+        if (lk && Math.abs(cls(si) - lk[1]) >= 2) { si = '.'; nCel++; } else nSk++;
+        if (si === '.' && !r.hair) { s += '...'; return; }
+        any = true; s += si + (r.hair ? HK[r.hair.k] : '.') + nameCk(row[0]);
+      } else s += '...';
     });
     if (any) out[id] = s.replace(/(\.\.\.)+$/, '');
   }
   const js = `/* v159: FotMob oyuncu fotoğraflarından ölçülen ten/saç rengi (tools/veri/7_gorunus.js ile üretildi; elle düzenleme). Kulüp → yuva başına 3 karakter: ten 0-8 (SKN), saç k/d/b/l/s/r, ad sağlaması */\nconst TEN_FM=${JSON.stringify(out)};\n`;
   fs.writeFileSync(YAZ, js);
-  console.log('yazıldı', YAZ, js.length, 'bayt · kulüp', Object.keys(out).length);
+  console.log('yazıldı', YAZ, js.length, 'bayt · kulüp', Object.keys(out).length, '· ten yazılan', nSk, '· LOOKS ile çelişen (yazılmadı)', nCel);
 })();

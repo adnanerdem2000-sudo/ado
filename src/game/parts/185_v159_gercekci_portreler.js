@@ -17,8 +17,8 @@ lookOf=(old=>function(seed,nat,age,coach){const L=old.apply(this,arguments);try{
           else if(T.si<=3&&['afro','braids','dread','curlytop'].includes(L.hs)&&r()<0.8)L.hs=ltS[Math.floor(r()*ltS.length)];
           if(!T.hc&&T.si>=5&&/^#(c9a35e|7a5230|9a4a22|e8d27a)/.test(L.hc))L.hc=V159_HC.k;}}
       if(T.hc&&!hasL){const g=age>=34?0.12:0;L.hc=g?mixC(T.hc,'#d9d9d9',g):T.hc;L.fhc=1;}}}}}catch(e){}return L;})(lookOf);
-/* 3B: yeni saç modeli anahtarları */
-try{if(typeof F3_HS!=='undefined'){if(F3_HS.braids==null)F3_HS.braids=5;}}catch(e){}
+/* 3B: yeni saç modeli anahtarları — örgü (cornrows) 3B'de 9 numaralı Meshy modeli (ado3d_hair_ek.js "9"); v172'ye kadar yanlışlıkla rastaya (5) eşleniyordu */
+try{if(typeof F3_HS!=='undefined')F3_HS.braids=9;}catch(e){}
 
 /* ---------- 2) çizim ---------- */
 let V159_ID=0;

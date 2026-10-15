@@ -41,7 +41,7 @@ function stfCard(cid,i){const L=stfList(cid),s=L[i],r=STF_R[STK[i]],c=CLUBS[cid]
   openModal(`<section class="stf-card"><div class="stc-hd"><div class="stc-face">${faceSVG(lookOf('st:'+s.k,s.nat,s.age,true),{coach:true,c1:c.c1,c2:c.c2,age:s.age})}</div><div><span class="kicker">${esc(r.n)}</span><h3>${esc(s.name)}</h3><small>${flagImg(s.nat,'fl-row')} ${esc(natName(s.nat))} · ${s.age} yaş · ${esc(c.name)}</small></div></div>
    <div class="stc-st"><div><small>Yetenek</small>${starsHTML(a,a,true)}<b>${stTxt(a)} ★</b></div><div><small>Potansiyel</small>${starsHTML(a,hi,true)}<b>${lo===hi?stTxt(hi):stTxt(lo)+'–'+stTxt(hi)} ★</b></div></div>
    <div class="fp-attr stc-at">${stfAttrs(s).map(([n,v])=>`<div><span>${esc(n)}</span><b class="${col(v)}">${v}</b></div>`).join('')}</div>
-   <p class="fp-l">Etki alanı <b>${esc(r.e)}</b></p>${mine?`<div class="fp-row" style="margin-top:8px"><div><small>Maaş</small><b>${eur(s.w)}/hf</b></div><div><small>Sözleşme</small><b>${G.s.year+(s.cy||1)}</b></div><div><small>Yaş durumu</small><b>${s.age<45?'Gelişiyor':s.age<60?'Zirvede':'Düşüşte'}</b></div></div>`:''}</section>
+   <p class="fp-l">Etki alanı <b>${esc(r.e)}</b></p>${mine?`<div class="fp-row" style="margin-top:8px"><div><small>Maaş</small><b>${wgH(s.w)}</b></div><div><small>Sözleşme</small><b>${G.s.year+(s.cy||1)}</b></div><div><small>Yaş durumu</small><b>${s.age<45?'Gelişiyor':s.age<60?'Zirvede':'Düşüşte'}</b></div></div>`:''}</section>
    <div class="offer-btns" style="margin-top:10px">${mine&&!s.me?`<button class="cta sm" data-act="stfMkt" data-k="${STK[i]}">Yerine birini ara</button>`:''}<button class="btn ghost" data-act="closeModal">Kapat</button></div>`);}
 /* iş piyasası (TD) */
 function appealStars(){const c=myClub(),m=G.m;return clamp((c.str-55)/7+(curLeague().tier>=9?0.5:0)+((m.rep||40)-40)/40+(UP('td_dil')?0.5:0),0.5,5);}
@@ -52,9 +52,9 @@ function stfMarket(role){const m=G.m,i=STK.indexOf(role),seed=role+G.s.year+'w'+
   return out.sort((a,b)=>b.ab-a.ab);}
 let STM=null;
 function stfMktOpen(role){STM=role;const m=G.m,mine=stfMine(),cur=mine.find(s=>s&&s.role===role),bill=mine.reduce((a,s)=>a+(s?s.w:0),0);
-  openModal(`<h3>${esc(STF_R[role].n)} ara</h3><p class="muted" style="margin:0">Maaş bütçesi ${eur(bill)} / ${eur(m.sbud)} haftalık · kulüp cazibesi ${starsHTML(appealStars(),appealStars())}</p>
+  openModal(`<h3>${esc(STF_R[role].n)} ara</h3><p class="muted" style="margin:0">Maaş bütçesi ${amtFmt(bill*52)} / ${amtFmt(m.sbud*52)} yıllık · kulüp cazibesi ${starsHTML(appealStars(),appealStars())}</p>
    ${cur?`<p class="muted" style="margin:0">Mevcut: ${esc(cur.name)} ${starsHTML(abStars(cur.ab),abStars(cur.ab))} · ayrılırsa 12 haftalık tazminat (${eur(cur.w*12)})</p>`:''}
-   <div>${stfMarket(role).map((s,n)=>{const [lo,hi]=potShown(s,false);return `<div class="stf-mk"><div><b>${esc(s.name)}</b><small>${flagImg(s.nat,'fl-row')} ${s.age} yaş · ${eur(s.w)}/hf · POT ${stTxt(lo)}–${stTxt(hi)}★</small></div>${starsHTML(abStars(s.ab),hi)}<button class="${s.ok?'cta':'btn'} sm" data-act="stfHire" data-k="${n}">${s.ok?'İşe al':'Teklif'}</button></div>`;}).join('')}</div>
+   <div>${stfMarket(role).map((s,n)=>{const [lo,hi]=potShown(s,false);return `<div class="stf-mk"><div><b>${esc(s.name)}</b><small>${flagImg(s.nat,'fl-row')} ${s.age} yaş · ${wgT(s.w)} · POT ${stTxt(lo)}–${stTxt(hi)}★</small></div>${starsHTML(abStars(s.ab),hi)}<button class="${s.ok?'cta':'btn'} sm" data-act="stfHire" data-k="${n}">${s.ok?'İşe al':'Teklif'}</button></div>`;}).join('')}</div>
    <button class="btn ghost" data-act="closeModal">Kapat</button>`);}
 function stfHire(n){const m=G.m,role=STM,s=stfMarket(role)[n];if(!s)return;const mine=stfMine(),i=STK.indexOf(role),cur=mine[i],bill=mine.reduce((a,x)=>a+(x?x.w:0),0)-(cur?cur.w:0);
   if(!s.ok)return toast(`${s.name}: “Kulübünüzün projesi şu an bana uygun değil.”`);

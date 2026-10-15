@@ -14,7 +14,7 @@ fmProfHTML=(old=>function(p,c,opt){let h=old.apply(this,arguments);try{
       h=h.replace(/<div class="fmr"><span>([^<]+)<\/span><b class="vr">[^<]*<\/b><\/div>/g,(m,n)=>{const v=V[n];if(v==null)return m;const s=attrFuzzy(p,n,v,acc,20);return `<div class="fmr"><span>${n}</span><b class="vr${s==='??'?' unk':''}">${s}</b></div>`;});}
     /* M.Y. / P.Y. yıldızları: üstüne gelince sayı ya da aralık */
     let oLo,oHi,pLo,pHi;if(sc){[oLo,oHi]=scRange(p,'o');[pLo,pHi]=scRange(p,'p');}else{oLo=oHi=p.ovr;const pp=pPot(p);pLo=pp[0];pHi=pp[1];if(mine&&mgr){pLo=Math.min(pLo,pHi);}}
-    const tip=(t,a,b,note)=>{a=ab200(a);b=ab200(b);return a===b?`${t}: ${a}/200`:`${t}: ${a}–${b}/200${note?' · '+note:''}`;};
+    const tip=(t,a,b,note)=>{a=ab200(a);b=ab200(b);return a===b?`${t}: ${a}/100`:`${t}: ${a}–${b}/100${note?' · '+note:''}`;};
     const tipS=(x,t)=>fmStars(stV(x)).replace('<span class="fm-st"',`<span class="fm-st" tabindex="0" data-tip="${t}"`);const myS=oLo===oHi?tipS(oLo,tip('Mevcut yetenek',oLo,oHi)):starsRange(oLo,oHi,tip('Mevcut yetenek',oLo,oHi,'gözlem tahmini'));
     const pyS=pLo===pHi?tipS(pLo,tip('Potansiyel',pLo,pHi)):starsRange(pLo,pHi,tip('Potansiyel',pLo,pHi,sc?'gözlem tahmini':'tahmini'));
     h=h.replace(/<div class="fmi two"><div><span>M\.Y\.<\/span>[\s\S]*?<\/b><\/div><div><span>P\.Y\.<\/span>[\s\S]*?<\/b><\/div><\/div>/,`<div class="fmi two"><div><span>M.Y.</span><b>${myS}</b></div><div><span>P.Y.</span><b>${pyS}</b></div></div>`);

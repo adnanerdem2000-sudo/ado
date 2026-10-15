@@ -88,19 +88,55 @@ nextDay=(old=>function(){try{wgFix();}catch(e){}return old.apply(this,arguments)
 /* orta/zirve başlangıç mesajındaki maaşı yeni değere çek */
 wizGo=(old=>function(){const r=old.apply(this,arguments);try{if(G&&isPl()&&G.contract){wgFix();const im=(G.inbox||[]).find(x=>/Yıllık maaşın/.test(x.body||''));if(im)im.body=im.body.replace(/Yıllık maaşın [^.]*\./,`Yıllık maaşın ${money(G.contract.wage*52)}.`);save();render();}}catch(e){console.warn('v156 başlangıç',e);}return r;})(wizGo);
 
-/* ---------- kulüp finansı: gelir, ligin maaş/gelir oranıyla tutarlı ---------- */
+/* ---------- kulüp finansı: gelir, ligin maaş/gelir oranıyla tutarlı ----------
+   v172: tamamlama artık o anki kadronun maaşını değil, sezon başında sabitlenen bir "gelir tabanını" izler. Taban her sezon
+   en çok %15 değişir (sponsor ve ticari gelir kadronun maaşıyla birlikte ancak yavaşça büyür). Böylece sezon içinde maaş
+   bütçesini zorlayan menajerin bilançosu açık verebilir; uzun vadede gelir kulübün gerçek ölçeğine yaklaşır, oyun bozulmaz. */
+function wgRevBase(bill){const m=G.m,y=G.s.year;const R=m.wgRev;if(R&&R.y===y&&R.c===G.club)return R.b;
+  const b=R&&R.c===G.club&&R.b>0?clamp(bill,R.b*0.85,R.b*1.15):bill;m.wgRev={y,c:G.club,b};return b;}
 finData=(old=>function(){const F=old.apply(this,arguments);try{if(G.mode!=='mgr')return F;const S=G.s,g=wgLg(S.league),nPl=(S.results||[]).length,nTot=(S.fixtures||[]).length||1;
-    const bill=squadOf(G.club).reduce((a,p)=>a+(p.k==='ME'?0:wgAnnual(p,G.club)),0),target=bill/g.r*nPl/nTot,cur=F.ti-(F.inc.find(x=>x[0]==='Oyuncu satışları')||[0,0])[1]-(F.inc.find(x=>x[0]==='UEFA ödemeleri')||[0,0])[1];
+    const bill=squadOf(G.club).reduce((a,p)=>a+(p.k==='ME'?0:wgAnnual(p,G.club)),0),target=wgRevBase(bill)/g.r*nPl/nTot,cur=F.ti-(F.inc.find(x=>x[0]==='Oyuncu satışları')||[0,0])[1]-(F.inc.find(x=>x[0]==='UEFA ödemeleri')||[0,0])[1];
     const add=Math.max(0,target-cur);if(add>0){const sp=F.inc.find(x=>x[0]==='Sponsor ve ticari');if(sp)sp[1]+=add;F.ti+=add;}
     /* oyuncu dışı giderler (personel, tesis, işletme) — UEFA: gelirin üçte biri civarı */const op=F.exp.find(x=>x[0]==='İşletme giderleri');if(op){const need=Math.max(0,F.ti*0.3-op[1]);op[1]+=need;F.te+=need;}}catch(e){console.warn('v156 finans',e);}return F;})(finData);
 
-/* ---------- gösterim: yıllık + haftalık, amatörde "ücret yok", yapay zekâ maaşı "tahmini" ---------- */
-openModal=(old=>function(h){try{if(typeof h==='string')h=h.replace(/<small>Maaş<\/small>/g,'<small>Maaş (tahmini)</small>');}catch(e){}return old.call(this,h,...[].slice.call(arguments,1));})(openModal);
-render=(old=>function(){const r=old.apply(this,arguments);try{const v=$('#view');if(!v||!G||!isPl())return r;
-    v.querySelectorAll('dt').forEach(dt=>{if(dt.textContent.trim()!=='Yıllık maaş')return;const dd=dt.nextElementSibling;if(!dd||dd.dataset.wg)return;dd.dataset.wg=1;const t=dd.textContent.trim();
-      if(/^0 €$/.test(t)){dd.textContent='Ücret yok';dd.title='Amatör lisans: maaş yok';}else{const a=amtParse(t);if(a!=null&&a>0)dd.insertAdjacentHTML('beforeend',`<small class="wg-hf"> · ${amtFmt(a/52)}/hf</small>`);}});
-    {const tw=document.createTreeWalker(v,NodeFilter.SHOW_TEXT),L=[];let n;while((n=tw.nextNode()))if(/yıllık 0 €/i.test(n.nodeValue))L.push(n);for(const t of L)t.nodeValue=t.nodeValue.replace(/yıllık 0 €/gi,'ücret yok (amatör lisans)');}
-    v.querySelectorAll('.wallet span').forEach(sp=>{if(sp.textContent.trim()!=='Yıllık maaş'||sp.dataset.wg)return;sp.dataset.wg=1;const b=sp.previousElementSibling,a=b&&amtParse(b.textContent.trim());if(a===0)b.textContent='Ücret yok';else if(a>0)sp.textContent=`Yıllık maaş · ${amtFmt(a/52)}/hf`;});
-  }catch(e){}return r;})(render);
-openModal=(old=>function(h){const r=old.apply(this,arguments);try{const mc=$('#modalCard');if(mc)mc.querySelectorAll('dt').forEach(dt=>{if(dt.textContent.trim()!=='Yıllık maaş')return;const dd=dt.nextElementSibling;if(!dd||dd.dataset.wg)return;dd.dataset.wg=1;const t=dd.textContent.trim();
-    if(/^0 €$/.test(t))dd.textContent='Ücret yok';else{const a=amtParse(t);if(a!=null&&a>0)dd.insertAdjacentHTML('beforeend',`<small class="wg-hf"> · ${amtFmt(a/52)}/hf</small>`);}});}catch(e){}return r;})(openModal);
+/* ---------- v172: teknik direktör, yönetici, personel ve hakem maaşı aynı modelde ----------
+   Taban, ligin oyuncu başı ortalama maaşıdır (WG_LG, kaynak: src/game/MAAS_KAYNAKLARI.md). Görev oranları kaynak değil oyun
+   varsayımıdır (eski modelin oranları korundu): TD = lig ortalaması × kulüp zenginliği^2,5 × itibar; sportif direktör ×0,6, başkan
+   ×0,4; yardımcı antrenör, gözlemci, doktor kademeye göre TD'nin %25–76'sı; hakem kulüpten bağımsız, personel oranının %30'u ve lig
+   ortalamasının Süper Lig'e göre karekökü (hakem ücretleri ligler arasında oyuncu maaşları kadar açılmaz).
+   Türkiye'de taban asgari ücret. Ekranda "tahmini" yazar. */
+const WG_ROLEK={td:1,sd:.6,bsk:.4};
+function wgStaffAnnual(prof,c,lvl,rep){if(!c)return WG_ASGARI;const L=LEAGUES[c.league]||{},key=wgKey(c.league),tr=(L.cc||'TR')==='TR';
+  const ref=prof==='ref',ck=ref?1:wgClubK(c),repK=clamp(0.75+(rep==null?50:rep)/200,0.75,1.25);
+  let base=L.youth?WG_ASGARI*1.5:WG_AM[key]?WG_AM[key]*3:wgLg(c.league).a;if(ref&&!L.youth&&!WG_AM[key])base=Math.sqrt(base*WG_LG.sl.a);/* hakem ücreti lig zenginliğiyle daha az değişir: Süper Lig ortalamasına göre karekök ölçek */let w=base*Math.pow(ck,2.5)*repK;
+  if(WG_ROLEK[prof])w*=WG_ROLEK[prof];else w*=(0.35+0.18*(lvl||0))/1.4*(ref?0.3:1);
+  const floor=WG_AM[key]?WG_AM[key]:tr?WG_ASGARI:wgMin(c.league);return Math.max(floor,w);}
+/* oyuncunun kendi sözleşmesi dışındaki meslekler: şu anki görev ve kulüpten yıllık maaş */
+function wgMyStaffAnnual(cid){const c=CLUBS[cid||G.club];if(!c)return 0;if(G.mode==='mgr'){const role=(G.m&&G.m.role)||'td';return wgStaffAnnual(role,c,0,G.m&&G.m.rep);}
+  const j=G.job||{};return wgStaffAnnual(G.staff==='ref'?'ref':G.staff,c,j.lvl||0,j.rep);}
+function wgMyStaffU(cid){let u=wgU(wgMyStaffAnnual(cid));if(G.contract&&G.contract.stigCut)u=Math.max(50,Math.round(u*0.6/50)*50);return u;}
+/* eski kayıt: TD/personel/hakem sözleşmesini bir kez yeni modele taşı (süre ve görev aynı) */
+function wgFixStaff(){if(!G||isPl()||!G.contract||G.contract.v172||!G.club||!CLUBS[G.club]||!G.s)return;if(G.susp&&G.susp.w>0)return;/* bahis cezası bitince */
+  const old=G.contract.wage||0;G.contract.wage=wgMyStaffU();G.contract.v172=1;
+  if(old>0&&!G.v172w&&!G.wg172msg){G.wg172msg=1;msg('board','Maaşın yeniden düzenlendi',`Teknik ekip ve yönetici maaşları artık lig ortalamalarına dayanan modelle hesaplanıyor (v172). Maaşın ${wgTU(old)} yerine ${wgTU(G.contract.wage)} oldu. Süren ve görevin değişmedi.`);}
+  G.v172w=1;}
+newGame=(old=>function(){const r=old.apply(this,arguments);try{if(G)G.v172w=1;}catch(e){}return r;})(newGame);
+render=(old=>function(){try{wgFixStaff();}catch(e){console.warn('v172 maaş',e);}return old.apply(this,arguments);})(render);
+nextDay=(old=>function(){try{wgFixStaff();}catch(e){}return old.apply(this,arguments);})(nextDay);
+
+/* ---------- v172: tek maaş biçimlendiricisi ----------
+   İç birim haftalıktır (oyun maaşı her pazartesi öder); ekranda yıllık + haftalık birlikte, HTML üretilirken yazılır.
+   (v103 ve v156'nın DOM üzerinde metin çeviren dönüştürücüleri kaldırıldı.) */
+function wgH(we,o){we=+we||0;if(we<=0)return (o&&o.zero)||'Ücret yok';return `${amtFmt(we*52)}<small class="wg-hf">/yıl · ${amtFmt(we)}/hf</small>`;}
+function wgT(we,o){we=+we||0;if(we<=0)return (o&&o.zero)||'ücret yok';return `${amtFmt(we*52)}/yıl (${amtFmt(we)}/hf)`;}
+function wgHU(u,o){return wgH((+u||0)/EUR_TL,o);}
+function wgTU(u,o){return wgT((+u||0)/EUR_TL,o);}
+/* "tahmini" işareti: kaynak türüne göre açıklama (WG_LG.s) */
+const WG_SRC={u:'UEFA, European Club Finance and Investment Landscape 2025',d:'Deloitte, Annual Review of Football Finance',m:'MLSPA maaş rehberi',c:'Capology (haber aktarımı)',f:'FootyStats'};
+function wgSrcTxt(lid){const s=wgLg(lid).s;return WG_SRC[s]?`Oyuncuya özel gerçek maaş değil: ligin ortalaması (${WG_SRC[s]}) ve piyasa değerinden hesaplanan tahmin.`:'Oyuncuya özel gerçek maaş değil; bu lig için açık bir ortalama kaynağı bulunamadı, ortalama da tahmini (komşu liglere göre).';}
+function wgEstTag(lid){return ` <small class="wg-est" title="${esc(wgSrcTxt(lid))}">tahmini</small>`;}
+/* yapay zekâ oyuncusunun maaşı tahmin mi (menajerin kendi kulübünde imzalanmış sözleşme gerçektir) */
+function wgIsEst(p,cid){const m=G&&G.m;return !(m&&m.ct&&p&&m.ct[p.k]&&cid===G.club);}
+function wgPH(p,cid){const w=pWage(p,cid);return wgH(w)+(wgIsEst(p,cid)?wgEstTag((CLUBS[cid]||{}).league):'');}
+/* cüzdan kutusu (Yaşam ekranı): <div><b>…</b><span>…</span></div> */
+function wgWallet(u){const we=(+u||0)/EUR_TL;return we>0?`<div><b>${amtFmt(we*52)}</b><span>Yıllık maaş · ${amtFmt(we)}/hf</span></div>`:`<div><b>Ücret yok</b><span>${isPl()?'Amatör lisans':'Sözleşme yok'}</span></div>`;}

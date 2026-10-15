@@ -55,7 +55,7 @@ function negPlayerInit(){const n=G.m.neg,p=negP(),me=myClub();const cw=pWage(p,n
     rc:!loan&&(ps==='Hırslı'||p.ovr>=me.str+4)&&hash(p.k+'rc')%3>0,ag:loan?rnd5(cw*8,500):rnd5(Math.max(n.o.fee*0.06,cw*10),1000),bon:loan?0:rnd5(cw*(6+hash(p.k+'b')%10),1000)};
   if(loan)n.d.w=Math.round(cw*(n.o.wp/100));
   const d=n.d;n.c={w:rnd5(d.w*0.85,d.w>2e4?1000:100),y:d.y||1,role:Math.floor(d.role),bon:rnd5(d.bon*0.6,500),ag:rnd5(d.ag*0.6,500),rc:d.rc?rnd5(n.A*2,stepOf(n.A)):0,ab:0,gb:0};
-  n.log.push(['ag',`Menajer: “${p.name} ${loan?'kiralık gelmeye sıcak bakıyor':'kulübünüzle konuşmaya hazır'}. Beklentilerimiz: haftalık ${eur(d.w)}${d.y?`, ${d.y} yıl`:''}, ${roleName(d.role).toLowerCase()} rolü${d.rc?', serbest kalma maddesi':''}. Benim ücretim ${eur(d.ag)}.”`]);}
+  n.log.push(['ag',`Menajer: “${p.name} ${loan?'kiralık gelmeye sıcak bakıyor':'kulübünüzle konuşmaya hazır'}. Beklentilerimiz: ${wgT(d.w)}${d.y?`, ${d.y} yıl`:''}, ${roleName(d.role).toLowerCase()} rolü${d.rc?', serbest kalma maddesi':''}. Benim ücretim ${eur(d.ag)}.”`]);}
 function negScore(){const n=G.m.neg,d=n.d,c=n.c,p=negP();const parts=[];
   const wr=c.w/d.w;parts.push(['Maaş',wr>=1?Math.min(10,(wr-1)*40):wr>=0.92?(wr-1)*120:-15+(wr-0.92)*200]);
   if(d.y)parts.push(['Süre',-Math.max(0,Math.abs(c.y-d.y)-(p.age>=30&&c.y>d.y?1:0))*7]);
@@ -68,17 +68,17 @@ function negScore(){const n=G.m.neg,d=n.d,c=n.c,p=negP();const parts=[];
 function negPlayer(){const m=G.m,n=m.neg,p=negP();if(!n||n.st!=='player'||!p)return;const c=n.c,bud=m.budget/EUR_TL,wb=wbudInit(),bill=wageBill();
   const cost=(n.type==='tr'?n.o.fee*(n.o.inst==='pesin'?1:n.o.inst==='y2'?0.5:0.34):n.o.fee)+c.ag+c.bon;
   if(cost>bud)return toast(`Toplam ilk ödeme (${eur(cost)}) bütçeni aşıyor`);
-  const myW=n.type==='renew'?c.w-pWage(p,G.club):c.w;if(bill+myW>wb*1.0)return toast(`Maaş bütçesi yetmiyor (${eur(bill)} + ${eur(myW)} > ${eur(wb)}/hf)`);
+  const myW=n.type==='renew'?c.w-pWage(p,G.club):c.w;if(bill+myW>wb*1.0)return toast(`Maaş bütçesi yetmiyor (yıllık ${amtFmt(bill*52)} + ${amtFmt(myW*52)} > ${amtFmt(wb*52)})`);
   const S=negScore(),worst=S.parts.slice().sort((a,b)=>a[1]-b[1])[0];
-  n.log.push(['me',`Teklif: haftalık ${eur(c.w)}${n.type==='tr'?`, ${c.y} yıl`:''}, rol: ${roleName(c.role)}${c.bon?`, imza ${eur(c.bon)}`:''}, menajer ${eur(c.ag)}${c.rc?`, serbest kalma ${eur(c.rc)}`:''}`]);
+  n.log.push(['me',`Teklif: ${wgT(c.w)}${n.type==='tr'?`, ${c.y} yıl`:''}, rol: ${roleName(c.role)}${c.bon?`, imza ${eur(c.bon)}`:''}, menajer ${eur(c.ag)}${c.rc?`, serbest kalma ${eur(c.rc)}`:''}`]);
   if(S.tot>=0){negDone();return;}
   n.ppat-=1+(n.lastS!=null&&S.tot<=n.lastS+1?1:0);n.lastS=S.tot;const dd=n.d;
-  const hint={Maaş:`haftalık ${eur(dd.w)} altı bizim için kabul edilemez`,Süre:`müvekkilim ${dd.y} yıllık bir sözleşme istiyor`,Rol:`${roleName(dd.role).toLowerCase()} statüsü verilmezse gelmez`,'İmza parası':`imza parası en az ${eur(rnd5(dd.bon*0.9,500))} olmalı`,'Menajer ücreti':`benim ücretim ${eur(rnd5(dd.ag*0.9,500))} altında olamaz`,'Serbest kalma maddesi':'sözleşmeye serbest kalma maddesi konmalı'}[worst[0]]||'şartlar yetersiz';
+  const hint={Maaş:`${wgT(dd.w)} altı bizim için kabul edilemez`,Süre:`müvekkilim ${dd.y} yıllık bir sözleşme istiyor`,Rol:`${roleName(dd.role).toLowerCase()} statüsü verilmezse gelmez`,'İmza parası':`imza parası en az ${eur(rnd5(dd.bon*0.9,500))} olmalı`,'Menajer ücreti':`benim ücretim ${eur(rnd5(dd.ag*0.9,500))} altında olamaz`,'Serbest kalma maddesi':'sözleşmeye serbest kalma maddesi konmalı'}[worst[0]]||'şartlar yetersiz';
   if(n.ppat<=0){n.st='fail';m.negCd=m.negCd||{};m.negCd[n.k]=G.s.day+45;n.log.push(['ag',`Menajer: “Görüşmeyi sonlandırıyoruz. ${p.name} başka seçenekleri değerlendirecek.”`]);msg('board',`Sözleşme görüşmesi başarısız: ${p.name}`,`${p.name} ile şahsi şartlarda anlaşılamadı.`);}
   else n.log.push(['ag',`Menajer: “${S.tot>-12?'Yaklaştık ama ':''}${hint}.”`]);save();negOpen();}
 function negDone(){const m=G.m,n=m.neg,p=negP(),c=n.c,o=n.o,from=n.from,me=myClub();
   if(n.type==='renew'){m.budget-=(c.ag+c.bon)*EUR_TL;m.ct=m.ct||{};m.ct[n.k]={w:c.w,end:G.s.year+c.y,role:c.role,rc:c.rc};m.stat=m.stat||{};m.stat[n.k]=c.role;relAdd(p,8);n.st='done';n.log.push(['ag',`Menajer: “Anlaştık. ${p.name} ${G.s.year+c.y} yılına kadar kulüpte.”`]);
-    msg('board',`Sözleşme yenilendi: ${p.name}`,`${p.name} ${G.s.year+c.y} yazına kadar yeni sözleşme imzaladı. Haftalık ${eur(c.w)}, rol: ${roleName(c.role)}.`);save();negOpen();return;}
+    msg('board',`Sözleşme yenilendi: ${p.name}`,`${p.name} ${G.s.year+c.y} yazına kadar yeni sözleşme imzaladı. Maaş ${wgT(c.w)}, rol: ${roleName(c.role)}.`);save();negOpen();return;}
   let first=n.type==='tr'?o.fee*(o.inst==='pesin'?1:o.inst==='y2'?0.5:0.34):o.fee;m.budget-=(first+c.ag+c.bon)*EUR_TL;
   if(n.type==='tr'&&o.inst!=='pesin'){m.inst=m.inst||[];const nI=o.inst==='y2'?1:2;for(let i=1;i<=nI;i++)m.inst.push({y:G.s.year+i,a:o.fee*(o.inst==='y2'?0.5:0.33),k:n.k,c:from});}
   G.tx=G.tx||{};G.tx[n.k]=G.club;txNote(n.k,G.club,typeof price==='number'&&price<1e10?price:undefined);m.ct=m.ct||{};m.ct[n.k]={w:c.w,end:n.type==='loan'?G.s.year+1:G.s.year+c.y,role:c.role,rc:c.rc,from};
@@ -86,7 +86,7 @@ function negDone(){const m=G.m,n=m.neg,p=negP(),c=n.c,o=n.o,from=n.from,me=myClu
   if(o.sell){m.sellOn=m.sellOn||{};m.sellOn[n.k]={c:from,pct:o.sell};}
   m.wbud=Math.max(m.wbud,wageBill());syncStr(G.club);syncStr(from);m.xi=null;m.stat=m.stat||{};m.stat[n.k]=c.role;relOf(p);relAdd(p,18);
   n.st='done';n.log.push(['ag',`Menajer: “Anlaştık! ${p.name} sağlık kontrolünden geçti ve imzayı attı.”`]);
-  msg('board',`${n.type==='loan'?'Kiralık':'Transfer'}: ${p.name}`,`${p.name} ${CLUBS[from].name} kulübünden ${n.type==='loan'?'kiralık olarak':eur(o.fee)+' bedelle'} kadromuza katıldı. Haftalık maaş ${eur(c.w)}, rol: ${roleName(c.role)}.`);
+  msg('board',`${n.type==='loan'?'Kiralık':'Transfer'}: ${p.name}`,`${p.name} ${CLUBS[from].name} kulübünden ${n.type==='loan'?'kiralık olarak':eur(o.fee)+' bedelle'} kadromuza katıldı. Maaş ${wgT(c.w)}, rol: ${roleName(c.role)}.`);
   toast(`${p.name} imzaladı!`);save();negOpen();}
 function loansEnd(){const m=G.m;if(!m||!m.loans)return;m.optOf=[];for(const [k,l] of Object.entries(m.loans)){const p=pByKey(k);
     if(l.mand&&m.budget>=l.opt*EUR_TL){m.budget-=l.opt*EUR_TL;m.ct[k].end=G.s.year+4;msg('board','Zorunlu opsiyon',`${p?p.name:'Oyuncu'} için ${eur(l.opt)} bonservis ödendi; artık bizim oyuncumuz.`);}
@@ -116,15 +116,15 @@ function negOpen(){const m=G.m,n=m.neg,p=negP();if(!n||!p){closeModal();return;}
     <p class="ng-l">Sonraki satıştan pay</p>${chips('sell',[[0,'Yok'],[10,'%10'],[20,'%20'],[30,'%30']],o.sell)}
     <p class="ng-l">Performans bonusları</p>${chips('add',[[0,'Yok'],[5,'+%5'],[10,'+%10'],[20,'+%20']],o.add)}
     <button class="cta" data-act="ngClub">Teklifi gönder</button>`;}
-  else if(n.st==='club'){body=`<div class="ng-info"><span>Maaşı <b>${eur(pWage(p,n.from))}/hf</b></span><span>Bütçe <b>${eur(bud)}</b></span><span>Sabır ${pat(n.pat,5)}</span></div>
+  else if(n.st==='club'){body=`<div class="ng-info"><span>Maaşı <b>${wgPH(p,n.from)}</b></span><span>Bütçe <b>${eur(bud)}</b></span><span>Sabır ${pat(n.pat,5)}</span></div>
     <p class="ng-l">Süre</p>${chips('dur',[['yarim','Yarım sezon'],['sezon','Sezon sonuna kadar']],o.dur)}
     <p class="ng-l">Maaş katkısı (bizim ödeyeceğimiz)</p>${chips('wp',[[25,'%25'],[50,'%50'],[75,'%75'],[100,'%100']],o.wp)}
     <p class="ng-l">Kiralama bedeli</p>${stp('fee',eur(o.fee))}
     <p class="ng-l">Satın alma opsiyonu</p>${chips('opt',[['yok','Yok'],['ops','Opsiyonlu'],['zor','Zorunlu']],o.opt)}${o.opt!=='yok'?stp('optP',eur(o.optP)):''}
     <button class="cta" data-act="ngClub">Kiralama teklifi gönder</button>`;}
-  else if(n.st==='player'){const S=negScore(),bill=wageBill(),wb=wbudInit();body=`<div class="ng-info"><span>Maaş bütçesi <b>${eur(bill)}/${eur(wb)}</b></span><span>İlgi <b>${n.I}</b></span><span>Sabır ${pat(n.ppat,4)}</span></div>
+  else if(n.st==='player'){const S=negScore(),bill=wageBill(),wb=wbudInit();body=`<div class="ng-info"><span>Maaş bütçesi <b>${amtFmt(bill*52)} / ${amtFmt(wb*52)}</b> yıllık</span><span>İlgi <b>${n.I}</b></span><span>Sabır ${pat(n.ppat,4)}</span></div>
     <div class="ng-mood"><i><em style="width:${Math.round(clamp(50+S.tot*1.4,3,100))}%"></em></i><small>${S.tot>=0?'Menajer bu şartlardan memnun görünüyor':S.tot>-12?'Yakın, ama bir iki madde eksik':'Beklentilerin oldukça altında'}</small></div>
-    <p class="ng-l">Haftalık maaş</p>${stp('w',eur(cc.w),`Beklenti ~${eur(rnd5(n.d.w*(0.95+(hash(n.k)%10)/100),100))}`)}
+    <p class="ng-l">Maaş · yıllık ${amtFmt(cc.w*52)}</p>${stp('w',eur(cc.w)+'/hf',`Beklenti ~${wgT(rnd5(n.d.w*(0.95+(hash(n.k)%10)/100),100))}`)}
     ${n.type!=='loan'?`<p class="ng-l">Sözleşme süresi</p>${chips('y',[[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5 yıl']],cc.y)}`:''}
     <p class="ng-l">Kadro rolü (söz)</p>${chips('role',[[0,'Yedek'],[1,'Rotasyon'],[2,'İlk 11'],[3,'Yıldız']],cc.role)}
     ${n.type!=='loan'?`<p class="ng-l">İmza parası</p>${stp('bon',eur(cc.bon))}<p class="ng-l">Serbest kalma maddesi</p>${stp('rc',cc.rc?eur(cc.rc):'Yok')}`:''}
@@ -139,7 +139,7 @@ function negOpen(){const m=G.m,n=m.neg,p=negP();if(!n||!p){closeModal();return;}
 function bestRoles(p){const kinds=Object.keys(FMR).filter(k=>({GK:'KL',CB:'DF',FB:'DF',DM:'OS',CM:'OS',AM:'OS',WM:'KN',W:'KN',ST:'FW'})[k]===p.pos);const out=[];for(const k of kinds)for(const r of FMR[k])out.push([r[1],roleFit(p,r[0])]);return out.sort((a,b)=>b[1]-a[1]).slice(0,3);}
 function mgrProfile(p,c){const m=G.m,mine=c.id===G.club,R=squadRoles(c.id)[p.k],A=mine?null:askPrice(p,c.id),loan=m.loans&&m.loans[p.k],at=pAttrs(p);
   const col=v=>v>=85?'a5':v>=75?'a4':v>=65?'a3':v>=55?'a2':'a1';
-  return `<section class="fm-prof"><div class="fp-row"><div><small>Sözleşme</small><b>${ctEnd(p)}${loan?' · kiralık':''}</b></div><div><small>Maaş</small><b>${eur(pWage(p,c.id))}/hf</b></div><div><small>Değer</small><b>${eur(pValue(p))}</b></div></div>
+  return `<section class="fm-prof"><div class="fp-row"><div><small>Sözleşme</small><b>${ctEnd(p)}${loan?' · kiralık':''}</b></div><div><small>Maaş</small><b>${wgPH(p,c.id)}</b></div><div><small>Değer</small><b>${eur(pValue(p))}</b></div></div>
    <div class="fp-row"><div><small>Kişilik</small><b>${esc(persOf(p))}</b></div><div><small>Durum</small><b>${esc(R||'—')}</b></div><div><small>${mine?'Moral':'Transfer'}</small><b>${mine?moodOf(relOf(p))[2]+' '+moodOf(relOf(p))[1]:A.nfs?'Satılık değil':R==='Rotasyon'||R==='Yedek'?'Kiralığa uygun':'Pazarlığa açık'}</b></div></div>
    <div class="fp-attr">${at.map(([l,v])=>`<div><span>${l}</span><b class="${col(v)}">${v}</b></div>`).join('')}</div>
    <p class="fp-l">En uygun roller</p><div class="fp-roles">${bestRoles(p).map(([n,v])=>`<span>${esc(n)} <em>${'★'.repeat(fitStars(v))||'☆'}</em></span>`).join('')}</div>

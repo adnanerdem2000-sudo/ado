@@ -199,7 +199,7 @@ game/parts/178_v151_boyut_ve_veri.js
 game/parts/181_v154_futbolcu_duzeltmeleri.js
 game/parts/183_v156_gercekci_maaslar.js
 game/parts/184_v157_lig_fiksturu.js
-game/data/ten_fm.js
+@zy game/data/ten_fm.js
 game/parts/185_v159_gercekci_portreler.js
 game/parts/188_v161_transferler_ve_menajerler.js
 game/parts/187_v160_magaza_ve_formalar.js
@@ -213,6 +213,12 @@ game/parts/195_v170_meslek_metinleri.js
 game/parts/199_v171_arayuz_sadelik.js
 game/parts/198_v171_gelen_kutusu_ve_menajer.js
 game/parts/197_v171_hiz.js
+game/parts/205_v172_sozlesme_ve_emeklilik.js
+game/parts/200_v172_menu_ve_olcek.js
+game/parts/202_v172_sezon_oncesi.js
+game/parts/203_v172_hakem_gozlemci_doktor.js
+game/parts/201_v172_baskan_ve_sd.js
+game/parts/207_v172_kucuk_duzeltmeler.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js

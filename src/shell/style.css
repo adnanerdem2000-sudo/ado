@@ -2941,3 +2941,123 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .gk171-n,.ib-t b .gk171-n,.msg-head b .gk171-n{display:inline-block;width:auto;flex:none;margin:0 6px 0 0;padding:0 6px;border-radius:9px;background:rgba(255,255,255,.12);color:var(--chalk-2,#cfd6dd);font:600 11px/17px system-ui,sans-serif;font-style:normal;vertical-align:1px}
 .gk171-h{margin:8px 0 4px;font-size:12.5px}.gk171-h summary{cursor:pointer;color:var(--chalk-3,#9aa4ae)}
 .gk171-h ul{margin:6px 0 0;padding-left:16px}.gk171-h li{margin:3px 0;color:var(--chalk-2,#cfd6dd)}.gk171-h li small{color:var(--chalk-3,#9aa4ae);margin-right:4px}
+/* v172 menu: sade menüde alt sekmeler, boş ekranlar soluk, güç ölçeği ipucu */
+.v172-alt{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:-2px 0 12px;padding:0 0 2px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}.v172-alt::-webkit-scrollbar{display:none}
+.v172-at{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 11px 7px;background:none;border:0;border-bottom:2px solid transparent;color:var(--chalk-2,#c9d3e0);font-weight:700;font-size:13px;white-space:nowrap;cursor:pointer;margin-bottom:-1px}
+.v172-at.on{color:#fff;border-bottom-color:var(--hot,#ff3b5c)}
+.v172-at small{font-size:10px;font-weight:600;opacity:.75}
+.v172-at.bos:not(.on){opacity:.55}
+[data-bos]:not([aria-current]){opacity:.5}
+.ui-mi[data-bos]{flex-wrap:wrap}.ui-mi[data-bos]::after{content:'henüz veri yok';flex:1 0 100%;font-size:10px;opacity:.85;padding-left:24px;margin-top:-4px}
+.nav-i[data-bos]::after{content:'boş';margin-left:auto;font-size:10px;opacity:.8}
+.v172-ip{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:4px;padding:0;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.08);color:inherit;font-size:10px;font-weight:800;line-height:1;cursor:help;vertical-align:middle}
+/* v172 yarim: maaş gösterimi — yapay zekâ oyuncusu maaşı "tahmini" işareti (kaynak açıklaması title'da) */
+.wg-est{font-size:.7em;font-weight:600;opacity:.72;margin-left:2px;border-bottom:1px dotted currentColor;cursor:help;white-space:nowrap}
+/* v172 sezon: hazırlık maçları, kamp paneli, TD sezon öncesi planı */
+.sz172-hz{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}.sz172-hz .btn{width:100%}
+.week .day.hzd .dl{color:var(--led);font-weight:700}
+.sz172-fl{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:4px}
+.sz172-fl li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:var(--panel-2,rgba(255,255,255,.04));font-size:13px}
+.sz172-fl li.now{outline:1px solid var(--led)}.sz172-fl li>span{flex:1;min-width:0;display:flex;flex-direction:column}.sz172-fl li>span small{opacity:.75;font-size:11.5px}
+.sz172-fl li>b{font-variant-numeric:tabular-nums;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.08)}.sz172-fl li>b.w{color:var(--good)}.sz172-fl li>b.l{color:var(--red)}
+.sz172-pp .strip{margin-bottom:8px}.sz172-pp .btn{width:100%;margin-top:6px}
+.sz172-td h3{margin:2px 0 6px}.sz172-td>.cta{width:100%;margin:8px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px}.sz172-td>.cta small{font-size:12px;opacity:.85;font-weight:500;text-transform:none;letter-spacing:0}
+.sz172-sec{margin-top:12px}.sz172-sec .kicker{display:block;margin-bottom:6px}
+.sz172-sec .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.sz172-sec .seg .chip{min-width:0;overflow-wrap:anywhere}.sz172-sec .seg .chip[disabled]{opacity:.45}
+.sz172-cap{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))!important}.sz172-hed{grid-template-columns:1fr!important}
+.sz172-frr{display:grid;grid-template-columns:54px 1fr;gap:6px;align-items:center;margin-bottom:6px}.sz172-frr>span{font-size:12px;opacity:.8}
+.sz172-frr .seg{grid-template-columns:repeat(3,minmax(0,1fr))}.sz172-frr .chip{padding:7px 4px;font-size:12.5px}
+.sz172-frb{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0}
+.v5c.f{background:rgba(255,179,32,.16);border-color:rgba(255,179,32,.5)}
+
+/* v172 sozlesme: sözleşme maddeleri, transfer son günü, yeni meslek */
+.dd-it>.cta,.dd-it>.btn,.dd-it>em{flex:0 0 auto;width:auto;margin:0}.dd-it>.cta.sm{padding:8px 16px}.dd-it svg{vertical-align:middle}.dd-it b{display:inline}
+.soz72-ddb{display:flex;gap:6px;flex:0 0 auto}.soz72-ddb .cta,.soz72-ddb .btn{width:auto;margin:0}
+.dd-band>.cta{flex:0 0 auto;width:auto;margin:0}
+.dd-clock.live{color:#7ee0a0;text-shadow:0 0 18px rgba(126,224,160,.35)}
+.soz72-cl{margin:12px 0 4px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)}
+.soz72-rows{display:grid;grid-template-columns:1fr;gap:4px}
+@media (min-width:720px){.soz72-rows{grid-template-columns:1fr 1fr}}
+.soz72-r{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.04)}
+.soz72-r.on{background:rgba(126,224,160,.08)}
+.soz72-r>span{flex:1;min-width:0}.soz72-r b{display:block;font-size:13px}.soz72-r small{display:block;color:var(--chalk-3,#9aa7b8);font-size:11.5px}
+.soz72-r>.btn{flex:0 0 auto;width:auto;margin:0;white-space:nowrap}.soz72-r>em{font-style:normal;color:#7ee0a0}
+.soz72-cnt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;margin:6px 0;border-radius:8px;background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.4)}
+.soz72-cnt>span{flex:1 1 180px}.soz72-cnt .btn{width:auto;margin:0}
+.soz72-log{margin:6px 0 0;padding-left:18px;font-size:12px;color:var(--chalk-3,#9aa7b8)}
+.soz72-ocl{display:flex;flex-wrap:wrap;gap:4px 10px;margin:4px 0 8px;font-size:12px;color:var(--chalk-2,#c9d3e0)}.soz72-ocl>b{width:100%;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-3,#9aa7b8)}.soz72-ocl i{font-style:normal;color:var(--chalk-1,#fff)}
+.soz72-rcb{margin:4px 0 8px;padding:6px 8px;border-radius:8px;background:rgba(255,107,107,.12);font-size:12.5px}
+.soz72-warn{padding:8px 10px;margin:6px 0;border-radius:8px;background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.35);font-size:12.5px}
+.soz72-my .btn{margin-top:8px}
+.soz72-td .neg-xr{margin:4px 0}
+.soz72-negx .filt,.soz72-td .filt{flex-wrap:wrap;overflow:visible}.soz72-negx .filt>*,.soz72-td .filt>*{flex-shrink:1}
+.neg-x .sub-h{flex-wrap:wrap;gap:2px 8px}.neg-x .sub-h>span:first-child{white-space:nowrap}
+@media (max-width:520px){.soz72-negx .neg-xr,.soz72-td .neg-xr{grid-template-columns:118px 1fr}}
+.soz72-negx{margin-top:4px}
+.soz72-mesg{display:grid;grid-template-columns:1fr;gap:6px}
+@media (min-width:720px){.soz72-mesg{grid-template-columns:1fr 1fr}}
+.soz72-mes{text-align:left}.soz72-mes .soz72-mi{margin-top:4px;color:var(--chalk-2,#c9d3e0)}
+.soz72-mesb{margin:10px 0}.soz72-mesb .btn{width:100%}
+.soz72-ml{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.soz72-ml li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+.soz72-ml li.on{background:rgba(126,224,160,.08)}.soz72-ml small{grid-column:1;color:var(--chalk-3,#9aa7b8)}.soz72-ml em{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:12px;color:var(--chalk-2,#c9d3e0);text-align:right}
+@media (max-width:520px){.soz72-ml li{grid-template-columns:1fr}.soz72-ml em{grid-column:1;grid-row:auto;text-align:left}}
+/* v172 sezon: seçili çipte alt yazı okunur kalsın */
+.sz172-sec .chip[aria-pressed="true"] small{color:inherit;opacity:.9}
+/* v172 personel: hakem atama rolleri ve MHK sıralaması, gözlemci önerileri, doktor hastaları */
+.pr172-rol{display:inline-block;font:700 10.5px/1.5 var(--f-body);letter-spacing:.03em;padding:1px 6px;border-radius:6px;background:rgba(255,201,60,.16);color:#ffd36a;vertical-align:1px}
+.pr172-rol.r-dort{background:rgba(124,196,255,.16);color:#9fd2ff}.pr172-rol.r-var{background:rgba(53,212,154,.16);color:#6fe3b8}
+.pr172-strip{margin:4px 0 8px}.pr172-ladder{grid-template-columns:repeat(5,1fr)}
+.pr172-rank li.pr172-me{background:rgba(255,201,60,.1);border-radius:8px}.pr172-rank li.pr172-upz span{color:var(--good)}.pr172-rank li.pr172-dnz span{color:#ff7a74}
+.pr172-on{margin:4px 0 6px;font-size:14px}.pr172-rp{color:#9fd2ff}.pr172-help{font-size:12px}.pr172-pts{margin:8px 0;font-size:13.5px}
+.pr172-wl{margin:0 0 8px;font-size:13.5px;line-height:1.45}
+.pr172-onr,.pr172-pt{padding:9px 0;border-bottom:1px solid var(--line)}.pr172-onr:last-child,.pr172-pt:last-child{border-bottom:0}
+.pr172-onh{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.pr172-onh small{color:var(--chalk-3);font-size:12px}
+.pr172-tl{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:6px 0 2px}.pr172-tl i{font-style:normal;color:var(--chalk-3);font-size:12px}
+.pr172-tl span{font-size:11.5px;padding:3px 7px;border-radius:7px;border:1px solid var(--line);color:var(--chalk-3)}
+.pr172-tl span.on{border-color:rgba(124,196,255,.45);color:#cfe7ff}.pr172-tl span.ok{border-color:rgba(74,210,127,.5);color:var(--good);background:rgba(74,210,127,.1)}
+.pr172-tl span.x{border-color:rgba(239,59,54,.45);color:#ff8a84;background:rgba(239,59,54,.08)}.pr172-tl span.wait{border-style:dashed}
+.pr172-perf{display:block;color:var(--chalk-2);font-size:12px;margin-top:3px}.pr172-onr .why{display:block;color:#ff9d97;font-size:12px}
+@media(max-width:600px){.pr172-ladder span{font-size:10.5px}.pr172-tl span{font-size:11px;padding:2px 6px}}
+/* v172 yonetici: sportif direktör ve başkan ana sayfası, kongre çubukları, maç sonrası özet */
+.rl-kpi{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:10px 0 4px}
+.rl-kpi>div{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rl-kpi span{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#a99fc9}
+.rl-kpi b{font-size:16px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rl-kpi small{font-size:11px;color:var(--chalk-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-kpi .bad b{color:#ff8a84}.rl-kpi .good b{color:var(--good)}.rl-kpi .warn b{color:#ffd166}
+.rl-wn{margin:0 0 8px;font-size:12px}
+.rl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.rl-grid>.panel{margin:0}
+.rl-mrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.rl-mrow .btn,.rl-mrow .w3b{width:100%}
+.btn.rl-loca{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin-top:8px}
+.btn.rl-loca small{opacity:.75;font-size:11px}
+.rl-tg{display:grid;grid-template-columns:1fr;gap:4px;border-bottom:1px solid var(--line);padding:4px 0 6px}
+.rl-tg .sc-b{display:flex;gap:6px;justify-content:flex-end}.rl-tg .trrow{width:100%}
+.rl-more{margin-top:8px}
+.rl-plan{width:100%;border-collapse:collapse;font-size:12.5px}.rl-plan th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#a99fc9;text-align:left;padding:3px 4px;font-weight:800}
+.rl-plan td{padding:4px;border-top:1px solid var(--line)}.rl-plan tr.weak td{color:#ffd166;font-weight:700}
+.rl-hc b{display:block;font-size:15px}.rl-hc small{color:var(--chalk-3);font-size:12px}
+.rl-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin:8px 0;font-size:12.5px}
+.rl-mb{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}.rl-mb em{display:block;height:100%;background:#7cc4ff}
+.rl-mb.good em{background:var(--good)}.rl-mb.bad em{background:#ff8a84}
+.rl-bars{display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.rl-bars>div{display:grid;grid-template-columns:minmax(110px,40%) 1fr 30px;gap:8px;align-items:center;font-size:12.5px}
+.rl-bars i{display:block;height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}.rl-bars em{display:block;height:100%;background:linear-gradient(90deg,#7cc4ff,var(--good))}
+.rl-bars b{text-align:right}
+.rl-ms{margin:10px 0;padding:10px 12px;border:1px solid rgba(124,196,255,.25);border-radius:10px;background:rgba(124,196,255,.05)}
+.rl-ms ul{margin:4px 0 6px;padding-left:18px;font-size:13px}.rl-ms li{margin:2px 0}
+@media(max-width:700px){.rl-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.rl-kpi>div:last-child{grid-column:1/-1}.rl-grid{grid-template-columns:1fr}.rl-bars>div{grid-template-columns:minmax(96px,42%) 1fr 26px}}
+/* v172 personel: bilet başlığında rol rozeti okunur */
+.ticket-head .pr172-rol{background:#1d1630;color:#ffd36a}.ticket-head .pr172-rol.r-dort{color:#9fd2ff}.ticket-head .pr172-rol.r-var{color:#6fe3b8}
+/* v172 sezon: takvimde hazırlık maçı rengi */
+.v5lg .lg.f{background:rgba(255,179,32,.8)}
+/* v172 sezon: hazırlık çipinde sonuç rengi korunur */
+.v5c.f.rw{background:rgba(46,224,122,.28)}.v5c.f.rd{background:rgba(255,210,63,.24)}.v5c.f.rl{background:rgba(239,59,59,.28)}
+/* v172 personel: hakem zaman çizelgesi simgesi */
+.pr172-tlic{font-size:38px;line-height:1}
+.pr172-tlic{display:inline-block;margin-right:8px}
+/* v172 kucuk: sonuç penceresinde takım adı hece ortasından bölünmesin; süresi dolmuş teklif notu */
+.res-board{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.res-board .team{min-width:0}
+.res-board .team b{overflow-wrap:normal;word-break:normal;hyphens:manual;font-size:clamp(11px,3.6vw,17px)}
+.ib-eski{color:var(--chalk-3,#9fb3a6);font-style:italic}

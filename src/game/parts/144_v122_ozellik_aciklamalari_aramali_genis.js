@@ -68,8 +68,8 @@ function cpxBody(a,ca,b,cb){const A=fmAttrs(a),B=fmAttrs(b),ua=cpxUnknown(a,ca),
   const num=(v)=>typeof v==='number'?v:null;
   const row=(l,va,vb,cmpA,cmpB,hi)=>{const x=num(cmpA),y=num(cmpB);const wa=x!=null&&y!=null&&(hi===false?x<y:x>y),wb=x!=null&&y!=null&&(hi===false?y<x:y>x);return `<tr><td class="${wa?'w':''}">${va}</td><th>${l}</th><td class="${wb?'w':''}">${vb}</td></tr>`;};
   const pa=pPot(a),pb=pPot(b),ra=Sa.ap?Sa.rt/Sa.ap:0,rb=Sb.ap?Sb.rt/Sb.ap:0;
-  const genRows=[row('Mevcut yetenek',`${R200(a.ovr)}/200`,`${R200(b.ovr)}/200`,a.ovr,b.ovr),row('Potansiyel',`${ab200(pa[0])}${pa[0]!==pa[1]?'–'+ab200(pa[1]):''}`,`${ab200(pb[0])}${pb[0]!==pb[1]?'–'+ab200(pb[1]):''}`,(pa[0]+pa[1])/2,(pb[0]+pb[1])/2),
-    row('Yaş',a.age,b.age,a.age,b.age,false),row('Piyasa değeri',eur(pValue(a)),eur(pValue(b)),pValue(a),pValue(b)),row('Maaş (hafta)',eur(pWage(a,ca)),eur(pWage(b,cb)),pWage(a,ca),pWage(b,cb),false),
+  const genRows=[row('Mevcut yetenek',`${R200(a.ovr)}/100`,`${R200(b.ovr)}/100`,a.ovr,b.ovr),row('Potansiyel',`${ab200(pa[0])}${pa[0]!==pa[1]?'–'+ab200(pa[1]):''}`,`${ab200(pb[0])}${pb[0]!==pb[1]?'–'+ab200(pb[1]):''}`,(pa[0]+pa[1])/2,(pb[0]+pb[1])/2),
+    row('Yaş',a.age,b.age,a.age,b.age,false),row('Piyasa değeri',eur(pValue(a)),eur(pValue(b)),pValue(a),pValue(b)),row('Maaş (yıllık, tahmini)',amtFmt(pWage(a,ca)*52),amtFmt(pWage(b,cb)*52),pWage(a,ca),pWage(b,cb),false),
     row('Sözleşme bitişi',(()=>{try{return ctEnd(a);}catch(e){return '–';}})(),(()=>{try{return ctEnd(b);}catch(e){return '–';}})(),null,null),
     row('Boy',`${Ma.h} cm`,`${Mb.h} cm`,null,null),row('Kilo',`${Ma.w} kg`,`${Mb.w} kg`,null,null),row('Ayak',esc(Ma.ft),esc(Mb.ft),null,null),
     row('Bu sezon maç',Sa.ap||0,Sb.ap||0,Sa.ap||0,Sb.ap||0),row('Gol',Sa.g||0,Sb.g||0,Sa.g||0,Sb.g||0),row('Asist',Sa.a||0,Sb.a||0,Sa.a||0,Sb.a||0),row('Ortalama puan',ra?ra.toFixed(2):'–',rb?rb.toFixed(2):'–',ra||null,rb||null)].join('');

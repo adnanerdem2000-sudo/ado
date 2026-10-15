@@ -25,43 +25,8 @@ function lookOf(seed,nat,age,coach){const ck=seed+'|'+age+'|'+(coach?1:0);if(LKC
   const grey=coach?clamp((age-40)/26,0,1)*(0.55+r()*0.5):age>=34?0.12:0;
   const boot=['#14161a','#14161a','#f4f4f4','#ff4f9a','#39d0ff','#c6ff3d','#ff7a1f','#ffd400'][wp([4,2,1.4,.8,.9,.9,.7,.6])];
   return LKC[ck]={sk,hc:grey>0.04?mixC(hc,'#d9d9d9',Math.min(1,grey)):hc,hs,bd,fw:17.6+r()*2.4,ey:g==='light'&&r()<0.25?'#3d6a8a':'#1a120c',gl:!!coach&&r()<0.22,boot,hgt:0.95+r()*0.1,bld:0.92+r()*0.16,suit:['#20242b','#1b2433','#2e3138','#13161b'][Math.floor(r()*4)]};}
-function hairSVG(L,front){const f=L.fw,hc=L.hc,a=50-f,b=50+f;
-  if(!front){if(L.hs==='afro')return `<circle cx="50" cy="30" r="${f+9}" fill="${hc}"/>`;
-    if(L.hs==='long')return `<path d="M${a-3} 40 Q${a-4} 14 50 14 Q${b+4} 14 ${b+3} 40 L${b+4} 70 Q${b-2} 74 ${b-4} 62 L${a+4} 62 Q${a+2} 74 ${a-4} 70Z" fill="${hc}"/>`;
-    if(L.hs==='dread')return `<g stroke="${hc}" stroke-width="3.6" stroke-linecap="round" fill="none">${[-4,-3,-2,-1,0,1,2,3,4].map(i=>`<path d="M${50+i*4.4} 22 Q${50+i*5.4} 44 ${50+i*5.9} ${62+(i&1)*5}"/>`).join('')}</g>`;
-    if(L.hs==='bun')return `<circle cx="50" cy="12" r="6.6" fill="${hc}"/>`;return '';}
-  const cap=`M${a} 41 Q${a-1} 17 50 17 Q${b+1} 17 ${b} 41 Q${b-3} 27 50 26 Q${a+3} 27 ${a} 41Z`;
-  switch(L.hs){
-    case 'bald':return `<ellipse cx="43" cy="25.5" rx="5.5" ry="2.4" fill="#fff" opacity=".18"/>`;
-    case 'buzz':return `<path d="M${a+0.5} 38 Q${a} 19.5 50 19.5 Q${b} 19.5 ${b-0.5} 38 Q${b-3} 27 50 26.5 Q${a+3} 27 ${a+0.5} 38Z" fill="${hc}" opacity=".82"/>`;
-    case 'fade':return `<path d="${cap}" fill="${hc}" opacity=".42"/><path d="M${a+3} 31 Q${a+2} 15.5 50 15.5 Q${b-2} 15.5 ${b-3} 31 Q${b-6} 25 50 24.5 Q${a+6} 25 ${a+3} 31Z" fill="${hc}"/>`;
-    case 'side':return `<path d="M${a} 42 Q${a-2} 15 52 14.5 Q${b+3} 16 ${b} 40 Q${b-2} 27 58 25.5 Q46 31 ${a+2} 31Z" fill="${hc}"/>`;
-    case 'mohawk':return `<path d="${cap}" fill="${hc}" opacity=".32"/><path d="M45 30 Q44 12 50 8 Q56 12 55 30 Q50 27 45 30Z" fill="${hc}"/>`;
-    case 'curly':case 'afro':{const R=L.hs==='afro'?6.6:5.6,pts=[];for(let i=0;i<9;i++){const t=Math.PI*(1.02+0.96*i/8);pts.push([50+Math.cos(t)*(f+0.5),40+Math.sin(t)*22]);}
-      pts.push([42,19],[50,16],[58,19],[46,24],[54,24]);return `<g fill="${hc}"><path d="${cap}"/>${pts.map(([x,y])=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R}"/>`).join('')}</g>`;}
-    case 'long':return `<path d="${cap}" fill="${hc}"/><path d="M${a} 40 Q${a-1.5} 54 ${a+1} 62 L${a+3} 44Z M${b} 40 Q${b+1.5} 54 ${b-1} 62 L${b-3} 44Z" fill="${hc}"/>`;
-    case 'dread':return `<path d="${cap}" fill="${hc}"/><g stroke="${hc}" stroke-width="3.4" stroke-linecap="round">${[-1,1].map(s=>`<path d="M${50+s*(f-2)} 30 L${50+s*(f+2)} 58"/><path d="M${50+s*(f-6)} 26 L${50+s*(f-1)} 50"/>`).join('')}</g>`;
-    default:return `<path d="${cap}" fill="${hc}"/>`;}}
-function faceSVG(L,o){const sk=L.sk,sh=shade(sk,-0.17),dk=shade(sk,-0.42),hc=L.hc,f=L.fw;o=o||{};
-  const body=o.coach?`<path d="M8 112 C10 86 22 76 37 72 L50 84 L63 72 C78 76 90 86 92 112Z" fill="${L.suit}"/><path d="M41 72 L50 92 L59 72Z" fill="#f4f4f4"/><path d="M48 77 L52 77 L54 99 L50 104 L46 99Z" fill="${o.c1||'#8a1d1d'}"/><path d="M37 72 L47 98 L42 79Z M63 72 L53 98 L58 79Z" fill="rgba(255,255,255,.09)"/>`
-    :`<path d="M10 112 C12 86 24 76 38 72 L50 80 L62 72 C76 76 88 86 90 112 Z" fill="${o.c1}" stroke="${o.c2}" stroke-width="3"/><path d="M38 72 L50 86 L62 72" fill="none" stroke="${o.c2}" stroke-width="4"/>${o.capt?'<path d="M14 92 L26 88 L28 95 L16 99Z" fill="#ffd21f"/>':''}`;
-  let beard='';if(L.bd==='stub')beard=`<path d="M${50-f+1} 46 Q${50-f+3} 63 50 65 Q${50+f-3} 63 ${50+f-1} 46 Q${50+f-4} 59 50 60 Q${50-f+4} 59 ${50-f+1} 46Z" fill="${hc}" opacity=".32"/>`;
-  else if(L.bd==='full')beard=`<path d="M${50-f+0.5} 44 Q${50-f+2} 66 50 67 Q${50+f-2} 66 ${50+f-0.5} 44 Q${50+f-4} 58 50 58.5 Q${50-f+4} 58 ${50-f+0.5} 44Z" fill="${hc}" opacity=".92"/>`;
-  else if(L.bd==='goatee')beard=`<ellipse cx="50" cy="61" rx="5" ry="4" fill="${hc}" opacity=".9"/>`;
-  const mus=(L.bd==='full'||L.bd==='goatee'||L.bd==='mus')?`<path d="M43.5 53 Q50 50.2 56.5 53 Q50 55 43.5 53Z" fill="${hc}"/>`:'';
-  const wr=o.coach&&o.age>=52?`<path d="M42 31 Q50 29.5 58 31 M43.5 34 Q50 32.8 56.5 34" stroke="${sh}" stroke-width="1" fill="none"/>`:'';
-  const gl=L.gl?`<g fill="rgba(200,220,255,.12)" stroke="#1d1d1d" stroke-width="1.4"><rect x="37.5" y="40.2" width="10" height="7.6" rx="2.4"/><rect x="52.5" y="40.2" width="10" height="7.6" rx="2.4"/><path d="M47.5 43 L52.5 43" fill="none"/></g>`:'';
-  const brow=L.hs==='bald'&&!o.coach?dk:shade(hc,hc==='#c9a35e'||hc.startsWith('#d')?-0.25:0);
-  return `<svg viewBox="0 0 100 112" width="78" height="88" aria-hidden="true">${hairSVG(L,false)}${body}
-  <rect x="42.5" y="56" width="15" height="18" rx="6" fill="${sh}"/>
-  <ellipse cx="${50-f-0.6}" cy="45" rx="3.1" ry="5" fill="${sh}"/><ellipse cx="${50+f+0.6}" cy="45" rx="3.1" ry="5" fill="${sh}"/>
-  <ellipse cx="50" cy="42" rx="${f}" ry="22" fill="${sk}"/><path d="M${50+f*0.35} 22 Q${50+f+1} 30 ${50+f-1} 52 Q${50+f*0.6} 62 50 64 Q${50+f*0.55} 50 ${50+f*0.35} 22Z" fill="#000" opacity=".06"/>
-  ${beard}${hairSVG(L,true)}${wr}
-  <path d="M38.5 38.5 L46 37.6" stroke="${brow}" stroke-width="2.5" stroke-linecap="round"/><path d="M54 37.6 L61.5 38.5" stroke="${brow}" stroke-width="2.5" stroke-linecap="round"/>
-  <ellipse cx="42.5" cy="44" rx="2.6" ry="2.2" fill="#fff" opacity=".85"/><ellipse cx="57.5" cy="44" rx="2.6" ry="2.2" fill="#fff" opacity=".85"/><circle cx="42.8" cy="44.2" r="1.7" fill="${L.ey}"/><circle cx="57.8" cy="44.2" r="1.7" fill="${L.ey}"/>
-  <path d="M48.5 46.5 Q50 51 52 49.5" stroke="${sh}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  ${mus}<path d="M44 55.6 Q50 ${o.coach?57.6:58.6} 56 55.6" stroke="${dk}" stroke-width="1.9" fill="none" stroke-linecap="round"/>${gl}
-  ${o.num!=null&&!o.coach?`<text x="50" y="106" text-anchor="middle" font-family="Saira Extra Condensed,Arial Narrow,sans-serif" font-weight="800" font-size="19" fill="${o.c2}">${o.num}</text>`:''}</svg>`;}
+/* v172: eski 2B yüz çizimi (hairSVG + faceSVG gövdesi) kaldırıldı — portreleri 185_v159 çizer. Bildirim yalnız sonraki atamalar (134_v112 sarmalayıcısı, 185) için ad bağlaması olarak kalır. */
+function faceSVG(L,o){return '';}
 
 /* ---------- Maç içi: gerçek kadrodan görünüş ve forma numarası ---------- */
 let LOOKQ=null;
@@ -156,7 +121,7 @@ function boardReq(k){if(G.phase!=='season')return toast('Yaz arasında yönetim 
   if(k==='takviye'&&cs.pend)return toast('Yönetimin devam eden bir projesi var');
   (G.req=G.req||{})[k]=absDay()+REQ[k].cd;
   const P=unlist?1:reqP(k),ok=Math.random()<P;let txt;
-  if(k==='maas'){if(ok){const inc=rnd(0.12,0.3)*(role==='Yıldız'||role==='Kaptan'?1.25:1);G.contract.wage=Math.round(G.contract.wage*(1+inc)/50)*50;cs.board=clamp(cs.board-3,0,100);txt=`Yönetim talebini kabul etti. Haftalık maaşın ${money(G.contract.wage)} oldu (+%${Math.round(inc*100)}).`;}
+  if(k==='maas'){if(ok){const inc=rnd(0.12,0.3)*(role==='Yıldız'||role==='Kaptan'?1.25:1);G.contract.wage=Math.round(G.contract.wage*(1+inc)/50)*50;cs.board=clamp(cs.board-3,0,100);txt=`Yönetim talebini kabul etti. Maaşın ${wgTU(G.contract.wage)} oldu (+%${Math.round(inc*100)}).`;}
     else{cs.board=clamp(cs.board-6,0,100);txt=role==='Yedek'||role==='Rotasyon'||role==='Genç yetenek'?'Yönetim: “Takımda daha fazla süre aldığında bu konuyu konuşuruz.” Talebin reddedildi.':pick(['Yönetim şu an maaş artışına sıcak bakmıyor: “Önce sahada göster.”','Başkan bütçenin sınırda olduğunu söyledi. Talebin reddedildi.']);}}
   else if(k==='tesis'){if(ok){cs.pend={k:'tesis',at:absDay()+rint(25,45)};txt=`Yönetim ${money(clubBudget(c)*0.08*cs.fac)} bütçeli tesis yenilemesini onayladı. Çalışmalar yaklaşık bir ay sürecek.`;}
     else{cs.board=clamp(cs.board-3,0,100);txt='Yönetim tesis yatırımını bu sezon bütçeye koyamayacağını açıkladı.';}}

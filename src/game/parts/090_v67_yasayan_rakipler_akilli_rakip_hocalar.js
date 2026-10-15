@@ -189,9 +189,9 @@ negStart=(old=>function(from,k,type){try{const D=derbyOf(G.club,from),p=squadOf(
     save();negOpen();}catch(e){console.warn(e);}return r;})(negStart);
 function rvReveal(n,p,where){const rv=n.rv,rc=CLUBS[rv.id];rv.on=1;n.offN=n.offN||0;rv.dl=n.offN+2+(hash(n.k+'dl')%2);const D=derbyOf(G.club,rv.id);
   if(where==='club'){n.A=Math.max(n.A,Math.round(rv.fee*1.02/5e4)*5e4);n.log.push(['club',`“Bu arada ${rc.name} de ${p.name} için resmi teklif yaptı: ${eur(rv.fee)}. En iyi teklifi kim verirse oyuncu onundur.”`]);}
-  else n.log.push(['ag',`Menajer: “${rc.name} de masada; haftalık ${eur(rv.w)} öneriyorlar.${D?' Ezeli rakibiniz olduklarını biliyorsunuz, müvekkilim iki tarafı da dinliyor.':''}”`]);
+  else n.log.push(['ag',`Menajer: “${rc.name} de masada; ${wgT(rv.w)} öneriyorlar.${D?' Ezeli rakibiniz olduklarını biliyorsunuz, müvekkilim iki tarafı da dinliyor.':''}”`]);
   wdInit();wdEv('⚔',`${rc.name}, ${p.name} transferinde ${myClub().name} ile yarışa girdi.`,rv.id);
-  msg('offer',`Transfer yarışı: ${p.name}`,`${rc.name}, görüştüğün ${p.name} için devreye girdi. ${where==='club'?`Kulübe ${eur(rv.fee)} teklif ettiler.`:`Oyuncuya haftalık ${eur(rv.w)} öneriyorlar.`} Hızlı ve ikna edici olmazsan oyuncuyu kaptırabilirsin.`);}
+  msg('offer',`Transfer yarışı: ${p.name}`,`${rc.name}, görüştüğün ${p.name} için devreye girdi. ${where==='club'?`Kulübe ${eur(rv.fee)} teklif ettiler.`:`Oyuncuya ${wgT(rv.w)} öneriyorlar.`} Hızlı ve ikna edici olmazsan oyuncuyu kaptırabilirsin.`);}
 function rvHijack(n,p,why){const rv=n.rv,rc=CLUBS[rv.id];if(!rc||!p)return;n.st='fail';G.m.negCd=G.m.negCd||{};G.m.negCd[n.k]=G.s.day+90;rv.won=1;
   G.tx=G.tx||{};G.tx[p.k]=rc.id;txNote(p.k,rc.id,rv.fee);syncStr(rc.id);syncStr(n.from);
   n.log.push([why==='club'?'club':'ag',why==='club'?`“Üzgünüz, ${rc.name} teklifini kabul ettik. ${p.name} onlarla anlaştı.”`:`Menajer: “${rc.name} ile imzaladık. Teklifiniz geç ve yetersiz kaldı.”`]);
@@ -212,7 +212,7 @@ negPlayer=(old=>function(){const n=G.m&&G.m.neg,p=negP();const r=old.apply(this,
     if(n.st==='fail'){rvHijack(n,p,'player');save();rvLost(n,p);}else if(n.st==='player'&&n.ppat<=2&&Math.random()<0.35){rvHijack(n,p,'player');save();rvLost(n,p);}}catch(e){console.warn(e);}return r;})(negPlayer);
 negOpen=(old=>function(){const r=old.apply(this,arguments);try{const n=G.m&&G.m.neg;if(!n)return r;const mc=$('#modalCard'),lg=mc&&mc.querySelector('.ng-log');if(!lg)return r;let h='';
     if(n.drb&&(n.st==='club'||n.st==='player'))h+=`<div class="rv-band drb">🔥 <b>${derbyLvN(n.drb)}</b><span>Ezeli rakipten transfer: fiyat yüksek, kulübün sabrı az, oyuncu ek maaş istiyor.</span></div>`;
-    if(n.rv&&n.rv.on&&!n.rv.won&&(n.st==='club'||n.st==='player')){const rc=CLUBS[n.rv.id],left=Math.max(0,(n.rv.dl||0)-(n.offN||0));h+=`<div class="rv-band">${crestSVG(rc,24)}<div><b>Rakip teklif: ${esc(rc.name)}</b><small>${n.st==='club'?`Bonservis ${eur(n.rv.fee)}${left?` · ${left} teklif hakkın kaldı`:' · son şansın'}`:`Oyuncuya haftalık ${eur(n.rv.w)}`}</small></div></div>`;}
+    if(n.rv&&n.rv.on&&!n.rv.won&&(n.st==='club'||n.st==='player')){const rc=CLUBS[n.rv.id],left=Math.max(0,(n.rv.dl||0)-(n.offN||0));h+=`<div class="rv-band">${crestSVG(rc,24)}<div><b>Rakip teklif: ${esc(rc.name)}</b><small>${n.st==='club'?`Bonservis ${eur(n.rv.fee)}${left?` · ${left} teklif hakkın kaldı`:' · son şansın'}`:`Oyuncuya ${wgT(n.rv.w)}`}</small></div></div>`;}
     if(n.rv&&n.rv.won)h+=`<div class="rv-band lost">${crestSVG(CLUBS[n.rv.id],24)}<div><b>${esc(CLUBS[n.rv.id].name)} oyuncuyu kaptı</b></div></div>`;
     if(h)lg.insertAdjacentHTML('beforebegin',h);}catch(e){}return r;})(negOpen);
 /* gelen teklifler: artırma savaşı ve göz kırpan kulüp */
@@ -234,7 +234,7 @@ let PO_WAR=0;
 pushOffer=(old=>function(o){const r=old.apply(this,arguments);try{if(PO_WAR||!isPl()||!o||o.renew||o.loan||o.role==='A Takıma Yükselme'||o.status!=='open')return r;if(Math.random()>0.28)return r;
     const c=CLUBS[o.club];const cs=Object.values(CLUBS).filter(x=>x.id!==o.club&&x.id!==G.club&&!LEAGUES[x.league].youth&&LEAGUES[x.league].tier>=LEAGUES[c.league].tier-1&&Math.abs(x.str-c.str)<=5&&(!eligible||eligible(LEAGUES[x.league],G.p.age)));if(!cs.length)return r;
     const rv=wpick(cs.map(x=>[x,derbyOf(x.id,o.club)?5:x.league===c.league?2:1])),o2=makeOffer(rv,(o.interest||0)+1,o.kind,o.role);o2.wage=Math.max(o2.wage,Math.round(o.wage*rnd(1.08,1.25)/50)*50);o2.bonus=Math.max(o2.bonus,o.bonus);
-    PO_WAR=1;try{old(o2);}finally{PO_WAR=0;}const im=G.inbox[0];if(im&&im.offer===o2){im.title=`Artırma savaşı: ${rv.name}`;im.body=`${c.name} teklifini duyan ${rv.name}${derbyOf(rv.id,o.club)?' (ezeli rakibi)':''} araya girdi ve daha yüksek maaş önerdi: haftalık ${money(o2.wage)}. `+im.body;}
+    PO_WAR=1;try{old(o2);}finally{PO_WAR=0;}const im=G.inbox[0];if(im&&im.offer===o2){im.title=`Artırma savaşı: ${rv.name}`;im.body=`${c.name} teklifini duyan ${rv.name}${derbyOf(rv.id,o.club)?' (ezeli rakibi)':''} araya girdi ve daha yüksek maaş önerdi: ${wgTU(o2.wage)}. `+im.body;}
     wdInit();wdEv('⚔',`${rv.name} ve ${c.name}, ${meN()} için yarışıyor.`,rv.id);}catch(e){console.warn(e);}return r;})(pushOffer);
 acceptOffer=(old=>function(o){const from=G.club,D=o&&!o.renew?derbyOf(from,o.club):null;const r=old.apply(this,arguments);try{if(D&&D.lv>=2&&isPl()){G.p.fame=clamp(G.p.fame+2,0,100);G.p.morale=clamp(G.p.morale-4,0,100);G.hate={c:from,y:G.s.year};
     msg('news',`Olay transfer: ${meF()} ezeli rakibe geçti`,`${CLUBS[from].name} taraftarı, ${meNs('gen')} ezeli rakip ${CLUBS[o.club].name} ile imzalamasına çok öfkeli. Eski takımına karşı oynayacağın maçlarda ıslıklanacaksın.`);wdInit();wdEv('😡',`Olay transfer: ${meN()}, ${CLUBS[from].name} formasını çıkarıp ezeli rakip ${CLUBS[o.club].name} ile imzaladı.`,o.club,1);}}catch(e){}return r;})(acceptOffer);
