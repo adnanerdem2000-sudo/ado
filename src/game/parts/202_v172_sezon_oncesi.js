@@ -321,3 +321,5 @@ viewMgrHub=(old=>function(){let h=old.apply(this,arguments);try{if(!isTD())retur
     const pp=sz172TdPanel();if(pp){let j=-1;for(const key of ['data-act="mgrSim">Hızlı sonuç</button>','data-act="mgrAdv"']){const k=h.indexOf(key);if(k>=0){j=h.indexOf('</button>',k)+9;break;}}if(j<9)j=h.indexOf('<div class="stab');h=j>0?h.slice(0,j)+pp+h.slice(j):pp+h;}}catch(e){console.warn('sz172 td hub',e);}return h;})(viewMgrHub);
 /* eski yaz arası "hazırlık maçı oyna" düğmesi yeni sistemle değişti; eylem kalırsa plana yönlendir */
 friendly=function(){if(isTD()&&G.phase==='off')return sz172TdOpen('off');};
+/* sade ana sayfa "Ayrıntılar" katlamasına girmesin: hazırlık paneli üst bloğun hemen altında */
+if(typeof uiHubSimplify==='function')uiHubSimplify=(old=>function(v){const r=old.apply(this,arguments);try{const b=v&&v.querySelector('.hub-more .sz172-pp'),top=v&&v.querySelector(':scope > .hub-top');if(b&&top){const al=v.querySelector(':scope > .hub-al');(al||top).insertAdjacentElement('afterend',b);}}catch(e){}return r;})(uiHubSimplify);
