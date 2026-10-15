@@ -3277,6 +3277,15 @@ body.pro .sz74-box{background:rgba(255,255,255,.03)}
 /* v179: lig bağlantıları */
 .lglink{color:inherit;text-decoration:underline dotted rgba(90,168,255,.8);text-underline-offset:3px;cursor:pointer;font-weight:inherit}.lglink:hover{color:var(--led)}
 #top .lglink.lg-top{text-decoration:none}#top .lglink.lg-top:hover{text-decoration:underline dotted;text-underline-offset:3px}
+/* v181: genel ses ayarı */
+.ses-set{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px 10px;margin:4px 0 8px}
+.ses-set .ses-ic{font-size:20px;width:26px;text-align:center}
+.ses-set input[type=range]{width:100%;accent-color:var(--led,#38d27a);height:28px}
+.ses-set .ses-hz{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+/* v182: lig başlangıcı notu, oda sürüm uyarısı */
+.v182-not{margin:6px 0 10px;padding:8px 11px;border-radius:10px;background:rgba(90,168,255,.1);border:1px solid rgba(90,168,255,.3);font-size:13px;line-height:1.4}
+.v182-not.k{font-size:12px;margin:4px 0 8px}
+.v182-uy{margin:9px 0 0;padding:7px 9px;border-radius:9px;background:rgba(255,179,32,.12);border:1px solid rgba(255,179,32,.4);font-size:12px}
 /* Otomatik üretildi: node tools/tema_renk.js — elle düzenleme. Profesyonel tema renk seçenekleri (mor → yeşil / lacivert). */
 /* yesil */
 body.pro.pv-yesil .tline .ms-td i{background:#2c4338;color:#c5fde3}
@@ -23297,7 +23306,7 @@ function locaFG(W){const d=W.document;if(d.getElementById('loca-fg'))return;cons
 .lc-ht{margin:10px 0;display:grid;gap:6px}.lc-ht p{margin:0;font-weight:700}.lc-ht .abh-tr{font-size:13px;opacity:.85}
 @media (max-width:700px){#loca-fg .lc-bar{display:none}#loca-wall{font-size:12px}#lcPal .lc-card{padding:7px;font-size:12px}#lcPal .lc-card button{padding:5px 7px;margin-top:4px}#lcBub .lc-b{font-size:12px}#lcHeads i{width:34px;height:22px}}`;
   d.head.appendChild(st);const fg=d.createElement('div');fg.id='loca-fg';fg.setAttribute('aria-hidden','true');let cr='';try{cr=crestSVG(myClub(),28);}catch(e){}
-  fg.innerHTML=`<div class="lc-vig"></div><div class="lc-gl"></div><div class="lc-top"></div><i class="lc-bar l"></i><i class="lc-bar r"></i><div id="lcHeads"><i></i><i></i><i></i><i></i><i></i></div><div class="lc-desk">${cr}<span class="lc-tea"></span><span class="lc-prog">MAÇ PROGRAMI · ${esc((myClub().short||'').toLocaleUpperCase('tr-TR'))}</span></div>`;
+  fg.innerHTML=`<div class="lc-vig"></div><div class="lc-gl"></div><div class="lc-top"></div><div id="lcHeads"><i></i><i></i><i></i><i></i><i></i></div><div class="lc-desk">${cr}<span class="lc-tea"></span><span class="lc-prog">MAÇ PROGRAMI · ${esc((myClub().short||'').toLocaleUpperCase('tr-TR'))}</span></div>`;
   const cv=d.getElementById('cv3d'),host=(cv&&cv.parentElement)||d.body;try{if(host!==d.body&&W.getComputedStyle(host).position==='static')host.style.position='relative';}catch(e){}host.appendChild(fg);const wl=d.createElement('div');wl.id='loca-wall';wl.innerHTML='<b id="lcSc">0–0</b><i id="lcMn">0’</i>';host.appendChild(wl);
   const bb=d.createElement('div');bb.id='lcBub';host.appendChild(bb);const pl=d.createElement('div');pl.id='lcPal';pl.hidden=true;host.appendChild(pl);d.body.classList.add('ab-loca');}
 function locaClean(){const W=LOCA.W;LOCA.on=0;if(!W)return;try{W.__abLoca&&W.__abLoca(false);}catch(e){}try{const d=W.document;['loca-fg','loca-wall','lcBub','lcPal','loca-css'].forEach(id=>{const e=d.getElementById(id);if(e)e.remove();});d.body.classList.remove('ab-loca');}catch(e){}
@@ -23886,6 +23895,54 @@ Object.assign(NAT_TR,{MOZ:'Mozambik',THA:'Tayland',MWI:'Malavi',AFG:'Afganistan'
   SSD:'Güney Sudan',SMR:'San Marino',SDN:'Sudan',STP:'São Tomé ve Príncipe',PUR:'Porto Riko',TKM:'Türkmenistan',NCL:'Yeni Kaledonya',VIN:'Saint Vincent ve Grenadinler'});
 Object.assign(EUCC3,{AR:'ARG',US:'USA',MX:'MEX',RU:'RUS',JP:'JPN',NO:'NOR',SE:'SWE',PO:'POL',CZ:'CZE',UA:'UKR',HR:'CRO',RS:'SRB'});
 flagImg=(old=>function(n,cls){if(n&&!FLAGS[n]&&EUCC3[n]&&FLAGS[EUCC3[n]])n=EUCC3[n];return old.call(this,n,cls);})(flagImg);
+/* ================= v181: genel ses ayarı (%0–100) — oyundaki tüm sesler (maç sesi, tören, anlar, Adoball/3B) tek bir ana ses düzeyinden geçer; locadan izlerken görüşü kapatan direkler kaldırıldı (201) ================= */
+function sesYuzde(){const v=setsGet().vol;return v==null||isNaN(+v)?100:clamp(Math.round(+v),0,100);}
+const SESV={gain:[],media:[]};
+function sesCarpan(){return Math.pow(sesYuzde()/100,1.6);}/* kulağa doğrusal gelsin diye hafif eğri */
+/* bir pencerenin ses API'lerini ana ses düzeyine bağla: AudioContext.destination ana kazanç düğümüne, medya öğelerinin volume'u çarpana */
+function adoSesYama(win){try{if(!win||win.__adoSes)return;win.__adoSes=1;
+    const B=win.BaseAudioContext||win.AudioContext||win.webkitAudioContext;const P=B&&B.prototype;const d=P&&(Object.getOwnPropertyDescriptor(P,'destination')||(win.AudioContext&&Object.getOwnPropertyDescriptor(win.AudioContext.prototype,'destination')));
+    if(d&&d.get){const og=d.get;Object.defineProperty(P,'destination',{configurable:true,enumerable:true,get(){if(this.__adoMg)return this.__adoMg;const real=og.call(this);try{const g=this.createGain();g.gain.value=sesCarpan();g.connect(real);
+          /* createGain().connect(destination) gibi zincirlerde ana düğüm de AudioDestinationNode gibi davranır */
+          try{Object.defineProperty(g,'maxChannelCount',{get(){return real.maxChannelCount;}});}catch(e){}
+          this.__adoMg=g;SESV.gain.push(new WeakRef(g));return g;}catch(e){return real;}}});}
+    const M=win.HTMLMediaElement&&win.HTMLMediaElement.prototype,vd=M&&Object.getOwnPropertyDescriptor(M,'volume');
+    if(vd&&vd.set){Object.defineProperty(M,'volume',{configurable:true,enumerable:true,get(){return this.__adoBv!=null?this.__adoBv:vd.get.call(this);},
+        set(v){this.__adoBv=+v;try{vd.set.call(this,clamp(+v*sesCarpan(),0,1));}catch(e){}}});
+      const op=M.play;M.play=function(){try{if(!this.__adoKayit){this.__adoKayit=1;this.__adoVs=vd.set;SESV.media.push(new WeakRef(this));}const b=this.__adoBv!=null?this.__adoBv:vd.get.call(this);this.__adoBv=b;vd.set.call(this,clamp(b*sesCarpan(),0,1));}catch(e){}return op.apply(this,arguments);};
+    }}catch(e){console.warn('ses ayarı',e);}}
+function sesUygula(){const k=sesCarpan();
+  SESV.gain=SESV.gain.filter(r=>{const g=r.deref();if(!g)return false;try{g.gain.setTargetAtTime(k,g.context.currentTime,0.03);}catch(e){try{g.gain.value=k;}catch(x){}}return true;});
+  SESV.media=SESV.media.filter(r=>{const m=r.deref();if(!m)return false;try{const b=m.__adoBv!=null?m.__adoBv:1;m.__adoVs.call(m,clamp(b*k,0,1));}catch(e){}return true;});}
+adoSesYama(window);
+/* Ayarlar: Ses bölümü (Görünüm'den önce) */
+function sesAyarHTML(){const v=sesYuzde();return `<p class="sub-h v181-h"><span>Ses</span><span id="sesYz">${v===0?'Kapalı':'%'+v}</span></p>
+  <div class="ses-set"><span class="ses-ic" aria-hidden="true">${v===0?'🔇':v<40?'🔈':v<75?'🔉':'🔊'}</span><input type="range" id="sesVol" min="0" max="100" step="5" value="${v}" aria-label="Genel ses düzeyi"><div class="ses-hz">${[0,25,50,75,100].map(x=>`<button type="button" class="chip" data-act="sesHz" data-v="${x}" aria-pressed="${v===x}">${x?'%'+x:'Kapalı'}</button>`).join('')}</div></div>`;}
+openSettings=(old=>function(){const r=old.apply(this,arguments);try{const mc=$('#modalCard');if(!mc||mc.querySelector('.ses-set'))return r;
+    const gh=[...mc.querySelectorAll(':scope > p.sub-h')].find(p=>/Görünüm/i.test(p.textContent));const h=sesAyarHTML();
+    if(gh)gh.insertAdjacentHTML('beforebegin',h);else{const ob=mc.querySelector(':scope > .offer-btns');if(ob)ob.insertAdjacentHTML('beforebegin',h);else mc.insertAdjacentHTML('beforeend',h);}}catch(e){console.warn('ses ayar',e);}return r;})(openSettings);
+function sesKaydet(v){const s=setsGet();s.vol=clamp(Math.round(+v||0),0,100);setsPut(s);sesUygula();const y=$('#sesYz');if(y)y.textContent=s.vol===0?'Kapalı':'%'+s.vol;
+  const ic=document.querySelector('.ses-set .ses-ic');if(ic)ic.textContent=s.vol===0?'🔇':s.vol<40?'🔈':s.vol<75?'🔉':'🔊';
+  document.querySelectorAll('.ses-set [data-act=sesHz]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===s.vol)));const rg=$('#sesVol');if(rg&&+rg.value!==s.vol)rg.value=s.vol;}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='sesVol')sesKaydet(e.target.value);});
+ACTX.sesHz=el=>sesKaydet(el.dataset.v);
+/* ================= v182: lig başlamadan önce "hazırlık maçları tabloya işlenmez" notu; çevrimiçi odada iki tarafın oyun sürümü farklıysa uyarı ================= */
+/* ---------- lig başlangıcı notu (puan durumu ve ana sayfadaki mini tablo) ---------- */
+function v182LigNotu(){try{const S=G&&G.s;if(!S||G.phase!=='season'||(S.results||[]).length||!S.cal||S.cal[0]==null||S.day>S.cal[0])return '';
+    const gun=S.cal[0]-S.day;return `<p class="v182-not">⚽ Lig ${esc(fmtDate(dateOf(S.cal[0])))} tarihinde başlıyor${gun>0?` (${gun} gün sonra)`:' (bugün)'}. Hazırlık maçları lig tablosuna ve istatistiklere işlenmez.</p>`;}catch(e){return '';}}
+viewLeague=(old=>function(){const h=old.apply(this,arguments);try{if((typeof VLG==='undefined'||!VLG||VLG===G.s.league)&&(LTAB==='tbl'||LTAB==='g'||LTAB==='a')){const n=v182LigNotu();if(n){const i=h.search(/<section[^>]*>\s*<div class="tbl-wrap"|<div class="tbl-wrap"/);return i>0?h.slice(0,i)+n+h.slice(i):h.replace(/(<\/h2>)/,'$1'+n);}}}catch(e){}return h;})(viewLeague);
+render=(old=>function(){const r=old.apply(this,arguments);try{if(G&&TAB==='hub'){const n=v182LigNotu();const t=n&&document.querySelector('#view .hub-side .mini-t');if(t&&!t.parentElement.querySelector('.v182-not'))t.insertAdjacentHTML('beforebegin',n.replace('class="v182-not"','class="v182-not k"'));}}catch(e){}return r;})(render);
+/* ---------- çevrimiçi oda: sürüm parmak izi ---------- */
+let V182_IZ=null;
+function v182Iz(){if(V182_IZ)return V182_IZ;try{let n=0,h=0;for(const s of document.scripts){const t=s.text||'';n+=t.length;h=(h*31+t.length+(t.charCodeAt(t.length>>1)||0))>>>0;}V182_IZ=(n.toString(36)+h.toString(36)).slice(-10);}catch(e){V182_IZ='?';}return V182_IZ;}
+mpSt=(old=>function(){const o=old.apply(this,arguments);try{o.bv=v182Iz();}catch(e){}return o;})(mpSt);
+let V182_UY=false;
+mpUI=(old=>function(){const r=old.apply(this,arguments);try{const P=MP.peer;if(!mpOn()||!P||!mpPeerLive())return r;
+    const fark=P.bv?P.bv!==v182Iz():true;/* eski sürüm bv göndermez */
+    if(fark&&!V182_UY){V182_UY=true;const nm=esc(P.n||'Arkadaşın');
+      msg('news','🌐 Oyun sürümleri farklı',`${nm} ile oyunun farklı sürümlerini kullanıyorsunuz. Sonuçların ve tablonun ikinizde aynı işlenmesi için ikiniz de sayfayı yenileyin (iPhone’da ana ekrandaki uygulamayı tamamen kapatıp yeniden açın). Güncel sürüm: adnanerdem2000-sudo.github.io/ado`);
+      toast('🌐 '+(P.n||'Arkadaşın')+' farklı bir oyun sürümünde: ikiniz de sayfayı yenileyin');}
+    const pn=$('#v178Pop');if(pn&&!pn.hidden&&fark&&!pn.querySelector('.v182-uy'))pn.insertAdjacentHTML('beforeend','<p class="v182-uy">⚠ Arkadaşınla farklı oyun sürümlerindesiniz: ikiniz de sayfayı yenileyin.</p>');}catch(e){}return r;})(mpUI);
 /* ================= v177: canlı 3B futbolcu maçında tek gol defteri — skor, anlatım, motor olayları, golcü/asist, maç sonu ve lig istatistiği birebir ================= */
 /* Futbolcu kariyerinin 3B (Adoball) maçında goller MR'de (maç anlatımı) doğar, motor onları "zorla gol" ile canlandırır (106/113).
    Eskiden: (1) golcü adayı 40 sn'de topa ulaşamazsa takımdan herhangi biri (oyuncumuz da) atabiliyordu, MR "0 gol" derken çerçevede oyuncumuzun golü;
@@ -32600,6 +32657,7 @@ body.match-mode:not(.eng-2d):has(#action-overlay.active) #match-bar, body.match-
 </div>
 
 <script>
+try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
     const commentaryTemplates = {
         buildUp: [
             "{team}, orta alanda kısa paslarla boşluk arıyor; top {player} ile buluştu.",
