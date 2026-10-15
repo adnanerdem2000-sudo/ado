@@ -3211,10 +3211,69 @@ body.fut table thead th,body.fut table thead tr{background:#0f3a22;color:#f4f7ee
 .v174-ic-b{width:22px;height:22px;vertical-align:-3px;margin-right:8px}
 #modalCard .v5ag button{display:grid !important;grid-template-columns:96px minmax(0,auto) minmax(0,1fr);text-align:left;align-items:center;min-height:0;height:auto;padding:7px 8px;transform:none}
 #modalCard .v5ag .dt{display:block;text-align:left}#modalCard .v5ag .dt small{display:block;position:static}#modalCard .v5ag em{display:block;text-align:left}
+/* v174: oyuncu profili › Sözleşme sekmesi (FM tarzı sözleşme kartı) */
+.sz74{display:flex;flex-direction:column;gap:12px;min-width:0;max-width:1100px}
+.sz74-hd{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(100deg,rgba(255,255,255,.06),rgba(255,255,255,.015))}
+.sz74-hd>div{flex:1 1 auto;min-width:0}.sz74-hd h3{margin:2px 0 1px;font-size:20px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sz74-hd small{display:block;color:var(--chalk-2);font-size:12.5px}.sz74-cr{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px}
+.sz74-pill{flex:0 0 auto;align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:6px;background:rgba(255,255,255,.1);color:var(--chalk)}
+.sz74-pill.ex{background:rgba(239,59,54,.2);color:#ff9b96}.sz74-pill.wa{background:rgba(255,179,32,.18);color:var(--led)}.sz74-pill.ln{background:rgba(90,160,255,.18);color:#9cc7ff}.sz74-pill.ok,.sz74-pill.fr{background:rgba(74,210,127,.18);color:var(--good)}
+.sz74-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:-4px}.sz74-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--good),var(--led));border-radius:99px}
+.sz74-warns{display:flex;flex-direction:column;gap:6px}
+.sz74-w{margin:0;padding:8px 11px;border-radius:9px;border-left:4px solid var(--chalk-3);background:rgba(255,255,255,.05);font-size:13.5px;line-height:1.35}
+.sz74-w.bad{border-left-color:var(--red);background:rgba(239,59,54,.1)}.sz74-w.wa{border-left-color:var(--led);background:rgba(255,179,32,.09)}.sz74-w.ok{border-left-color:var(--good);background:rgba(74,210,127,.09)}.sz74-w.inf{border-left-color:#6aa8ff;background:rgba(90,160,255,.08)}
+.sz74-grid{column-count:1;column-gap:12px;margin-bottom:-12px;orphans:1;widows:1}
+.sz74{container-type:inline-size}@container (min-width:700px){.sz74-grid{column-count:2}}@container (min-width:1040px){.sz74-grid{column-count:3}}
+.sz74-box{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);padding:6px 12px 8px;min-width:0;break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;display:block;box-sizing:border-box;margin:0 0 12px}
+.sz74-bh{margin:4px 0 4px;font-size:11.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--chalk-3);display:flex;align-items:center;gap:7px}
+.sz74-bh i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;background:rgba(255,255,255,.08);color:var(--chalk-2);font-size:11px;letter-spacing:0}
+.sz74-r{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);gap:4px 12px;padding:7px 0;border-top:1px solid var(--line);align-items:baseline}
+.sz74-box>.sz74-r:nth-child(2){border-top:0}
+.sz74-r>span{color:var(--chalk-2);font-size:13px;line-height:1.3}
+.sz74-r>b{font-weight:700;font-size:14px;text-align:right;min-width:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.sz74-r>b>small{display:block;font-weight:500;font-size:11.5px;color:var(--chalk-3);margin-top:2px;line-height:1.3}
+.sz74-r>b svg{vertical-align:-2px}
+.sz74-unk{color:var(--chalk-3);font-style:italic;font-weight:600}.sz74-no{color:var(--chalk-3);font-weight:600}
+.sz74-wage{display:flex;flex-direction:column;align-items:flex-end;gap:5px}.sz74-wage>b{font-size:15px;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;column-gap:4px;white-space:nowrap}.sz74-wage>b>small{white-space:normal}.sz74-wage>b small.wg-hf{font-weight:500;color:var(--chalk-3);font-size:11.5px}
+.sz74-wp{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.sz74-wp span{display:flex;flex-direction:column;align-items:flex-end;white-space:nowrap;padding:3px 6px;font-size:11.5px;font-weight:600;color:var(--chalk-2);border-left:1px solid var(--line)}.sz74-wp span:first-child{border-left:0}
+.sz74-wp span em{font-style:normal;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--chalk-3)}
+.sz74-wp span.on{background:rgba(255,179,32,.14);color:var(--chalk)}.sz74-wp span.on em{color:var(--led)}
+.sz74-acts{display:flex;flex-wrap:wrap;gap:8px}.sz74-acts .btn,.sz74-acts .cta{width:auto;flex:0 1 auto}
+.sz74-src{margin:0;color:var(--chalk-3);font-size:11.5px}
+.sz74-me{margin-top:4px}
+@media (max-width:520px){.sz74-hd{padding:10px}.sz74-hd h3{font-size:17px}.sz74-r{grid-template-columns:minmax(0,40%) minmax(0,1fr)}.sz74-box{padding:4px 10px 6px}.sz74-acts>*{flex:1 1 calc(50% - 8px)}}
+body.fut .sz74-hd{background:radial-gradient(ellipse 40% 140% at 6% -40%,rgba(255,248,214,.14),transparent 65%),linear-gradient(90deg,#123422,#0c2418);border-color:rgba(244,247,238,.2)}
+body.fut .sz74-box{background:rgba(9,32,20,.7);border-color:rgba(244,247,238,.16)}body.fut .sz74-r{border-top-color:rgba(244,247,238,.12)}body.fut .sz74-r:nth-child(2){border-top:0}
+body.fut .sz74-wp span.on{background:#f4f7ee;color:#0b2a1a}body.fut .sz74-wp span.on em{color:#7a5a00}
+body.pro .sz74-box{background:rgba(255,255,255,.03)}
 /* v175: tema seçici — dört seçenek, profesyonel temanın yeşil ve lacivert renk örnekleri */
 .thm-chips{grid-template-columns:repeat(2,minmax(0,1fr))}
 .thm-pro-yesil .thm-sw{background:linear-gradient(90deg,#62f0b0 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#15603d,#0a2e1d)}
 .thm-pro-lacivert .thm-sw{background:linear-gradient(90deg,#62b8f0 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#16386b,#0a1a33)}
+/* v176: çevrimiçi oda — hazır sayacı */
+.fm-cont,.tab.cont{position:relative}
+.mp-say{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);padding:1px 6px;border-radius:8px;background:#0b1f15;color:#fff;font:800 10px/1.4 system-ui,sans-serif;letter-spacing:.04em;border:1px solid rgba(255,255,255,.35);white-space:nowrap;pointer-events:none}
+.mp-say.bir{background:#ffc21a;color:#1a1200;border-color:#ffc21a}
+.sz74-acts .btn[disabled]{opacity:.55}
+/* v178: üst çubukta Oda düğmesi ve küçük panel */
+.mp-pill.v178-oda{gap:6px}.mp-pill .v178-l{font:800 12px/1 var(--f-display,system-ui);letter-spacing:.08em;text-transform:uppercase}
+.mp-pill .v178-n{font:700 10px/1 system-ui;opacity:.8;padding:2px 5px;border-radius:8px;background:rgba(255,255,255,.08)}
+.v178-pop{position:fixed;z-index:9000;background:var(--panel,#101a15);color:var(--chalk,#eef3ef);border:1px solid var(--line,#2c3b33);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.5);padding:12px;font-size:13px;max-height:calc(100vh - 90px);overflow:auto}
+.v178-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.v178-h b{font:800 14px/1.2 var(--f-display,system-ui)}
+.v178-kod{font-family:ui-monospace,monospace;letter-spacing:.12em;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.07)}
+.v178-d{font-size:11px;font-weight:700}
+.v178-ks{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.v178-k{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:10px;background:var(--panel-2,#13201a);border:1px solid var(--line,#2c3b33)}
+.v178-k>i{flex:none;width:9px;height:9px;border-radius:50%;background:#8a958f}.v178-k.on>i{background:#38d27a;box-shadow:0 0 7px #38d27a}.v178-k.rd>i{background:#5aa8ff;box-shadow:0 0 7px #5aa8ff}.v178-k.bos{opacity:.6;border-style:dashed}
+.v178-k>div{flex:1;min-width:0}.v178-k b{display:block;font-size:13px}.v178-k small{display:block;font-size:11px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v178-k>em{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.v178-sen{font-size:10px;font-weight:700;opacity:.6;margin-left:4px}
+.v178-p{margin:9px 0 0;font-size:12px;opacity:.85;line-height:1.4}
+.v178-st{margin:10px 0 4px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+.v178-log{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:12px}.v178-log time{display:inline-block;min-width:44px;opacity:.55;font-variant-numeric:tabular-nums;margin-right:6px}
+.v178-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+@media (max-width:560px){.mp-pill.v178-oda{padding:0 8px}.mp-pill .v178-n{display:none}}
 /* Otomatik üretildi: node tools/tema_renk.js — elle düzenleme. Profesyonel tema renk seçenekleri (mor → yeşil / lacivert). */
 /* yesil */
 body.pro.pv-yesil .tline .ms-td i{background:#2c4338;color:#c5fde3}
@@ -20992,7 +21051,7 @@ async function mpPubState(force){if(!mpOn()||!MP.code||!mpConnected())return;con
   mqPub(MP.base+'/s/'+s.p,await mpEnc(s),true);}
 async function mpPubRes(force){if(!mpOn()||!MP.code||!mpConnected()||!G.s)return;const S=G.s;
   const o={k:'res',p:mpPid(),r:G.mp.role,y:S.year,L:S.league,club:G.club||'',fh:mpH53(JSON.stringify(S.fixtures||[]),3),rs:(S.results||[]).map(rd=>rd.map(m=>[m[0],m[1],m[2],m[3]])),ts:Date.now()};
-  if(G.mp.role==='host')o.fx=S.fixtures;const sig=JSON.stringify([o.y,o.L,o.fh,o.rs,o.club]);if(!force&&sig===MP.lastRes)return;MP.lastRes=sig;
+  if(G.mp.role==='host'){o.fx=S.fixtures;o.lm=G.lgMove||{};}const sig=JSON.stringify([o.y,o.L,o.fh,o.rs,o.club,o.lm]);if(!force&&sig===MP.lastRes)return;MP.lastRes=sig;
   mqPub(MP.base+'/r/'+o.p,await mpEnc(o),true);}
 async function mpPubMsg(o){if(!MP.code)return 0;o.p=mpPid();o.i=o.p+'-'+Date.now().toString(36)+'-'+(++MP.seq);o.ts=Date.now();MP.seen.add(o.i);return mqPub(MP.base+'/m',await mpEnc(o),false);}
 /* ---------- al ---------- */
@@ -21140,6 +21199,7 @@ function mpUI(flash){try{const pill=$('#top .mp-pill');if(pill){const s=mpStatus
       h=!live?`<b>⏳ ${nm} çevrimdışı</b><span>Gün, arkadaşın da “Hazırım” deyince ilerler. Döndüğünde kendiliğinden devam edilir.</span><button class="btn sm" data-act="mpSolo">Tek devam et (çevrimiçini kapat)</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`
         :P.e<me?`<b>⏳ ${nm} geride</b><span>${esc(mpDateTxt(P.e))} tarihinde; seninle aynı güne gelince birlikte ilerlersiniz.</span><button class="btn ghost sm" data-act="mpNudge">🔔 Dürt</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`
         :`<b>✅ Hazırsın</b><span>${nm} da “Hazırım” deyince gün ilerleyecek.</span><button class="btn ghost sm" data-act="mpNudge">🔔 Dürt</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`;}
+    else if(P.rd&&P.rd.k==='tatil')h=`<b>☀ ${nm} tatilde</b><span>${esc(mpDateTxt(P.rd.stop))} tarihine kadar onu bekletmiyorsun: sen Devam’a bastıkça o aralık onun için kendiliğinden simüle edilir.</span>`;
     else h=P.e>me?`<b>🟢 ${nm} ileride bekliyor</b><span>${esc(mpDateTxt(P.e))} · Devam’a basarak ona yetişebilirsin.</span>`:`<b>🟢 ${nm} hazır</b><span>Sen de Devam’a (Hazırım) basınca gün ilerler.</span>`;
     if(bar.__h!==h){bar.innerHTML=h;bar.__h=h;}bar.className=(MP.ready?'rdy':'peer')+(flash?' fl':'');if(flash){setTimeout(()=>{bar.classList.remove('fl');},700);}
     const pn=$('#mpPanelBody');if(pn&&!$('#modal').hidden&&!pn.__busy){const nh=mpPanelBody();if(pn.__h!==nh){pn.innerHTML=nh;pn.__h=nh;}}}catch(e){}}
@@ -23469,9 +23529,315 @@ renderTop=(old=>function(){old.apply(this,arguments);try{if(!G||!G.s||G.phase===
     box.dataset.act='v174Takvim';box.classList.add('v174-tarih');box.setAttribute('role','button');box.setAttribute('tabindex','0');box.title='Takvim: önümüzdeki günler';
     led.insertAdjacentHTML('afterbegin','<svg class="v174-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>');}catch(e){}})(renderTop);
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('v174-tarih')){e.preventDefault();e.stopPropagation();ACTX.v174Takvim();}},true);
+/* ================= v174: oyuncu profili › Sözleşme sekmesi — Football Manager tarzı sözleşme kartı =================
+   Kartta görünen her değer oyunun gerçekten kullandığı veriden gelir:
+   - Kendi oyuncumuz (TD / SD / başkan): G.m.ct[k] — w (haftalık €), end (30 Haziran yılı), role (0-3 / 0.5), rc (serbest kalma €),
+     ab/gb (maç/gol primi: v41 bonusWeek → haftalık maaşın %12 / %25'i), raise, relc (v41 mgrNewSeason), tb, sad, opt, pt, sellp, y0, ptN/ptW (v172 soz72);
+     kiralık aldıklarımız G.m.loans[k] (from, y, opt, mand), kiralık verdiklerimiz G.m.lout[k], eski kulübün satış payı G.m.sellOn[k],
+     bu sezon ödenen primler G.m.bonP[k]. Maddesi olmayan (devralınan) sözleşmede maaş pWage ile "tahmini" gösterilir.
+   - Futbolcu (kendi sözleşmen): G.contract (wage iç birim/hf, years, role) + cl (v172 maddeleri), G.loan, G.next, G.tl.
+   - Diğer kulüplerin oyuncuları: maaş pWage (tahmini), bitiş ctEnd; maddeleri oyunda tutulmadığı için "bilinmiyor".
+     TD için kulübün istediği bedel askPrice (042'deki aralık), kulübümüzün satış payı G.m.sellRev[k], serbest oyuncu listesi G.m.fa.
+   Bu sürümden sonra imzalanan sözleşmelerde imza parası, menajer ücreti, başlangıç sezonu ve kiralık maaş katkısı da kaydedilir
+   (ct.bon, ct.ag, ct.s0, loans[k].wp/fee; G.contract.bon/s0). Eski kayıtlarda bu satırlar "kayıtlı değil" yazar. */
+
+/* ---------- yeni imzalarda eksik kalan bilgileri kaydet (eski kayıtlar: alan yok → "kayıtlı değil") ---------- */
+function sz74Mark(fn){return function(){const m=G&&G.m,ref=m&&m.ct?Object.assign({},m.ct):{};const r=fn.apply(this,arguments);
+  try{const M=G&&G.m;if(M&&M.ct&&G.s)for(const k of Object.keys(M.ct)){const ct=M.ct[k];if(ct&&ct!==ref[k]&&ct.s0==null)ct.s0=G.s.year;}}catch(e){console.warn('v174 imza',e);}return r;};}
+negDone=(old=>function(){const m=G.m,n=m&&m.neg,k=n&&n.k,c=n&&n.c?Object.assign({},n.c):null,o=n&&n.o?Object.assign({},n.o):null,ty=n&&n.type;const r=old.apply(this,arguments);
+  try{const ct=m&&m.ct&&m.ct[k];if(ct&&c&&n.st==='done'){ct.s0=G.s.year;ct.bon=Math.max(0,+c.bon||0);ct.ag=Math.max(0,+c.ag||0);
+      if(ty==='loan'&&m.loans&&m.loans[k]&&o){m.loans[k].wp=+o.wp||0;m.loans[k].fee=Math.max(0,+o.fee||0);}}}catch(e){console.warn('v174 negDone',e);}return r;})(negDone);
+try{if(typeof V155_DEC==='object'&&V155_DEC.renew)V155_DEC.renew=(old=>function(ev,k){const r=old.apply(this,arguments);try{if(k==='imza'){const ct=G.m&&G.m.ct&&G.m.ct[ev.pk];if(ct){ct.s0=G.s.year;ct.bon=Math.max(0,Math.round((+ev.bon||0)/EUR_TL));}}}catch(e){}return r;})(V155_DEC.renew);}catch(e){}
+try{youthIntake=sz74Mark(youthIntake);}catch(e){}
+try{optUse=sz74Mark(optUse);}catch(e){}
+try{if(ACTX.acadUpP)ACTX.acadUpP=sz74Mark(ACTX.acadUpP);}catch(e){}
+try{if(ACTX.ddDo)ACTX.ddDo=sz74Mark(ACTX.ddDo);}catch(e){}
+/* zorunlu satın alma: kiralık sözleşme kalıcı olur → yeni başlangıç */
+loansEnd=(old=>function(){const m=G.m,mand=m&&m.loans?Object.keys(m.loans).filter(k=>m.loans[k].mand):[];const r=old.apply(this,arguments);
+  try{for(const k of mand){const ct=m.ct&&m.ct[k];if(ct&&!(m.loans&&m.loans[k])&&(!G.tx||G.tx[k]===G.club))ct.s0=G.s.year+1;}}catch(e){}return r;})(loansEnd);
+/* futbolcu: imza parası ve başlangıç sezonu */
+acceptOffer=(old=>function(o){const r=old.apply(this,arguments);try{if(o&&isPl()&&o.status==='accepted'){let t=null;
+    if(o.loan)t=G.next&&G.next.club===o.club&&G.next.loan?G.next.contract:(G.club===o.club?G.contract:null);
+    else if(o.renew)t=G.contract;else if(G.next&&G.next.club===o.club)t=G.next.contract;else if(G.club===o.club)t=G.contract;
+    if(t&&t.s0==null){t.s0=G.phase==='season'?G.s.year:G.s.year+1;t.bon=Math.max(0,+o.bonus||0);}}}catch(e){console.warn('v174 kabul',e);}return r;})(acceptOffer);
+
+/* ---------- yardımcılar ---------- */
+const SZ74_AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+function sz74Days(endY){try{return Math.round((Date.UTC(endY,5,30)-today().getTime())/DAY_MS);}catch(e){return null;}}
+function sz74Left(d){if(d==null)return '';if(d<0)return 'Sona erdi';const mo=Math.floor(d/30.44);if(mo>=12){const y=Math.floor(mo/12),a=mo%12;return `${y} yıl${a?` ${a} ay`:''}`;}return mo>=1?`${mo} ay`:`${Math.max(0,d)} gün`;}
+const sz74EndTxt=y=>`30 Haziran ${y}`;
+const sz74Un='<span class="sz74-unk">Bilinmiyor</span>';
+const sz74No='<span class="sz74-no">Yok</span>';
+const sz74Nr='<span class="sz74-unk">Kayıtlı değil</span>';
+function sz74Row(l,v,s,cls){return `<div class="sz74-r${cls?' '+cls:''}"><span>${l}</span><b>${v}${s?`<small>${s}</small>`:''}</b></div>`;}
+function sz74Box(t,rows,ic){if(!rows)return '';return `<section class="sz74-box"><p class="sz74-bh">${ic?`<i>${ic}</i>`:''}${t}</p>${rows}</section>`;}
+/* maaş: seçili dönem önde, üç dönem şeridi (Ayarlar › Maaş gösterimi) */
+function sz74Wage(we,est,lid){we=+we||0;const k=wgPer();const strip=we>0?`<div class="sz74-wp">${['hf','ay','yil'].map(x=>`<span class="${x===k?'on':''}"><em>${WGP[x][0]}</em>${amtFmt(wgPerAmt(we,x))}</span>`).join('')}</div>`:'';
+  return `<div class="sz74-wage"><b>${wgH(we)}${est?wgEstTag(lid):''}</b>${strip}</div>`;}
+function sz74Bar(s0,endY){if(s0==null||endY==null)return '';try{const a=Date.UTC(s0,6,1),b=Date.UTC(endY,5,30),n=today().getTime();if(b<=a)return '';const f=clamp((n-a)/(b-a),0,1);return `<div class="sz74-bar" title="Sözleşmenin %${Math.round(f*100)}’i geride kaldı"><i style="width:${(f*100).toFixed(1)}%"></i></div>`;}catch(e){return '';}}
+function sz74Warn(L){return L.length?`<div class="sz74-warns">${L.map(([c,t])=>`<p class="sz74-w ${c}">${t}</p>`).join('')}</div>`:'';}
+function sz74Join(p,cid){try{const C=careerOf(p),T=(C.tx||[]).filter(e=>e.to===cid);const e=T[T.length-1];return e?{y:e.y,loan:!!e.loan}:null;}catch(e){return null;}}
+function sz74Head(c,title,sub,pill){return `<header class="sz74-hd"><span class="sz74-cr">${c?crestSVG(c,40):''}</span><div><span class="kicker">${title}</span><h3>${c?esc(c.name):'—'}</h3><small>${sub}</small></div>${pill||''}</header>`;}
+const sz74Pill=(t,cls)=>`<span class="sz74-pill ${cls||''}">${t}</span>`;
+
+/* ---------- veri modeli: profildeki oyuncu ---------- */
+function sz74Data(p,c){const D={k:p.k,c,mode:G.mode||'player'};const m=G.mode==='mgr'?G.m:null,Y=G.s?G.s.year:2026;
+  const lout=m&&m.lout&&m.lout[p.k],own=!!(m&&G.club&&(c.id===G.club||(lout&&lout.to===c.id))&&(c.id!==G.club||squadOf(G.club).some(x=>x.k===p.k)));
+  D.kind=own?'own':'other';D.lout=own&&lout?lout:null;const cid=own?G.club:c.id;D.cid=cid;
+  D.ct=own&&m.ct?m.ct[p.k]||null:null;D.loanIn=own&&m.loans?m.loans[p.k]||null:null;
+  D.w=pWage(p,cid);D.est=wgIsEst(p,cid);D.end=ctEnd(p);D.days=sz74Days(D.end);D.R=(squadRoles(c.id)||{})[p.k]||null;
+  D.s0=D.ct?(D.ct.s0!=null?D.ct.s0:D.ct.y0!=null?D.ct.y0:null):null;D.join=sz74Join(p,cid);D.Y=Y;
+  if(D.ct&&D.ct.pt&&(D.ct.role||0)>=1){const need=D.ct.role>=3?0.6:D.ct.role>=2?0.45:0.25,played=Math.max(0,((G.s&&G.s.week)||1)-1);let st=0;try{st=(clubSeasonEst(G.club)[p.k]||{}).st||0;}catch(e){}D.pt={need,played,st,n:D.ct.ptN||0};}
+  if(D.ct&&(D.ct.ab||D.ct.gb)&&m.bonP&&m.bonP[p.k]&&m.bonP[p.k].y===Y){const b=m.bonP[p.k];D.bonPaid=(D.ct.ab?b.ap*Math.round(D.ct.w*0.12):0)+(D.ct.gb?b.g*Math.round(D.ct.w*0.25):0);}
+  if(m&&!own&&G.mode==='mgr'){try{const A=askPrice(p,c.id);D.ask=A;}catch(e){}}
+  D.sellRev=m&&m.sellRev&&m.sellRev[p.k]||null;D.sellOn=own&&m.sellOn&&m.sellOn[p.k]||null;
+  D.fa=!!(m&&!own&&(m.faY===Y+1||m.faY===Y)&&(m.fa||[]).includes(p.k));
+  D.neg=m&&m.neg&&m.neg.k===p.k&&m.neg.d&&m.neg.st!=='fail'?m.neg:null;D.negCd=m&&m.negCd&&m.negCd[p.k]>((G.s&&G.s.day)||0)?m.negCd[p.k]-G.s.day:0;
+  return D;}
+
+/* ---------- kart: kendi oyuncumuz / diğer kulüplerin oyuncuları ---------- */
+function sz74HTML(p,c){const D=sz74Data(p,c),ct=D.ct,L=D.loanIn,Y=D.Y,w=D.w,warn=[],td=typeof isTD==='function'&&isTD();
+  const expiring=D.end<=Y+1,roleSt=ct&&ct.role!=null?roleName(ct.role):null;
+  /* başlık */
+  let pill='';if(D.lout)pill=sz74Pill('Kiralıkta','ln');else if(L)pill=sz74Pill('Kiralık','ln');else if(D.fa)pill=sz74Pill('Serbest','fr');else if(expiring)pill=sz74Pill('Son yıl','ex');else if(D.days!=null&&D.days<=548)pill=sz74Pill('Bitiyor','wa');
+  const kick=D.kind==='own'?(L?'Kiralık sözleşme':'Sözleşme · kulübümüz'):'Sözleşme';
+  const hc=D.lout?CLUBS[G.club]:c;
+  const head=sz74Head(hc,kick,`${esc(D.R||roleSt||'Kadro oyuncusu')} · ${sz74EndTxt(D.end)} tarihine kadar`,pill);
+  /* genel */
+  const startTxt=D.s0!=null?seasonLabel(D.s0):D.kind==='own'&&ct?sz74Nr:sz74Un;
+  let gen=sz74Row('Kulüp',`${esc((D.lout?CLUBS[G.club]:c).name)}`,D.lout?`Şu an kiralık: ${esc(CLUBS[D.lout.to]?CLUBS[D.lout.to].name:'')}`:'')+
+    sz74Row('Takımdaki rolü',esc(D.R||'—'),'kadro hiyerarşisi')+
+    (D.kind==='own'?sz74Row('Sözleşmedeki rol',roleSt?esc(roleSt):(ct?sz74Nr:sz74Un),ct&&ct.pt&&(ct.role||0)>=1?'rol garantili':ct?'garanti maddesi yok':'devralınan sözleşme'):'')+
+    sz74Row('Başlangıç',startTxt,D.join?`Kulübe katılış: ${seasonLabel(D.join.y)}${D.join.loan?' (kiralık)':''}`:'')+
+    sz74Row('Bitiş',sz74EndTxt(D.end),D.est&&D.kind!=='own'?'oyunun bu oyuncu için tuttuğu bitiş yılı':'')+
+    sz74Row('Kalan süre',sz74Left(D.days),D.days!=null&&D.days>=0?`${Math.max(0,D.days)} gün`:'');
+  if(D.pt){const pc=D.pt.played?Math.round(D.pt.st/D.pt.played*100):0;gen+=sz74Row('Oynama süresi garantisi',`İlk 11’de en az %${Math.round(D.pt.need*100)}`,D.pt.played>=8?`Bu sezon: ${D.pt.st}/${D.pt.played} maç (%${pc})`:`8. haftadan sonra izlenir · şu an ${D.pt.st}/${D.pt.played}`);}
+  /* maaş ve ödemeler */
+  let pay='';
+  if(D.lout)pay=sz74Row('Sözleşme maaşı',sz74Wage(w,D.est,myClub().league),'kiralık süresince maaşını kiralayan kulüp öder');
+  else pay=sz74Row(L?'Ödediğimiz maaş':'Maaş',sz74Wage(w,D.est,(CLUBS[D.cid]||{}).league),D.est?(D.kind==='own'?'devralınan sözleşme; tutar kulüp maaş ölçeğinden tahmin':'kulüp maaş ölçeğinden tahmin'):'');
+  if(D.kind==='own'&&ct){pay+=sz74Row('İmza parası',ct.bon!=null?(ct.bon?eur(ct.bon):sz74No):sz74Nr,ct.bon!=null?(ct.bon?'imzada ödendi':''):'bu sürümden önce imzalandı')+(ct.ag!=null&&ct.ag?sz74Row('Menajer ücreti',eur(ct.ag),'imzada ödendi'):'');}
+  else if(D.kind==='own')pay+=sz74Row('İmza parası',sz74Nr,'devralınan sözleşme');
+  /* primler */
+  let bon='';
+  if(D.kind==='own'&&ct){
+    bon=sz74Row('Maç primi',ct.ab?`${eur(Math.round(ct.w*0.12))} / maç`:sz74No,ct.ab?'haftalık maaşın %12’si · her pazar ödenir':'')+
+      sz74Row('Gol primi',ct.gb?`${eur(Math.round(ct.w*0.25))} / gol`:sz74No,ct.gb?'haftalık maaşın %25’i':'')+
+      sz74Row('Şampiyonluk primi',ct.tb?`${eur(ct.tb*ct.w)} / kupa`:sz74No,ct.tb?`${ct.tb} haftalık maaş · sezon sonu`:'')+
+      sz74Row('Sadakat primi',ct.sad?`${eur(ct.sad*ct.w)} / sezon`:sz74No,ct.sad?`${ct.sad} haftalık maaş · her yeni sezon başında`:'')+
+      (D.bonPaid!=null?sz74Row('Bu sezon ödenen primler',eur(D.bonPaid),'maç ve gol primleri'):'');}
+  else if(D.kind==='own')bon=sz74Row('Primler',sz74No,'devralınan sözleşmede prim maddesi yok');
+  else bon=sz74Row('Maç / gol / şampiyonluk primi',sz74Un,'kulübün iç bilgisi');
+  /* maddeler */
+  let cl='';
+  if(D.kind==='own'&&ct){
+    cl=sz74Row('Serbest kalma bedeli',ct.rc?eur(ct.rc):sz74No,ct.rc?'bedeli ödeyen her kulübe geçerli (yurt içi / yurt dışı ayrımı yok) · transfer dönemlerinde; bedeli yatıran kulüp oyuncuyu pazarlıksız alır':'')+
+      sz74Row('Yıllık maaş artışı',ct.raise?`+%${ct.raise} / sezon`:sz74No,ct.raise?`gelecek sezon ${wgT(Math.round(ct.w*(1+ct.raise/100)))}`:'')+
+      sz74Row('Küme düşerse maaş indirimi',ct.relc?`−%${ct.relc}`:sz74No,ct.relc?`düşersek ${wgT(Math.round(ct.w*(1-ct.relc/100)))}`:'')+
+      sz74Row('Opsiyon yılı',ct.opt?`+1 yıl · ${ct.opt===2?'oyuncu':'kulüp'} lehine`:sz74No,ct.opt?(ct.opt===2?'son yıl biterken oyuncu kulüpten kopmamışsa kullanır':'son yıl biterken gücü takım gücünün en fazla 6 altındaysa kulüp kullanır'):'')+
+      sz74Row('Oyuncuya satıştan pay',ct.sellp?`%${ct.sellp}`:sz74No,ct.sellp?'satılırsa bonservisten oyuncuya ödenir':'');}
+  else if(D.kind==='own')cl=sz74Row('Serbest kalma bedeli',sz74No,'devralınan sözleşme')+sz74Row('Diğer maddeler',sz74No,'maaş artışı, düşme indirimi, opsiyon kaydı yok');
+  else cl=sz74Row('Serbest kalma bedeli',sz74Un,'kulübün iç bilgisi')+sz74Row('Diğer maddeler',sz74Un,'opsiyon, maaş artışı, satıştan pay');
+  if(D.sellOn&&CLUBS[D.sellOn.c])cl+=sz74Row('Eski kulübün satış payı',`%${D.sellOn.pct}`,`satarsak bonservisin bu kısmı ${esc(CLUBS[D.sellOn.c].name)} kulübüne ödenir`);
+  if(D.sellRev&&CLUBS[D.sellRev.club])cl+=sz74Row('Kulübümüzün satış payı',`%${D.sellRev.pct}`,`${esc(CLUBS[D.sellRev.club].name)} onu başka kulübe satarsa bütçemize`);
+  /* kiralık */
+  let ln='';
+  if(L){const f=CLUBS[L.from];ln=sz74Row('Ana kulüp',f?`${crestSVG(f,14)} ${esc(f.name)}`:'—','bonservisi orada')+sz74Row('Kiralık süresi',`${seasonLabel(L.y)} sezon sonu`,'sezon bitince ana kulübüne döner')+
+      sz74Row(L.mand?'Zorunlu satın alma':'Satın alma opsiyonu',L.opt?eur(L.opt):sz74No,L.opt?(L.mand?'sezon sonunda bütçe yeterse otomatik ödenir':'kiralık bitince yaz boyunca kullanılabilir'):'')+
+      sz74Row('Maaş katkımız',L.wp!=null?`%${L.wp}`:sz74Nr,L.wp!=null?'maaşın bu kısmını biz ödüyoruz':'bu sürümden önce imzalandı')+
+      (L.fee!=null?sz74Row('Kiralama bedeli',L.fee?eur(L.fee):sz74No,''):'');}
+  else if(D.lout){const t=CLUBS[D.lout.to];ln=sz74Row('Kiralandığı kulüp',t?`${crestSVG(t,14)} ${esc(t.name)}`:'—',`${seasonLabel(D.lout.y)} sezonu`)+sz74Row('Dönüş','sezon sonunda','yeni sezon başlarken kadroya döner')+sz74Row('Maaş','kiralayan kulüp öder','');}
+  /* transfer bilgisi (diğer kulüpler) */
+  let tr='';
+  if(D.kind==='other'){if(D.ask)tr+=sz74Row('Kulübün istediği bedel',D.ask.nfs?'Satılık değil':`${eur(rnd5(D.ask.a*0.9,stepOf(D.ask.a)))} – ${eur(rnd5(D.ask.a*1.15,stepOf(D.ask.a)))}`,D.ask.nfs?'kilit oyuncu':'tahmini · kalan sözleşme süresi bedeli etkiler');
+    if(D.neg&&D.neg.d){const d=D.neg.d;tr+=sz74Row('Menajerin talepleri',`${wgT(d.w)}`,`${d.y?d.y+' yıl · ':''}${esc(roleName(d.role)||'')} rolü${d.rc?' · serbest kalma maddesi istiyor':''}`);}}
+  /* uyarılar */
+  if(D.days!=null&&D.days<0)warn.push(['bad','Sözleşmesi sona erdi.']);
+  else if(L)warn.push(['inf',`Kiralık oyuncu: sezon sonunda ${esc(CLUBS[L.from]?CLUBS[L.from].name:'ana kulübüne')} döner${L.opt?(L.mand?' — zorunlu satın alma maddesi var.':' — satın alma opsiyonu yazın kullanılabilir.'):'.'}`]);
+  else if(expiring&&!D.lout){if(D.kind==='own')warn.push(['bad',ct&&ct.opt?`Son yıl: sezon sonunda ${ct.opt===2?'oyuncu':'kulüp'} opsiyonu değerlendirilir; kullanılmazsa bedelsiz ayrılır.`:'Son yıl: yenilenmezse sezon sonunda bedelsiz ayrılır.']);
+    else warn.push(['wa',G.mode==='mgr'?`Sözleşmesinin son yılı: kulübü daha düşük bonservis ister${p.age>=27?'; yazın serbest oyuncu olabilir':''}.`:'Sözleşmesinin son yılında.']);}
+  if(!L&&!D.lout&&D.days!=null&&D.days>=0&&D.days<183)warn.push(['bad',`Sözleşmenin bitmesine 6 aydan az kaldı (${sz74Left(D.days)}).`]);
+  if(D.pt&&D.pt.n===1)warn.push(['bad','Rol garantisi tutulmuyor: oyuncu şikayet etti; düzelmezse tazminat ister.']);else if(D.pt&&D.pt.n===2)warn.push(['bad','Rol garantisi ihlali için tazminat ödendi.']);
+  if(D.negCd)warn.push(['wa',`Şu an yeni sözleşme konuşmak istemiyor (${D.negCd} gün).`]);
+  if(D.fa)warn.push(['ok','Serbest oyuncu listesinde: bonservis ödemeden görüşülebilir.']);
+  if(D.kind==='own'&&!ct&&!D.lout)warn.push(['inf','Göreve gelmeden önce imzalanmış sözleşme: maaş tahmini, ek madde kaydı yok. Yenilediğinde maddeler burada görünür.']);
+  /* kısa yollar (yalnız mevcut eylemler) */
+  const A=[];if(td&&D.kind==='own'&&!L&&!D.lout){if(D.end<=Y+2)A.push(`<button class="${expiring?'cta':'btn'} sm" data-act="renew" data-k="${esc(p.k)}">Sözleşmeyi yenile</button>`);A.push(`<button class="btn sm" data-act="talk1" data-k="${esc(p.k)}">Birebir görüş</button>`);}
+  if(td&&D.kind==='own')A.push(`<button class="btn sm" data-act="navGo" data-tab="squad" data-k="soz">Tüm sözleşmeler</button>`);
+  if(D.fa&&td)A.push(`<button class="cta sm" data-act="faGo" data-k="${esc(p.k)}">Serbest oyuncuyla görüş</button>`);
+  const acts=A.length?`<div class="sz74-acts">${A.join('')}</div>`:'';
+  return `<div class="sz74">${head}${sz74Bar(D.s0,D.end)}${sz74Warn(warn)}<div class="sz74-grid">${sz74Box('Genel',gen,'📄')}${sz74Box(D.lout?'Maaş':'Maaş ve ödemeler',pay,'€')}${L||D.lout?sz74Box('Kiralık şartları',ln,'↔'):''}${sz74Box('Primler',bon,'★')}${sz74Box('Maddeler',cl,'§')}${tr?sz74Box('Transfer',tr,'⇄'):''}</div>${acts}
+    <p class="sz74-src">${D.kind==='own'&&ct?'Değerler kulübün kayıtlı sözleşmesinden.':D.est?'Maaş, kulübün ve ligin maaş ölçeğinden tahmin edildi; maddeler kulübün iç bilgisi.':''}</p></div>`;}
+
+/* ---------- kart: futbolcunun kendi sözleşmesi ---------- */
+function sz74MeData(){const ct=G.contract||{},cl=ct.cl||{},Y=G.s?G.s.year:2026,off=G.phase==='off';const D={ct,cl,Y,c:myClub(),w:+ct.wage||0,yrs:+ct.years||0};
+  /* sezon içinde years bu sezonu da sayar → bitiş Y+years; yaz arasında years bir azalmıştır ama G.s.year hâlâ biten sezon → Y+1+years */
+  D.end=D.yrs>0?Y+D.yrs+(off?1:0):null;
+  D.days=D.end!=null?sz74Days(D.end):null;D.s0=ct.s0!=null?ct.s0:cl.y0!=null?cl.y0:null;
+  if(G.loan){const pc=G.loan.contract||{};D.loan={parent:CLUBS[G.loan.parent],pw:+pc.wage||0,py:+pc.years||0,role:pc.role};D.loan.pend=D.loan.py>0?Y+D.loan.py:null;}
+  if(cl.pt){const played=Math.max(0,((G.s&&G.s.week)||1)-1),st=(G.s&&G.s.stats)||{};D.pt={need:{Yıldız:0.7,Kaptan:0.7,'İlk 11':0.55,Rotasyon:0.3}[ct.role]||0.25,played,ap:st.apps||0,bad:!!ct.ptBad};}
+  D.pd=cl.pd&&cl.pd.y===Y?cl.pd.s:null;return D;}
+function sz74MeHTML(){if(!G.contract)return '<p class="muted">Sözleşmen yok.</p>';const D=sz74MeData(),ct=D.ct,cl=D.cl,w=D.w,Y=D.Y,c=D.c,warn=[],LN=D.loan;
+  const youth=!!(curLeague()&&curLeague().youth);
+  let pill='';if(LN)pill=sz74Pill('Kiralık','ln');else if(G.next)pill=sz74Pill('İmza atıldı','ok');else if(G.mustMove||D.yrs<=0)pill=sz74Pill('Bitti','ex');else if(D.yrs<=1)pill=sz74Pill('Son yıl','ex');
+  const head=sz74Head(c,LN?'Kiralık sözleşmen':'Sözleşmen',`${esc(ct.role||'')}${D.end?` · ${sz74EndTxt(D.end)} tarihine kadar`:''}`,pill);
+  let gen=sz74Row('Kulüp',esc(c?c.name:'—'),youth?'altyapı sözleşmesi':'')+sz74Row('Rolün',esc(ct.role||'—'),cl.pt?'rol garantili':'')+
+    sz74Row('Başlangıç',D.s0!=null?seasonLabel(D.s0):sz74Nr,D.s0!=null?'':'bu sürümden önce imzalandı')+
+    sz74Row('Bitiş',D.end?sz74EndTxt(D.end):LN?'Sezon sonu':'—',`${D.yrs>0?`${D.yrs} sezon`:'süre doldu'}`)+sz74Row('Kalan süre',D.end?sz74Left(D.days):'—',D.days!=null&&D.days>=0?`${D.days} gün`:'');
+  if(D.pt){const pc=D.pt.played?Math.round(D.pt.ap/D.pt.played*100):0;gen+=sz74Row('Oynama süresi garantisi',`Maçların en az %${Math.round(D.pt.need*100)}’inde`,D.pt.played>=8?`Bu sezon: ${D.pt.ap}/${D.pt.played} maç (%${pc})`:`8. haftadan sonra izlenir · şu an ${D.pt.ap}/${D.pt.played}`);}
+  let pay=sz74Row(LN?'Kiralık maaşın':'Maaş',sz74Wage(w/EUR_TL,false),'')+sz74Row('İmza parası',ct.bon!=null?(ct.bon?money(ct.bon):sz74No):sz74Nr,ct.bon!=null?(ct.bon?'imzada ödendi':''):'bu sürümden önce imzalandı');
+  if(D.pd!=null)pay+=sz74Row('Bu sezon ödenen primler',money(D.pd),'maç ve gol primleri');
+  const pc=v=>money(Math.round(w*v/100));
+  const bon=sz74Row('Maç primi',cl.ab?`${pc(cl.ab)} / maç`:sz74No,cl.ab?`haftalık maaşın %${cl.ab}’i · pazar günleri ödenir`:'')+sz74Row('Gol primi',cl.gb?`${pc(cl.gb)} / gol`:sz74No,cl.gb?`haftalık maaşın %${cl.gb}’i`:'')+
+    sz74Row('Şampiyonluk primi',cl.tb?`${money(cl.tb*w)} / kupa`:sz74No,cl.tb?`${cl.tb} haftalık maaş · sezon sonu`:'')+sz74Row('Sadakat primi',cl.sad?`${money(cl.sad*w)} / sezon`:sz74No,cl.sad?`${cl.sad} haftalık maaş · kulüpteki her tamamlanan sezon`:'');
+  const nx=v=>wgHU(Math.round(w*v/50)*50);
+  let cls=sz74Row('Serbest kalma bedeli',cl.rc?eur(cl.rc):sz74No,cl.rc?'senden güçlü ya da denk, en fazla bir alt seviyedeki liglerden kulüpler (yurt içi / yurt dışı ayrımı yok) · transfer dönemlerinde; kulübün engel olamaz':'yoksa kulübün sezon içinde transferini engelleyebilir')+
+    sz74Row('Yıllık maaş artışı',cl.raise?`+%${cl.raise} / sezon`:sz74No,cl.raise?`gelecek sezon ${nx(1+cl.raise/100).replace(/<small[\s\S]*<\/small>/,'')}`:'')+
+    sz74Row('Küme düşerse maaş indirimi',cl.relc?`−%${cl.relc}`:sz74No,cl.relc?`düşersek ${nx(1-cl.relc/100).replace(/<small[\s\S]*<\/small>/,'')}`:'')+
+    sz74Row('Opsiyon yılı',cl.opt?`+1 yıl · ${cl.opt===2?'senin':'kulübün'} lehine`:sz74No,cl.opt?(cl.opt===2?'sözleşme biterken istersen 1 yıl daha kalırsın':'sezon ortalaman 6,6+ ve maçların %30’unda oynadıysan kulüp kullanır'):'')+
+    sz74Row('Sonraki satıştan pay',cl.sell?`%${cl.sell}`:sz74No,cl.sell?'bonservisle ayrılırsan bonservisin bu kısmı sana':'');
+  let ln='';if(LN){ln=sz74Row('Ana kulüp',LN.parent?`${crestSVG(LN.parent,14)} ${esc(LN.parent.name)}`:'—','bonservisin orada')+sz74Row('Dönüş','sezon sonunda','')+
+      sz74Row('Ana sözleşmen',LN.pend?sz74EndTxt(LN.pend):'—',`${esc(LN.role||'')}${LN.py?` · ${LN.py} sezon`:''}`)+sz74Row('Ana kulüpteki maaşın',sz74Wage(LN.pw/EUR_TL,false),'');}
+  if(G.next&&CLUBS[G.next.club]){const n=G.next.contract||{};warn.push(['ok',`${esc(CLUBS[G.next.club].name)} ile ${G.next.loan?'kiralık ':''}anlaştın: yeni sezonda ${esc(n.role||'')} rolüyle ${n.years||1} yıllık sözleşme başlar.`]);}
+  if(G.mustMove&&!G.next)warn.push(['bad','Sözleşmen bitti: yeni kulüp bulmalısın.']);
+  else if(!LN&&G.phase==='season'&&D.yrs<=1)warn.push(['bad',cl.opt?`Son yıl: sezon sonunda ${cl.opt===2?'opsiyon hakkını kullanabilirsin':'kulüp opsiyonu değerlendirir'}.`:'Son yıl: sezon sonunda yenileme teklifi gelmezse kulüp değiştirmen gerekir.']);
+  if(!LN&&D.days!=null&&D.days>=0&&D.days<183&&!G.next)warn.push(['bad',`Sözleşmenin bitmesine 6 aydan az kaldı (${sz74Left(D.days)}).`]);
+  if(G.tl)warn.push(['wa','Transfer listesindesin.']);
+  if(D.pt&&D.pt.bad)warn.push(['bad',`Rol garantin tutulmuyor.${cl.ptC===Y?' Bu sezon şikayet ettin.':''}`]);
+  if(LN)warn.push(['inf',`Kiralıktasın: sezon sonunda ${esc(LN.parent?LN.parent.name:'ana kulübüne')} döneceksin.`]);
+  const A=[];try{if(G.phase==='season'&&!youth){const dis=reqLeft('maas')>0;A.push(`<button class="btn sm" data-act="breq" data-k="maas" ${dis?'disabled':''}>${esc(REQ.maas.n)}${dis?` · ${reqLeft('maas')} gün`:''}</button>`);}}catch(e){}
+  if(D.pt&&D.pt.bad&&cl.ptC!==Y)A.push('<button class="cta sm" data-act="soz72Sik">Yönetime şikayet et</button>');
+  A.push('<button class="btn sm" data-act="tab" data-tab="board">Yönetim</button>');
+  return `<div class="sz74 sz74-me">${head}${sz74Bar(D.s0,D.end)}${sz74Warn(warn)}<div class="sz74-grid">${sz74Box('Genel',gen,'📄')}${sz74Box('Maaş ve ödemeler',pay,'€')}${LN?sz74Box('Kiralık şartları',ln,'↔'):''}${youth?'':sz74Box('Primler',bon,'★')+sz74Box('Maddeler',cls,'§')}</div><div class="sz74-acts">${A.join('')}</div>
+    <p class="sz74-src">Değerler imzaladığın sözleşmeden. Maddeler bir sonraki görüşmede teklif ekranındaki “Pazarlık” ile istenebilir.</p></div>`;}
+
+/* ---------- profile ekle: Sözleşme sekmesi ---------- */
+fmProfHTML=(old=>function(p,c,opt){let h=old.apply(this,arguments);try{if(opt&&opt.acad||!p||!p.k||!c||!CLUBS[c.id]||p.alive===false||LEAGUES[c.league]&&LEAGUES[c.league].youth&&!(G.mode==='mgr'&&c.id===G.club))return h;
+    h+=`<section class="fmp-soz" hidden>${sz74HTML(p,c)}</section>`;}catch(e){console.warn('v174 sözleşme kartı',e);}return h;})(fmProfHTML);
+function sz74Mount(mc,was){if(!mc)return;const sec=mc.querySelector('.fmp-soz'),nav=mc.querySelector('.pf-tabs'),body=mc.querySelector('.pf-body');if(!sec||!nav||!body||nav.querySelector('[data-k=soz]'))return;
+  const b=document.createElement('button');b.dataset.act='pfTab';b.dataset.k='soz';b.textContent='Sözleşme';const ref=nav.querySelector('[data-k=cp]');nav.insertBefore(b,ref||null);
+  const pn=document.createElement('div');pn.className='pf-pane';pn.dataset.p='soz';pn.hidden=true;sec.hidden=false;pn.appendChild(sec);body.appendChild(pn);
+  if(was==='soz')pfTabGo('soz');}
+pfBuild=(old=>function(mc){const was=PF_TAB;const r=old.apply(this,arguments);try{sz74Mount(mc,was);}catch(e){console.warn('v174 sekme',e);}return r;})(pfBuild);
+/* futbolcu: Oyuncu › Sözleşme alt sekmesi */
+stab=(old=>function(id,tabs){try{if(id==='pl'&&isPl()&&G.contract&&G.phase!=='retired'&&Array.isArray(tabs)&&!tabs.some(t=>t&&t[0]==='soz'))tabs=tabs.concat([['soz','Sözleşme',()=>sz74MeHTML()]]);}catch(e){}return old.call(this,id,tabs);})(stab);
 /* ================= v175: normal kenar çubuğu geri döndü (v172 menü sadeleştirmesi ve sayfa üstü alt sekmeler kaldırıldı; güç ölçeği kalıyor) ================= */
 if(typeof window.v172UiEski==='function')uiGroups=window.v172UiEski;
 v172Alt=function(){};
+/* ================= v176: çevrimiçi oda düzeltmeleri — ortak fikstür (oda kodundan tohumlu), lig dağılımı ve sezon ortası eşitleme, "1/2" hazır sayacı ================= */
+/* 1) Fikstür iki cihazda da aynı kurulsun: oda açıkken yeni sezonun fikstürü oda kodu + lig + yıl tohumuyla karıştırılır */
+function mpTohumKaristir(a,seed){const r=srng(seed),x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
+function mpFiksturKur(){try{if(!mpOn()||!G.s)return false;const S=G.s;if((S.results||[]).length)return false;
+    const ids=leagueClubs(S.league).map(c=>c.id).sort();S.fixtures=makeFixtures(mpTohumKaristir(ids,'oda:'+G.mp.code+':'+S.league+':'+S.year));return true;}catch(e){console.warn('oda fikstür',e);return false;}}
+newSeason=(old=>function(){const r=old.apply(this,arguments);try{if(mpFiksturKur()){MP.lastRes='';}}catch(e){}return r;})(newSeason);
+/* 2) Eşitleme: misafir, kurucunun lig dağılımını (kendi kulübü hariç) ve — fikstür farklıysa — fikstürünü ve oynanmış sonuçlarını devralır */
+mpMerge=(old=>function(o){try{const S=G.s;if(!S||!mpOn())return;
+    if(G.mp.role==='guest'&&o.lm&&typeof o.lm==='object'){const yeni=Object.assign({},o.lm);
+      /* kendi kulübünün ligi kendi dünyandaki gibi kalır */
+      if(G.club&&CLUBS[G.club]){const ben=(G.lgMove||{})[G.club];if(ben!==undefined)yeni[G.club]=ben;else delete yeni[G.club];}
+      if(JSON.stringify(yeni)!==JSON.stringify(G.lgMove||{})){G.lgMove=yeni;try{lgApply.k=null;lgApply();}catch(e){}save();}}
+    if(o.y!==S.year||o.L!==S.league)return;
+    const myH=mpH53(JSON.stringify(S.fixtures||[]),3);
+    if(o.fh!==myH&&G.mp.role==='guest'&&Array.isArray(o.fx)&&mpFixOk(o.fx)&&Array.isArray(o.rs)){
+      const R0=(S.results||[]).length;
+      S.fixtures=JSON.parse(JSON.stringify(o.fx));S.results=JSON.parse(JSON.stringify(o.rs));
+      /* hafta sayacı oynanmış tur sayısıyla uyumlu */
+      S.week=S.results.length+1;
+      /* oynanmış haftaların maç günleri yeniden oynanmasın: takvim devralınan son haftanın ertesi gününe alınır */
+      const nR=S.results.length;if(nR&&S.cal&&S.cal[nR-1]!=null&&S.day<=S.cal[nR-1]){S.day=S.cal[nR-1]+1;}
+      save();MP.lastRes='';mpPubRes(true);
+      msg('news','🌐 Lig fikstürü oda kurucusuyla eşitlendi',R0?`Odaya sezon içinde katıldığın için fikstür ve şimdiye kadarki ${S.results.length} haftanın sonuçları oda kurucusunun dünyasından alındı. Bundan sonra maçlar ikinizde de aynı rakiplerle oynanır ve sonuçlar ortak tabloya işlenir.`:'Bu sezonun fikstürü ikinizde de aynı.');
+      try{mpSoftRender();}catch(e){}return;}
+    return old.apply(this,arguments);}catch(e){console.warn('oda birleştirme v176',e);}})(mpMerge);
+/* oda sonradan açılırsa (Ayarlar ya da katılma) ve sezonda henüz maç yoksa fikstür tohumlu kurulur */
+if(typeof ACTX.mpSetTog==='function')ACTX.mpSetTog=(old=>function(){const r=old.apply(this,arguments);try{if(mpFiksturKur()){save();MP.lastRes='';mpPubRes(true);}}catch(e){}return r;})(ACTX.mpSetTog);
+wizGo=(old=>function(){const r=old.apply(this,arguments);try{if(G&&G.mp&&G.mp.on&&mpFiksturKur()){save();MP.lastRes='';setTimeout(()=>mpPubRes(true),500);}}catch(e){}return r;})(wizGo);
+/* 3) Hazır sayacı: Devam/Hazırım düğmesinin altında kaç kişinin beklendiği (FM'deki gibi): kimse basmadıysa 2/2, biri bastıysa 1/2 */
+function mpBekleyen(){const benHazir=!!MP.ready,o=MP.peer&&mpPeerLive()&&MP.peer.rd;return (benHazir?0:1)+(o?0:1);}
+mpUI=(old=>function(){const r=old.apply(this,arguments);try{const on=mpOn()&&mpPartnerExists();const n=on?mpBekleyen():0;
+    for(const b of document.querySelectorAll('#top .fm-cont,#tabs .tab.cont')){let s=b.querySelector('.mp-say');
+      if(!on){if(s)s.remove();continue;}
+      if(!s){b.insertAdjacentHTML('beforeend','<small class="mp-say"></small>');s=b.querySelector('.mp-say');}
+      const t=`${n}/2`;if(s.textContent!==t)s.textContent=t;s.title=n?`${n} kişi bekleniyor`:'Herkes hazır';s.classList.toggle('bir',n===1);}}catch(e){}return r;})(mpUI);
+render=(old=>function(){const r=old.apply(this,arguments);try{mpUI();}catch(e){}return r;})(render);
+/* ================= v178: üst çubukta "Oda" düğmesi ve küçük panel (çevrimiçi olanlar, son olaylar); oda kurucusu sunucu: kariyeri açıkken oda sürer, bağlantısı giderse oda duraklar; olaylar kayda yazılır ================= */
+/* ---------- oda olay günlüğü (kayıtta tutulur; oyunu kapatıp açınca kaybolmaz) ---------- */
+function v178Log(x){try{if(!G||!G.mp)return;const L=G.mp.log=G.mp.log||[];const s=String(x||'').slice(0,160);if(L.length&&L[L.length-1].x===s&&Date.now()-L[L.length-1].t<60000)return;
+    L.push({t:Date.now(),e:mpEpoch(),x:s});if(L.length>40)L.splice(0,L.length-40);save();}catch(e){}}
+function v178Rol(r){return r==='host'?'Sunucu':'Misafir';}
+function v178PeerN(){return (MP.peer&&MP.peer.n)||(G.mp.peer&&G.mp.peer.n)||'Arkadaşın';}
+/* bağlantı ve eşleşme değişimleri günlüğe */
+const V178={live:null,conn:null,mem:0,lr:'',y:0,pop:false};
+function v178Izle(){try{if(!G||!G.mp||!mpOn())return;const mem=(G.mp.mem||[]).length,live=mpPeerLive(),conn=mpConnected()>0,nm=v178PeerN(),host=G.mp.role==='host';
+    if(V178.conn!==null&&conn!==V178.conn)v178Log(conn?'Sunuculara yeniden bağlandın':'İnternet bağlantın koptu');
+    if(V178.conn===null&&conn)v178Log('Odaya bağlandın · '+(host?'oda sunucusu sensin':'sunucu: '+nm));
+    V178.conn=conn;
+    if(mem>=2&&V178.mem<2&&V178.mem!==0)v178Log(nm+' odaya katıldı');V178.mem=mem;
+    if(mem>=2){if(V178.live!==null&&live!==V178.live)v178Log(live?(host?nm+' çevrimiçi oldu':'Sunucu ('+nm+') çevrimiçi: oda sürüyor'):(host?nm+' çevrimdışı oldu':'Sunucu ('+nm+') kapandı: oda duraklatıldı'));V178.live=live;}
+    const P=MP.peer;if(P&&P.lr&&live){const k=P.lr.join('|');if(V178.lr&&k!==V178.lr)v178Log(`${nm}: ${P.lr[0]} ${P.lr[1]}-${P.lr[2]} ${P.lr[3]}`);V178.lr=k;}}catch(e){}}
+/* kendi maç sonucun da günlüğe */
+nextDay=(old=>function(){const n0=G&&G.s?G.s.results.length:0,y0=G&&G.s?G.s.year:0;const r=old.apply(this,arguments);try{if(mpOn()&&G.s&&G.s.year===y0&&G.s.results.length>n0){const x=mpLastRes();if(x)v178Log(`Sen: ${x[0]} ${x[1]}-${x[2]} ${x[3]}`);}}catch(e){}return r;})(nextDay);
+mpFull=(old=>function(){v178Log('Oda dolu: katılamadın');return old.apply(this,arguments);})(mpFull);
+/* ---------- sunucu (oda kurucusu): arkadaşın çevrimdışıysa günler senin Devam’ınla ilerler; arkadaşın dönünce sana yetişir ---------- */
+mpCheck=(old=>function(){const r=old.apply(this,arguments);try{if(MP.ready&&mpOn()&&G.mp.role==='host'&&mpPartnerExists()&&!mpPeerLive()&&mpConnected()>0&&!MP.going){const me=mpEpoch();const T=MP.ready.stop;if(T>me){v178Log('Sunucu olarak devam ettin ('+v178PeerN()+' çevrimdışı)');mpGo(T);}}}catch(e){}return r;})(mpCheck);
+/* misafir: sunucu kapalıyken bekleme çubuğu bunu söyler */
+mpUI=(old=>function(){const r=old.apply(this,arguments);try{v178Izle();
+    const bar=$('#mpbar');if(bar&&!bar.hidden&&MP.ready&&G.mp.role==='guest'&&!mpPeerLive()){const nm=esc(v178PeerN());
+      const h=`<b>⏸ Sunucu kapalı · oda duraklatıldı</b><span>Odanın sunucusu ${nm}. ${nm} kariyerini açınca kaldığınız yerden birlikte devam edersiniz; senin kaydın cihazında duruyor.</span><button class="btn sm" data-act="mpSolo">Odadan ayrıl, tek devam et</button><button class="btn ghost sm" data-act="mpCancel">İptal</button>`;
+      if(bar.__h!==h){bar.innerHTML=h;bar.__h=h;}}
+    /* hazır sayacı: herkes hazırsa (gün ilerlerken) sayaç gizlenir */
+    for(const s of document.querySelectorAll('.mp-say'))s.hidden=s.textContent==='0/2';
+    v178Dugme();if(V178.pop)v178PopCiz();}catch(e){}return r;})(mpUI);
+/* ---------- üst çubuk: Oda düğmesi ---------- */
+function v178Cevrimici(){if(!G||!G.mp||!mpOn())return 0;return (mpConnected()>0?1:0)+(mpPartnerExists()&&mpPeerLive()?1:0);}
+function v178Dugme(){try{if(!G||G.phase==='retired')return;const meta=$('#top .top-meta');if(!meta)return;let b=meta.querySelector('.mp-pill');
+    if(!b){meta.insertAdjacentHTML('afterbegin','<button class="mp-pill mp-off" data-act="v178Oda"></button>');b=meta.querySelector('.mp-pill');}
+    if(b.dataset.act!=='v178Oda')b.dataset.act='v178Oda';
+    const on=mpOn(),n=v178Cevrimici(),s=mpStatus();if(!b.classList.contains('mp-'+s.c))b.className='mp-pill mp-'+s.c;b.classList.add('v178-oda');
+    const un=MP.unread&&on?`<em>${MP.unread}</em>`:'';const h=`<i></i><b class="v178-l">Oda</b>${on?`<small class="v178-n">${n}/2</small>`:''}${un}`;
+    if(b.__h!==h){b.innerHTML=h;b.__h=h;}b.title=on?`Çevrimiçi oda ${G.mp.code} · ${s.t}`:'Çevrimiçi oda: kapalı';}catch(e){}}
+renderTop=(old=>function(){old.apply(this,arguments);try{v178Dugme();}catch(e){}})(renderTop);
+/* ---------- küçük panel ---------- */
+function v178Saat(t){try{const d=new Date(t),n=new Date();const hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');return d.toDateString()===n.toDateString()?hm:d.getDate()+'.'+(d.getMonth()+1)+' '+hm;}catch(e){return '';}}
+function v178Kisi(o){return `<li class="v178-k ${o.c}"><i></i><div><b>${esc(o.n)}${o.sen?' <span class="v178-sen">sen</span>':''}</b><small>${esc(o.alt)}</small></div><em>${esc(o.rol)}</em></li>`;}
+function v178PopHTML(){if(!mpOn())return `<div class="v178-h"><b>🌐 Çevrimiçi oda</b><span class="v178-d mp-offt">Kapalı</span></div>
+    <p class="v178-p">Bu kariyer tek oyunculu. Oda kurarsan sunucusu sen olursun: kariyerin açık olduğu sürece arkadaşın aynı dünyada seninle oynar.</p>
+    <div class="v178-b"><button class="btn sm" data-act="v178Kur">Oda kur</button><button class="btn sm" data-act="v178Katil">Arkadaşının odasına katıl</button></div>`;
+  const s=mpStatus(),host=G.mp.role==='host',P=MP.peer,pp=G.mp.peer||{},live=mpPeerLive(),me=mpEpoch(),conn=mpConnected()>0;
+  const ben={n:(G.p&&G.p.name)||'Sen',sen:1,rol:v178Rol(G.mp.role),c:conn?'on':'off',alt:[mpProfN(G.prof),mpClubN(G.club)].filter(Boolean).join(' · ')+(conn?(MP.ready?' · hazır':' · çevrimiçi'):' · bağlanıyor…')};
+  const kisi=[ben];
+  if(mpPartnerExists()){const pr=(P&&P.prof)||pp.prof,cn=(P&&P.cn)||pp.cn,e=(P&&P.e)||pp.e;let d=live?(P&&P.rd?(P.rd.k==='tatil'?'tatilde':'hazır'):'çevrimiçi'):'çevrimdışı';
+    if(e&&e!==me)d+=' · '+mpDateTxt(e)+(e>me?' (ileride)':' (geride)');
+    kisi.push({n:v178PeerN(),rol:v178Rol(host?'guest':'host'),c:live?(P&&P.rd?'rd':'on'):'off',alt:[mpProfN(pr),cn].filter(Boolean).join(' · ')+' · '+d});}
+  const n=kisi.filter(k=>k.c!=='off').length;
+  const durum=!mpPartnerExists()?`Kod ya da bağlantıyı arkadaşına gönder; katılınca burada görünür.`
+    :host?(live?'Sunucu sensin: kariyerin açık oldukça oda açık.':`Sunucu sensin. ${esc(v178PeerN())} çevrimdışı: Devam’a bastıkça günler ilerler, döndüğünde sana yetişir.`)
+    :(live?`Sunucu ${esc(v178PeerN())}: bağlantı açık.`:`Sunucu (${esc(v178PeerN())}) kapalı: oda duraklatıldı. Kariyerini açınca aynı yerden sürersiniz.`);
+  const L=(G.mp.log||[]).slice(-6).reverse();
+  return `<div class="v178-h"><b>🌐 Oda <span class="v178-kod">${esc(G.mp.code)}</span></b><span class="v178-d mp-${s.c}t">● ${n}/2 çevrimiçi</span></div>
+    <ul class="v178-ks">${kisi.map(v178Kisi).join('')}${mpPartnerExists()?'':'<li class="v178-k bos"><i></i><div><b>Boş yer</b><small>Arkadaşın bekleniyor</small></div><em>Misafir</em></li>'}</ul>
+    <p class="v178-p">${durum}</p>
+    ${L.length?`<p class="v178-st">Son olaylar</p><ul class="v178-log">${L.map(x=>`<li><time>${esc(v178Saat(x.t))}</time>${esc(x.x)}</li>`).join('')}</ul>`:''}
+    <div class="v178-b"><button class="btn sm" data-act="v178Panel">Sohbet ve ayrıntılar${MP.unread?` (${MP.unread})`:''}</button><button class="btn sm" data-act="mpCopy" data-v="${esc(mpLink(G.mp.code))}">Bağlantıyı kopyala</button></div>`;}
+function v178PopCiz(){const p=$('#v178Pop');if(!p||p.hidden)return;const h=v178PopHTML();if(p.__h!==h){p.innerHTML=h;p.__h=h;}v178Konum();}
+function v178Konum(){const p=$('#v178Pop'),b=$('#top .mp-pill');if(!p||!b)return;const r=b.getBoundingClientRect(),w=Math.min(340,window.innerWidth-16);p.style.width=w+'px';
+  p.style.top=Math.round(r.bottom+8)+'px';p.style.left=Math.round(Math.max(8,Math.min(window.innerWidth-w-8,r.left+r.width/2-w/2)))+'px';}
+function v178Kapat(){const p=$('#v178Pop');if(p)p.hidden=true;V178.pop=false;}
+ACTX.v178Oda=()=>{let p=$('#v178Pop');if(p&&!p.hidden){v178Kapat();return;}
+  if(!p){p=document.createElement('div');p.id='v178Pop';p.className='v178-pop';document.body.appendChild(p);}
+  p.hidden=false;V178.pop=true;p.__h='';v178PopCiz();MP.unread=MP.unread||0;};
+ACTX.v178Panel=()=>{v178Kapat();mpPanel(false);};
+ACTX.v178Kur=()=>{v178Kapat();if(!G)return;ACTX.mpSetTog({checked:true});v178Log('Oda kuruldu · sunucu sensin');};
+ACTX.v178Katil=()=>{v178Kapat();if(!G)return;save();G=null;W.step='list';try{render();}catch(e){}ACTX.mpJoinOpen({dataset:{code:''}});};
+document.addEventListener('click',e=>{if(!V178.pop)return;const t=e.target;if(t&&t.closest&&(t.closest('#v178Pop')||t.closest('#top .mp-pill')))return;v178Kapat();},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&V178.pop){v178Kapat();e.stopImmediatePropagation();e.preventDefault();}},true);
+window.addEventListener('resize',()=>{if(V178.pop)v178Konum();});
+/* sekme/sayfa kapanırken kayıt (son olaylar ve gün kaybolmasın) */
+const v178Kaydet=()=>{try{if(G)save();}catch(e){}};
+window.addEventListener('pagehide',v178Kaydet);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')v178Kaydet();});
+/* sezon ortası eşitlemesi ve oda açma/kapama da günlüğe */
+ACTX.mpOff=(old=>function(){if(mpOn())v178Log('Çevrimiçi kapatıldı');return old.apply(this,arguments);})(ACTX.mpOff);
+ACTX.mpSolo=(old=>function(){if(mpOn())v178Log('Odadan ayrıldın: tek devam');return old.apply(this,arguments);})(ACTX.mpSolo);
 /* ================= TAKVİM: ligin gerçek takım sayısına göre fikstür ================= */
 const BREAK={TR:[[11,21],[0,10]],DE:[[11,21],[0,10]],FR:[[11,21],[0,3]],IT:[[11,29],[0,3]],ES:[[11,22],[0,2]],EN:null,PT:[[11,23],[0,2]],NL:[[11,21],[0,9]],BE:[[11,27],[0,14]],SA:[[11,20],[0,3]],BR:null,SC:[[11,30],[0,12]],GR:[[11,23],[0,3]],AT:[[11,14],[1,5]],CH:[[11,20],[0,25]],DK:[[11,8],[1,15]]};
 function dayOfDate(y,m,dd){return Math.round((Date.UTC(y+(m<6?1:0),m,dd)-seasonStartTs(y))/DAY_MS);}
