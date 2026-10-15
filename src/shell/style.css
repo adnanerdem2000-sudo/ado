@@ -2938,6 +2938,6 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 .v171-q{margin-top:8px}
 #tabs .tab.cont.mp-rdy{background:linear-gradient(180deg,#2fb86a,#1d8a4c)}
 /* v171: gelen kutusu — birleşen iletiler (×N) ve önceki iletiler */
-.gk171-n{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;background:rgba(255,255,255,.12);color:var(--chalk-2,#cfd6dd);font:600 11px/17px system-ui,sans-serif;font-style:normal;vertical-align:1px}
+.gk171-n,.ib-t b .gk171-n,.msg-head b .gk171-n{display:inline-block;width:auto;flex:none;margin:0 6px 0 0;padding:0 6px;border-radius:9px;background:rgba(255,255,255,.12);color:var(--chalk-2,#cfd6dd);font:600 11px/17px system-ui,sans-serif;font-style:normal;vertical-align:1px}
 .gk171-h{margin:8px 0 4px;font-size:12.5px}.gk171-h summary{cursor:pointer;color:var(--chalk-3,#9aa4ae)}
 .gk171-h ul{margin:6px 0 0;padding-left:16px}.gk171-h li{margin:3px 0;color:var(--chalk-2,#cfd6dd)}.gk171-h li small{color:var(--chalk-3,#9aa4ae);margin-right:4px}

@@ -5,12 +5,13 @@
    Oyunda adoZKayit(ad, paket) kaydı yapar; `ad` global değişkeni ilk okunduğunda paket açılır (DecompressionStream ya da yedek
    JS inflate, 178_v151) ve dosyanın özgün metni kurulur (JSON.parse; olmazsa eval) — sonuç, dosyanın doğrudan gömülmesiyle birebir aynıdır.
    v171: iki biçim
-     @z  dosya.js  → üst düzeyde tek global tanımlayan veri: `var X = …;`, `const X = …;`, `let X = …;` ya da `Object.assign(X, …);`
-                     (Object.assign yalnız X daha önce @z ile kaydedildiyse). Tembel: X ilk okunduğunda açılır. `const`/`let` veri
-                     bağlaması window özelliğine (getter) dönüşür; X'e dosyanın satırından önce erişen kod yoktur (TDZ'de zaten hata verirdi).
-     @zy dosya.js  → yerinde, eşzamanlı: bildirim olduğu gibi kalır, yalnız değer paketten açılır
-                     (`var X = adoZYerinde("…");` / `Object.assign(X, adoZYerinde("…"));`). IIFE içindeki veriler (3B motorun
-                     ADO_MOCAP…) ve sözcüksel (const) bir nesneye eklenen veriler (CLUB_INFO) için. Açma o satır çalışınca olur.
+     @z  dosya.js  → tembel: `var X = …;` ya da `Object.assign(X, …);` (X daha önce @z ile kaydedilmiş olmalı). X window özelliği
+                     (getter) olur, ilk okunduğunda açılır; açılışta gerekmeyen büyük veri (3B modeller) için.
+     @zy dosya.js  → açılışta gereken veri: bildirim OLDUĞU GİBİ kalır (`const X = adoZYerinde("anahtar");`, `var`, `let` ya da
+                     `Object.assign(X, adoZYerinde("anahtar"));`), yani const/TDZ/IIFE içi kapsam değişmez. Paket, derleyicinin bloğun
+                     önüne koyduğu ön yükleme betiğine (ZPRE) taşınır; o betik paketi hemen tarayıcının yerel açıcısıyla
+                     (fetch data: + DecompressionStream, eşzamansız) açmaya başlar. Satır çalıştığında açılmış bayt hazırsa
+                     yalnız metin + JSON.parse yapılır; hazır değilse (eski tarayıcı) yedek JS inflate eşzamanlı çalışır.
    Kullanım (deneme): node tools/sikistir.js [--y] <dosya.js> [...]   → boyutları yazar ve açma sınamasını yapar. */
 'use strict';
 const fs = require('fs'), zlib = require('zlib');
@@ -53,20 +54,31 @@ function singleValue(text, p) {
   try { new (require('vm').Script)('(' + v + '\n)'); return true; } catch (e) { return false; }
 }
 /* manifest satırı → tek JS satırı; açma sınaması başarısızsa hata fırlatır.
-   yerinde=true: @zy (bildirim yerinde kalır); known: daha önce @z ile kaydedilmiş adlar (Object.assign hedefi için) */
-function zLine(text, file, yerinde, known) {
+   yerinde=true: @zy (bildirim yerinde kalır, paket `pre` dizisine {key, z} olarak eklenir); known: daha önce @z ile kaydedilmiş adlar */
+function zLine(text, file, yerinde, known, pre) {
   const p = parse(text); if (!p) throw new Error(`${file}: başta "var|const|let X =" ya da "Object.assign(X," bulunamadı`);
   if (!singleValue(text, p)) throw new Error(`${file}: dosya tek bir veri değeri tanımlamıyor (birden çok deyim ya da kapanış yok)`);
   const z = pack(text); if (unpack(z) !== text) throw new Error(`${file}: sıkıştırma sınaması tutmadı`);
   let line;
-  if (yerinde) line = p.kind === 'assign' ? `Object.assign(${p.name},adoZYerinde("${z}"));` : `${p.kind} ${p.name}=adoZYerinde("${z}");`;
-  else {
+  if (yerinde) {
+    const key = JSON.stringify(file), arg = pre ? key : `"${z}"`; if (pre) pre.push({ key: file, z });
+    line = p.kind === 'assign' ? `Object.assign(${p.name},adoZYerinde(${arg}));` : `${p.kind} ${p.name}=adoZYerinde(${arg});`;
+  } else {
+    if (p.kind !== 'var' && p.kind !== 'assign') throw new Error(`${file}: tembel @z yalnız "var X =" / "Object.assign(X," içindir; const/let veri için @zy kullan`);
     if (p.kind === 'assign' && known && !known.has(p.name)) throw new Error(`${file}: Object.assign hedefi ${p.name} @z ile kaydedilmemiş (sözcüksel bir nesneyse @zy kullan)`);
     line = `adoZKayit(${JSON.stringify(p.name)},"${z}");`;
   }
-  return { name: p.name, kind: p.kind, line, raw: text.length, size: z.length };
+  return { name: p.name, kind: p.kind, line, raw: text.length, size: line.length + (yerinde && pre ? z.length : 0) };
 }
-module.exports = { pack, unpack, zLine, globalName, parse, valueText };
+/* ön yükleme betiği (ES5): paketleri kaydeder ve yerel açıcıyla hemen açmaya başlar; 178_v151 adoZYerinde() buradan okur */
+function preScript(list) {
+  return '(function(){var P=window.__adoZon=window.__adoZon||{};function on(k,b){var e=P[k]={b:b,u:null,t:0};' +
+    'if(typeof DecompressionStream==="undefined"||typeof fetch==="undefined"||typeof Response==="undefined")return;' +
+    'try{fetch("data:application/octet-stream;base64,"+b).then(function(r){return new Response(r.body.pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();})' +
+    '.then(function(a){if(!e.bitti){e.u=new Uint8Array(a);e.t=performance.now();}},function(){});}catch(x){}}' +
+    list.map(x => `on(${JSON.stringify(x.key)},"${x.z}");`).join('') + '})();';
+}
+module.exports = { pack, unpack, zLine, preScript, globalName, parse, valueText };
 
 if (require.main === module) {
   let a = 0, b = 0; const av = process.argv.slice(2), y = av.includes('--y');

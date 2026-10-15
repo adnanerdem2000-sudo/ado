@@ -18,21 +18,25 @@ const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); retu
 const OUT = path.resolve(ROOT, opt('--out') || 'dist/futbol-kariyeri.html');
 const AB_TAG = '<script type="text/x-abdoc" id="abdoc">';
 const Z_KNOWN = new Set();   /* v171: @z ile kaydedilen adlar (Object.assign hedefi denetimi) */
+const ZPRE = { list: [], at: -1 };   /* v171: @zy paketleri; ilk @zy'nin bulunduğu <script> bloğunun önüne ön yükleme betiği olarak konur */
 
 /* Manifestten metni kur; her çıktı satırı için kaynak (dosya, satır) tut. */
-function assemble(manifest) {
+function assemble(manifest, top) {
   const dir = path.dirname(manifest), out = [], src = [];
+  let blk = -1;   /* son açılan <script> satırının çıktıdaki yeri */
   const rows = fs.readFileSync(manifest, 'utf8').split('\n');
   rows.forEach((row, n) => {
     if (row === '' || row.startsWith('#')) return;
     const at = `${path.relative(ROOT, manifest)}:${n + 1}`;
-    if (row.startsWith('| ') || row === '|') { out.push(row.slice(2)); src.push([at, 1]); return; }
+    if (row.startsWith('| ') || row === '|') { if (row.slice(2) === '<script>') blk = out.length; out.push(row.slice(2)); src.push([at, 1]); return; }
     if (row.startsWith('@z ') || row.startsWith('@zy ')) {   /* v151: veri dosyasını sıkıştırılmış gömer (tools/sikistir.js); oyunda ilk kullanımda açılır
                                                                   v171: @zy = yerinde, eşzamanlı açma (IIFE içi ya da sözcüksel nesneye ekleme) */
       const y = row.startsWith('@zy '), rel = row.slice(y ? 4 : 3).trim(), f = path.join(dir, rel);
       if (!fs.existsSync(f)) fail(`${at}: dosya yok: ${rel}`);
-      let z; try { z = ZIP.zLine(fs.readFileSync(f, 'utf8'), rel, y, Z_KNOWN); } catch (e) { fail(`${at}: ${e.message}`); }
+      if (y && !top) fail(`${at}: @zy yalnız ana belgede (Adoball iframe'inde açıcı yok)`);
+      let z; try { z = ZIP.zLine(fs.readFileSync(f, 'utf8'), rel, y, Z_KNOWN, y ? ZPRE.list : null); } catch (e) { fail(`${at}: ${e.message}`); }
       if (!y) Z_KNOWN.add(z.name);
+      else if (ZPRE.at < 0) { if (blk < 0) fail(`${at}: @zy bir <script> bloğunun içinde olmalı`); ZPRE.at = blk; }
       out.push(z.line); src.push([path.relative(ROOT, f), 1]); return;
     }
     if (row.startsWith('@abdoc ')) {
@@ -74,7 +78,10 @@ function checkScripts(doc, label) {
 }
 function fail(msg) { console.error('HATA: ' + msg); process.exit(1); }
 
-const doc = assemble(path.resolve(ROOT, opt('--manifest') || 'src/manifest.txt'));   /* v171: --manifest <yol> (ölçüm için başka manifest; yollar o dosyanın klasörüne göre) */
+const doc = assemble(path.resolve(ROOT, opt('--manifest') || 'src/manifest.txt'), true);   /* v171: --manifest <yol> (ölçüm için başka manifest; yollar o dosyanın klasörüne göre) */
+if (ZPRE.list.length) {   /* v171: @zy ön yükleme betiği — ilk @zy bloğunun hemen önüne ayrı bir <script> */
+  doc.lines.splice(ZPRE.at, 0, '<script>', ZIP.preScript(ZPRE.list), '</script>'); doc.src.splice(ZPRE.at, 0, ['ZPRE', 1], ['ZPRE', 1], ['ZPRE', 1]);
+}
 const nScripts = checkScripts(doc, 'Ana belge');
 const text = doc.lines.join('\n') + '\n';
 const buf = Buffer.from(text, 'utf8');

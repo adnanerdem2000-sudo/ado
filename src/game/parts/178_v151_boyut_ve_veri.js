@@ -90,10 +90,13 @@ function adoZDeger(j){try{return JSON.parse(j);}catch(err){}return (0,eval)('('+
 function adoZCalistir(ad,e,s){const b=adoZBas(s);
   if(b&&b.ad===ad){const v=adoZDeger(b.j);if(b.atama)Object.assign(e.deger,v);else e.deger=v;return;}
   (0,eval)(s);}
-/* v171: @zy — yerinde, eşzamanlı açma: `var X=adoZYerinde("…")` / `Object.assign(X,adoZYerinde("…"))` (IIFE içi ya da sözcüksel hedef) */
-function adoZYerinde(b64){const Z=adoZ(),t0=performance.now();let b=null;
-  try{b=adoZBas(adoZMetin(adoInflate(adoB64U8(b64))));}catch(err){console.warn('Sıkıştırılmış veri açılamadı',err);}
-  const v=b?adoZDeger(b.j):undefined;const ms=performance.now()-t0;Z.n++;Z.ms+=ms;(Z.yer=Z.yer||[]).push([b&&b.ad,Math.round(ms*10)/10]);return v;}
+/* v171: @zy — açılışta gereken veri, bildirim yerinde kalır: `const X=adoZYerinde("anahtar")`. Paket derleyicinin koyduğu ön yükleme
+   betiğinde (window.__adoZon) durur ve orada tarayıcının yerel açıcısıyla eşzamansız açılmaya başlamıştır; bayt hazırsa yalnız metin +
+   JSON.parse, değilse yedek JS inflate eşzamanlı. Argüman paketin kendisi de olabilir (ön yükleme yoksa). */
+function adoZYerinde(k){const Z=adoZ(),t0=performance.now(),P=window.__adoZon||{},e=P[k];let b=null,hazir=false;
+  try{let u;if(e&&e.u){u=e.u;hazir=true;}else u=adoInflate(adoB64U8(e?e.b:k));if(e){e.bitti=true;e.u=null;e.b=null;}b=adoZBas(adoZMetin(u));}
+  catch(err){console.warn('Sıkıştırılmış veri açılamadı',k.length>200?'':k,err);}
+  const v=b?adoZDeger(b.j):undefined;const ms=performance.now()-t0;Z.n++;Z.ms+=ms;(Z.yer=Z.yer||[]).push([b&&b.ad,Math.round(ms*10)/10,hazir?'hazır':'js']);return v;}
 /* sayfa yüklendikten sonra boşta: paketleri arka planda aç (yalnız inflate; metin ilk kullanımda kurulur) */
 function adoZPlan(){const Z=adoZ();if(Z.plan)return;Z.plan=true;
   if(typeof DecompressionStream==='undefined')return;   /* yedek inflate eşzamanlı: ilk kullanımda */

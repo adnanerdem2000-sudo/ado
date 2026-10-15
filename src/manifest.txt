@@ -25,7 +25,7 @@ game/parts/013_render.js
 game/parts/014_kadrolar_gercek_oyuncular_super_lig_5.js
 game/parts/014_kadrolar_gercek_oyuncular_super_lig_5_2.js
 game/parts/015_teknik_direktorluk.js
-@z game/data/flags.js
+@zy game/data/flags.js
 game/parts/016_v10_gorunus_hiyerarsi_teknik_direktorler.js
 game/parts/017_v11_kupalar_avrupa_milli_turnuvalar.js
 game/parts/018_milli_takim_uluslar_ligi_elemeler.js
@@ -57,15 +57,15 @@ game/parts/043_v25_adoball_2b_gorunum_dinamikleri_gercek.js
 game/parts/044_v26_gelen_tekliflerde_fm_tarzi_derin.js
 game/parts/045_v27_lig_kurallari_kume_dusme_yukselme.js
 game/parts/046_v28_gozlemci_rapor_formu_profilde_sezon.js
-@z game/data/looks.js
+@zy game/data/looks.js
 game/parts/047_v29_gercek_boy_ve_gorunum_verisi_cesitli.js
 game/parts/048_v30_kadromuzla_karsilastirma_profil.js
 game/parts/049_v31_forma_numarasi_duzeltmesi_personel.js
 game/parts/050_v32_para_birimi_lige_ozel_transfer.js
-@z game/data/posd.js
+@zy game/data/posd.js
 game/parts/051_v33_gercek_mevkiler_14_detayli_mevki.js
 game/data/car_cl.js
-@z game/data/card.js
+@zy game/data/card.js
 game/parts/052_v34_tum_liglerde_gol_asist_kralligi.js
 game/parts/053_v35_fm_tarzi_devam_dugmesi_istatistik.js
 game/parts/054_v36_kategorili_menu_fm_tarzi_kenar_cubugu.js
@@ -128,7 +128,7 @@ game/parts/108_v86_altyapidan_yetisen_gencler_newgen_iyi.js
 game/parts/109_v87_2026_27_kadrolari_dogrulandi_ekim.js
 game/parts/110_v88_sezon_ici_gelisim_teknik_ekipten.js
 game/parts/111_v89_hizli_baslangic_senaryosunda_da.js
-@z game/data/foot_db.js
+@zy game/data/foot_db.js
 game/parts/112_v90_gercek_tercih_edilen_ayak_zayif_ayak.js
 game/parts/113_v91_adoball_mac_motoru_yayin_ekrani.js
 game/parts/114_v92_tam_adlar_akilli_arama_hakemlikte.js
@@ -145,28 +145,28 @@ game/parts/124_v102_hakemde_yalniz_ciddi_kararlar.js
 game/parts/125_v103_baslangic_seviyesi_fm_gibi_maaslar.js
 game/parts/126_v104_guncel_hakem_teknolojileri.js
 game/parts/127_v105_doktor_3b_muayene_odasi_doctor_life.js
-game/data/gi.js
+@zy game/data/gi.js
 game/parts/127_v105_doktor_3b_muayene_odasi_doctor_life_2.js
 game/parts/128_v106_football_manager_tarzi_lig_ekrani.js
 game/parts/129_v107_muayene_odasi_butun_vucutlu.js
 game/parts/130_v108_kulup_sayfasi_football_manager_tarzi.js
-@z game/data/sq_rl.js
+@zy game/data/sq_rl.js
 @zy game/data/club_info_ek.js
-@z game/data/coach_rl.js
+@zy game/data/coach_rl.js
 |
 game/parts/132_v110_gercek_kadrolari_oyuna_bagla_gercek.js
 game/parts/133_v111_oyuncu_karakteristikleri_football.js
 game/parts/134_v112_daha_gercekci_profil_yuzleri_profil.js
 game/parts/135_v113_sosyal_medya_profili_haftada_bir.js
-@z game/data/hw_real.js
+@zy game/data/hw_real.js
 game/parts/136_v114_gercek_boy_kilo_gercekci_potansiyel.js
 game/parts/137_v115_tum_ekranda_200_luk_yetenek_olcegi.js
 game/parts/138_v116_gelen_kutusu_bildirim_abonelikleri.js
-@z game/data/amg.js
+@zy game/data/amg.js
 |
 game/parts/140_v118_amator_lig_yapisi_bolgesel_amator.js
 game/parts/141_v119_yardimci_hakemler_daha_az_isabetli.js
-@z game/data/trg.js
+@zy game/data/trg.js
 |
 game/parts/143_v121_tff_2_lig_iki_grup_beyaz_kirmizi_3.js
 game/parts/144_v122_ozellik_aciklamalari_aramali_genis.js
