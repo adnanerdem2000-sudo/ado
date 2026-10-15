@@ -8,7 +8,7 @@ cpxBody=function(a,ca,b,cb){const A=fmAttrs(a),B=fmAttrs(b),ua=cpxUnknown(a,ca),
   const tr=(l,va,vb,x,y,lo)=>{const w=W(x,y,lo);return `<tr><td class="${w[0]?'w':''}">${va}</td><th>${l}</th><td class="${w[1]?'w':''}">${vb}</td></tr>`;};
   const ra=Sa.ap?Sa.rt/Sa.ap:0,rb=Sb.ap?Sb.rt/Sb.ap:0,ap=(Sa.ap||0)+(Sb.ap||0)>0;
   const gen=[tr('Yetenek',R200(a.ovr),R200(b.ovr),a.ovr,b.ovr),tr('Potansiyel',pot(pa),pot(pb),(pa[0]+pa[1])/2,(pb[0]+pb[1])/2),tr('Yaş',a.age,b.age,a.age,b.age,true),
-    tr('Değer',eur(pValue(a)),eur(pValue(b)),pValue(a),pValue(b)),tr('Maaş (yıllık, tahmini)',amtFmt(pWage(a,ca)*52),amtFmt(pWage(b,cb)*52),pWage(a,ca),pWage(b,cb),true),
+    tr('Değer',eur(pValue(a)),eur(pValue(b)),pValue(a),pValue(b)),tr('Maaş ('+(typeof wgPer==='function'?WGP[wgPer()][0]:'yıllık')+', tahmini)',amtFmt(typeof wgPer==='function'?wgPerAmt(pWage(a,ca),wgPer()):pWage(a,ca)*52),amtFmt(typeof wgPer==='function'?wgPerAmt(pWage(b,cb),wgPer()):pWage(b,cb)*52),pWage(a,ca),pWage(b,cb),true),
     tr('Boy · ayak',`${Ma.h} · ${esc(Ma.ft)}`,`${Mb.h} · ${esc(Mb.ft)}`,null,null),
     ap?tr('Sezon (M/G/A)',`${Sa.ap||0}/${Sa.g||0}/${Sa.a||0}`,`${Sb.ap||0}/${Sb.g||0}/${Sb.a||0}`,(Sa.g||0)+(Sa.a||0),(Sb.g||0)+(Sb.a||0)):'',ap&&(ra||rb)?tr('Ort. puan',ra?ra.toFixed(2):'–',rb?rb.toFixed(2):'–',ra||null,rb||null):''].join('');
   const val=(X,n)=>{for(const g of ['T','M','P','G']){const f=(X[g]||[]).find(x=>x[0]===n);if(f)return f[1];}return null;};

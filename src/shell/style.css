@@ -3064,3 +3064,5 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 /* v172 macsonu: "Diğer maçlar" şeridi/paneli maç ekranının alt düğmelerini (Maç sonu) örtmesin */
 html.v172-lcv .match{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px + var(--lcv-h,44px))}
 html.v172-lcvp .match .mv-ctrl{padding-right:var(--lcv-w,330px)}
+/* v173 maaş: dönem seçici */
+.wgp-set{margin:4px 0 10px}.wgp-set .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
