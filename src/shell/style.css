@@ -3066,3 +3066,119 @@ html.v172-lcv .match{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px 
 html.v172-lcvp .match .mv-ctrl{padding-right:var(--lcv-w,330px)}
 /* v173 maaş: dönem seçici */
 .wgp-set{margin:4px 0 10px}.wgp-set .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+/* v173 tema: Futbol — renkler ve zemin (gece maçı çimi, tebeşir beyazı, skorbord kehribarı, kırmızı kart) */
+body.fut{--night:#04140b;--turf:#0b3a22;--turf-hi:#0f4a2c;--panel:rgba(9,32,20,.94);--panel-2:#0f2d1d;
+  --chalk:#f4f7ee;--chalk-2:#c6d5c7;--chalk-3:#93ab99;--line:rgba(244,247,238,.16);
+  --led:#ffc21a;--led-ink:#1a1200;--red:#e5343b;--yellow:#ffd23f;--good:#45dd82;--hot:#ffc21a;
+  --fut-board:#0c2418;--fut-board-2:#0a1f14;--fut-card:#d42a31;--fut-dot:radial-gradient(circle,rgba(255,194,26,.13) 1px,transparent 1.4px);
+  --f-display:'Saira Extra Condensed','Barlow Semi Condensed','Arial Narrow',sans-serif;
+  background-color:#05170d;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 68 105'%3E%3Cg fill='none' stroke='%23f4f7ee' stroke-opacity='.075' stroke-width='.32'%3E%3Crect x='2' y='2' width='64' height='101'/%3E%3Cline x1='2' y1='52.5' x2='66' y2='52.5'/%3E%3Ccircle cx='34' cy='52.5' r='9.15'/%3E%3Crect x='13.85' y='2' width='40.3' height='16.5'/%3E%3Crect x='24.85' y='2' width='18.3' height='5.5'/%3E%3Crect x='13.85' y='86.5' width='40.3' height='16.5'/%3E%3Crect x='24.85' y='97.5' width='18.3' height='5.5'/%3E%3Cpath d='M26.7 18.5a9.15 9.15 0 0 0 14.6 0M26.7 86.5a9.15 9.15 0 0 1 14.6 0M2 3.5a1.5 1.5 0 0 0 1.5-1.5M64.5 2a1.5 1.5 0 0 0 1.5 1.5M2 101.5a1.5 1.5 0 0 1 1.5 1.5M64.5 103a1.5 1.5 0 0 1 1.5-1.5'/%3E%3C/g%3E%3Cg fill='%23f4f7ee' fill-opacity='.09'%3E%3Ccircle cx='34' cy='52.5' r='.5'/%3E%3Ccircle cx='34' cy='13' r='.4'/%3E%3Ccircle cx='34' cy='92' r='.4'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse 55% 26% at 6% -4%,rgba(255,248,214,.16),transparent 70%),radial-gradient(ellipse 55% 26% at 94% -4%,rgba(255,248,214,.16),transparent 70%),
+    repeating-linear-gradient(180deg,#0a2a18 0 80px,#0c311c 80px 160px),linear-gradient(180deg,#0b2c19,#04120a);
+  background-size:min(100%,640px) auto,auto,auto,auto,auto;background-position:center 70px,0 0,0 0,0 0,0 0;background-repeat:no-repeat,no-repeat,no-repeat,repeat,no-repeat;background-attachment:fixed}
+/* v173 tema: Futbol — başlıklar (forma numarası tipografisi) ve küçük simgeler */
+body.fut .h,body.fut .modal-card h3,body.fut .start h1,body.fut .top-txt b,body.fut .team b,body.fut .lic-name,body.fut .saved b{font-style:normal;letter-spacing:.03em}
+body.fut .h{font-weight:800;font-size:27px;line-height:1.02;position:relative;padding-left:28px;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+body.fut .h::before{content:'';position:absolute;left:0;top:50%;width:20px;height:20px;transform:translateY(-52%);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23f4f7ee' stroke='%23071a0f' stroke-width='1.2'/%3E%3Cpolygon points='12,7.4 16,10.3 14.5,15 9.5,15 8,10.3' fill='%23071a0f'/%3E%3Cpath d='M12 7.4V2.2M16 10.3l4.9-1.6M14.5 15l3 4.2M9.5 15l-3 4.2M8 10.3l-4.9-1.6' stroke='%23071a0f' stroke-width='1.1' fill='none'/%3E%3C/svg%3E") center/contain no-repeat}
+body.fut .sub-h{color:var(--chalk-3);letter-spacing:.13em}
+body.fut .panel>.sub-h:first-child{padding-bottom:7px;border-bottom:1px dashed rgba(244,247,238,.22);color:var(--chalk-2)}
+body.fut .kicker{color:var(--led)}
+body.fut .pill{border-radius:4px}
+body.fut .pill.red::before,body.fut .pill.warn::before{content:'';width:7px;height:10px;border-radius:1.5px;margin-right:5px;flex:0 0 auto;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+body.fut .pill.red::before{background:#e5343b}body.fut .pill.warn::before{background:#ffd23f}
+body.fut .pill.red{color:#ff8f8a}
+/* v173 tema: Futbol — taktik tahtası paneller (tebeşir köşe yayları) */
+body.fut .panel,body.fut .msg,body.fut .saved,body.fut .hub-more,body.fut .today{background:radial-gradient(circle at 0 0,transparent 12px,rgba(244,247,238,.2) 12px 13.2px,transparent 13.8px) 0 0/24px 24px no-repeat,radial-gradient(circle at 100% 0,transparent 12px,rgba(244,247,238,.2) 12px 13.2px,transparent 13.8px) 100% 0/24px 24px no-repeat,
+    radial-gradient(ellipse 80% 60% at 30% 0%,rgba(255,255,255,.035),transparent 70%),linear-gradient(180deg,var(--fut-board),var(--fut-board-2));border-color:rgba(244,247,238,.17)}
+body.fut .msg.ib2{background:linear-gradient(90deg,color-mix(in srgb,var(--ic) 11%,transparent),transparent 65%),linear-gradient(180deg,var(--fut-board),var(--fut-board-2))}
+body.fut .sqrow,body.fut .trrow{background:#0f2d1d;border-color:rgba(244,247,238,.13)}
+body.fut .sqrow:nth-child(even),body.fut .trrow:nth-child(even){background:#123422}
+body.fut .sqrow>i{font-family:var(--f-display);font-style:normal;font-weight:800;font-size:19px;color:var(--chalk);text-align:center;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+body.fut .sqrow>em{font-family:var(--f-display);font-style:normal;font-weight:800}
+/* v173 tema: Futbol — düğmeler (skorbord kehribarı, kırmızı kart DEVAM, tebeşir seçimler) */
+body.fut .cta{clip-path:none;font-style:normal;font-weight:800;letter-spacing:.04em;border-radius:10px;background:var(--fut-dot) 0 0/4px 4px,linear-gradient(180deg,#ffd24d,#f2b100);color:#1a1200;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 4px 16px -4px rgba(255,194,26,.45)}
+body.fut .cta small{color:#2b2000;opacity:.85}
+body.fut .cta[disabled]{background:#4b4630;color:#1b1708;box-shadow:none}
+body.fut .btn{background:rgba(244,247,238,.07);border-color:rgba(244,247,238,.22);border-radius:9px;color:var(--chalk)}
+body.fut .btn.ghost{background:transparent;color:var(--chalk-2)}
+body.fut .icon-btn{background:rgba(0,0,0,.35);border-color:rgba(244,247,238,.25)}
+body.fut .chip{background:rgba(9,32,20,.92);border-color:rgba(244,247,238,.2);border-radius:8px}
+body.fut .chip[aria-pressed="true"]{background:#f4f7ee;border-color:#f4f7ee;color:#0b2a1a;box-shadow:inset 0 -3px 0 var(--led)}
+body.fut .grp-t{background:rgba(9,32,20,.85);border-color:rgba(244,247,238,.2);color:var(--chalk);border-radius:8px}
+body.fut .grp-t.on{background:#f4f7ee;color:#0b2a1a;border-color:#f4f7ee;box-shadow:inset 0 -3px 0 var(--led)}
+body.fut .v172-alt{border-bottom:1px dashed rgba(244,247,238,.3)}
+body.fut .v172-at{color:var(--chalk-2)}body.fut .v172-at.on{color:#fff;border-bottom-color:var(--led)}
+body.fut .stabs{background:rgba(0,0,0,.32);border-color:rgba(244,247,238,.16)}
+body.fut .stabs button{color:var(--chalk-2)}body.fut .stabs button.on{background:#f4f7ee;color:#0b2a1a;box-shadow:inset 0 -3px 0 var(--led)}
+body.fut .fm-cont{background:linear-gradient(180deg,#e2363d,#b9222a);border-radius:5px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 4px 14px rgba(185,34,42,.4)}
+html.ui-sade:not(.fm-nav) body.fut #tabsIn .tab.cont{background:linear-gradient(180deg,#e2363d,#b9222a);border-radius:9px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),0 6px 18px rgba(185,34,42,.45);transform:rotate(-2deg)}
+html.ui-sade:not(.fm-nav) body.fut #tabsIn .tab.cont::before{content:'';width:17px;height:17px;flex:0 0 17px;margin-right:2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.5 11.5a6 6 0 1 0 11.6-2.2H21V6H8.6A6 6 0 0 0 3.5 11.5z' fill='white'/%3E%3Ccircle cx='9.4' cy='11.6' r='2.1' fill='%23b9222a'/%3E%3Cpath d='M17 6V3.5' stroke='white' stroke-width='2'/%3E%3C/svg%3E") center/contain no-repeat}
+html.ui-sade:not(.fm-nav) body.fut #tabsIn .tab.cont.mp-rdy{background:linear-gradient(180deg,#2fb86a,#1d8a4c);transform:none}
+/* v173 tema: Futbol — üst çubuk (skorbord) ve alt çubuk (taç çizgisi) */
+body.fut .top{background:radial-gradient(ellipse 40% 140% at 8% -40%,rgba(255,248,214,.2),transparent 65%),radial-gradient(ellipse 40% 140% at 92% -40%,rgba(255,248,214,.16),transparent 65%),linear-gradient(100deg,color-mix(in srgb,var(--club,#1f4a33) 30%,#07110b) 0%,#060d09 62%);border-color:rgba(244,247,238,.16);box-shadow:inset 0 -2px 0 rgba(255,194,26,.6),0 8px 22px rgba(0,0,0,.4)}
+body.fut .top .led{background:var(--fut-dot) 0 0/3px 3px,#020503;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,194,26,.35);font-style:normal;letter-spacing:.08em}
+body.fut .led{color:var(--led);text-shadow:0 0 8px rgba(255,194,26,.55)}
+body.fut .tabs{background:linear-gradient(180deg,#0d2a1a,#06150d);border-top:2px solid rgba(244,247,238,.78);box-shadow:0 -6px 18px rgba(0,0,0,.4)}
+body.fut .tab{color:var(--chalk-3)}
+body.fut .tab[aria-current="page"],html.ui-sade:not(.fm-nav) body.fut #tabsIn .tab.on{color:#fff}
+body.fut .tab[aria-current="page"] svg,html.ui-sade:not(.fm-nav) body.fut #tabsIn .tab.on svg{color:var(--led);stroke:var(--led)}
+html:not(.fm-nav) body.fut .tab[aria-current="page"]:not(.cont)::after,html.ui-sade:not(.fm-nav) body.fut #tabsIn .tab.on:not(.cont)::after{content:'';position:absolute;top:-4px;left:calc(50% - 3px);width:6px;height:6px;border-radius:50%;background:#f4f7ee;box-shadow:0 0 0 2px #06150d}
+html.fm-nav body.fut .tabs{background:radial-gradient(circle at 100% 100%,transparent 30px,rgba(244,247,238,.12) 30px 31px,transparent 32px),linear-gradient(180deg,#0c2418,#06140c);border-top:0;border-right:2px solid rgba(244,247,238,.55)}
+body.fut .nav-cat>p,body.fut .pg-crumb{color:var(--chalk-3)}
+body.fut .pg-crumb i{color:var(--led)}
+body.fut .nav-i{color:var(--chalk-2)}
+body.fut .nav-i:hover{background:rgba(244,247,238,.07);color:#fff}
+body.fut .nav-i[aria-current="page"]{background:linear-gradient(90deg,rgba(255,194,26,.2),rgba(255,194,26,.03));color:#fff}
+body.fut .nav-i[aria-current="page"]::before{background:var(--led)}
+body.fut .nav-i[aria-current="page"] svg{stroke:var(--led)}
+body.fut .nav-modal .nav-cat{background:rgba(244,247,238,.04)}
+body.fut .ui-mi{background:rgba(9,32,20,.9);border-color:rgba(244,247,238,.15)}
+body.fut .ui-mg.on>p b{color:var(--led)}
+/* v173 tema: Futbol — maç bileti ve takvim (LED pano) */
+body.fut .ticket{background:repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0 26px,transparent 26px 52px),linear-gradient(180deg,#0f3220,#0a2116);border:1px solid rgba(244,247,238,.2)}
+body.fut .ticket::before,body.fut .ticket::after{background:#071a10;box-shadow:inset 0 0 0 1px rgba(244,247,238,.2)}
+body.fut .ticket-head{background:var(--fut-dot) 0 0/4px 4px,#030805;color:var(--led);border-bottom:2px dashed rgba(244,247,238,.3);text-shadow:0 0 6px rgba(255,194,26,.4)}
+body.fut .ticket-foot{border-top:2px dashed rgba(244,247,238,.22)}
+body.fut .vs{font-style:normal;color:#f4f7ee;font-size:26px;width:46px;height:46px;display:grid;place-items:center;border:2px solid rgba(244,247,238,.55);border-radius:50%;background:rgba(0,0,0,.25)}
+body.fut .team.me b{color:var(--led)}
+body.fut .day{background:rgba(9,32,20,.9);border-color:rgba(244,247,238,.16)}
+body.fut .day.cur{background:var(--fut-dot) 0 0/3px 3px,#030805;border-color:var(--led);box-shadow:inset 0 0 0 1px var(--led)}
+body.fut .day.cur b{color:var(--led);text-shadow:0 0 8px rgba(255,194,26,.5)}
+body.fut .day.mday{background:rgba(212,42,49,.22);border-color:rgba(229,52,59,.6)}
+/* v173 tema: Futbol — tablolar, pencereler, başlangıç ekranı */
+body.fut table.lgt th{color:var(--chalk-3)}
+body.fut table.lgt tbody tr:nth-child(even) td{background:rgba(244,247,238,.03)}
+body.fut table.lgt tbody tr.me td{background:rgba(255,194,26,.13)}
+body.fut table.lgt td.pts{font-family:var(--f-display);font-weight:800;font-size:16px}
+body.fut .modal-back{background:rgba(1,8,4,.7)}
+body.fut .modal-card{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20'%3E%3Cpath d='M1 0v19h38V0M11 0v8h18V0M15 8a5 5 0 0 0 10 0' fill='none' stroke='%23f4f7ee' stroke-opacity='.07' stroke-width='.4'/%3E%3C/svg%3E") right -6px top -2px/150px auto no-repeat,linear-gradient(180deg,#0e2a1b,#081a10);border-color:rgba(244,247,238,.2);box-shadow:0 -2px 0 rgba(244,247,238,.6),0 -10px 30px rgba(0,0,0,.5)}
+body.fut .modal-card h3{font-weight:800}
+body.fut .start h1{font-style:normal;text-shadow:0 3px 0 rgba(0,0,0,.4)}
+body.fut .start h1 span{color:var(--led)}
+body.fut .ladder-mini span{font-style:normal;background:rgba(9,32,20,.9)}
+body.fut .ladder-mini span:first-child{background:var(--led);color:var(--led-ink)}
+body.fut .fm-pitch{background:repeating-linear-gradient(180deg,#1d6a3c 0 10%,#1a6036 10% 20%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.55),0 10px 24px rgba(0,0,0,.35)}
+/* v173 tema: Futbol — oyuncu profili ve lig başlığı (FM laciverti yerine çim/tahta) */
+body.fut #modal.pf-on #modalCard.pf{background:linear-gradient(180deg,#0c2418,#07170e)}
+body.fut .pf-hd{background:radial-gradient(ellipse 40% 140% at 6% -40%,rgba(255,248,214,.16),transparent 65%),linear-gradient(90deg,color-mix(in srgb,var(--club,#1f4a33) 22%,#0f2d1d),#0a1f14 60%);border-bottom-color:rgba(244,247,238,.3)}
+body.fut .pf-tabs{background:#0a1f14;border-bottom-color:rgba(244,247,238,.2)}
+body.fut .pf-tabs button{color:var(--chalk-2)}body.fut .pf-tabs button.on{border-bottom-color:var(--led)}
+body.fut .pf-menu{background:#0f2d1d;border-color:rgba(244,247,238,.25)}
+body.fut .pf-ch,body.fut .pf-b,body.fut .pf-x{border-color:rgba(244,247,238,.2)}
+body.fut .lg-head{background:radial-gradient(ellipse 40% 140% at 96% -40%,rgba(255,248,214,.14),transparent 65%),linear-gradient(110deg,color-mix(in srgb,var(--lc1,#1f4a33) 32%,#0c2418) 0%,#0a1f14 70%);border-color:rgba(244,247,238,.16)}
+body.fut .thm-c[aria-pressed="true"] small{opacity:1}
+body.fut .tab .badge,body.fut .nav-b,body.fut .ib-chip>em{background:#d42a31;color:#fff}
+body.fut .staff-card{background:radial-gradient(ellipse 50% 90% at 100% 0%,rgba(255,248,214,.12),transparent 70%),linear-gradient(160deg,#164030,#0a1f14);border-color:rgba(244,247,238,.18)}
+/* v173 tema: Ayarlar → tema seçici (örnek renkler her temada aynı görünür) */
+.thm-set{margin:4px 0 10px}.thm-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.thm-c{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;min-width:0}
+.thm-c span{font-size:13px;line-height:1.15;text-align:center}.thm-c small{font-size:11px;font-weight:600;opacity:.85;color:inherit}
+.thm-sw{display:block;width:100%;max-width:92px;height:26px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.thm-futbol .thm-sw{background:linear-gradient(90deg,transparent 47%,rgba(255,255,255,.75) 47% 53%,transparent 53%),radial-gradient(circle at 50% 50%,transparent 6px,rgba(255,255,255,.75) 6px 7.2px,transparent 7.6px),linear-gradient(90deg,#ffc21a 0 14%,transparent 14%),repeating-linear-gradient(90deg,#0f4a2c 0 10px,#0c3a22 10px 20px)}
+.thm-pro .thm-sw{background:linear-gradient(90deg,#62f0de 0 14%,transparent 14%),linear-gradient(180deg,#f0cc45 0 30%,transparent 30%),linear-gradient(160deg,#2b1263,#1b0b3c)}
+.thm-klasik .thm-sw{background:linear-gradient(90deg,#ffb320 0 14%,transparent 14%),repeating-linear-gradient(180deg,#0a2618 0 6px,#0c2b1c 6px 12px)}
+/* v173 tema (son dokunuş): takım adları hece ortasından bölünmesin; futbol temasında tablo başlıkları çim yeşili */
+.team b{overflow-wrap:normal;word-break:normal;hyphens:manual}
+.prep-opp b,.ticket .team b,.mt-teams .team b{font-size:clamp(12px,4.2vw,18px)}
+body.fut table thead th,body.fut table thead tr{background:#0f3a22;color:#f4f7ee;border-color:rgba(244,247,238,.15)}
