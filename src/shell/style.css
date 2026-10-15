@@ -2929,3 +2929,5 @@ body.pro .chip[aria-pressed="true"]{background:#6646f0}
 @media (max-width:560px){.mp-pill span{display:none}.mp-pill{padding:0 9px}#mpbar{bottom:8px}}
 .mp-code-in .cta{flex:0 0 auto;width:auto;min-width:120px;margin:0}.mp-code-in input{flex:1 1 60%;width:100%}
 .mp-pill span{display:none}.mp-pill{padding:0 9px}@media (min-width:1100px){.mp-pill span{display:inline}.mp-pill{padding:0 10px}}
+/* v170: iletilerdeki ekran bağlantısı */
+.ib-go{display:inline;padding:0;border:0;background:none;color:#7fd4ff;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}

@@ -17,7 +17,7 @@ const IB_FROM={board:'Yönetim kurulu',squad:'Soyunma odası',coach:'Teknik ekip
   gundem:'Gündem',news:'Haber merkezi',press:'Basın',event:'Kişisel',nat:'Milli takım',agent:'Menajerin',menajer:'Menajerin'};
 const IB_RES_COL={w:'#4ad27f',l:'#ff5a52',d:'#a3b8ab'};
 const IB_MEMO=new WeakMap();
-function ibResult(m){const s=(m.title||'')+' '+(m.body||'');
+function ibMacSonuc(m){const s=(m.title||'')+' '+(m.body||'');
   const x=/([^:·]+?)\s(\d+)-(\d+)\s(.+)$/.exec(m.title||'');
   if(x&&G&&CLUBS[G.club]){const me=CLUBS[G.club].name,h=x[1].trim(),a=x[4].trim(),hg=+x[2],ag=+x[3];const us=h.endsWith(me)?1:a.startsWith(me)?2:0;
     if(us){const u=us===1?hg:ag,o=us===1?ag:hg;return u>o?'w':u<o?'l':'d';}}
@@ -32,7 +32,7 @@ function ibCat(m){if(!m)return {k:'other'};let c=IB_MEMO.get(m);if(c&&c.ti===m.t
   else if(t==='report'||/maç raporu|maç sonu|değerlendirme|derbi|galibiyet|mağlubiyet|beraberlik|skor/i.test(T))k='match';
   else if(t==='nat')k='nat';else if(t==='press'||t==='news')k='press';else if(t==='coach'||t==='squad')k='staff';
   else if(t==='board')k='board';else if(t==='scout')k='scout';else if(t==='event')k='event';else if(t==='gundem')k='gundem';else k='other';
-  const res=k==='match'?ibResult(m):'';const D=IB_CATS[k];
+  const res=k==='match'?ibMacSonuc(m):'';const D=IB_CATS[k];
   c={k,ti:m.title,res,lab:D[0],ic:D[1],col:res?IB_RES_COL[res]:D[2]};IB_MEMO.set(m,c);return c;}
 function ibFrom(m){if(m.from)return String(m.from);if(m.totw)return (LEAGUES[m.totw.lg]||{}).short||'Lig';
   if(m.offer&&CLUBS[m.offer.club])return CLUBS[m.offer.club].name;return IB_FROM[m.t]||'Gelen kutusu';}
