@@ -3182,3 +3182,15 @@ body.fut .staff-card{background:radial-gradient(ellipse 50% 90% at 100% 0%,rgba(
 .team b{overflow-wrap:normal;word-break:normal;hyphens:manual}
 .prep-opp b,.ticket .team b,.mt-teams .team b{font-size:clamp(12px,4.2vw,18px)}
 body.fut table thead th,body.fut table thead tr{background:#0f3a22;color:#f4f7ee;border-color:rgba(244,247,238,.15)}
+/* v174: üst çubukta takvim */
+.v174-tarih{cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}.v174-tarih:hover,.v174-tarih:focus-visible{background:rgba(255,255,255,.08);outline:none}
+.v174-ic{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:5px;opacity:.85}
+.v174-serit{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:10px 0 12px}
+.v174-g{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding:7px 3px;border-radius:9px;border:1px solid var(--line,#2c3b33);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}
+.v174-g b{font-size:17px;line-height:1}.v174-g small,.v174-dn{font-size:10.5px;opacity:.75}.v174-dl{font-size:10px;opacity:.8;text-align:center;overflow-wrap:anywhere}
+.v174-g.bugun{border-color:#ffc21a;box-shadow:0 0 0 1px #ffc21a inset}.v174-g.mac{background:rgba(255,194,26,.12)}
+.v174-g>span:last-child,.v174-g>.v5chip{max-width:100%;font-size:10px}
+@media (max-width:420px){.v174-serit{gap:4px}.v174-g{padding:6px 2px}.v174-g b{font-size:15px}}
+.v174-ic-b{width:22px;height:22px;vertical-align:-3px;margin-right:8px}
+#modalCard .v5ag button{display:grid !important;grid-template-columns:96px minmax(0,auto) minmax(0,1fr);text-align:left;align-items:center;min-height:0;height:auto;padding:7px 8px;transform:none}
+#modalCard .v5ag .dt{display:block;text-align:left}#modalCard .v5ag .dt small{display:block;position:static}#modalCard .v5ag em{display:block;text-align:left}
