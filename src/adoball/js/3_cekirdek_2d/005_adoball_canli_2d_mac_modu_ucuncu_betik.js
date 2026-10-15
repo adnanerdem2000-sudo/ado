@@ -2308,7 +2308,7 @@
         if (live && S.hoverRef && v.rx != null) ringPut(v.rx, v.ry, 1.3, RG_REF, .95);
         // gol kutlaması: golü atan ve yakınındaki takım arkadaşları kollarını kaldırır
         var cel = null;
-        if (live && S.hold === 'goal' && !S.goalPend && S.goalInfo && S.goalInfo.scorer >= 0 && !S.goalInfo.own && v.x[S.goalInfo.scorer] > -20) {
+        if (live && S.hold === 'goal' && !S.goalPend && S.goalInfo && S.goalInfo.scorer >= 0 && !S.goalInfo.own && v.x[S.goalInfo.scorer] > -20 && !(S.goalPulseT0 != null && now - S.goalPulseT0 < 1300)) {      /* [v183] kamera önce topu ağda gösterir (~1,3 sn), sonra golcüye döner (eskiden top çizgiyi geçer geçmez golcüye dönüyordu: file hiç görünmüyordu) */
             var sc = S.goalInfo.scorer, tm = sim.players[sc].team, ids = RG.cel.ids; ids.length = 0; ids.push(sc);
             for (i = 0; i < 22; i++) if (i !== sc && sim.players[i].team === tm && v.x[i] > -20 && Math.hypot(v.x[i] - v.x[sc], v.y[i] - v.y[sc]) < 14) ids.push(i);
             cel = RG.cel;
@@ -2329,7 +2329,7 @@
         }
         // duran top kamerası: yalnızca canlı oyunda (tekrarda değil, refTarget()'taki gibi) ve VAR sahnesi
         // yokken - kamera yönetmeni önceliği full/VAR > gol kutlaması (ado3d.js içinde cel0 ile) > bu > yayın
-        var dd0 = (live && !vs && sim.mode === 'dead' && sim.dead && (!DL.on || v.dead)) ? sim.dead : null, deadCam = null;
+        var dd0 = (live && !vs && S.hold !== 'goal' && sim.mode === 'dead' && sim.dead && (!DL.on || v.dead)) ? sim.dead : null, deadCam = null;      /* [v183] gol beklemesinde başlama vuruşu kamerası yok: motor gol adımında ölü topu (orta nokta) kurar, kamera top ağdayken orta yuvarlağa kaçıyordu */
         if (dd0) { var ddir = sim.teams[dd0.team].dir; deadCam = RG.dead; deadCam.kind = dd0.kind; deadCam.x = dd0.x; deadCam.y = dd0.y; deadCam.ax = ddir === 1 ? PW : 0; deadCam.dir = ddir; if (dd0.kind === 'corner') spCornerSpot(sim, dd0, deadCam); else deadCam.bx = deadCam.by = NaN; }     // [sp] kornerde planlı top noktası
         // top sürme: canlı top sahibinin (kaleci hariç - eldeki top ayaktaki top değildir) sürekli koşu tarzını değiştirir; takeon = rakibi çalımlama girişimi (motor: player.dribble/dribType)
         var carry = null, G3 = S.gk;
@@ -2824,7 +2824,7 @@
         }
         var a = S.hold === 'goal' ? 0 : (S.hold === 'card' || S.hold === 'var') ? 1 : alpha;      // kutlamada top ağda kalır (kickoff noktasına ışınlanmaz), kartta atılan oyuncu görünmez
         var v = DL.on && !S.hold && !S.vs ? dlView() : liveView(a);      // [v135] gecikmeli gosterim: halka kayittan
-        if (S.hold === 'goal') gtLive(v, dt);                                             // [gt] top ağa girer
+        if (S.hold === 'goal') { gtLive(v, dt); celLive(v, dt); } else if (S.gcel) S.gcel = null;      // [gt] top ağa girer · [v183] gol sevinci koşusu
         else if (S.sim && S.sim.refHold && S.sim.refAsk && S.sim.refAsk.kind === 'goal' && !S.vs) {      /* [v57] karar anında top ağda */
             var ra0 = S.sim.refAsk, tm0 = S.sim.teams[ra0.team]; if (!S.refGi || S.refGi.ask !== ra0) S.refGi = { ask: ra0, gx: tm0 && tm0.dir === 1 ? PW : 0, gy: S.sim.ball.y, team: ra0.team, scorer: ra0.scorer };
             var gi0 = S.goalInfo; S.goalInfo = S.refGi; try { gtLive(v, dt); } finally { S.goalInfo = gi0; }
@@ -2903,6 +2903,37 @@
         var g2 = S.gb; if (!g2) return;
         var h = Math.min(.05, dt || .016) * .8; g2.acc = (g2.acc || 0) + h; if (g2.acc < 3) { var st = Math.ceil(h / .01); for (var j = 0; j < st; j++) gtStep(g2, h / st); }
         v.bx = g2.x; v.by = g2.y; v.bz = g2.z; v.owner = -1;
+    }
+    /* [v183] gol sevinci (yalnızca görüntü, canlı 'goal' beklemesinde): motor gol anında durur ve eskiden 22 oyuncu koşunun ortasında donup kalıyordu.
+       Şimdi golcü köşe bayrağı / tribün yönüne koşar, 35 m içindeki takım arkadaşları ona koşup çevresinde toplanır, diğerleri koşularını
+       yavaşlayarak bitirir (hız 0'a ~1 sn'de iner). Konumlar görünüm katmanında; simülasyon ve RNG değişmez. Kendi kalesine golde sevinç koşusu yok. */
+    function celLive(v, dt) {
+        var gi = S.goalInfo, sim = S.sim; if (!gi || !sim) return;
+        var C2 = S.gcel, i, p, h = Math.min(.05, Math.max(0, dt || .016));
+        if (!C2 || C2.gi !== gi || C2.sid !== S.sid) {
+            C2 = S.gcel = { gi: gi, sid: S.sid, x: new Float32Array(22), y: new Float32Array(22), vx: new Float32Array(22), vy: new Float32Array(22), t: 0, tx: 0, ty: 0 };
+            var R = S.ring, b = R && R.buf, k = R ? R.n - 1 : -1, lim = Math.max(2, k - 14);      // son canlı kareden koşu hızı (motor gol adımında oyuncuları başlama düzenine koyar)
+            while (b && k > lim && b[(k % RING) * FS + 5] === 1) k--;
+            var okR = b && k >= 2 && b[(k % RING) * FS + 5] !== 1, o1 = okR ? (k % RING) * FS : 0, o0 = okR ? ((k - 1) % RING) * FS : 0;
+            for (i = 0; i < 22; i++) { C2.x[i] = v.x[i]; C2.y[i] = v.y[i];
+                if (okR) { var q = 6 + i * 4, ux = (b[o1 + q] - b[o0 + q]) / DT, uy = (b[o1 + q + 1] - b[o0 + q + 1]) / DT; if (Math.hypot(ux, uy) < 9.5 && b[o1 + q] > -20) { C2.vx[i] = ux; C2.vy[i] = uy; } } }
+            var sc0 = gi.scorer; if (sc0 >= 0 && !gi.own && v.x[sc0] > -20) { var gxs = gi.gx != null ? (gi.gx > PW / 2 ? PW : 0) : (v.x[sc0] > PW / 2 ? PW : 0); C2.tx = gxs + (gxs > 0 ? -7 : 7); C2.ty = v.y[sc0] < PH / 2 ? 3 : PH - 3; }      // köşe bayrağı yönü
+        }
+        C2.t += h;
+        var sc = gi.scorer, cel = sc >= 0 && !gi.own && v.x[sc] > -20, team = cel ? sim.players[sc].team : -1, ring = 0;
+        for (i = 0; i < 22; i++) {
+            if (v.x[i] < -20) continue; p = sim.players[i]; if (!p || p.role === 'GK') { C2.x[i] = v.x[i]; C2.y[i] = v.y[i]; continue; }      // kaleci: aksiyonu (plonjon/kalkış) kendi katmanında
+            var tx = null, ty = null, vmax = 0, acc = 6;
+            if (cel && i === sc && C2.t > .25) { tx = C2.tx; ty = C2.ty; vmax = C2.t < 2.6 ? 6.2 : 1.2; }
+            else if (cel && p.team === team && Math.hypot(C2.x[i] - C2.x[sc], C2.y[i] - C2.y[sc]) < 35 && C2.t > .45) { var ang = (ring++) * 1.1 + i * .7, rr = 1.3 + .35 * ring; tx = C2.x[sc] + Math.cos(ang) * rr; ty = C2.y[sc] + Math.sin(ang) * rr; vmax = 5.8; }
+            var ax, ay;
+            if (tx != null) { var dx = tx - C2.x[i], dy = ty - C2.y[i], dl = Math.hypot(dx, dy), want = Math.min(vmax, dl * 1.6); ax = (dl > .05 ? dx / dl * want : 0) - C2.vx[i]; ay = (dl > .05 ? dy / dl * want : 0) - C2.vy[i]; }
+            else { ax = -C2.vx[i] * 1.6; ay = -C2.vy[i] * 1.6; acc = 5; }      // koşuyu yavaşlayarak bitir
+            var al = Math.hypot(ax, ay), am = acc * h; if (al > am) { ax *= am / al; ay *= am / al; }
+            C2.vx[i] += ax; C2.vy[i] += ay; C2.x[i] = Math.max(.5, Math.min(PW - .5, C2.x[i] + C2.vx[i] * h)); C2.y[i] = Math.max(.5, Math.min(PH - .5, C2.y[i] + C2.vy[i] * h));
+            v.x[i] = C2.x[i]; v.y[i] = C2.y[i];
+            var spd = Math.hypot(C2.vx[i], C2.vy[i]); if (spd > .3) { v.fx[i] = C2.vx[i] / spd; v.fy[i] = C2.vy[i] / spd; }
+        }
     }
     /* ---------- gol tekrarı ---------- */
     function showReplayUI() { showSkip('Tekrarı geç'); }

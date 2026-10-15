@@ -949,9 +949,9 @@
             return best;
         }
         function fgOpen(p) {
-            var need = S.forceGap || 0; if (!(need > 0)) return true;
-            var gx = atkGoalX(p.team), ox = p.x, oy = p.y, dy = Math.abs(oy - CY), dx = Math.abs(gx - ox);
+            var need = S.forceGap || 0, gx = atkGoalX(p.team), ox = p.x, oy = p.y, dy = Math.abs(oy - CY), dx = Math.abs(gx - ox);
             if (S.forceAng && dy > S.forceAng * Math.max(dx, 1)) return false;      // çizgiye çok yakın, dar açı
+            if (!(need > 0)) return true;
             var a = fgAim(p, ox, oy, gx, p.a.fin); if (!a || a.g < need) return false;
             for (var i = 0; i < 22; i++) { var o = S.players[i]; if (o.team === p.team || o.off || o.role === 'GK') continue; if (segDist(o.x, o.y, ox, oy, gx, a.y) < .8) return false; }      // şut yolunda savunmacı
             return true;
