@@ -1875,12 +1875,13 @@
         /* ----- forma/yüz dokusu: oyuncu başına bir DOKU DİZİSİ katmanı (TEXTURE_2D_ARRAY - atlas kenar taşması yok, katman başına mipmap).
            Üst yarı: forma gövdesi (takıma özgü KURGUSAL desen, sırtta soyadı + numara, göğüste küçük numara ve takım baş harfli arma);
            alt yarı: yüz (göz, kaş - saç renginde, dudak, oyuncuya göre sakal/kirli sakal). Hiçbir gerçek marka/arma/sponsor kullanılmaz.
-           Numara: veritabanında forma numarası alanı olmadığı için mevkiden klasik numaralandırmayla türetilir (KL 1, SĞB 2, SLB 3, ...). */
+           Numara: oyuncunun gerçek forma numarası (kayıtta no; [v186]), yoksa mevkiden klasik numaralandırmayla türetilir (KL 1, SĞB 2, SLB 3, ...). */
         var KIT = { tex: null, size: 0, n: 0, ok: false, info: null };
         var ROLE_NO = { GK: 1, RB: 2, LB: 3, RCB: 4, LCB: 5, CB: 4, RDM: 6, DM: 6, LDM: 8, CM: 8, RW: 7, RM: 7, ST: 9, CF: 9, AM: 10, CAM: 10, LW: 11, LM: 11 };
         function shirtNumbers(players) {
             var out = [], used = [{}, {}];
-            players.forEach(function (p, i) { var t = p.team ? 1 : 0, n = ROLE_NO[p.role]; if (n && !used[t][n]) { used[t][n] = 1; out[i] = n; } else out[i] = 0; });
+            players.forEach(function (p, i) { var t = p.team ? 1 : 0, rn = p.db && +p.db.no; if (rn >= 1 && rn <= 99 && !used[t][rn]) { used[t][rn] = 1; out[i] = rn | 0; } });      // [v186] gerçek forma numarası (kadro verisi; oyun kaydından p.db.no)
+            players.forEach(function (p, i) { if (out[i]) return; var t = p.team ? 1 : 0, n = ROLE_NO[p.role]; if (n && !used[t][n]) { used[t][n] = 1; out[i] = n; } else out[i] = 0; });
             players.forEach(function (p, i) { if (out[i]) return; var t = p.team ? 1 : 0, h = hash(p.name || ('p' + i)), n = 12 + h % 19, k = 0; while (used[t][n] && k++ < 40) n = n >= 30 ? 12 : n + 1; used[t][n] = 1; out[i] = n; });
             return out;
         }
@@ -2272,6 +2273,7 @@
            seçtiği İZLEME AÇISINA (st.style) göre elev/mesafe değişir, GERİ KALAN HER ŞEY (takip mantığı,
            tekrar/replay çerçevesi - st.replay her zaman KENDİ sabit açısını kullanır, style'dan ETKİLENMEZ)
            değişmedi. */
+        var TV_H = 21, TV_Z = 57, TV_DOL = .12, TV_ZM = .8;      // TV_ZM: kadraj (yayında topun çevresi ~45–50 m; eski yayın kamerası 60 m — oyuncular çok küçüktü)      // [v186] TV ana kamerası: yükseklik (m), saha ortasından derinlik (m; yan çizginin ~23 m gerisi), topa doğru hafif kayma payı
         var CAM_STYLE = { std: { wvL: 60, wvP: 44, elev: 27 }, low: { wvL: 40, wvP: 30, elev: 15 }, high: { wvL: 80, wvP: 60, elev: 39 } };  // yayın kamerası açı ön ayarları: std = eski/öntanımlı davranışla SAYISAL OLARAK birebir aynı (geriye dönük uyum)
         function camGoal(mode, st, bx, bz, cel0, v) {
             var zoom = Math.max(1, st.zoom || 1), tx, tz, dist, elev, az = 0, wv;
@@ -2337,7 +2339,18 @@
             var wp = mode === 'full' ? 4 : 3.6;      // [v133] kritik sonumlu yay: hiz surekli (canli/olu top kadraj gecisinde ve vuruslarda sarsinti yok)
             camSd(c, 'tx', g.tx, wp, dt); camSd(c, 'tz', g.tz, wp, dt); camSd(c, 'dist', g.dist, 4, dt); camSd(c, 'elev', g.elev, 4, dt); camSd(c, 'az', g.az, 4, dt);
             eye[0] = c.tx + Math.sin(c.az) * Math.cos(c.elev) * c.dist; eye[1] = Math.sin(c.elev) * c.dist; eye[2] = c.tz + Math.cos(c.az) * Math.cos(c.elev) * c.dist;
-            curFov = FOVY; CAM_FD = c.dist; CAM_AX = c.tx; CAM_AZ = c.tz; mlook(VIEW, eye[0], eye[1], eye[2], c.tx, 0, c.tz); mpersp(PROJ, FOVY, asp, 1.5, 900); mmul(VP, PROJ, VIEW);
+            curFov = FOVY; CAM_FD = c.dist;
+            /* [v186] TV ana kamerası: canlı oyunda göz orta çizgi hizasında, tribünün üst katında SABİT durur; topu döner (pan) ve görüş açısıyla (zoom) izler —
+               kale önünde ceza sahası yandan-çapraz görünür (yayın görüntüsü). Kadraj eski yayın kamerasının TV_ZM katı (~48 m; oyuncular daha büyük); duran top / sevinç / tekrar
+               kameraları değişmez, geçiş yumuşak (tvk yayı). R.tvCam = false → eski kaydırmalı (dolly) kamera. */
+            var tvOn = mode === 'bcast' && R.tvCam !== false && !st.dead && !st.replay && !(cel0 && cel0.length) && !R.proFocus;
+            if (c.tvk == null) c.tvk = tvOn ? 1 : 0; camSd(c, 'tvk', tvOn ? 1 : 0, 2.6, dt);
+            var tk = clamp(c.tvk, 0, 1);
+            if (tk > .001) {
+                var tex = PW / 2 + (c.tx - PW / 2) * TV_DOL, tey = TV_H, tez = PH / 2 + TV_Z, dTV = Math.hypot(c.tx - tex, tey, c.tz - tez), fTV = 2 * Math.atan(c.dist * Math.tan(FOVY / 2) * TV_ZM / dTV);
+                eye[0] += (tex - eye[0]) * tk; eye[1] += (tey - eye[1]) * tk; eye[2] += (tez - eye[2]) * tk; curFov = FOVY + (fTV - FOVY) * tk; CAM_FD = c.dist + (dTV - c.dist) * tk;
+            }
+            CAM_AX = c.tx; CAM_AZ = c.tz; mlook(VIEW, eye[0], eye[1], eye[2], c.tx, 0, c.tz); mpersp(PROJ, curFov, asp, 1.5, 900); mmul(VP, PROJ, VIEW);
         }
         /* [v158] loca kamerası: göz yakın (S) tribünün en üst sırasının biraz üstünde ve gerisinde SABİT durur (yalnız topa doğru çok az kayar);
            bakış hedefi topu insan başı gibi gecikmeli izler; geniş açı. Unity stadyumunda üst sıra yüksekliği seyirci şeritlerinden bulunur. */

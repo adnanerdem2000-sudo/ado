@@ -43,7 +43,7 @@ function abAttrs(p,role,boost,fam){let R={};try{R=fmAttrs(p).raw||{};}catch(e){}
 function abLook(p,T){try{const q=Object.assign({spos:p.pos==='KL'?'KL':(p.spos||''),T},p);const r=f3Look(q,0);const M=pMetaX(q);
   return {h:r.h||180,w:r.w||75,sk:r.sk!=null?r.sk:1,hs:r.hs!=null?r.hs:1,hc:r.hc!=null?r.hc:0,bd:r.bd!=null?r.bd:0,ft:M.ft==='Sol'?'L':'R',wf:clamp(M.wf||3,1,5),v:2};}catch(e){return null;}}
 let AB_ID=1000000;
-function abRec(p,role,T,boost,fam){const A=abAttrs(p,role,boost,fam),id=AB_ID++;const r=Object.assign({id,name:p.name,__k:p.k},A);const ap=abLook(p,T);if(ap)r.__ap=ap;if(p.k==='ME')r.agg=6;return r;}
+function abRec(p,role,T,boost,fam){const A=abAttrs(p,role,boost,fam),id=AB_ID++;const r=Object.assign({id,name:p.name,__k:p.k},A);if(p.num>=1&&p.num<=99)r.no=p.num|0;      /* v186: 3B formada gerçek numara */const ap=abLook(p,T);if(ap)r.__ap=ap;if(p.k==='ME')r.agg=6;return r;}
 /* ---------- diziliş → motorun 11 rolü (en yakın eşleme, Macar yöntemi) ---------- */
 function abHung(C){const n=C.length,u=new Array(n+1).fill(0),v=new Array(n+1).fill(0),p=new Array(n+1).fill(0),way=new Array(n+1).fill(0);
   for(let i=1;i<=n;i++){p[0]=i;let j0=0;const minv=new Array(n+1).fill(Infinity),used=new Array(n+1).fill(false);

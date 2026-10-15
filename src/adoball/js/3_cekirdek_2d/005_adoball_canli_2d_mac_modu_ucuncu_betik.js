@@ -3403,7 +3403,7 @@
     function tacPitchHTML(team) { TAC_TEAM = team;
         var t = matchData[team === 0 ? 'h' : 'a'], live = tacLive(), XY = tacPos(S.tac[team]), X0 = tacFrom(team), k, h = '<svg viewBox="0 0 68 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".35"><rect x="1" y="1" width="66" height="98"/><line x1="1" y1="50" x2="67" y2="50"/><circle cx="34" cy="50" r="8.7"/><rect x="13.85" y="1" width="40.3" height="15.7"/><rect x="24.85" y="1" width="18.3" height="5.2"/><rect x="13.85" y="83.3" width="40.3" height="15.7"/><rect x="24.85" y="93.8" width="18.3" height="5.2"/></g><circle cx="34" cy="50" r=".6" fill="rgba(255,255,255,.7)"/></svg>' + tacOverlay(team, XY, X0);
         for (k = 0; k < 11; k++) {
-            var id = t && t.squad ? t.squad[k] : null, p = id != null ? getPlayerFromId(id) : null, xy = XY.p[k], xy0 = X0 ? X0.p[k] : xy, pos = posNamesList[k], full = p ? String(p.name || pos) : pos, ws = full.trim().split(' ').filter(Boolean), nm = ws.length > 1 ? ws.slice(1).join(' ') : full, badge = '', cond = '';
+            var id = t && t.squad ? t.squad[k] : null, p = id != null ? getPlayerFromId(id) : null, xy = XY.p[k], xy0 = X0 ? X0.p[k] : xy, pos = (p && p.lbl) || posNamesList[k], full = p ? String(p.name || pos) : pos, ws = full.trim().split(' ').filter(Boolean), nm = ws.length > 1 ? ws.slice(1).join(' ') : full, badge = '', cond = '';
             if (live) {
                 var r = (matchData.ratings && id != null && matchData.ratings[id] != null) ? matchData.ratings[id] : 6.5, sp = S.sim.players[team * 11 + MAP[k]], st = sp && sp.stam != null ? Math.max(0, Math.min(1, sp.stam)) : null;
                 badge = '<em class="' + ratingClass(r) + '" title="Maç reytingi">' + r.toFixed(1) + '</em>';
@@ -3418,10 +3418,19 @@
     var TAC_GR = ['gk', 'fb', 'cb', 'cb', 'fb', 'dm', 'cm', 'am', 'w', 'w', 'st'];
     var TAC_TEAM = 0;
     function tacXY(k) { try { var hm = G.__abHomes && G.__abHomes[TAC_TEAM] && G.__abHomes[TAC_TEAM][MAP[k]]; if (hm) return [Math.round(hm[1] * 100), Math.round(90 - (hm[0] - .035) / .685 * 78)]; } catch (e) { } return TAC_XY[k]; }
+    /* [v186] oyuncunun grubu gerçek dizilişten (motor kaydındaki mevki etiketi); yoksa 4-2-3-1 varsayımı */
+    var TAC_LB = { KL: 'gk', STP: 'cb', SLB: 'fb', 'SĞB': 'fb', SLKB: 'fb', 'SĞKB': 'fb', DOS: 'dm', MDO: 'dm', MOS: 'cm', MO: 'cm', OOS: 'am', MOO: 'am', SLO: 'w', 'SĞO': 'w', SLK: 'w', 'SĞK': 'w', SLA: 'w', 'SĞA': 'w', SNT: 'st', SF: 'st', FA: 'st' };
+    function tacGrp(k) { try { var t = matchData[TAC_TEAM === 0 ? 'h' : 'a'], id = t && t.squad ? t.squad[k] : null, p = id != null ? getPlayerFromId(id) : null, g = p && p.lbl ? TAC_LB[p.lbl] : null; if (g) return g; } catch (e) { } return TAC_GR[k]; }
+    function tacAyir(P) {      // yakın iki oyuncuyu (yüzde koordinat) yatayda ayır; birkaç tur
+        for (var it = 0; it < 6; it++) { var moved = false;
+            for (var i = 1; i < 11; i++) for (var j = i + 1; j < 11; j++) { var dx = P[j][0] - P[i][0], dy = P[j][1] - P[i][1];
+                if (Math.abs(dx) < 15 && Math.abs(dy) < 9) { var need = (15 - Math.abs(dx)) / 2 + .5, sg = dx === 0 ? (P[i][0] < 50 ? 1 : -1) : (dx > 0 ? 1 : -1);
+                    P[i][0] = Math.max(7, Math.min(93, P[i][0] - sg * need)); P[j][0] = Math.max(7, Math.min(93, P[j][0] + sg * need)); moved = true; } }
+            if (!moved) break; } }
     function tacPos(t) {
         var P = [], k, s = function (v, a, b) { return v > 0 ? a : v < 0 ? b : 0; };
         for (k = 0; k < 11; k++) {
-            var g = TAC_GR[k], x = tacXY(k)[0], y = tacXY(k)[1], cx = x - 50, fw = g === 'st' || g === 'w' || g === 'am', mid = g === 'dm' || g === 'cm';
+            var g = tacGrp(k), x = tacXY(k)[0], y = tacXY(k)[1], cx = x - 50, fw = g === 'st' || g === 'w' || g === 'am', mid = g === 'dm' || g === 'cm';
             if (g === 'cb' || g === 'fb') y += s(t.line, -7, 5);                                  // savunma çizgisi
             else if (g === 'dm') y += s(t.line, -4, 4);
             else if (g === 'cm') y += s(t.line, -2, 2);
@@ -3434,7 +3443,8 @@
             if (g === 'cb') y = Math.min(y, 80);                                                 // kaleciyle üst üste binmesin
             P.push([Math.max(7, Math.min(93, x)), Math.max(11, Math.min(90, y))]);
         }
-        P[7][1] = Math.max(P[7][1], P[10][1] + 16);                                              // 10 numara forvetin altına girmesin
+        if (tacGrp(7) === 'am' && tacGrp(10) === 'st') P[7][1] = Math.max(P[7][1], P[10][1] + 16);      // 10 numara forvetin altına girmesin (yalnız gerçekten 10 numara varsa)
+        tacAyir(P);                                                                              // [v186] üst üste binen oyuncuları yana ayır
         return { p: P, l: [(P[2][1] + P[3][1]) / 2, t.press > 0 ? 30 : t.press < 0 ? 58 : 45] };      // l: savunma çizgisi, pres hattı
     }
     // kaymanın başlangıcı: aynı takımın sahası açıksa oyuncuların o anki yeri (kayarken yeni seçim yapılırsa sıçramaz), yoksa son çizilen yer

@@ -6,9 +6,11 @@
    doğrudan serbest vuruş %2,6 (18–28 m'de faul olursa golcü kullanır). Uygunluk: kafa türleri Kafa Vuruşu ve boyla, uzaktan şut Uzaktan Şut'la, kontra rakip hücum ettikçe artar.
    Tür, golün kuyruk zamanından türetilen ayrı bir rastgele akışla seçilir (Math.random değil: aynı maç kaydında aynı tür).
    Her tür bir durum makinesidir (motor kancaları: S.forceAir golcü hava topunu kazanır ve kafa vurur · S.forceRebound kaleci golcünün önüne çeler ·
-   S.forceCorner korner golcüye · S.forceFK serbest vuruşu golcü kullanır · S.forceQuick tek dokunuş). Penceresi dolan tür (70 sn; duran top 90 sn) v183'ün açık oyun kademelerine düşer.
+   S.forceCorner korner golcüye · S.forceFK serbest vuruşu golcü kullanır · S.forceQuick tek dokunuş). Penceresi dolan tür (35 sn; duran top 60 sn) v183'ün açık oyun kademelerine düşer.
    Skor/golcü/asist defteri (214 V177) değişmez: golcü yine kuyruktaki oyuncu, olay yolu aynı. */
-const V186={W:{fk:.026,kontra:.125,kafa_orta:.039,kafa_duran:.092,orta_ayak:.07,ara:.045,donen:.119,uzak:.049,acik:.461},WIN:70,WIN_D:90,log:[]};
+const V186={W:{fk:.026,kontra:.125,kafa_orta:.039,kafa_duran:.092,orta_ayak:.07,ara:.045,donen:.119,uzak:.049,acik:.461},WIN:35,WIN_D:60,log:[]};
+/* v183 açık oyun kademeleri: gerçek gol şutlarının %86'sı ceza sahası içinden (StatsBomb) — mesafe sınırı daha uzun süre ceza sahası içinde kalır (eski: 18 m → 60 sn'de 26 m → 120 sn'de 32 m) */
+if(typeof V183!=='undefined')V183.F=[[0,16,1.6,.8],[25,18,1.4,.9],[50,20,1.1,1],[80,22,.8,1.1],[110,24,0,1.2],[150,28,0,1.4]];
 function v186Rnd(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
 /* tür seçimi: p(tür) ∝ gol payı × uygunluk(golcü) */
 function v186Pick(sim,tm,by,rnd){const W=V186.W,p=by!=null?sim.players[by]:null,a=p&&p.a?p.a:{},o={};
@@ -20,11 +22,14 @@ function v186Pick(sim,tm,by,rnd){const W=V186.W,p=by!=null?sim.players[by]:null,
 /* not: motorda forceDist 0 "30 m" demektir (S.forceDist || 30); şut istenmeyen evrede .01 */
 /* her adım: q = kuyruktaki gol ({t0,av}), tm = golü atacak motor takımı. Dönen: tür etkin mi (v183'ün dış şut zorlaması bekletilir) */
 function v186Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const by=sim.forceBy;const P=sim.players,gp=by!=null?P[by]:null;
-  if(!q.av){const seed=Math.round((q.t0||0)*1000)^(tm*7919)^((q.side||0)*104729)^Math.round((q.t||0)*37);const rnd=v186Rnd(seed);q.av={tip:gp?v186Pick(sim,tm,by,rnd):'acik',t0:sim.t,rnd,st:0};try{V186.log.push(q.av.tip);}catch(e){}}
-  const A=q.av,el=sim.t-A.t0,win=A.tip==='kafa_duran'?V186.WIN_D:V186.WIN;
+  if(!q.av){const seed=Math.round((q.t0||0)*1000)^(tm*7919)^((q.side||0)*104729)^Math.round((q.t||0)*37);const rnd=v186Rnd(seed);q.av={tip:gp?v186Pick(sim,tm,by,rnd):'acik',t0:sim.t,rnd,st:0};{const u=rnd();q.av.dT=u<.45?6+5*rnd():u<.86?11+5.5*rnd():16.5+7*rnd();}      /* açık oyunda bitiriş mesafesi gerçek gol şutlarından (%45 6–11 m, %41 11–16,5 m, %14 16,5–24 m); eskiden şut pencerenin sınırında (18–28 m) çekiliyordu */try{V186.log.push(q.av.tip);}catch(e){}}
+  const A=q.av,el=sim.t-A.t0;let win=A.tip==='kafa_duran'||A.tip==='kontra'?V186.WIN_D:V186.WIN;      /* kontra top kazanmayı bekler: 60 sn */
+  if(A.ok>sim.t||(A.tip==='kontra'&&A.ct!=null&&sim.t-A.ct<15))win=Math.max(win,el+1);      /* kurgu sürerken (bitiriş penceresi açık / kontra koşusu) pencere kapanmaz */
   /* fırsatçı serbest vuruş: her türde golcü 18–28 m'deki doğrudan serbest vuruşu kullanır */
   sim.forceFK=A.tip==='fk'&&gp&&!gp.off&&gp.team===tm?gp.id:null;
   if(A.tip==='acik'||!gp||gp.off||gp.team!==tm||el>win){if(A.tip!=='acik'){A.from=A.tip;A.tip='acik';q.t0=sim.t;}      /* yedek: v183 açık oyun kademeleri baştan (18 m) */
+    if(A.dT)sim.forceDist=Math.min(sim.forceDist||30,A.dT+Math.max(0,sim.t-q.t0-40)*.12);
+    /* not: golcünün kendi kararıyla çektiği şutu mesafeyle sınırlamak (forceHold) uzak şut golünü %32'den %20'ye indiriyor ama yoğun gol kuyruğunda (lab: maç başı 8 gol) süresinde atılamayan gol 64'te 7'den 14–16'ya çıkıyor — açık */
     sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;return false;}
   const dir=sim.teams[tm].dir,gx=dir>0?105:0,o=sim.ball.owner,hy=Math.hypot,dG=q2=>hy(gx-q2.x,34-q2.y),live=sim.mode==='live';
   const box=(x,y)=>{gp.boxT={x:gx-dir*x,y:34+y,t:sim.t};if(gp.run&&!gp.run.v186)gp.run=null;gp.late=null;gp.chk=null;};      /* ceza sahası hücresi koşu / gelip göstermeden önce gelir */
@@ -43,15 +48,18 @@ function v186Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const by=sim
       A.own=o?o.team:A.own;
       const on=A.ct!=null&&sim.t-A.ct<15;sim.forceDist=on?16:.01;if(on)okFor(.1,null,18);
       if(on&&live&&o&&o.team===tm&&o!==gp&&dG(gp)>14&&!(gp.run&&gp.run.until>sim.t))gp.run={v186:1,until:sim.t+2.6,x:gx-dir*Math.max(10,Math.min(dG(gp)-8,26)),y:34+(gp.y>34?4:-4)};
-      if(on&&free&&(gp.x-o.x)*dir>2&&hy(gp.x-o.x,gp.y-o.y)<46&&dG(gp)<44){sim.forceQuick=null;pass(gp,hy(gp.x-o.x,gp.y-o.y)>32,{run:true});}
+      if(on&&free&&(gp.x-o.x)*dir>2&&hy(gp.x-o.x,gp.y-o.y)<34&&dG(gp)<44){sim.forceQuick=null;pass(gp,false,{run:true});}      /* yerden ara pası (havadan uzun top kafa düellosuna dönüyordu) */
       return true;}
     case 'kafa_orta':case 'orta_ayak':{   /* top kanatta bir arkadaşta: golcü ceza sahasına (ön/uzak direk), orta ona (veri: orta golü medyan 6,8 / 8,3 m) */
       const head=A.tip==='kafa_orta';sim.forceDist=head?.01:15;
       if(!live||!o||o.team!==tm||o===gp)return true;
       if(Math.abs(o.y-34)<10||Math.abs(gx-o.x)>38)feed(q2=>{const d2=Math.abs(gx-q2.x);return Math.abs(q2.y-34)>=11&&d2<=38&&d2>=6?1+(38-d2)/38:0;});
-      const dl=Math.abs(gx-o.x),wing=Math.abs(o.y-34)>=10&&dl<=38&&dl>=3;
+      const dl=Math.abs(gx-o.x),wing=Math.abs(o.y-34)>=8&&dl<=46&&dl>=3;
       if(dl<62)box(head?6.8:8.3,(o.y>34?-1:1)*(head?2.2:3.2));
-      if(wing&&free&&dG(gp)<(head?13.5:16)){if(head)sim.forceAir=gp.id;else sim.forceQuick=gp.id;okFor(head?3.5:3,head?'HEAD':null,head?14:15);pass(gp,head||hy(gp.x-o.x,gp.y-o.y)>22,{cross:true});}
+      if(wing&&free&&dG(gp)<22&&(gx-gp.x)*dir>0){      /* golcü savunma hattının gerisinden (ofsayta düşmeden) ön / uzak direk hücresine koşar, orta koşusunun önüne */
+        const sx=gx-dir*(head?6.8:8.3),sy=34+(o.y>34?-1:1)*(head?2.2:3.2),ux=sx-gp.x,uy=sy-gp.y,ul=hy(ux,uy)||1,sp=Math.min(8,ul/1.2),vx0=gp.vx,vy0=gp.vy;
+        if(head)sim.forceAir=gp.id;else sim.forceQuick=gp.id;okFor(head?3.5:3,head?'HEAD':null,head?16:16);
+        gp.run={v186:1,until:sim.t+2.4,x:sx,y:sy};gp.vx=ux/ul*sp;gp.vy=uy/ul*sp;pass(gp,head||hy(sx-o.x,sy-o.y)>22,{cross:true});gp.vx=vx0;gp.vy=vy0;}
       return true;}
     case 'kafa_duran':{   /* sıradaki korner golcünün kafasına */
       sim.forceDist=.01;sim.forceCorner=gp.id;if(sim.forceAir===gp.id)okFor(3.5,'HEAD',14);
@@ -78,7 +86,10 @@ function v186Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const by=sim
   return false;}
 /* v183 zorla gol akışını sarar: tür etkinken dış şut zorlaması ve uzun bekleme kuralı bekler, mesafe/aralık türe göre */
 if(typeof v183ForceTick==='function'){v183ForceTick=(old=>function(S,sim){const q=ABM.fq&&ABM.fq[0];const act=!!(q&&q.av&&q.av.tip!=='acik');const tk=V183.TK,ow=V183.OWN;
-  if(act){V183.TK=1e9;V183.OWN=1e9;}let r;try{r=old.apply(this,arguments);}finally{V183.TK=tk;V183.OWN=ow;}
-  try{const q2=ABM.fq&&ABM.fq[0];if(q2&&ABM.fcur===q2&&sim.forceGoal!=null){v186Kurgu(sim,q2,sim.forceGoal);}else if(!ABM.fq||!ABM.fq.length){sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceFK=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;}}catch(e){console.warn('v186',e);}
+  const dT=!!(q&&q.av&&q.av.dT);if(act||dT)V183.TK=1e9;if(act)V183.OWN=1e9;let r;try{r=old.apply(this,arguments);}finally{V183.TK=tk;V183.OWN=ow;}
+  try{const q2=ABM.fq&&ABM.fq[0];if(q2&&ABM.fcur===q2&&sim.forceGoal!=null){v186Kurgu(sim,q2,sim.forceGoal);
+    /* açık oyun yedeğinde v183'ün dış şut zorlaması da bitiriş mesafesine (dT) uyar: eskiden pencerenin sınırından (26–32 m) vurduruyordu */
+    const A=q2.av;if(A&&A.tip==='acik'&&A.dT&&sim.t-q2.t0>tk&&sim.mode==='live'&&!sim.shot){const o=sim.ball.owner,gx=v183GoalX(sim,sim.forceGoal);
+      if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&(sim.forceBy==null||o.id===sim.forceBy)&&Math.hypot(gx-o.x,34-o.y)<(sim.forceDist||30)&&Math.abs(o.y-34)<22){try{sim._lab.doShot(o,sim.xgAt(o.x,o.y,sim.teams[o.team].dir,3),3,null);}catch(e){}}}}else if(!ABM.fq||!ABM.fq.length){sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceFK=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;}}catch(e){console.warn('v186',e);}
   return r;})(v183ForceTick);
   abForceTick=function(S,sim){if(ABM.hz)return;return v183ForceTick(S,sim);};}
