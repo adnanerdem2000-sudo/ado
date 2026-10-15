@@ -79,14 +79,21 @@ function adoZAc(ad){const Z=adoZ(),e=Z.ad[ad];if(!e)return undefined;if(e.bitti|
   try{for(const p of e.parca){if(p.bitti)continue;const u=p.u||adoInflate(adoB64U8(p.b));p.b=null;p.u=null;p.bitti=true;adoZCalistir(ad,e,adoZMetin(u));}}
   catch(err){console.warn('Sıkıştırılmış veri açılamadı:',ad,err);}
   finally{e.mesgul=false;}
-  e.bitti=true;Z.n++;Z.ms+=performance.now()-t0;
+  e.bitti=true;Z.n++;const ms=performance.now()-t0;Z.ms+=ms;(Z.acilan=Z.acilan||[]).push([ad,Math.round(ms*10)/10,document.readyState]);
   try{Object.defineProperty(window,ad,{configurable:true,enumerable:true,writable:true,value:e.deger});}catch(err){}
   return e.deger;}
-/* veri metnini çalıştır: "var AD = {json};" ve "Object.assign(AD, {json});" JSON.parse ile (hızlı, eval yok); başka biçim (0,eval) ile */
-function adoZCalistir(ad,e,s){const t=s.replace(/^\s*\/\*[\s\S]*?\*\/\s*/,''),m=/^\s*(?:var\s+([\w$]+)\s*=|Object\.assign\(\s*([\w$]+)\s*,)\s*/.exec(t);
-  if(m&&(m[1]||m[2])===ad){const j=t.slice(m[0].length).replace(m[1]?/;\s*(\/\/[^\n]*)?\s*$/:/\)\s*;\s*$/,'');let v;try{v=JSON.parse(j);}catch(err){v=undefined;}
-    if(v!==undefined){if(m[1])e.deger=v;else Object.assign(e.deger,v);return;}}
+/* veri metnini çalıştır: "var|const|let AD = {json};" ve "Object.assign(AD, {json});" JSON.parse ile (hızlı, eval yok); JSON değilse
+   değer ifadesi (0,eval) ile hesaplanır (v171: const/let için — dolaylı eval'deki const dışarı sızmaz) */
+function adoZBas(s){const t=s.replace(/^\s*\/\*[\s\S]*?\*\/\s*/,''),m=/^\s*(?:(?:var|const|let)\s+([\w$]+)\s*=|Object\.assign\(\s*([\w$]+)\s*,)\s*/.exec(t);
+  if(!m)return null;return {ad:m[1]||m[2],atama:!m[1],j:t.slice(m[0].length).replace(m[1]?/;\s*(\/\/[^\n]*)?\s*$/:/\)\s*;\s*(\/\/[^\n]*)?\s*$/,'')};}
+function adoZDeger(j){try{return JSON.parse(j);}catch(err){}return (0,eval)('('+j+'\n)');}
+function adoZCalistir(ad,e,s){const b=adoZBas(s);
+  if(b&&b.ad===ad){const v=adoZDeger(b.j);if(b.atama)Object.assign(e.deger,v);else e.deger=v;return;}
   (0,eval)(s);}
+/* v171: @zy — yerinde, eşzamanlı açma: `var X=adoZYerinde("…")` / `Object.assign(X,adoZYerinde("…"))` (IIFE içi ya da sözcüksel hedef) */
+function adoZYerinde(b64){const Z=adoZ(),t0=performance.now();let b=null;
+  try{b=adoZBas(adoZMetin(adoInflate(adoB64U8(b64))));}catch(err){console.warn('Sıkıştırılmış veri açılamadı',err);}
+  const v=b?adoZDeger(b.j):undefined;const ms=performance.now()-t0;Z.n++;Z.ms+=ms;(Z.yer=Z.yer||[]).push([b&&b.ad,Math.round(ms*10)/10]);return v;}
 /* sayfa yüklendikten sonra boşta: paketleri arka planda aç (yalnız inflate; metin ilk kullanımda kurulur) */
 function adoZPlan(){const Z=adoZ();if(Z.plan)return;Z.plan=true;
   if(typeof DecompressionStream==='undefined')return;   /* yedek inflate eşzamanlı: ilk kullanımda */

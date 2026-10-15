@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /* src/manifest.txt'ten tek dosyalık oyunu üretir ve her <script> bloğunu tarayıcıdaki gibi (klasik betik) derleyerek denetler.
-   Kullanım: node tools/build.js [--out dist/futbol-kariyeri.html] [--verify <karşılaştırılacak.html>] [--check]
+   Kullanım: node tools/build.js [--out dist/futbol-kariyeri.html] [--verify <karşılaştırılacak.html>] [--check] [--manifest src/manifest.txt]
      --check   yalnız denetle, dosya yazma
      --verify  çıktı verilen dosyayla bayt bayt aynı mı (bölme işleminin kayıpsız olduğunu kanıtlamak için)
-   Manifest satırları: dosya yolu, "| düz satır", "@abdoc <manifest>" ya da "@z <veri.js>" (v151: sıkıştırılmış gömme, tools/sikistir.js).
+   Manifest satırları: dosya yolu, "| düz satır", "@abdoc <manifest>", "@z <veri.js>" (v151: sıkıştırılmış gömme, tools/sikistir.js)
+   ya da "@zy <veri.js>" (v171: yerinde eşzamanlı açılan sıkıştırılmış veri).
    Çıktı 15,5 milyon baytı aşarsa uyarır, 16 milyonu aşarsa başarısız olur (yayın sınırı).
    Başarılıysa son satır SYNTAX_OK olur. Sözdizimi hatasında hatanın kaynak dosyası ve satırı yazılır. */
 'use strict';
@@ -16,6 +17,7 @@ const SIZE_WARN = 15500000, SIZE_MAX = 16000000;
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i < 0 ? null : (args[i + 1] || ''); };
 const OUT = path.resolve(ROOT, opt('--out') || 'dist/futbol-kariyeri.html');
 const AB_TAG = '<script type="text/x-abdoc" id="abdoc">';
+const Z_KNOWN = new Set();   /* v171: @z ile kaydedilen adlar (Object.assign hedefi denetimi) */
 
 /* Manifestten metni kur; her çıktı satırı için kaynak (dosya, satır) tut. */
 function assemble(manifest) {
@@ -25,10 +27,12 @@ function assemble(manifest) {
     if (row === '' || row.startsWith('#')) return;
     const at = `${path.relative(ROOT, manifest)}:${n + 1}`;
     if (row.startsWith('| ') || row === '|') { out.push(row.slice(2)); src.push([at, 1]); return; }
-    if (row.startsWith('@z ')) {   /* v151: veri dosyasını sıkıştırılmış gömer (tools/sikistir.js); oyunda ilk kullanımda açılır */
-      const rel = row.slice(3).trim(), f = path.join(dir, rel);
+    if (row.startsWith('@z ') || row.startsWith('@zy ')) {   /* v151: veri dosyasını sıkıştırılmış gömer (tools/sikistir.js); oyunda ilk kullanımda açılır
+                                                                  v171: @zy = yerinde, eşzamanlı açma (IIFE içi ya da sözcüksel nesneye ekleme) */
+      const y = row.startsWith('@zy '), rel = row.slice(y ? 4 : 3).trim(), f = path.join(dir, rel);
       if (!fs.existsSync(f)) fail(`${at}: dosya yok: ${rel}`);
-      let z; try { z = ZIP.zLine(fs.readFileSync(f, 'utf8'), rel); } catch (e) { fail(`${at}: ${e.message}`); }
+      let z; try { z = ZIP.zLine(fs.readFileSync(f, 'utf8'), rel, y, Z_KNOWN); } catch (e) { fail(`${at}: ${e.message}`); }
+      if (!y) Z_KNOWN.add(z.name);
       out.push(z.line); src.push([path.relative(ROOT, f), 1]); return;
     }
     if (row.startsWith('@abdoc ')) {
@@ -70,7 +74,7 @@ function checkScripts(doc, label) {
 }
 function fail(msg) { console.error('HATA: ' + msg); process.exit(1); }
 
-const doc = assemble(path.join(ROOT, 'src/manifest.txt'));
+const doc = assemble(path.resolve(ROOT, opt('--manifest') || 'src/manifest.txt'));   /* v171: --manifest <yol> (ölçüm için başka manifest; yollar o dosyanın klasörüne göre) */
 const nScripts = checkScripts(doc, 'Ana belge');
 const text = doc.lines.join('\n') + '\n';
 const buf = Buffer.from(text, 'utf8');

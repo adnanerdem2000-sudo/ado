@@ -3,20 +3,28 @@
    Paket: deflate-raw( [u32 metin uzunluğu][metin; uzun base64 dizileri \x01 ile işaretli][her dizi için: u32 uzunluk + ikili bayt] ), base64.
    Base64 dizileri ikiliye çevrilip sıkıştırıldığı için (Meshy modeli, saç, kafa derisi bitmapleri, GLB) metin sıkıştırmasından daha küçüktür.
    Oyunda adoZKayit(ad, paket) kaydı yapar; `ad` global değişkeni ilk okunduğunda paket açılır (DecompressionStream ya da yedek
-   JS inflate, 178_v151) ve dosyanın özgün metni (0,eval) ile çalıştırılır — sonuç, dosyanın doğrudan gömülmesiyle birebir aynıdır.
-   Yalnız üst düzeyde tek bir global tanımlayan dosyalar içindir: `var X = …;` ya da `Object.assign(X, …);` (IIFE içindeki veriler olmaz).
-   Kullanım (deneme): node tools/sikistir.js <dosya.js> [...]   → boyutları yazar ve açma sınamasını yapar. */
+   JS inflate, 178_v151) ve dosyanın özgün metni kurulur (JSON.parse; olmazsa eval) — sonuç, dosyanın doğrudan gömülmesiyle birebir aynıdır.
+   v171: iki biçim
+     @z  dosya.js  → üst düzeyde tek global tanımlayan veri: `var X = …;`, `const X = …;`, `let X = …;` ya da `Object.assign(X, …);`
+                     (Object.assign yalnız X daha önce @z ile kaydedildiyse). Tembel: X ilk okunduğunda açılır. `const`/`let` veri
+                     bağlaması window özelliğine (getter) dönüşür; X'e dosyanın satırından önce erişen kod yoktur (TDZ'de zaten hata verirdi).
+     @zy dosya.js  → yerinde, eşzamanlı: bildirim olduğu gibi kalır, yalnız değer paketten açılır
+                     (`var X = adoZYerinde("…");` / `Object.assign(X, adoZYerinde("…"));`). IIFE içindeki veriler (3B motorun
+                     ADO_MOCAP…) ve sözcüksel (const) bir nesneye eklenen veriler (CLUB_INFO) için. Açma o satır çalışınca olur.
+   Kullanım (deneme): node tools/sikistir.js [--y] <dosya.js> [...]   → boyutları yazar ve açma sınamasını yapar. */
 'use strict';
 const fs = require('fs'), zlib = require('zlib');
 
 const B64 = /[A-Za-z0-9+/]{256,}={0,2}/g;
-const DEF = /^\s*(?:var\s+([A-Za-z_$][\w$]*)\s*=|Object\.assign\(\s*([A-Za-z_$][\w$]*)\s*,)/m;
+/* baş: [1] bildirim türü, [2] ad | [3] Object.assign hedefi; [4] metnin geri kalanı (değer + kapanış) */
+const DEF = /^(\s*(?:\/\*[\s\S]*?\*\/\s*)?)(?:(var|const|let)\s+([A-Za-z_$][\w$]*)\s*=|Object\.assign\(\s*([A-Za-z_$][\w$]*)\s*,)\s*/;
 
-/* dosyanın tanımladığı global ad (yorum satırları atlanır) */
-function globalName(text) {
-  const body = text.replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '').replace(/^\s*\/\/.*\n/gm, '');
-  const m = DEF.exec(body); return m ? (m[1] || m[2]) : null;
+/* dosyanın tanımladığı ad ve biçim (baştaki blok yorumu atlanır) */
+function parse(text) {
+  const m = DEF.exec(text); if (!m) return null;
+  return { kind: m[2] || 'assign', name: m[3] || m[4], head: m[0], pre: m[1] };
 }
+function globalName(text) { const p = parse(text); return p ? p.name : null; }
 function pack(text) {
   if (text.includes('\x01')) throw new Error('metinde \\x01 var');
   const segs = [];
@@ -33,19 +41,38 @@ function unpack(b64) {
   for (let i = 1; i < t.length; i++) { const L = u.readUInt32LE(o); o += 4; out += u.subarray(o, o + L).toString('base64') + t[i]; o += L; }
   return out;
 }
-/* manifest satırı → tek JS satırı; açma sınaması başarısızsa hata fırlatır */
-function zLine(text, file) {
-  const name = globalName(text); if (!name) throw new Error(`${file}: üst düzeyde "var X =" ya da "Object.assign(X," bulunamadı`);
-  const z = pack(text); if (unpack(z) !== text) throw new Error(`${file}: sıkıştırma sınaması tutmadı`);
-  return { name, line: `adoZKayit(${JSON.stringify(name)},"${z}");`, raw: text.length, size: z.length };
+/* değer metni: başlık ve kapanış (`;` / `);`, ardından satır yorumu olabilir) atılmış */
+function valueText(text, p) {
+  const v = text.slice(p.head.length), re = p.kind === 'assign' ? /\)\s*;\s*(\/\/[^\n]*)?\s*$/ : /;\s*(\/\/[^\n]*)?\s*$/;
+  if (!re.test(v)) return null; return v.replace(re, '');
 }
-module.exports = { pack, unpack, zLine, globalName };
+/* tek ifade mi: değer JSON ise ya da tek bir ifade olarak derleniyorsa (birden çok deyimli dosyalar paketlenmez) */
+function singleValue(text, p) {
+  const v = valueText(text, p); if (v == null) return false;
+  try { JSON.parse(v); return true; } catch (e) { }
+  try { new (require('vm').Script)('(' + v + '\n)'); return true; } catch (e) { return false; }
+}
+/* manifest satırı → tek JS satırı; açma sınaması başarısızsa hata fırlatır.
+   yerinde=true: @zy (bildirim yerinde kalır); known: daha önce @z ile kaydedilmiş adlar (Object.assign hedefi için) */
+function zLine(text, file, yerinde, known) {
+  const p = parse(text); if (!p) throw new Error(`${file}: başta "var|const|let X =" ya da "Object.assign(X," bulunamadı`);
+  if (!singleValue(text, p)) throw new Error(`${file}: dosya tek bir veri değeri tanımlamıyor (birden çok deyim ya da kapanış yok)`);
+  const z = pack(text); if (unpack(z) !== text) throw new Error(`${file}: sıkıştırma sınaması tutmadı`);
+  let line;
+  if (yerinde) line = p.kind === 'assign' ? `Object.assign(${p.name},adoZYerinde("${z}"));` : `${p.kind} ${p.name}=adoZYerinde("${z}");`;
+  else {
+    if (p.kind === 'assign' && known && !known.has(p.name)) throw new Error(`${file}: Object.assign hedefi ${p.name} @z ile kaydedilmemiş (sözcüksel bir nesneyse @zy kullan)`);
+    line = `adoZKayit(${JSON.stringify(p.name)},"${z}");`;
+  }
+  return { name: p.name, kind: p.kind, line, raw: text.length, size: z.length };
+}
+module.exports = { pack, unpack, zLine, globalName, parse, valueText };
 
 if (require.main === module) {
-  let a = 0, b = 0;
-  for (const f of process.argv.slice(2)) {
-    const r = zLine(fs.readFileSync(f, 'utf8'), f); a += r.raw; b += r.line.length;
-    console.log(`${f}: ${r.name} · ${(r.raw / 1024).toFixed(0)} KB → ${(r.line.length / 1024).toFixed(0)} KB`);
+  let a = 0, b = 0; const av = process.argv.slice(2), y = av.includes('--y');
+  for (const f of av.filter(x => x !== '--y')) {
+    const r = zLine(fs.readFileSync(f, 'utf8'), f, y); a += r.raw; b += r.line.length;
+    console.log(`${f}: ${r.kind} ${r.name} · ${(r.raw / 1024).toFixed(0)} KB → ${(r.line.length / 1024).toFixed(0)} KB`);
   }
   console.log(`toplam ${(a / 1048576).toFixed(2)} MB → ${(b / 1048576).toFixed(2)} MB · ZIP_OK`);
 }
