@@ -269,7 +269,7 @@ function rlAfter(gu,go,f,c0,f0){const m=G.m,bsk=isBsk(),win=gu>go,draw=gu===go,o
   const L=lines.filter(Boolean);
   try{msg('report',`Maç sonrası özet: ${esc(myClub().short)} ${gu}-${go} ${esc(opp.short)}`,L.join(' · ').replace(/<[^>]+>/g,''));}catch(e){}
   setTimeout(()=>{try{const mc=$('#modalCard');if(!mc||$('#modal').hidden||mc.querySelector('.rl-ms'))return;mc.querySelectorAll('.notes li').forEach(li=>{if(bsk&&/^Yönetim güveni:/.test(li.textContent))li.textContent=`Üye desteği: ${Math.round(G.m.conf)}`;});
-    const sk=LOCA.scoutK;const box=`<section class="rl-ms"><p class="sub-h"><span>${bsk?'Başkanın maç sonrası notları':'Sportif direktörün maç sonrası özeti'}</span></p><ul>${L.map(x=>`<li>${x}</li>`).join('')}</ul>${!bsk&&sk?`<button class="btn sm" data-act="rlTgtQ" data-k="${sk.k}" data-id="${sk.c}">${esc(sk.n)}’i hedef listesine ekle</button>`:''}</section>`;
+    const sk=LOCA.scoutK;const box=`<section class="rl-ms"><p class="sub-h"><span>${bsk?'Başkanın maç sonrası notları':'Sportif direktörün maç sonrası özeti'}</span></p><ul>${L.map(x=>`<li>${x}</li>`).join('')}</ul>${!bsk&&sk?`<button class="btn sm" data-act="rlTgtQ" data-k="${sk.k}" data-id="${sk.c}">${esc(ek(sk.n,'acc'))} hedef listesine ekle</button>`:''}</section>`;
     const notes=mc.querySelector('ul.notes');if(notes)notes.insertAdjacentHTML('afterend',box);else{const b=mc.querySelector('button.cta');if(b)b.insertAdjacentHTML('beforebegin',box);}}catch(e){}},0);}
 ACTX.rlTgtQ=el=>{if(rlTgtAdd(el.dataset.k,el.dataset.id,'maç'))toast('Hedef listesine eklendi');else toast('Zaten listede');el.disabled=true;save();};
 ACTX.rlTgtDel=el=>{const m=G.m;m.sdT=(m.sdT||[]).filter(x=>x.k!==el.dataset.k);save();render();};
