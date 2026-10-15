@@ -41,7 +41,7 @@ const V185_GR={
   gen:()=>({lgMove:G.lgMove||{},lgHist:G.lgHist||[],qual:G.qual||null,qualPrev:G.qualPrev||null,coef:G.coef||null,cupW:G.cupW||[],cupWin:G.cupWin||{},cpChamps:G.cpChamps||[],chm:G.chm||{},dh:G.dh||{}}),
   co:()=>({co:G.co||{},coFree:G.coFree||[],coT:G.coT||{},coY:G.coY==null?null:G.coY}),
   cs:()=>({cs:G.cs||{}}),
-  tx:()=>({tx:G.tx||{},txh:G.txh||{}}),
+  tx:()=>({tx:G.tx||{},txh:G.txh||{},ack:G.mp.ack||{}}),
   ng:()=>({ng:G.ng||{},ngY:G.ngY||{}}),
   trl:()=>v185TrlDis(),
   wd:()=>({wd:G.wd||null}),
@@ -57,17 +57,17 @@ function v185SahipNg(){const out={};if(!(G.mode==='mgr'&&G.m&&G.club))return out
 function v185OYap(){const S=G.s;if(!S)return null;const mgr=G.mode==='mgr'&&G.m&&G.club&&CLUBS[G.club];
   const o={v:185,p:mpPid(),y:S.year,day:S.day,ph:G.phase,prof:G.prof||'',mode:G.mode||'',club:G.club||'',L:S.league,str:G.club&&CLUBS[G.club]?CLUBS[G.club].str:0,n:(G.p&&G.p.name)||''};
   if(isPl()&&G.p&&G.club&&CLUBS[G.club]&&G.phase!=='tryout'){let ovr=0,mv=0;try{ovr=OVR();}catch(e){}try{mv=marketValue();}catch(e){}
-    o.me={p:G.p,contract:G.contract||null,mvh:G.mvh||[],totals:G.totals||null,stats:S.stats||null,cid:G.cid||'',capt:G.capt||null,loan:G.loan||null,ovr,mv,tro:(G.trophies||[]).length};}
+    o.me={p:G.p,contract:G.contract||null,mvh:G.mvh||[],totals:G.totals||null,stats:S.stats||null,cid:G.cid||'',capt:G.capt||null,loan:G.loan||null,history:G.history||[],trophies:G.trophies||[],ovr,mv};}
   if(mgr){const m=G.m;let co=null;try{co=coachOf(G.club);}catch(e){}
-    o.td={co,rep:m.rep==null?null:m.rep,mt:G.mt||null,st:m.st||null,budget:m.budget||0,wbud:m.wbud||0,conf:m.conf==null?null:m.conf,role:m.role||null};
+    o.td={co,rep:m.rep==null?null:m.rep,mt:G.mt||null,st:m.st||null,budget:m.budget||0,wbud:m.wbud||0,conf:m.conf==null?null:m.conf,role:m.role||null,pres:(m.el&&m.el.pres)||null};
     o.sq=squadOf(G.club).map(p=>{let ct=0,pt=null,v=0;try{ct=ctEnd(p);}catch(e){}try{pt=pPot(p);}catch(e){}try{v=pValue(p);}catch(e){}
       return [p.k,p.ovr,p.age,ct,Math.round(clamp(100-fatOf(p.k),0,100)),(m.inj&&m.inj[p.k])||0,(m.ban&&m.ban[p.k])||0,pt,v,p.num,p.pos,p.name];});
     o.pst=S.pst||null;o.cs=(G.cs&&G.cs[G.club])||null;}
   o.ps={};for(const [k,x] of Object.entries(S.ps||{}))if(x&&x.c===G.club)o.ps[k]=x;
   try{o.cups=(S.cups&&S.cups.club===G.club&&S.cups.year===S.year?S.cups.list:[]).map(k=>{const x=Object.assign({},k);delete x.table;delete x.st;return x;});}catch(e){o.cups=[];}
-  const J=v185J(),j={tx:{},txh:{},trl:[]};for(const k of Object.keys(J.tx)){j.tx[k]=G.tx&&G.tx[k]!=null?G.tx[k]:null;if(G.txh&&G.txh[k])j.txh[k]=G.txh[k];}
+  const J=v185J(),j={tx:{},txh:{},trl:[],ts:{}};for(const k of Object.keys(J.tx)){j.tx[k]=G.tx&&G.tx[k]!=null?G.tx[k]:null;j.ts[k]=J.tx[k];if(G.txh&&G.txh[k])j.txh[k]=G.txh[k];}
   try{const T=G.trl,y=String(S.year);for(const r of ((T&&T.s&&T.s[y])||[]))if(r[1]==='ME'||J.tx[r[1]])j.trl.push(r[1]==='ME'?Object.assign(r.slice(),{1:'@'+mpPid()}):r);}catch(e){}
-  j.ng=v185SahipNg();o.j=j;o.of=(G.mp.of||[]).slice(-40);return o;}
+  j.ng=v185SahipNg();for(const k in j.ng)if(G.tx&&G.tx[k]===G.club&&!(k in j.tx)){j.tx[k]=G.club;j.ts[k]=1;}o.j=j;o.of=(G.mp.of||[]).slice(-40);return o;}
 /* ---------- gönder ---------- */
 function v185Planla(ms){if(!v185On())return;ms=ms==null?700:ms;const at=Date.now()+ms;if(V185.t&&V185.tAt<=at)return;clearTimeout(V185.t);V185.tAt=at;V185.t=setTimeout(()=>{V185.t=null;v185Gonder().catch(e=>console.warn('v185 gönder',e));},ms);}
 async function v185Gonder(){if(!v185On()||!mpConnected()||!G.s)return;if(V185.busy){v185Planla(900);return;}V185.busy=1;
@@ -101,27 +101,27 @@ function v185WAl(g,b,h){const S=G.s,own=G.club,mgr=G.mode==='mgr'&&G.m;
     V185.coIlk=1;return true;}
   if(g==='cs'){const mine=G.cs&&own?G.cs[own]:null;G.cs=b.cs||{};if(mine&&mgr)G.cs[own]=mine;return true;}
   if(g==='tx'){const J=v185J(),tx=b.tx||{},txh=b.txh||{};
-    for(const k of Object.keys(J.tx)){const lv=G.tx?G.tx[k]:undefined,hv=tx[k];if((hv==null?null:hv)===(lv==null?null:lv)){delete J.tx[k];continue;}if(lv==null)delete tx[k];else tx[k]=lv;if(G.txh&&G.txh[k])txh[k]=G.txh[k];}
+    const ack=b.ack||{};for(const k of Object.keys(J.tx)){const lv=G.tx?G.tx[k]:undefined,hv=tx[k];if((hv==null?null:hv)===(lv==null?null:lv)||(ack[k]&&ack[k]>=J.tx[k])){delete J.tx[k];continue;}if(lv==null)delete tx[k];else tx[k]=lv;if(G.txh&&G.txh[k])txh[k]=G.txh[k];}
     if(mgr&&own){const N=v185SahipNg();for(const k in N)if(G.tx&&G.tx[k]===own)tx[k]=own;}
     G.tx=tx;G.txh=txh;return true;}
   if(g==='ng'){const mine=v185SahipNg();G.ng=Object.assign(b.ng||{},mine);G.ngY=b.ngY||{};return true;}
-  if(g==='trl'){const T=trlInit();if(!T)return true;const me='@'+mpPid(),y=String(trlY()),J=v185J(),idf=r=>r[0]+'|'+r[1]+'|'+r[6];const old=new Set(((T.s&&T.s[y])||[]).map(idf));
+  if(g==='trl'){const T=trlInit();if(!T)return true;const me='@'+mpPid(),J=v185J(),idf=r=>r[0]+'|'+r[1]+'|'+r[6];
     const s={};for(const [yy,R] of Object.entries(b.s||{}))s[yy]=R.map(r=>r[1]===me?Object.assign(r.slice(),{1:'ME'}):r);
     for(const [yy,R] of Object.entries(T.s||{})){const hs=new Set((s[yy]||[]).map(idf));for(const r of R)if((r[1]==='ME'||J.tx[r[1]])&&!hs.has(idf(r)))(s[yy]=s[yy]||[]).push(r);}
     for(const yy in s)s[yy].sort((a,c)=>a[0]-c[0]);
-    const yeni=(s[y]||[]).filter(r=>!old.has(idf(r))&&r[1]!=='ME'&&!String(r[1]).startsWith('@')&&!J.tx[r[1]]);
     T.s=s;T.al=b.al||[];T.ly=b.ly;if(b.bf)T.bf=b.bf;
-    if(yeni.length&&V185.trlIlk){try{trlNews(yeni);}catch(e){console.warn('v185 transfer haberi',e);}}V185.trlIlk=1;return true;}
+    /* transfer haberleri sunucuda üretilir ve gündem iletisi olarak gelir (wn) */V185.trlIlk=1;return true;}
   if(g==='wd'){const W=b.wd;if(W&&G.wd&&G.wd.y===W.y){if(own&&G.wd.cl&&G.wd.cl[own]){W.cl=W.cl||{};W.cl[own]=G.wd.cl[own];}if(G.wd.pw)W.pw=G.wd.pw;if(G.wd.tap)W.tap=G.wd.tap;}if(W)G.wd=W;return true;}
-  if(g==='feed'){const F=(b.feed||[]).slice(),seen=new Set(F.map(x=>JSON.stringify(x)));for(const x of (G.mp.of||[]))if(!seen.has(JSON.stringify(x)))F.push(x);
-    F.sort((a,c)=>(c.y-a.y)||(c.d-a.d));G.feed=F.slice(0,120);return true;}
+  if(g==='feed'){const F=(b.feed||[]).slice(),seen=new Set(F.map(x=>JSON.stringify(x))),ben=(G.mp.of||[]).filter(x=>!seen.has(JSON.stringify(x)));
+    /* sunucuya henüz ulaşmamış kendi paylaşımlarım en üstte; gerisi sunucudaki sırayla */
+    const y0=G.s?G.s.year:0,d0=G.s?G.s.day:0;G.feed=ben.filter(x=>x.y===y0&&d0-x.d<=10).reverse().concat(F).slice(0,120);return true;}
   if(g==='leg'){G.leg=b.leg||{};G.legSeed=b.legSeed;G.legY=b.legY;return true;}
   if(g==='ph'){G.ph=b.ph||{};if(b.ph0Y!=null)G.ph0Y=b.ph0Y;return true;}
   if(g==='ovh'){G.ovh=b.ovh||{};return true;}
   if(g==='ps'){if(!S)return false;if(b.y!==S.year)return b.y<S.year;if(b.L!==S.league)return true;const ps=b.ps||{};for(const [k,x] of Object.entries(S.ps||{}))if(x&&x.c===own)ps[k]=x;S.ps=ps;return true;}
   if(g==='sz'){G.mp.str=b.str||{};v185StrUygula();return true;}
   if(g==='wn'){const L=b.wn||[],seen=G.mp.wnSeen||0;let mx=seen;
-    for(const x of L){if(x.i<=seen)continue;mx=Math.max(mx,x.i);if(!V185.wnIlk&&!seen)continue;if(/^(Transfer|Kiralık): |^Haftanın transferleri/.test(x.ti||''))continue;
+    for(const x of L){if(x.i<=seen)continue;mx=Math.max(mx,x.i);if(!V185.wnIlk&&!seen)continue;
       if(S&&x.y===S.year&&S.day-x.d>12)continue;msg(x.t||'gundem',x.ti||'',x.b||'');}
     G.mp.wnSeen=mx;V185.wnIlk=1;return true;}
   return true;}
@@ -132,13 +132,15 @@ function v185OAl(O){if(!O||!O.p)return;const prev=G.mpO;G.mpO=O;const pc=O.club&
   if(pc&&O.str)CLUBS[pc].str=O.str;
   if(G.mp.role==='host'){const S=G.s,j=O.j||{};let ch=0;
     /* misafirin kendi kulübüne yaptığı transferler sunucunun dünyasına işlenir */
-    for(const [k,to] of Object.entries(j.tx||{})){G.tx=G.tx||{};const cur=G.tx[k]==null?null:G.tx[k];if(cur===to)continue;const from=cur;if(to==null)delete G.tx[k];else G.tx[k]=to;
+    const ack=G.mp.ack=G.mp.ack||{};for(const [k,to] of Object.entries(j.tx||{})){G.tx=G.tx||{};const ts=(j.ts&&j.ts[k])||1;if(ack[k]&&ack[k]>=ts)continue;ack[k]=ts;const cur=G.tx[k]==null?null:G.tx[k];if(cur===to)continue;const from=cur;if(to==null)delete G.tx[k];else G.tx[k]=to;
       if(j.txh&&j.txh[k]){G.txh=G.txh||{};G.txh[k]=j.txh[k];}try{if(from&&CLUBS[from])syncStr(from);if(to&&CLUBS[to])syncStr(to);}catch(e){}ch++;}
+    {const ks=Object.keys(ack);if(ks.length>400){ks.sort((x,y)=>ack[x]-ack[y]);for(const x of ks.slice(0,ks.length-400))delete ack[x];}}
     for(const [k,p] of Object.entries(j.ng||{})){G.ng=G.ng||{};if(JSON.stringify(G.ng[k])!==JSON.stringify(p)){G.ng[k]=p;ch++;}}
     try{const T=trlInit(),idf=r=>r[0]+'|'+r[1]+'|'+r[6],y=String(O.y);if(T&&Array.isArray(j.trl)&&j.trl.length){const R=T.s[y]=T.s[y]||[],have=new Set(R.map(idf));for(const r of j.trl)if(!have.has(idf(r))){R.push(r);ch++;}R.sort((a,c)=>a[0]-c[0]);}}catch(e){}
     if(pc&&O.cs){G.cs=G.cs||{};G.cs[pc]=O.cs;}
     if(S&&O.y===S.year&&O.L===S.league&&O.ps&&pc){for(const [k,x] of Object.entries(O.ps)){S.ps=S.ps||{};S.ps[k]=x;}}
-    if(Array.isArray(O.of)&&O.of.length){const F=G.feed=G.feed||[],seen=new Set(F.map(x=>JSON.stringify(x)));let n=0;for(const x of O.of)if(!seen.has(JSON.stringify(x))){F.push(x);n++;}if(n){F.sort((a,c)=>(c.y-a.y)||(c.d-a.d));if(F.length>120)F.length=120;}}
+    if(Array.isArray(O.of)&&O.of.length){const F=G.feed=G.feed||[],seen=new Set(F.map(x=>JSON.stringify(x))),hs=G.mp.ofH=G.mp.ofH||[];
+      for(const x of O.of){const j=JSON.stringify(x);if(seen.has(j)||hs.includes(j))continue;if(G.s&&x.y===G.s.year&&G.s.day-x.d<=10)F.unshift(x);hs.push(j);}if(hs.length>80)hs.splice(0,hs.length-80);if(F.length>120)F.length=120;}
     if(pc&&O.str)CLUBS[pc].str=O.str;v185Planla(400);}
   try{if(prev&&prev.td&&O.td&&prev.club===O.club&&prev.td.co&&O.td.co&&prev.td.co.n!==O.td.co.n){}}catch(e){}}
 /* ---------- misafirde dünya üreten rastgele işler durur; sunucuda kendi işlerinin gündem iletileri misafire iletilir ---------- */
@@ -167,6 +169,7 @@ v185Durdur('legSeason');
 v185Durdur('ngSeason');
 v185Durdur('trlSeason');
 v185Durdur('rumorWeek');
+v185Durdur('trlDigest');
 /* sunucuda arkadaşın yönettiği kulüp "kendi kulübü" gibi korunur */
 wdOwnSkip=(old=>function(id){if(v185Host()&&id&&id===v185PCM())return true;return old.apply(this,arguments);})(wdOwnSkip);
 bidsWeek=(old=>function(){const n0=G.m&&G.m.bids?G.m.bids.length:0,top=G.inbox[0];const r=old.apply(this,arguments);try{const pc=v185PCM();if(pc&&G.m&&G.m.bids&&G.m.bids.length>n0){const b=G.m.bids[G.m.bids.length-1];if(b&&b.club===pc){G.m.bids.pop();if(G.inbox[0]!==top)G.inbox.shift();}}}catch(e){}return r;})(bidsWeek);
@@ -202,15 +205,16 @@ function v185Iz(cid,k,est){const O=v185O();if(!O||!O.pst||!cid||cid!==v185PCM()|
   const S=G.s,c=CLUBS[cid],ps=S.ps&&S.ps[k];return Object.assign({tracked:1},tr,c&&c.league===S.league&&ps?{g:Math.max(tr.g||0,ps.g||0),a:Math.max(tr.a||0,ps.a||0)}:{});}
 seasonStats=(old=>function(p,cid){const r=old.apply(this,arguments);try{const t=p&&v185Iz(cid,p.k,r);if(t)return t;}catch(e){}return r;})(seasonStats);
 clubSeasonEst=(old=>function(cid){const M=old.apply(this,arguments);try{if(cid&&cid===v185PCM()){for(const k in M){const x=M[k];if(!x||!x.p)continue;const t=v185Iz(cid,k,x);if(t)M[k]=Object.assign({p:x.p},t);}}}catch(e){}return M;})(clubSeasonEst);
-coachOf=(old=>function(id){try{const O=v185O();if(O&&O.td&&O.td.co&&id&&id===v185PCM()){const b=v185Kopya(O.td.co);return Object.assign(b,{club:id,mp:1});}}catch(e){}return old.apply(this,arguments);})(coachOf);
+coachOf=(old=>function(id){try{const O=v185O();if(O&&O.td&&O.td.co&&id&&id===v185PCM()){const b=v185Kopya(O.td.co);return Object.assign(b,{club:id,mp:1,me:false});}}catch(e){}return old.apply(this,arguments);})(coachOf);
+presName=(old=>function(id){try{const O=v185O();if(O&&O.td&&O.td.pres&&id&&id===v185PCM())return O.td.pres;}catch(e){}return old.apply(this,arguments);})(presName);
 /* kadro tablosu: arkadaşın oyuncularının sakatlık/ceza durumu */
 sqTable=(old=>function(id){let h=old.apply(this,arguments);try{if(id&&id===v185PCM()){const by=v185Sq();if(by)h=h.replace(/(data-k="([^"]+)"><td class="num">[^<]*<\/td><td class="l"><b>[^<]*<\/b>)/g,(m,a,k)=>{const x=by[k];if(!x)return m;return a+(x[5]?` <i class="pi pi-inj" title="Sakat · ${x[5]} hafta">✚</i>`:'')+(x[6]?` <i class="pi pi-ban" title="Cezalı · ${x[6]} maç">■</i>`:'')+(x[4]<75?` <small class="v185-kn">%${x[4]}</small>`:'');});}}catch(e){}return h;})(sqTable);
 /* kulüp sayfası: arkadaşın kulübünün kasası */
 cpBody=(old=>function(id,tab){let h=old.apply(this,arguments);try{const O=v185O();if(tab==='eko'&&O&&O.td&&id&&id===v185PCM()){h=h.replace('<span>tahmini</span></p><div class="fin-kpi">',`<span>kulüp verisi · ${esc(O.n||'arkadaşın')}</span></p><div class="fin-kpi"><div class="v185-kasa"><span>Transfer bütçesi</span><b>${money(O.td.budget||0)}</b></div>`);}}catch(e){}return h;})(cpBody);
 function v185Kasa(id){try{if(id===G.club&&G.m)return Math.round(G.m.budget||0);const O=v185O();if(O&&O.td&&id===O.club)return Math.round(O.td.budget||0);}catch(e){}return null;}
 /* arkadaşın futbolcuysa: kulübünün kadrosunda satırı ve kendi ekranındaki kartının aynısı */
-function v185Swap(O,fn){const keys=['p','club','contract','mvh','totals','cid','capt','loan'],bak={};for(const k of keys)bak[k]=G[k];const st0=G.s.stats,ph0=G.phase,md0=G.mode,pr0=G.prof;
-  try{const M=O.me;G.p=M.p;G.club=O.club;G.contract=M.contract;G.mvh=M.mvh;G.totals=M.totals;G.cid=M.cid;G.capt=M.capt;G.loan=M.loan;G.s.stats=M.stats||st0;G.phase='season';G.mode='player';G.prof='oyuncu';return fn();}
+function v185Swap(O,fn){const keys=['p','club','contract','mvh','totals','cid','capt','loan','history','trophies'],bak={};for(const k of keys)bak[k]=G[k];const st0=G.s.stats,ph0=G.phase,md0=G.mode,pr0=G.prof;
+  try{const M=O.me;G.p=M.p;G.club=O.club;G.contract=M.contract;G.mvh=M.mvh;G.totals=M.totals;G.cid=M.cid;G.capt=M.capt;G.loan=M.loan;G.history=M.history||[];G.trophies=M.trophies||[];G.s.stats=M.stats||st0;G.phase='season';G.mode='player';G.prof='oyuncu';return fn();}
   finally{for(const k of keys)G[k]=bak[k];G.s.stats=st0;G.phase=ph0;G.mode=md0;G.prof=pr0;}}
 function v185KartHTML(){const O=v185O();if(!O||!O.me||!CLUBS[O.club])return '';return v185Swap(O,()=>playerCardHTML());}
 function v185ArkSatir(){const O=v185O();if(!O||!O.me||!O.me.p)return '';const p=O.me.p;return `<button class="sqrow me v185-ark" data-act="v185Kart" title="Çevrimiçi odadaki arkadaşın"><i>${esc(String(p.num||''))}</i><b>${esc(p.name||O.n||'Arkadaşın')} <small>· arkadaşın</small></b><span>${flagImg(p.nat||'TUR','fl-row')} ${p.age}</span><em>${R200(O.me.ovr||0)}</em></button>`;}
@@ -219,6 +223,11 @@ ACTX.v185Kart=()=>{const O=v185O();if(!O||!O.me)return toast('Arkadaşının bil
   const M=O.me,c=CLUBS[O.club],st=M.stats||{};
   openModal(`<h3>🌐 ${esc(M.p.name||O.n||'Arkadaşın')}</h3>${card}<dl class="offer-terms"><div><dt>Kulüp</dt><dd>${c?esc(c.name):''}</dd></div><div><dt>Sözleşme</dt><dd>${M.contract?M.contract.years+' yıl · '+money(M.contract.wage||0)+'/hf':'—'}</dd></div><div><dt>Bu sezon</dt><dd>${st.apps||0} maç · ${st.goals||0} gol · ${st.assists||0} asist</dd></div><div><dt>Kariyer</dt><dd>${M.totals?`${M.totals.apps} maç · ${M.totals.goals} gol`:'—'}</dd></div></dl><button class="btn ghost" data-act="closeModal" style="width:100%;margin-top:8px">Kapat</button>`);};
 
+/* Ballon d'Or: iki cihazda aynı aday havuzu (arkadaşın futbolcuysa o da adaylar arasında), eşitlik bozma da tohumlu */
+bdoPool=(old=>function(){const P=old.apply(this,arguments);try{const O=v185O();if(O&&O.me&&O.me.stats&&O.club&&CLUBS[O.club]&&O.y===G.s.year){const st=O.me.stats,M=O.me;if(st.apps>=10){const pm=P.posMap[O.club]||[10,20],r=st.apps?st.rsum/st.apps:6.5,c=CLUBS[O.club],L=LEAGUES[c.league],big=['pl','ll','it1','de1','fr1'].includes(c.league)?6:L.tier>=8?0:-10;
+      const sc=M.ovr*1.15+st.goals*(M.p.pos==='FW'?0.85:1.05)+st.assists*0.6+r*12+(pm[0]===1?12:pm[0]===2?6:pm[0]<=4?3:0)+(P.euW===O.club?16:0)+big+c.str*0.15+(L.tier<8?-12:0);
+      if(M.ovr>=72||st.goals>=18){P.rows.push({k:'mp',n:M.p.name||O.n,c:O.club,nat:'TUR',pos:M.p.pos,age:M.p.age,g:st.goals,a:st.assists,ap:st.apps,r:+r.toFixed(2),cs:0,ovr:M.ovr,sc,mp:1});P.rows.sort((a,b)=>b.sc-a.sc);}}}}catch(e){}return P;})(bdoPool);
+bdoCompute=(old=>function(){if(!v185On()||!G.s)return old.apply(this,arguments);const mr=Math.random;Math.random=srng('bdo:'+G.mp.code+':'+G.s.year);try{return old.apply(this,arguments);}finally{Math.random=mr;}})(bdoCompute);
 /* ================= kupalar: iki cihazda aynı ağaç (aynı tohum, iki insanın gerçek sonuçları) ================= */
 function v185Insan(type,key){const H=[];const add=(club,list,me)=>{if(!club||!Array.isArray(list))return;const k=list.find(x=>type==='dom'?(x.id==='dom'&&x.cc===key):(x.type==='eu'&&x.id===key));if(k)H.push({c:club,k,me});};
   try{const s=G.s;if(s&&s.cups&&s.cups.club===G.club)add(G.club,s.cups.list,1);}catch(e){}
@@ -314,8 +323,22 @@ function v185GunAyarla(k,used){const cal=G.s.cal||[],Y=G.s.year;
     if(t==null||t<=G.s.day)continue;let best=null;for(const dl of [0,1,-1,2,-2,3,-3]){const d=t+dl;if(d>G.s.day&&v185GunUygun(d,cal,used)){best=d;break;}}if(best==null)continue;
     if(R.day!=null)used.delete(R.day);R.day=best;used.add(best);}}
 buildComps=(old=>function(){const R=old.apply(this,arguments);try{if(v185On()&&R&&R.list){const used=new Set();R.list.forEach(k=>k.rounds.forEach(x=>{if(x.day!=null)used.add(x.day);}));for(const k of R.list)v185GunAyarla(k,used);R.v185=1;setTimeout(()=>{try{v185CupFix();save();}catch(e){}},0);}}catch(e){console.warn('v185 kupa günleri',e);}return R;})(buildComps);
+/* ikiniz kupada karşılaştıysanız (lig kuralı gibi) ev sahibinin sonucu geçerli: deplasmandaki tarafın kaydı ve tur durumu düzeltilir */
+function v185H2H(){const O=v185O();if(!O||!Array.isArray(O.cups)||O.y!==G.s.year||!O.club)return false;const pc=O.club;let ch=false;const pts=(a,b)=>a>b?3:a===b?1:0;
+  for(const k of G.s.cups.list||[]){const pk=O.cups.find(x=>x.id===k.id&&x.type===k.type);if(!pk)continue;
+    k.res.forEach(z=>{if(z.opp!==pc||z.v185h)return;const pz=pk.res.find(x=>x.n===z.n&&(x.leg||0)===(z.leg||0)&&x.opp===G.club);if(!pz)return;
+      if(z.h||!pz.h){z.v185h=1;return;}
+      const us=pz.them,them=pz.us,lp=/Lig aşaması/.test(z.n),ri=k.rounds.findIndex(r=>r.n===z.n&&(r.leg||0)===(z.leg||0)),pri=pk.rounds.findIndex(r=>r.n===z.n&&(r.leg||0)===(z.leg||0));
+      const decisive=!lp&&(z.leg||0)!==1&&z.n!=='Final';
+      let peerWon=null;if(decisive){if(!pk.alive&&pk.out===z.n)peerWon=false;else if(pk.won||pk.cur>pri)peerWon=true;else return;}
+      if(z.us!==us||z.them!==them){if(lp&&k.lp){k.lp.p+=pts(us,them)-pts(z.us,z.them);k.lp.gf+=us-z.us;k.lp.ga+=them-z.them;}if((z.leg||0)===1&&Array.isArray(k.agg)){k.agg=[us,them];}z.us=us;z.them=them;ch=true;}
+      if(decisive){const iAdv=k.won||k.cur>ri,iOut=!k.alive&&k.out===z.n;
+        if(peerWon&&iAdv&&!k.won){k.alive=false;k.out=z.n;ch=true;msg('report',`🌐 ${k.name}: ev sahibinin sonucu geçerli`,`${mpClubN(pc)} ile oynadığınız ${z.n} maçında ev sahibi arkadaşının sonucu (${pz.us}-${pz.them}) işlendi; turu ${mpClubN(pc)} geçti.`);}
+        else if(peerWon===false&&iOut){k.alive=true;delete k.out;k.cur=ri+1;try{k.opp=k.type==='eu'?euDraw(k):domDraw(k);}catch(e){}ch=true;msg('report',`🌐 ${k.name}: ev sahibinin sonucu geçerli`,`${mpClubN(pc)} ile oynadığınız ${z.n} maçında ev sahibi arkadaşının sonucu (${pz.us}-${pz.them}) işlendi; turu sen geçtin.`);}}
+      z.v185h=1;});}
+  return ch;}
 /* rakip: ağaçtaki eşleşme (arkadaşın sonucu gelince kesinleşir) */
-function v185CupFix(){if(!v185On()||!G||!G.s||G.phase!=='season'||!G.s.cups||G.s.cups.club!==G.club)return false;let ch=false;
+function v185CupFix(){if(!v185On()||!G||!G.s||G.phase!=='season'||!G.s.cups||G.s.cups.club!==G.club)return false;let ch=false;try{if(v185H2H()){ch=true;V185.nc={};V185.eub={};}}catch(e){console.warn('v185 karşılaşma',e);}
   for(const k of G.s.cups.list||[]){if(!k.alive)continue;const r=k.rounds[k.cur];if(!r)continue;if(r.day!=null&&r.day<G.s.day)continue;if(r.day===G.s.day&&v185Mesgul())continue;
     let opp=null,home=null;
     if(k.type==='dom'){const B=natCup(k.cc),R=B&&B.rounds.find(x=>x.n===r.n),t=R&&R.ties.find(x=>!x.bye&&(x.a===G.club||x.b===G.club));if(t&&t.a&&t.b){opp=t.a===G.club?t.b:t.a;home=t.a===G.club;}}
