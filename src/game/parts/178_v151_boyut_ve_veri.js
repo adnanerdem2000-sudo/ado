@@ -2,6 +2,8 @@
    - Sıkıştırılmış veri: 3B modeller (Meshy gövde, saç, kafa derisi bitmapleri, GLB) derlemede tools/sikistir.js ile paketlenir (manifestte @z).
      Her paket adoZKayit(ad, paket) ile kaydolur; `ad` global değişkeni İLK OKUNDUĞUNDA açılır (açılışta çözülmez). Sayfa yüklendikten
      sonra boşta DecompressionStream ile önceden açılır; yoksa (eski Safari) yedek JS inflate (adoInflate) eşzamanlı çalışır.
+   - v171: @zy (yerinde) paketler — açılışta gereken oyun verisi (SQ_RL, FLAGS, LOOKS…) ve 3B hareket verisi; bildirim yerinde kalır
+     (`const X=adoZYerinde("yol")`), paket derleyicinin koyduğu ön yükleme betiğinde eşzamansız açılmış olur (tools/sikistir.js preScript).
    - adoAc(): DecompressionStream yoksa yedek inflate — FotMob kariyer verisi (162) ve stadyum (stadium_loader) de bunu kullanır.
    - Gerçek forma numaraları: SQ_RL satırının 7. alanı (tools/forma_no.js) → kadro ilk kurulurken SQ_REAL[id].shirt (109_v87 sarmalayıcısı numarayı verir).
    - Aksan/ğ/ı farkını yok sayan ad eşleme (adNorm): POSD, FOOT_DB, HW_REAL, LOOKS, CARD ve FotMob kariyer kayıtlarına takma ad.

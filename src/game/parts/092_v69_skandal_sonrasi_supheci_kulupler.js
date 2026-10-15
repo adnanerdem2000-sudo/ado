@@ -1,8 +1,10 @@
 /* ================= v69: skandal sonrası şüpheci kulüpler · ezeli rakipler arası YZ transferleri çok nadir ================= */
+/* v171: toplu YZ transferi sırasında lig kulüp listeleri ve kulüp dizisi önbellekten (197_v171_hiz); önbellek yoksa eskisi gibi */
+var AITX_LC=null,AITX_CV=null;function aiLC(l){if(!AITX_LC)return leagueClubs(l);return AITX_LC[l]||(AITX_LC[l]=leagueClubs(l));}function aiClubs(){if(!AITX_LC)return Object.values(CLUBS);return AITX_CV||(AITX_CV=Object.values(CLUBS));}
 aiTransfers=function(){const I=twInfo(),summer=G.s.day<=I.sc,n=summer?(Math.random()<0.5?3:2):(Math.random()<0.4?1:0);const lgs=WORLD.filter(l=>LEAGUES[l]&&!LEAGUES[l].youth&&LEAGUES[l].tier>=7);
-  let done=0;for(let i=0;i<n*6&&done<n;i++){const bl=pick(lgs),buyer=pick(leagueClubs(bl));if(!buyer||buyer.id===G.club)continue;const bsq=squadOf(buyer.id);if(bsq.length>=30)continue;
+  let done=0;for(let i=0;i<n*6&&done<n;i++){const bl=pick(lgs),buyer=pick(aiLC(bl));if(!buyer||buyer.id===G.club)continue;const bsq=squadOf(buyer.id);if(bsq.length>=30)continue;
     const pos=pick(['KL','DF','DF','OS','OS','KN','FW','FW']);const need=bsq.filter(p=>p.pos===pos).sort((a,b)=>b.ovr-a.ovr);const tgt=(need[1]||need[0]||{ovr:buyer.str-4}).ovr+rint(1,5);
-    const sl=pick(lgs.filter(l=>Math.abs(LEAGUES[l].tier-LEAGUES[bl].tier)<=1));const seller=pick(leagueClubs(sl));if(!seller||seller.id===buyer.id||seller.id===G.club)continue;if(derbyOf(buyer.id,seller.id)&&Math.random()>0.04)continue;const ssq=squadOf(seller.id);if(ssq.length<=20)continue;
+    const sl=pick(lgs.filter(l=>Math.abs(LEAGUES[l].tier-LEAGUES[bl].tier)<=1));const seller=pick(aiLC(sl));if(!seller||seller.id===buyer.id||seller.id===G.club)continue;if(derbyOf(buyer.id,seller.id)&&Math.random()>0.04)continue;const ssq=squadOf(seller.id);if(ssq.length<=20)continue;
     const cand=ssq.filter(p=>p.pos===pos&&Math.abs(p.ovr-tgt)<=4&&p.age<=31&&!(G.twPend||[]).some(x=>x.k===p.k));if(!cand.length)continue;const p=pick(cand),fee=Math.round(pValue(p)*rnd(0.85,1.35)/5e4)*5e4;
     G.tx=G.tx||{};G.tx[p.k]=buyer.id;txNote(p.k,buyer.id,fee);syncStr(buyer.id);syncStr(seller.id);done++;
     if(p.ovr>=76||[buyer.league,seller.league].includes(G.s.league))msg('gundem',`Transfer: ${p.name} → ${buyer.short}`,`${buyer.name}, ${seller.name} forması giyen ${p.name} (${p.age}, ${dpTag(p)}) ile anlaştı. Bonservis: ${eur(fee)}.`);}};

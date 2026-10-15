@@ -66,10 +66,10 @@ msg=(old=>function(t,title){if(T161.ai&&t==='gundem'&&/^Transfer: /.test(String(
 function trlAiLoans(){const T=trlInit(),I=twInfo(),d=G.s.day,summer=d<=I.sc,winter=d>=I.wo&&d<=I.wc;if(!summer&&!winter)return;
   let n=summer?(Math.random()<0.6?1:0)+(Math.random()<0.3?1:0):(Math.random()<0.25?1:0);if(!n)return;
   const lgs=WORLD.filter(l=>LEAGUES[l]&&!LEAGUES[l].youth&&LEAGUES[l].tier>=8);
-  for(let i=0;i<n*8&&n>0;i++){const lc=pick(leagueClubs(pick(lgs)));if(!lc||lc.id===G.club)continue;const sq=squadOf(lc.id);if(sq.length<24)continue;
+  for(let i=0;i<n*8&&n>0;i++){const lc=pick(aiLC(pick(lgs)));if(!lc||lc.id===G.club)continue;const sq=squadOf(lc.id);if(sq.length<24)continue;
     const cand=sq.filter(p=>p.k!=='ME'&&!p.me&&p.age>=18&&p.age<=22&&p.ovr<=lc.str-5&&!T.al.some(x=>x.k===p.k)&&!(G.twPend||[]).some(x=>x.k===p.k));if(!cand.length)continue;
     const p=pick(cand),lt=LEAGUES[lc.league].tier,cc=LEAGUES[lc.league].cc;
-    const bs=Object.values(CLUBS).filter(c=>{const L=LEAGUES[c.league];return L&&!L.youth&&!L.hidden&&c.id!==G.club&&c.id!==lc.id&&L.tier<=lt&&L.tier>=lt-2&&c.str<lc.str-3&&c.str>=p.ovr-5&&c.str<=p.ovr+6&&!derbyOf(lc.id,c.id);});
+    const bs=aiClubs().filter(c=>{const L=LEAGUES[c.league];return L&&!L.youth&&!L.hidden&&c.id!==G.club&&c.id!==lc.id&&L.tier<=lt&&L.tier>=lt-2&&c.str<lc.str-3&&c.str>=p.ovr-5&&c.str<=p.ovr+6&&!derbyOf(lc.id,c.id);});
     if(!bs.length)continue;const dom=bs.filter(c=>LEAGUES[c.league].cc===cc),b=pick(dom.length&&Math.random()<0.6?dom:bs);if(squadOf(b.id).length>=29)continue;
     const o=Math.random()<0.3?trlFee(pValue(p)*rnd(1,1.3)):0;T.al.push({k:p.k,f:lc.id,t:b.id,y:G.s.year,o});
     G.tx=G.tx||{};G.tx[p.k]=b.id;txNote(p.k,b.id);const L=G.txh&&G.txh[p.k];if(L&&L.length){L[L.length-1].loan=1;delete L[L.length-1].fee;}trlFin();syncStr(b.id);syncStr(lc.id);n--;}}

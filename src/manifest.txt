@@ -212,6 +212,7 @@ game/parts/196_v170_hata_duzeltmeleri.js
 game/parts/195_v170_meslek_metinleri.js
 game/parts/199_v171_arayuz_sadelik.js
 game/parts/198_v171_gelen_kutusu_ve_menajer.js
+game/parts/197_v171_hiz.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js
