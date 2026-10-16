@@ -2023,6 +2023,7 @@
             if (CARDS_ON && !f.off) {      // hakem: hava topu faulünde sarı (dirsek / ısrarlı faul), hakem akışından
                 var pYel = AC_AFY * Math.pow(Math.max(agg, 8) / 45, Y_EXP) + (f.nf >= 3 ? .2 : f.nf === 2 ? .1 : 0);
                 if ((f.yc || 0) >= 1) pYel *= Y_AGAIN;
+                if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .8 : 1);      // [av2] AV_CLK: uzayan canlı oyunda kart oranı (sarı 1,8–2,1 / takım)
                 if (RR() < pYel) { if ((f.yc || 0) >= 1) { f.yc++; cardEv(f, v, 'R', 'ikinci_sari', true, false); sendOff(f); } else cardEv(f, v, 'Y', 'faul', false, false); }
             }
             return true;
@@ -2793,6 +2794,7 @@
             var pSer = TK_SER * (.5 + agg / 50) * (.2 + 2.5 * g.sev * g.sev), pDog = dogR ? TK_DOG * clamp((dogso - .4) / .4, 0, 1) : 0, pRed = pSer + pDog;
             var pYel = TK_Y * (Y_BASE * Math.pow(Math.max(agg, 8) / 45, Y_EXP) * (.35 + 1.3 * g.sev) + (d.nf >= 3 ? .2 : d.nf === 2 ? .1 : 0)) + .5 * spa * (TK_SPAPEN && pen && att ? 0 : 1) + (pen && dogso >= .3 ? .9 : 0);      // [tackle] TK_SPAPEN: ceza sahasında topa oynama girişimli SPA → penaltı yeter
             if ((d.yc || 0) >= 1) pYel *= Y_AGAIN;      // sarı kartlı oyuncu temkinli oynar, hakem de ikinci kartta daha çekingendir
+            if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .8 : 1);      // [av2] AV_CLK: kart oranı ölçeği
             if (RR() < pRed) {
                 var whyR = pDog >= pSer ? 'son_adam' : 'sert', rv = VAR_ON ? varCard(d, o, 'R', whyR, pen, { sev: g.sev, dogso: dogso }) : null;
                 if (rv) emit('VAR', rv.ev);
@@ -2823,6 +2825,7 @@
             var pRed = R_SERIOUS * (.5 + agg / 50) * rf + R_DOGSO * dogso * (pen ? .6 : 1);
             var pYel = (Y_BASE * Math.pow(Math.max(agg, 8) / 45, Y_EXP) + (d.nf >= 3 ? .2 : d.nf === 2 ? .1 : 0)) * rf + (behind <= 1 && dGoal < 55 && !pen ? .12 : 0) + (pen ? .3 : 0);
             if ((d.yc || 0) >= 1) pYel *= Y_AGAIN;      // sarı kartlı oyuncu temkinli oynar, hakem de ikinci kartta daha çekingendir
+            if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .8 : 1);      // [av2] AV_CLK: kart oranı ölçeği
             if (RR() < pRed) {
                 var whyR = dogso >= .25 ? 'son_adam' : 'sert', rv = VAR_ON ? varCard(d, o, 'R', whyR, pen, { sev: null, dogso: dogso }) : null;      // VAR bazı kırmızıları kontrol eder: onay ya da sarıya düşürme
                 if (rv) emit('VAR', rv.ev);
