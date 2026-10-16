@@ -242,6 +242,10 @@
         // AV_CAL: maç başı istatistik kalibrasyonu (StatsBomb): 45 m+ pas isabeti %37 (uzun topun düşme noktası sapması uzunlukla büyür), baskı altında pas %70, ofsayt 2,1, sarı kart 2,0,
         //   ivme p99 ≤ 4 m/sn² (Metrica / Hawk-Eye: ivme tavanı AV_CA0 + .022·Hızlanma)
         AV_CAL: 1,
+        // AV_CLK: maç saati ölçeği. Eski motor 90 dakikanın olaylarını 1400 fiziksel sn'ye sıkıştırıyordu (CK ≈ 3,86); gerçekçi blok ve gerçek ölü top payıyla (top ~%60 oyunda)
+        //   oyun içi süre yetmiyordu (takım başına ~7 şut). Şimdi saat AV_CLKS sim-sn (CK = 5400 / AV_CLKS ≈ 2,45) ve top ölüyken saat AV_CLKD kat hızlı akar:
+        //   ölü top maç saatinde gerçek süresini korur (taç ~17, aut ~27, korner ~33 maç sn), fiziksel bekleme kısalır; top oyundayken her fiziksel saniye daha az maç saniyesidir
+        AV_CLK: 1, AV_CLKS: 2200, AV_CLKD: 2,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
     // [av] gerçek şut verisinden lojistik xG (IRLS; test log-kayıp .2412, AUC .804 — StatsBomb'un kendi xG'si .2400 / .806)
@@ -371,7 +375,8 @@
             return r;
         }
         function tacOf(tm) { return TAC_ON ? S.teams[tm].tac : TAC0; }
-        var FULL_S = PRM.MATCH_S, HALF_S = FULL_S / 2, CK = ((opts.params && opts.params.CLOCK_S) || CLOCK_S) / FULL_S;
+        var AV_CLK = !!PRM.AV_CLK && !(opts.params && opts.params.MATCH_S != null), AV_CLKD = AV_CLK ? PRM.AV_CLKD : 1;      // [av2] AV_CLK: maç saati ölçeği (açıkça MATCH_S verilmişse eski saat)
+        var FULL_S = AV_CLK ? PRM.AV_CLKS : PRM.MATCH_S, HALF_S = FULL_S / 2, CK = ((opts.params && opts.params.CLOCK_S) || CLOCK_S) / FULL_S;
         var R = mulberry(opts.seed || 1);
         var RR = mulberry(((opts.seed || 1) ^ 0x5bd1e995) >>> 0);      // hakem akışı: kart/VAR kararları ana rastgele diziyi tüketmez
         var CARDS_ON = !!PRM.CARDS, VAR_ON = !!PRM.VAR, Y_BASE = PRM.Y_BASE, Y_EXP = PRM.Y_EXP, R_SERIOUS = PRM.R_SERIOUS, R_DOGSO = PRM.R_DOGSO, Y_AGAIN = PRM.Y_AGAIN, Y_POS = PRM.Y_POS, VAR_MARG = PRM.VAR_MARG, VAR_RND = PRM.VAR_RND, VAR_CANCEL = PRM.VAR_CANCEL, OFF_TOL = .2,
@@ -413,7 +418,8 @@
         if (AV_MOVE) { MV_BRK = avp('AV_BRK', 5.5); MV_LAT0 = avp('AV_LAT0', 5.2); MV_LATV = avp('AV_LATV', .1); AIS_EFF = avp('AV_EFF', .25); }
         if (AV_OUT) { DEAD_T = avp('AV_DT', 4); DEAD_G = avp('AV_DG', 6); DEAD_F = avp('AV_DF', 5.5); DEAD_C = avp('AV_DC', 7); }
         if (AV_CAL) { OFFS_MISS = avp('AV_OFM', .012); Y_BASE = avp('AV_YB', .23); AC_PL = avp('AV_CPL', .11); if (AV_SHOT) GK_S0 = avp('AV_CGK', -.03); SHOT_LOSS = avp('AV_SLS', .3); THINK_A = avp('AV_THA', .55); THINK_B = avp('AV_THB', .25); TEMPO_A = avp('AV_TPA', .35); TEMPO_B = avp('AV_TPB', .35); }      // [av2] AV_CAL: ofsayt (pasçının yanlış görmesi) ve sarı kart oranı
-        if (AV_LIVE) { DEAD_T = avp('AV_LT', 5.8); DEAD_G = avp('AV_LG', 8); DEAD_F = avp('AV_LF', 7.2); DEAD_C = avp('AV_LC', 9.5); }      // [av2] AV_LIVE
+        if (AV_LIVE) { DEAD_T = avp('AV_LT', 5.8); DEAD_G = avp('AV_LG', 8); DEAD_F = avp('AV_LF', 7.2); DEAD_C = avp('AV_LC', 9.5); }
+        if (AV_LIVE && AV_CLK) { DEAD_T = avp('AV_KT', 3.5); DEAD_G = avp('AV_KG', 5.5); DEAD_F = avp('AV_KF', 5.1); DEAD_C = avp('AV_KC', 6.7); }      // [av2] fiziksel sn; maç saatinde × AV_CLKD × CK (taç ≈ 17, aut ≈ 27, serbest vuruş ≈ 25, korner ≈ 33 maç sn)      // [av2] AV_LIVE
         var keepBall = false, ballPending = false, hdZ = null;      // [dead]/[air] bir sonraki vuruşta top yerinde kalır · [ball] bu adımda top adımı henüz işlemedi · [air] kafa temasındaki top yüksekliği
         var GH = 2.44, BRAD = .11;      // kale yüksekliği, top yarıçapı (m)
         var BS = { x: CX, y: CY };      // [ais] takım bloğunun izlediği (gecikmeli) top konumu
@@ -1751,7 +1757,7 @@
             // uzun süreli: efor (hız² + hızlanma) × dayanıklılık; kalıcı kısım tavanı düşürür, geri kalanı yavaşken / top ölüyken tavana toparlanır
             var dr = FT_K * (r * r + FT_KA * Math.max(0, up - .2)) * p.staK * DT * CK * tacFat(p.team);
             p.stam -= dr; p.stamCap = clamp(p.stamCap - dr * FT_IRR, .3, 1);
-            if (!live || r < .45) p.stam += (p.stamCap - p.stam) * Math.min(1, FT_REC * CK * DT);
+            if (!live || r < .45) p.stam += (p.stamCap - p.stam) * Math.min(1, FT_REC * CK * DT * (S.mode === 'dead' ? AV_CLKD : 1));
             p.stam = clamp(p.stam, .3, p.stamCap);
             // kısa süreli (anaerobik, W' dengesi gibi): kritik hızın (FT_AHI·Vmax) üstündeki hız ve sert hızlanma depoyu boşaltır; depo yalnız kritik hızın altında, FT_AT sn zaman sabitiyle dolar
             var hi = Math.max(0, (r - FT_AHI) / (1 - FT_AHI));
@@ -2947,7 +2953,7 @@
         function step() {
             if (S.finished) return;
             if (S.refHold) return;      /* [port] hakem kararı bekleniyor */
-            S.t += DT; S.audit.ticks++; ballPending = false;
+            S.t += S.mode === 'dead' ? DT * AV_CLKD : DT; S.audit.ticks++; ballPending = false;      // [av2] AV_CLK: top ölüyken maç saati AV_CLKD kat hızlı
             if (AIS) { var kb = Math.min(1, DT / AIS_LAG); BS.x += (B.x - BS.x) * kb; BS.y += (B.y - BS.y) * kb; }
             var penHold = PEN_END && (S.mode === 'dead' && S.dead && S.dead.kind === 'penalty' || !!(S.shot && (S.shot.pen || S.shot.force)));      // [dead] PEN_END: verilmiş penaltının sonucu belli olmadan devre / maç bitmez (IFAB 7.4)
             if (S.half === 1 && S.t >= HALF_S && !S.halfBreak && !penHold) { S.halfBreak = true; emit('HALFTIME', {}); S.teams.forEach(function (t) { t.dir = -t.dir; }); startDead('kickoff', 1, { x: CX, y: CY }, { second: true }); placeKickoff(1); S.half = 2; S.dead.wait = 1.5;
@@ -3070,7 +3076,8 @@
         emit('KICKOFF', { team: 0 });
         return S;
     }
-    var api = { create: create, roleBase: roleBase, C: { PW: PW, PH: PH, CX: CX, CY: CY, GW: GW, GY0: GY0, GY1: GY1, PA_D: PA_D, PA_Y0: PA_Y0, PA_Y1: PA_Y1, DT: DT, HALF_S: DEFAULTS.MATCH_S / 2, FULL_S: DEFAULTS.MATCH_S, CLOCK_S: CLOCK_S, CK: CLOCK_S / DEFAULTS.MATCH_S }, FORM: FORM, ROLE_TR: ROLE_TR };
+    var FULL0 = DEFAULTS.AV_CLK ? DEFAULTS.AV_CLKS : DEFAULTS.MATCH_S;      // [av2] AV_CLK: varsayılan maç saati
+    var api = { create: create, roleBase: roleBase, C: { PW: PW, PH: PH, CX: CX, CY: CY, GW: GW, GY0: GY0, GY1: GY1, PA_D: PA_D, PA_Y0: PA_Y0, PA_Y1: PA_Y1, DT: DT, HALF_S: FULL0 / 2, FULL_S: FULL0, CLOCK_S: CLOCK_S, CK: CLOCK_S / FULL0 }, FORM: FORM, ROLE_TR: ROLE_TR };
     if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Sim2D = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 
