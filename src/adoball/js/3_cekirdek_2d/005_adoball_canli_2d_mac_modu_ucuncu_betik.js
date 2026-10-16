@@ -749,7 +749,7 @@
        Ölü top başlayınca olayın sekansı gerçek zamanda (× seçili hız: 2x/4x oranlı kısalır) oynar: SEQ_T sim-sn (taç/aut/korner topun yolu, faul düşme + düdük, ofsayt bayrağı).
        Kart: hakem oyuncuya koşar, kart ancak varınca kalkar (kırmızıda sahne o an, oyuncu yürüyerek çıkar). Kart / çıkış bitmeden duran top kullanılmaz (sim adımı bekler,
        aksiyon saati akar). Kritik ana atla / sonuna simüle et / 2B / FM gösterimi bu sekansı atlar. */
-    var SEQ_T = { throw: 2.8, goalkick: 2.6, corner: 2.6, freekick: 3.2, penalty: 3.2 }, SQ = { d: null, until: -1, card: null, blk: 0, blk0: 0 };
+    var SEQ_T = { throw: 3.0, goalkick: 2.8, corner: 2.8, freekick: 3.2, penalty: 3.2 }, SQ = { d: null, until: -1, card: null, blk: 0, blk0: 0 };
     function sqLog(k, x) { var a = S.tlog || (S.tlog = []); if (a.length < 3000) a.push([Math.round(performance.now()), k, x == null ? null : Math.round(x * 100) / 100, S.sim ? Math.round(S.sim.t * 100) / 100 : 0]); }      // olay zaman çizelgesi (ölçüm: ado2d._tlog)
     function sqOn() { return !!(S.use3 && S.r3 && !S.r3.lost && mode === '2d' && !S.raw && !G.__abLive && !S.skip && S.watch !== 'fm' && !(S.sim && S.sim.userRef)); }
     function sqReset() { SQ.d = null; SQ.until = -1; SQ.card = null; SQ.blk = 0; SQ.blk0 = 0; S.offWalk = null; }
@@ -758,7 +758,8 @@
         if (red && p) { var fx0 = OA.fpx[id], fy0 = OA.fpy[id]; if (!(fx0 > 0 || fy0 > 0)) { fx0 = ev.x; fy0 = ev.y; } S.offWalk = { id: id, sid: S.sid, x: fx0, y: fy0, go: Infinity, end: Infinity, gp: 0, fx: p.fx || 1, fy: p.fy || 0 }; }
         if (!sqOn() || !p) { sqBand(kind, id, now); if (S.feedCard) { try { S.feed.push(S.feedCard); } catch (e) { } S.feedCard = null; } S.refCard = { kind: kind, id: id, until: now + 2600 }; if (S.offWalk) { S.offWalk.go = now; S.offWalk.end = now; } if (scene) scene(); return; }
         var r = S.ref, tx = p.off && S.offWalk ? S.offWalk.x : p.x, ty = p.off && S.offWalk ? S.offWalk.y : p.y, dist = r ? Math.hypot(r.x - tx, r.y - ty) : 0;
-        SQ.card = { kind: kind, id: id, red: red, scene: scene, sid: S.sid, fev: S.feedCard && S.feedCard.p === id ? S.feedCard : null, max: now + Math.max(.9, Math.min(2.5, dist / 6.5)) * 1000 / Math.max(.5, liveSpeed()) };      /* en geç 2,5 sn: hakem uzaktaysa kartı oradan gösterir */ S.feedCard = null;
+        SQ.card = { kind: kind, id: id, red: red, scene: scene, sid: S.sid, fev: S.feedCard && S.feedCard.p === id ? S.feedCard : null, max: now + Math.max(1.2, Math.min(3.2, dist / 5.5)) * 1000 / Math.max(.5, liveSpeed()) };      /* en geç 3,2 sn: hakem uzaktaysa kartı oradan gösterir */ S.feedCard = null;
+        if (V7.on && !red && !p.off) try { v7Go(id, 0, 0, 1.75, 7, { fol: 1, stop: 1.45 }); V7.cardW = id; } catch (e) { }      // [v187] oyuncu hakeme yürür (≤ 2 m/sn), önünde durur
     }
     function sqBand(kind, id, now) { try { var p = S.sim.players[id]; S.cardBand = { kind: kind, id: id, team: p ? p.team : 0, min: minOf(S.sim.t), until: now + 5000 / Math.max(.5, liveSpeed()) }; } catch (e) { } }      /* [v186] kart alt bandı ~5 sn (ad, dakika, takım) */
     function sqTick(sim, now) {      /* her karede: bekleyen kart (hakem vardı mı), yeni ölü top sekansı */
@@ -767,8 +768,10 @@
             if (c.sid !== S.sid) { SQ.card = null; c = null; }
             else {
                 var p = sim.players[c.id], tx = p && p.off && S.offWalk ? S.offWalk.x : p ? p.x : 0, ty = p && p.off && S.offWalk ? S.offWalk.y : p ? p.y : 0, r = S.ref;
-                if (!sqOn() || now >= c.max || !r || Math.hypot(r.x - tx, r.y - ty) < 4.2) {
+                var g7 = V7.on && V7.gv[c.id] ? V7.gv[c.id] : null; if (g7 && g7.x === g7.x) { tx = g7.x; ty = g7.y; }      // [v187] görünen konum (hakeme yürüyor)
+                if (!sqOn() || now >= c.max || !r || Math.hypot(r.x - tx, r.y - ty) < 2.9) {
                     SQ.card = null; S.refCard = { kind: c.kind, id: c.id, until: now + 2600 }; sqBand(c.kind, c.id, now); sqLog('kart:' + c.kind, r ? Math.hypot(r.x - tx, r.y - ty) : -1);
+                    if (V7.on) try { v7CardShown(c, now); } catch (e) { }      // [v187] itiraz eden oyuncular, kart pozunda bekleme
                     var ls = Math.max(.5, liveSpeed()); SQ.blk = Math.max(SQ.blk, now + 2700 / ls);
                     if (S.offWalk && S.offWalk.id === c.id) { S.offWalk.go = now + 1300 / ls; S.offWalk.end = S.offWalk.go + 9000 / ls; SQ.blk = Math.max(SQ.blk, S.offWalk.go + 3800 / ls); }
                     if (c.fev) SQ.fd = { ev: c.fev, at: now + 1700 / Math.max(.5, liveSpeed()), sid: S.sid };      /* kart satırı faul satırından sonra (spiker satır aralığı 1,6 sn; kart önceliği faulden yüksek) */
@@ -904,12 +907,13 @@
         var sndH = false; if (/^(FOUL|OFFSIDE|THROWIN|CORNER|ADV|CARD|OFF)$/.test(ev.type)) sqLog('ev:' + ev.type + (ev.meta && ev.meta.adv ? ':adv' : ev.meta && ev.meta.back ? ':back' : ev.meta && ev.meta.card ? ':' + ev.meta.card : ''));
         if ((ev.type === 'FOUL' && ev.meta && ev.meta.adv) || ev.type === 'ADV') {      /* [v186] avantaj: düdük yok, hakem kolları öne (≈1,8 sn); avantaj oluşmazsa geri dönüş düdüğü */
             sndH = true; var lsA = Math.max(.5, liveSpeed());
-            if (ev.type === 'FOUL') S.advShow = { until: performance.now() + 1800 / lsA };
+            if (ev.type === 'FOUL') { S.advShow = { until: performance.now() + 1800 / lsA }; if (V7.on && sqOn()) V7.band = { kind: 'adv', txt: 'Oyun devam ediyor', team: 1 - ev.team, until: performance.now() + 2200 / lsA }; }
             else if (ev.meta && ev.meta.back) { var sidB = S.sid; setTimeout(function () { if (S.sid === sidB) try { playWhistle(); } catch (e) { } }, 300 / lsA); }
         } else
         if ((ev.type === 'FOUL' || ev.type === 'OFFSIDE') && sqOn()) {      /* [v186] düdük temastan ~0,45 sn (ofsaytta bayraktan ~0,55 sn) sonra: temas / bayrak önce görülür */
             sndH = true; var evW = ev, sidW = S.sid; setTimeout(function () { if (S.sid !== sidW) return; sqLog('duduk:' + evW.type); try { if (!sndEvent(evW, { ff: sndFF() }) && evW.type === 'FOUL') playWhistle(); } catch (e) { } }, (ev.type === 'FOUL' ? 450 : 550) / Math.max(.5, liveSpeed()));
         } else if (ev.type !== 'CARD' && ev.type !== 'GOAL') { try { sndH = sndEvent(ev, { ff: sndFF() }); } catch (e) { } }      // [ses] vuruş, şut, kurtarış, direk, kaçan fırsat, faul, ofsayt, korner
+        if (V7.on) try { v7RefEv(ev); if (ev.type === 'FOUL' && !(ev.meta && ev.meta.adv)) v7FoulRpPlan(); } catch (e) { }      // [v187]
         if (ev.type === 'CARD' && sqOn() && !(ev.meta && ev.meta.var)) S.feedCard = ev;      // [v186] kart satırı kart gösterilince (sqCard)
         else if (ev.type !== 'GOAL') S.feed.push(ev);      // [v139] gol satiri top cizgiyi gecince (goalAnnounce)
         try { fmLog(ev); } catch (e) { }                                             // [fm2] önemli anlar / baskı
@@ -917,6 +921,7 @@
         handleRest(ev, m, sim, T, ps, sndH);
     }
     function actEvent(ev, m) {      // [v135] olayin 3B aksiyon kismi (gecikmeli gosterimde olay aninda, sim saatinde)
+        if (V7.on) try { v7Event(ev, m); } catch (e) { }      // [v187] değişiklik görünümü, kaçan şut / ofsayt jestleri
         if (ev.type === 'OFFSIDE') try { arOff(ev); } catch (e) { }      // [yan] yan hakem bayragi
         var gkHandK = false; try { gkHandK = gkEvent(ev); } catch (e) { warn('kaleci aksiyonu', e); }      // [gk] kurtarış/alma/oyuna sokma (elle oyuna sokmada bacak vuruşu oynatılmaz)
         try { if (!gkHandK && spEvent(ev)) gkHandK = true; } catch (e) { warn('duran top aksiyonu', e); }  // [sp] taç / koşulu duran top vuruşu (temas sim saatinde, R3.kick yok)
@@ -2418,7 +2423,8 @@
         var refPose = null, vs = live ? S.vs : null;
         if (vs) { var ph = vs.phase; refPose = ph === 'alert' ? 'ear' : (ph === 'tv1' || ph === 'tv2') ? 'tv' : ph === 'sign' ? 'point' : null; }
         if (cardOn) refPose = 'card';
-        else if (!refPose && live && S.advShow && now < S.advShow.until) refPose = 'tv';      // [v186] avantaj işareti: iki kol öne
+        else if (!refPose && live && S.advShow && now < S.advShow.until) refPose = 'adv';      // [v186] avantaj işareti: iki kol öne · [v187] kollar öne süpürür
+        if (!refPose && live && V7.on) { var rp7 = v7RefPose(now); if (rp7) refPose = rp7; }      // [v187] düdük + serbest vuruş yönü / korner / aut / penaltı noktası
         var ts = !live && S.rp ? S.rp.rate * (S.preset >= 4 ? 1.5 : S.preset >= 2 ? 1.2 : 1) : (S.vs ? vsScale() : (S.raw ? S.speed : Math.max(.3, S.rateNow || liveSpeed() * S.pace)));      // [fiz] gercek oynatma hizi
         try {      // [v132] tekrar türüne göre GERÇEK oynatma hızı: VAR görüntüsü fps/25 yavaş çekim, önemli an oynatımı kendi hızıyla
             if (!live && !S.rp && S.vs && S.vs.phase === 'watch' && S.vs.mon && S.vs.mon.fps > 0) ts = vsScale() * S.vs.mon.fps / 25;
@@ -2431,7 +2437,7 @@
         }
         // duran top kamerası: yalnızca canlı oyunda (tekrarda değil, refTarget()'taki gibi) ve VAR sahnesi
         // yokken - kamera yönetmeni önceliği full/VAR > gol kutlaması (ado3d.js içinde cel0 ile) > bu > yayın
-        var dd0 = (live && !vs && S.hold !== 'goal' && !(SQ.ob && S.viewT < SQ.ob.t + 1.3) && sim.mode === 'dead' && sim.dead && (!DL.on || v.dead)) ? sim.dead : null, deadCam = null;      /* [v183] gol beklemesinde başlama vuruşu kamerası yok: motor gol adımında ölü topu (orta nokta) kurar, kamera top ağdayken orta yuvarlağa kaçıyordu */
+        var dd0 = (live && !vs && S.hold !== 'goal' && !(SQ.ob && S.viewT < SQ.ob.t + 1.3) && !(V7.dl && V7.dl.ph < 3) && sim.mode === 'dead' && sim.dead && (!DL.on || v.dead)) ? sim.dead : null, deadCam = null;      /* [v183] gol beklemesinde başlama vuruşu kamerası yok: motor gol adımında ölü topu (orta nokta) kurar, kamera top ağdayken orta yuvarlağa kaçıyordu */
         if (dd0) { var ddir = sim.teams[dd0.team].dir; deadCam = RG.dead; deadCam.kind = dd0.kind; deadCam.x = dd0.x; deadCam.y = dd0.y; deadCam.ax = ddir === 1 ? PW : 0; deadCam.dir = ddir; if (dd0.kind === 'corner') spCornerSpot(sim, dd0, deadCam); else deadCam.bx = deadCam.by = NaN; }     // [sp] kornerde planlı top noktası
         // top sürme: canlı top sahibinin (kaleci hariç - eldeki top ayaktaki top değildir) sürekli koşu tarzını değiştirir; takeon = rakibi çalımlama girişimi (motor: player.dribble/dribType)
         var carry = null, G3 = S.gk;
@@ -2450,10 +2456,11 @@
             if (cutOn) { var aa = S.ar[arc.i], sgo = aa.ly < 0 ? 1 : -1, alo = aa.x < PW / 2 ? 1 : -1; S.r3.cutCam = { eye: [aa.x + alo * 3.2, 1.55, aa.y + sgo * 5.6], at: [aa.x, 1.3, aa.y], fov: 32 }; }
             else if (S.r3.cutCam) S.r3.cutCam = null;
             if (arc && (now - arc.t0 > 2700 || (arc.e && now - arc.e > 500))) S.arCut = null;
-        } if (S.r3 && live && !vs && !S.rp) try { sqCam(v, now); } catch (e) { } ST3.varOn = !!vs; ST3.crowdPulse = crowdPulse; ST3.crowdSide = crowdSide; ST3.carry = carry;
+        } if (S.r3 && live && !vs && !S.rp) try { sqCam(v, now); } catch (e) { } if (S.r3 && V7.on) try { v7Cam(v, now, live); } catch (e) { } ST3.varOn = !!vs; ST3.crowdPulse = crowdPulse; ST3.crowdSide = crowdSide; ST3.carry = carry;
         ST3.trail = RG.trail; ST3.trailLive = RG.trailLive; ST3.trailW = RG.trailW;
         ST3.clock = G3 ? (live ? S.viewT + (S.clkOff || 0) : S.viewT + (fmr && fmr.off || 0)) : null; ST3.ready = G3 ? G3.ready : null; ST3.voff = G3 ? G3.voff : null; ST3.hand = gkHand; ST3.noAct = noAct;
         R3._dl = DL.on ? 1 : 0;      // [v135]
+        ST3.xa = live && V7.on ? V7.xa : null; ST3.xb = live && V7.on ? V7.xb : null; ST3.v7dlv = live && V7.on && V7.dlv ? 1 : 0; ST3.v7board = live && V7.on && V7.sub && V7.sub.t < 6 ? 1 : 0;      // [v187]
         var ok = R3.render(ST3);
         if (!ok) return false;
         // ekran katmanı: isimler, karar etiketleri, hakem işaretleri
@@ -2536,7 +2543,7 @@
             else return false;
         }
         if (F.ph === 'gap') {
-            var rate = Math.min(FM_GAPMAX, S.speed * FM_GAP * (S.lk || 1)), n = 0, tEnd = now + 7;      // [perf] tavan: kare başına adım sayısı sınırlı (60 fps korunur, oyuncular sıçramaz)
+            var rate = Math.min(FM_GAPMAX, S.speed * FM_GAP * (S.lk || 1)) * (V7W.lvl === 'yaz' ? .32 : 1), n = 0, tEnd = now + 7;      // [perf] tavan: kare başına adım sayısı sınırlı (60 fps korunur, oyuncular sıçramaz)
             F.acc += dt * rate;
             while (F.acc >= DT && F.ph === 'gap' && !S.hold && !sim.finished && !S.halfPending) { F.sc0 = [sim.teams[0].score, sim.teams[1].score]; stepOnce(); F.acc -= DT; n++; if ((n & 7) === 0 && performance.now() > tEnd) { F.acc = 0; break; } }
             if (F.ph !== 'gap') F.acc = 0;
@@ -2857,14 +2864,14 @@
             var rw = Math.round(Math.max(220, Math.min(300, W * .26))), cw = W - 3 * pd - rw, cx = pd, rx = cx + cw + pd;
             var bnH = Math.round(Math.max(66, Math.min(100, avail * .13))), momH = Math.round(Math.max(70, Math.min(110, avail * .16))), pitH = Math.max(80, avail - bnH - momH - 2 * pd), py0 = y0 + bnH + pd;
             fmBanner(cx, y0, cw, bnH, F, now);
-            fmPanel(cx, py0, cw, pitH, null); fmPitch(cx + 8, py0 + 8, cw - 16, pitH - 16, v); fmFlow(cx + cw - 10, py0 + 20);
+            fmPanel(cx, py0, cw, pitH, null); if (V7W.lvl === 'yaz') v7YazPanel(cx + 8, py0 + 8, cw - 16, pitH - 16, F); else fmPitch(cx + 8, py0 + 8, cw - 16, pitH - 16, v); fmFlow(cx + cw - 10, py0 + 20);
             fmMomentum(cx, py0 + pitH + pd, cw, momH);
             fmStats(rx, y0, rw, avail);
         } else {                                                                     // dar ekran: üstte spiker bandı, saha + istatistik yan yana, altta baskımetre
             var fw = W - 2 * pd, bnH2 = Math.round(Math.max(54, Math.min(84, avail * .15))), y1 = y0 + bnH2 + pd, av2 = avail - bnH2 - pd;
             var lw2 = Math.round(fw * .56), rw2 = fw - lw2 - pd, r1 = Math.max(96, Math.min(lw2 * PH / PW + 12, av2 * .64)), mh = Math.max(56, Math.min(96, av2 - r1 - pd));
             fmBanner(pd, y0, fw, bnH2, F, now);
-            fmPanel(pd, y1, lw2, r1, null); fmPitch(pd + 5, y1 + 5, lw2 - 10, r1 - 10, v); fmFlow(pd + lw2 - 6, y1 + 16);
+            fmPanel(pd, y1, lw2, r1, null); if (V7W.lvl === 'yaz') v7YazPanel(pd + 5, y1 + 5, lw2 - 10, r1 - 10, F); else fmPitch(pd + 5, y1 + 5, lw2 - 10, r1 - 10, v); fmFlow(pd + lw2 - 6, y1 + 16);
             fmStats(pd + lw2 + pd, y1, rw2, r1);
             fmMomentum(pd, y1 + r1 + pd, fw, mh);
         }
@@ -2935,6 +2942,7 @@
             var ra0 = S.sim.refAsk, tm0 = S.sim.teams[ra0.team]; if (!S.refGi || S.refGi.ask !== ra0) S.refGi = { ask: ra0, gx: tm0 && tm0.dir === 1 ? PW : 0, gy: S.sim.ball.y, team: ra0.team, scorer: ra0.scorer };
             var gi0 = S.goalInfo; S.goalInfo = S.refGi; try { gtLive(v, dt); } finally { S.goalInfo = gi0; }
         }
+        if (V7.on && !S.vs) try { v7Live(v, dt); } catch (e) { warn('v187', e); }      // [v187] görünüm hedefleri, top görevlileri, değişiklik, devre, sevinç
         camStep(dt || .016, v, S.vs ? 1 : S.zoom ? (W < 520 ? 2.1 : 1.75) : 1);                // VAR sahnesinde kamera uzaklaşır (hakem kenardaki monitöre yürür)
         renderAny(v, { live: true, rings: S.vs ? S.vs.rings : ((G.__abRing || G.__abTr) ? (G.__abRing || []).concat(G.__abTr || []) : null) });      /* [port] Pro modu halkası + karakteristik halkası */
     }
@@ -3072,6 +3080,7 @@
         if (n - s0 > 25 * 12) s0 = n - 25 * 12;
         var rings = [{ id: gi.scorer, col: '#ffc93c' }]; if (gi.ast >= 0 && !gi.own) rings.push({ id: gi.ast, col: '#7fd1ff' });
         S.rp = { fr: fr, n: n, ng: ng, s0: s0, tc: s0, t: 0, endHold: 0, rings: rings, gi: gi, zoom: G.innerWidth < 520 ? 2.0 : 1.55, rate: 1, gk: null, by: rpBadgeY() };
+        if (V7.on) try { S.rp.v7g = v7GoalAngle(gi); sqLog('tekrar_aci:' + S.rp.v7g.ang); } catch (e) { }      // [v187] tekrar açısı golün türüne göre
         r3Cut(); S.cam.z = S.rp.zoom;                                                    // [fm] tekrar baslangici kurgu kesmesi · [v132] aktörler + kamera da (süzülme yok)
         S.rpCount++; S.hold = 'replay'; S.last = performance.now(); S.hover = null; var tip = $('v2d-tip'); if (tip) tip.hidden = true; showReplayUI();
         return true;
@@ -3921,7 +3930,10 @@
             H.goal.className = 'ab-hud-goal ' + (cb.team === 0 ? 'h' : 'a');
             H.goal.innerHTML = '<div class="gb"><span class="gb-tag" style="background:' + (cb.kind === 'R' ? '#d6262b;color:#fff' : '#f5c518;color:#111') + '"><span class="ab-hud-crest">' + ccr + '</span>' + (cb.kind === 'R' ? 'KIRMIZI KART' : 'SARI KART') + '</span><span class="gb-main"><span class="gb-p">' + esc(nameOf(cb.id)) + '</span><span class="gb-s">' + cb.min + '\' · ' + esc(ct.name) + '</span></span></div>'; } }
         else if (!gi && H.gk && H.gk.charAt(0) === 'k') H.gk = '';
-        if (H.goal.classList.contains('on') !== !!(gi || cb)) H.goal.classList.toggle('on', !!(gi || cb));
+        var vb7 = !gi && !cb && V7.band && performance.now() < V7.band.until && S.hold !== 'replay' ? V7.band : null;      /* [v187] değişiklik / avantaj / VAR kararı alt bandı */
+        if (vb7) { var vk7 = 'v|' + vb7.kind + '|' + (vb7.inN || vb7.txt || '') + '|' + (vb7.min || ''); if (H.gk !== vk7) { H.gk = vk7; H.goal.className = 'ab-hud-goal ' + (vb7.team === 1 ? 'a' : 'h'); H.goal.innerHTML = v7BandHTML(vb7); } }
+        else if (!gi && !cb && H.gk && H.gk.charAt(0) === 'v') H.gk = '';
+        if (H.goal.classList.contains('on') !== !!(gi || cb || vb7)) H.goal.classList.toggle('on', !!(gi || cb || vb7));
         if (wrap && wrap.classList.contains('ab-goal') !== !!gi) wrap.classList.toggle('ab-goal', !!gi);
     }
     function bcastHudPills() {
@@ -3939,6 +3951,451 @@
         });
         if (H.pills !== html) { H.pills = html; H.bottom.innerHTML = html; }                       // [opt] 22 hap yalnız içerik değişince yeniden kurulur
     }
+
+    /* ================= [v187] ANİMASYON VE YAYIN — yalnız görüntü (motor, kayıt, MR, olaylar ve sonuç değişmez) =================
+       Faul türleri (tutma, itme, dirsek, tekme, çelme, yüksek ayak, kafa çarpışması, arkadan / önden / yandan kayarak) motorun FOUL anındaki
+       konum, hız ve yönden (gerekirse aynı adımdaki kart sertliğinden) seçilir; faul yapana tür hareketi, kurbana uygun düşüş (sekme, yuvarlanma,
+       yüz / bacak tutma, yerde kalma, kalkış). Kart: oyuncu hakeme yürür (≤ 2 m/sn), kart ≤ 3 m'de, itiraz eden 1–3 oyuncu; hakem düdük ve kol
+       işaretleri (serbest vuruş yönü, korner, aut, penaltı noktası, avantaj). Top görevlileri: çizgiyi geçen top yolunda durur, görevli yeni topu
+       atar ve eskisini toplar. Jestler: kaçan şut, ofsayt itirazı, gol sevinci çeşitleri, yenilen golde hayal kırıklığı, korner itişmesi, kalecinin
+       barajı yönetmesi. Değişiklik sahnesi (tabela, el sıkışma, sahaya koşu), devre / maç sonu tünele yürüyüş ve tokalaşma, faul tekrarı.
+       Hepsi görüntü saatinde ve seçili hızla (2x/4x oranlı kısalır); Kritik ana atla / Sonuna simüle et / FM özeti / 2B bunları atlar. */
+    var V7 = { on: 1, gv: [], px: new Float32Array(22), py: new Float32Array(22), pOk: 0, busy: new Float64Array(22), xa: [], xb: [], dl: null, bb: null, sub: null, subQ: [], band: null, refP: null, half: null,
+        foul: null, rpq: null, rpT: -99, obSeen: null, lastG: null, cel: null, fkGk: null, corJ: null, lab: null, cnt: {} };
+    var V7_FN = ['', 'tutma', 'itme', 'dirsek', 'tekme', 'çelme', 'yüksek ayak', 'kafa çarpışması', 'arkadan kayarak', 'önden kayarak', 'yandan kayarak'];
+    function v7Now() { return performance.now(); }
+    function v7Ls() { return Math.max(.5, liveSpeed()); }
+    function v7Cnt(k) { V7.cnt[k] = (V7.cnt[k] || 0) + 1; sqLog('v7:' + k); }
+    function v7Free(id, t) { return !(V7.busy[id] > t) && !(OA.fall[id] > t) && !(OA.gnd[id] > t); }
+    function v7Act(id, k, t0, tc, d, until) { gkIssue(1, id, k, tc, t0, d); V7.busy[id] = Math.max(V7.busy[id], until != null ? until : tc + 1); }
+    function v7Gest(id, md, t0, dur, tx, ty, h, pow) { if (id < 0 || !S.sim || !S.sim.players[id] || S.sim.players[id].off) return; v7Act(id, 20, t0, t0, oaD(OA.tmp, tx || 0, ty || 0, md, dur, pow || 0, h || 1, 0, 0, 0, 0, 0), t0 + dur); }
+    /* --- görünüm hedefi: oyuncunun GÖRÜNEN konumu hedefe yürür (ışınlanma yok), bırakılınca motor konumuna yürüyerek döner --- */
+    function v7Go(id, tx, ty, vmax, dur, o) { var g = V7.gv[id] || (V7.gv[id] = { x: NaN, y: NaN }); g.tx = tx; g.ty = ty; g.v = vmax; g.until = v7Now() + dur * 1000 / v7Ls(); g.fol = o && o.fol || 0; g.stop = o && o.stop || 0; g.fcx = o && o.fcx != null ? o.fcx : NaN; g.fcy = o && o.fcy != null ? o.fcy : NaN; g.hide = 0; return g; }
+    function v7GvApply(v, dt) {
+        var now = v7Now(), h = Math.min(.1, dt || .016) * v7Ls(), i, g;
+        for (i = 0; i < 22; i++) {
+            g = V7.gv[i]; if (!g) continue;
+            var bx = v.x[i], by = v.y[i]; if (!(bx > -20) && !g.keep) { V7.gv[i] = null; continue; }
+            if (!(g.x === g.x)) { g.x = V7.pOk && V7.px[i] > -20 ? V7.px[i] : bx; g.y = V7.pOk && V7.px[i] > -20 ? V7.py[i] : by; }
+            var act = now < g.until, tx = act ? g.tx : bx, ty = act ? g.ty : by;
+            if (act && g.fol === 1 && v.rx != null) { var rx = g.x - v.rx, ry = g.y - v.ry, rl = Math.hypot(rx, ry) || 1; tx = v.rx + rx / rl * g.stop; ty = v.ry + ry / rl * g.stop; }      // hakeme yürür, önünde durur
+            var bv = g.bpx === g.bpx ? Math.hypot(bx - g.bpx, by - g.bpy) / Math.max(1e-3, h) : 0; g.bpx = bx; g.bpy = by;
+            var dx = tx - g.x, dy = ty - g.y, dl = Math.hypot(dx, dy), vm = act ? g.v : Math.max(2.6, Math.min(8, bv + 1.2)), st = vm * h;
+            if (!act && dl < .05) { V7.gv[i] = null; continue; }
+            if (dl > st) { g.x += dx / dl * st; g.y += dy / dl * st; } else { g.x = tx; g.y = ty; }
+            v.x[i] = g.x; v.y[i] = g.y;
+            if (act && dl > .25) { v.fx[i] = dx / dl; v.fy[i] = dy / dl; }
+            else if (act && g.fol === 1 && v.rx != null) { var fx = v.rx - g.x, fy = v.ry - g.y, fl = Math.hypot(fx, fy) || 1; v.fx[i] = fx / fl; v.fy[i] = fy / fl; }
+            else if (act && g.fcx === g.fcx) { var gx = g.fcx - g.x, gy = g.fcy - g.y, gl = Math.hypot(gx, gy) || 1; v.fx[i] = gx / gl; v.fy[i] = gy / gl; }
+        }
+    }
+    /* --- faul türü: savunmacının kurbana göre yeri (arkadan / önden / yandan), kurbanın hızı, topun yüksekliği, kayma, hava topu; aynı adımda gelen kart sertliği --- */
+    function v7FoulGeo(dp, op) {
+        var osp = Math.hypot(op.vx, op.vy), ux = osp > 1 ? op.vx / osp : op.fx, uy = osp > 1 ? op.vy / osp : op.fy, ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+        var rx = dp.x - op.x, ry = dp.y - op.y, rl = Math.hypot(rx, ry) || 1;
+        return { osp: osp, ux: ux, uy: uy, rx: rx / rl, ry: ry / rl, rl: rl, ca: (rx * ux + ry * uy) / rl };
+    }
+    function v7FoulKind(ev, m, dp, op, g) {
+        var h = oaH(ev.t + .37, ev.p * 3 + ev.p2), bz = S.prevB && S.prevB.z || 0;
+        if (m.air) return g.ca > .3 && h < .45 ? 7 : h < .55 ? 3 : 2;                                       // hava topu: kafa çarpışması (yüz yüze) / dirsek / sırttan itme
+        if (m.slide) return g.ca < -.3 ? 8 : g.ca > .35 ? 9 : 10;
+        if (bz > .75 && g.ca > -.2) return 6;                                                             // top havadayken öne uzanan ayak
+        if (m.pen) return g.ca < -.3 ? (h < .6 ? 5 : 2) : g.ca > .4 ? (h < .55 ? 4 : 5) : (h < .5 ? 5 : 1);
+        if (g.ca < -.3) return g.osp > 4.2 ? (h < .55 ? 5 : 2) : (h < .6 ? 1 : 2);                         // arkadan: hızlıyken çelme / itme, yavaşken forma çekme
+        if (g.ca > .45) return h < .5 ? 4 : 5;                                                            // önden: tekme / çelme
+        return h < .38 ? 2 : h < .7 ? 5 : 1;                                                              // yandan: omuz itmesi / çelme / tutma
+    }
+    function v7FoulIssue(sim, ev, m, k, dp, op, sev) {
+        var d = OA.tmp, g = v7FoulGeo(dp, op), h = oaH(ev.t, ev.p2), osp = g.osp, ux = g.ux, uy = g.uy, rx = g.rx, ry = g.ry;
+        var ty = 2, fx = -rx, fy = -ry, vr = 0, lie = (m.pen ? .9 : .5) + 1.0 * h + (sev || 0), dly = .45;
+        switch (k) {
+            case 1: ty = 3; vr = 5; fx = rx; fy = ry; lie *= .7; break;                                    // tutma: geriye çekilir, sırtüstü
+            case 2: ty = g.ca < -.3 ? 1 : 2; fx = -rx * .6 + ux * .4; fy = -ry * .6 + uy * .4; break;       // itme: arkadan öne yüzüstü, yandan yana
+            case 3: ty = h < .5 ? 3 : 2; vr = 2; lie += .6; break;                                           // dirsek: yüzünü tutar
+            case 4: ty = 2; vr = 1; lie += .4; break;                                                        // tekme: seker, bacağını tutar
+            case 5: ty = 1; vr = osp > 4.5 ? 4 : 0; fx = ux * .8 - rx * .2; fy = uy * .8 - ry * .2; break;  // çelme: öne düşer, hızlıysa yuvarlanır
+            case 6: ty = 3; vr = 2; lie += .5; break;                                                        // yüksek ayak: geriye düşer, göğsünü / yüzünü tutar
+            case 7: ty = 3; vr = 6; lie += .5; dly = .55; break;                                             // kafa çarpışması: havadan sırtüstü, başını tutar
+            case 8: ty = 1; vr = osp > 3.5 ? 4 : 3; fx = ux; fy = uy; dly = .5; break;                       // arkadan kayma: öne takla
+            case 9: ty = 1; vr = 0; fx = ux; fy = uy; dly = .5; break;                                       // önden kayma: bacağın üstünden öne
+            case 10: ty = 2; vr = 3; dly = .5; break;                                                        // yandan kayma: yana, bacağını tutar
+        }
+        var fl = Math.hypot(fx, fy) || 1;
+        if (m.adv) gkIssue(1, ev.p2, 13, ev.t + .08, ev.t + .08, oaD(d, fx / fl, fy / fl, .7, .5, 0, 0, 0, 0, 0, 0, 0));
+        else { gkIssue(1, ev.p2, 14, ev.t + dly, ev.t - .02, oaD(d, fx / fl, fy / fl, ty, lie, osp, vr, 0, 0, 0, 0, 0)); OA.fall[ev.p2] = ev.t + dly + .05 + Math.max(.25, Math.min(3.2, lie)) + (vr === 4 ? .9 : 0) + (vr === 1 ? .2 : 0) + .9; }
+        OA.fpx[ev.p] = dp.x; OA.fpy[ev.p] = dp.y;
+        var rk5 = .55, side = oaSideY(oaYaw(dp), dp.x, dp.y, op.x, op.y);
+        if (k >= 8) {      /* kayarak: arkadan rakibin ayağına (top ileride), önden topa / ayağa, yandan çapraz */
+            var sx = op.x + ux * (k === 8 ? .45 : .15), sy = op.y + uy * (k === 8 ? .45 : .15);
+            gkIssue(1, ev.p, 12, ev.t + .1, ev.t - .03, oaD(d, sx, sy, op.x, op.y, Math.hypot(dp.vx - op.vx, dp.vy - op.vy), 3, side, 0, 0, dp.vx, dp.vy)); OA.gnd[ev.p] = ev.t + 1.1; rk5 = 1.25;
+        } else {
+            gkIssue(1, ev.p, 19, ev.t + (k === 7 ? .05 : .06), ev.t - (k === 4 || k === 6 ? .32 : k === 7 ? .4 : .26), oaD(d, op.x + ux * Math.min(osp, 5) * .06, op.y + uy * Math.min(osp, 5) * .06, k, side, Math.hypot(dp.vx - op.vx, dp.vy - op.vy), op.vx, op.vy, 0, 0, dp.vx, dp.vy));
+            rk5 = [0, 1.0, .75, .7, .7, .75, .85, 1.0][k];
+            if (k === 7 && !m.adv) { gkIssue(1, ev.p, 14, ev.t + .55 + .35, ev.t + .7, oaD(OA.tmp, rx, ry, 3, .6 + .6 * h, 1, 6, 0, 0, 0, 0, 0)); rk5 = 2.4; }      // kafa çarpışmasında faul yapan da düşer
+        }
+        if (!(k === 7 && !m.adv)) gkIssue(1, ev.p, 15, ev.t + .4 + rk5, ev.t + .08 + rk5, oaD(OA.tmp, op.x, op.y, h < .62 ? 1 : 2, 1.9, 0, 0, 0, 0, 0, 0, 0));
+        OA.react[ev.p] = ev.t + rk5; V7.busy[ev.p] = ev.t + rk5 + 2; V7.busy[ev.p2] = OA.fall[ev.p2] || ev.t + 1;
+    }
+    oaFoulEv = function (sim, ev, m) {
+        var dp = sim.players[ev.p], op = sim.players[ev.p2]; if (!dp || !op) return;
+        var g = v7FoulGeo(dp, op), k = v7FoulKind(ev, m, dp, op, g);
+        V7.foul = { t: ev.t, p: ev.p, p2: ev.p2, k: k, x: op.x, y: op.y, pen: !!m.pen, adv: !!m.adv, card: '', ev: ev, m: m, now: v7Now(), sid: S.sid };
+        sqLog('faul:' + V7_FN[k]); v7Cnt('faul_' + k);
+        v7FoulIssue(sim, ev, m, k, dp, op, 0);
+    };
+    var oaCardEv0_ = oaCardEv;
+    oaCardEv = function (sim, ev) {
+        var F = V7.foul, m = ev.meta || {};
+        if (F && F.sid === S.sid && F.p === ev.p && Math.abs(ev.t - F.t) < .05 && !F.card) {      /* aynı adımdaki kart: sertliğe göre tür ve yerde kalma süresi */
+            F.card = m.card || 'Y'; var dp = sim.players[F.p], op = sim.players[F.p2], k = F.k;
+            if (dp && op) {
+                if (F.card === 'R' && m.why === 'sert' && (k === 1 || k === 2 || k === 5)) k = F.m.air ? 3 : (S.prevB && S.prevB.z > .5 ? 6 : 4);
+                if (k !== F.k) { F.k = k; sqLog('faul:' + V7_FN[k] + ':kart'); }
+                v7FoulIssue(sim, F.ev, F.m, k, dp, op, F.card === 'R' ? 1.3 : .7);
+            }
+        }
+        return oaCardEv0_(sim, ev);
+    };
+    /* --- olaylar (sim saatinde; gecikmeli gösterimde olay anında) --- */
+    function v7Event(ev, m) {
+        if (!V7.on || !S.sim || !S.r3 || !S.use3) return; var sim = S.sim, t = ev.t, i, p;
+        switch (ev.type) {
+            case 'SUB':      /* çıkan oyuncunun görünümü yuva yeni oyuncuya geçmeden önce saklanır; sahne bir sonraki ölü topta */
+                try { if (S.r3.subSnap && S.r3.subSnap(ev.p)) { if (S.r3.subHold) S.r3.subHold(ev.p, true); V7.subQ.push({ id: ev.p, team: ev.team, t: t, outN: m.outName || '', inN: m.inName || nameOf(ev.p), sid: S.sid }); } } catch (e) { }
+                break;
+            case 'OFF': case 'POST':
+                if (m.teammate || ev.p < 0 || !sqOn()) break;
+                if (v7Free(ev.p, t + .5)) v7Gest(ev.p, (m.xg || 0) >= .08 || ev.type === 'POST' ? 1 : 17, t + .55, 2.1);
+                for (i = 0; i < 22; i++) { p = sim.players[i]; if (i === ev.p || p.off || p.team !== ev.team || p.role === 'GK') continue; if (Math.hypot(p.x - sim.players[ev.p].x, p.y - sim.players[ev.p].y) < 14 && (m.xg || 0) >= .15 && v7Free(i, t + .7) && oaH(t, i) < .6) { v7Gest(i, oaH(i, t) < .5 ? 1 : 17, t + .75, 1.8); break; } }
+                break;
+            case 'SAVE':
+                if (ev.p2 >= 0 && (m.xg || 0) >= .12 && sqOn() && v7Free(ev.p2, t + .6)) v7Gest(ev.p2, oaH(t, ev.p2) < .5 ? 1 : 18, t + .65, 1.9);
+                break;
+            case 'OFFSIDE':
+                if (!sqOn()) break;
+                if (v7Free(ev.p, t + .9)) v7Gest(ev.p, oaH(t, ev.p) < .7 ? 4 : 1, t + .95, 1.8);
+                for (i = 0; i < 22; i++) { p = sim.players[i]; if (p.off || p.team === ev.team || p.role === 'GK') continue; if (Math.abs(p.x - ev.x) < 12 && oaH(t, i * 7) < .35 && v7Free(i, t + .1)) { v7Gest(i, 6, t + .12, 1.5, 0, 0, oaH(i, t) < .5 ? 1 : -1); break; } }
+                break;
+        }
+    }
+    /* --- hakem işaretleri (düdükten sonra): serbest vuruş yönü, korner, aut, penaltı noktası, taç yönü --- */
+    function v7RefSig(pose, dx, dy, delayMs, durMs) { var now = v7Now(), ls = v7Ls(), dl = Math.hypot(dx, dy) || 1; V7.refP = { pose: pose, t0: now + (delayMs || 0) / ls, until: now + ((delayMs || 0) + (durMs || 1700)) / ls, fx: dx / dl, fy: dy / dl, wh: now + Math.max(0, (delayMs || 0) - 380) / ls }; }
+    function v7RefEv(ev) {
+        if (!V7.on || !sqOn() || !S.sim) return; var sim = S.sim, m = ev.meta || {}, d;
+        if (ev.type === 'FOUL' && !m.adv) { var tf = 1 - ev.team, dir = sim.teams[tf] ? sim.teams[tf].dir : 1; if (m.pen) { var gx = sim.atkGoalX(tf); v7RefSig('pen', gx - dir * 11 - (S.ref ? S.ref.x : 0), PH / 2 - (S.ref ? S.ref.y : 0), 450, 2000); } else v7RefSig('fk', dir, 0, 450, 1700); }
+        else if (ev.type === 'CORNER') { d = { x: ev.x - (S.ref ? S.ref.x : 0), y: ev.y - (S.ref ? S.ref.y : 0) }; v7RefSig('corner', d.x, d.y, 250, 1800); }
+        else if (ev.type === 'THROWIN') { var dt = sim.teams[ev.team] ? sim.teams[ev.team].dir : 1; v7RefSig('fk', dt, 0, 250, 1300); }
+        else if (ev.type === 'OFF' && !(m.teammate)) { var dd = sim.mode === 'dead' ? sim.dead : null; if (dd && dd.kind === 'goalkick') v7RefSig('gk', dd.x - (S.ref ? S.ref.x : 0), dd.y - (S.ref ? S.ref.y : 0), 350, 1600); }
+    }
+    /* --- top görevlileri: altı görevli (iki yan çizgide ikişer, iki kale arkasında); boşta yedek topu elde tutar --- */
+    var V7_BB = [[26, -3.4, 0], [79, -3.4, 0], [26, PH + 3.7, 1], [79, PH + 3.7, 1], [-3.7, PH / 2 + 11, 2], [PW + 3.7, PH / 2 - 11, 3]];
+    function v7BBInit() { V7.bb = V7_BB.map(function (q) { var fx = q[2] === 2 ? 1 : q[2] === 3 ? -1 : 0, fy = q[2] === 0 ? 1 : q[2] === 1 ? -1 : 0; return { x: q[0], y: q[1], hx: q[0], hy: q[1], fx: fx, fy: fy, hfx: fx, hfy: fy, s: q[2], hold: 1, tx: q[0], ty: q[1], v: 0, g: 0, gt: 0, gT: 0 }; }); }
+    function v7BBStep(h) {
+        var B = V7.bb, i, b; if (!B) return;
+        for (i = 0; i < B.length; i++) {
+            b = B[i]; var dx = b.tx - b.x, dy = b.ty - b.y, dl = Math.hypot(dx, dy), st = (b.v || 1.5) * h;
+            if (dl > .03) { if (dl > st) { b.x += dx / dl * st; b.y += dy / dl * st; } else { b.x = b.tx; b.y = b.ty; } if (dl > .2) { b.fx = dx / dl; b.fy = dy / dl; } }
+            else if (b.ffx != null) { b.fx = b.ffx; b.fy = b.ffy; }
+            if (b.g) { b.gt += h; if (b.gt > b.gT) { b.g = 0; b.gt = 0; } }
+        }
+    }
+    function v7BBOut() { var B = V7.bb, L = V7.xa, i; if (!B) return; for (i = 0; i < B.length; i++) { var b = B[i], q = L[L.length] = { k: 0, id: -1, x: b.x, z: b.y, fx: b.fx, fz: b.fy, g: b.g, gt: b.gt, gh: 1, hold: b.hold }; } }
+    /* çizgiyi geçen topun 1,3 sn'lik yolu (outBallLive ile aynı fizik) */
+    function v7ObAt(o, e) {
+        var x = o.x, y = o.y, z = o.z, vx = o.vx, vy = o.vy, vz = o.vz, hh = .02, n = Math.ceil(e / hh), i;
+        for (i = 0; i < n; i++) { var q = Math.min(hh, e - i * hh); if (z > .01 || vz > 0) { vz -= 9.81 * q; z += vz * q; if (z < 0) { z = 0; vz = vz < -1.2 ? -vz * .55 : 0; vx *= .85; vy *= .85; } }
+            else { var sp = Math.hypot(vx, vy); if (sp > 1e-3) { var ns = Math.max(0, sp - (.9 + .02 * sp * sp) * q); vx *= ns / sp; vy *= ns / sp; } }
+            x += vx * q; y += vy * q; if (x < -6.2) { x = -6.2; vx = Math.abs(vx) * .15; } else if (x > PW + 6.2) { x = PW + 6.2; vx = -Math.abs(vx) * .15; } if (y < -5.2) { y = -5.2; vy = Math.abs(vy) * .15; } else if (y > PH + 5.2) { y = PH + 5.2; vy = -Math.abs(vy) * .15; } }
+        return { x: x, y: y, z: z };
+    }
+    /* yeni top teslimi: çizgi dışındaki top durur; en uygun görevli yerine koşar, yedek topu atış / köşe / aut noktasına atar; sonra eski topu alıp yerine döner */
+    function v7DlvStart(sim, d, ob) {
+        if (!V7.bb) v7BBInit();
+        var tx = d.x, ty = d.y, k = d.kind, o = { bx: NaN, by: NaN }, i, best = -1, bd = 1e9;
+        if (k === 'corner') { try { spCornerSpot(sim, d, o); } catch (e) { } if (o.bx === o.bx) { tx = o.bx; ty = o.by; } else { var sp2 = [0, 0]; spSpot(d, sp2); tx = sp2[0]; ty = sp2[1]; } }
+        var rest = v7ObAt(ob, 1.3), sideY = ty < PH / 2 ? -1 : 1, end = tx < PW / 2 ? 2 : 3;
+        for (i = 0; i < V7.bb.length; i++) {
+            var b = V7.bb[i], ok = k === 'throw' ? b.s === (sideY < 0 ? 0 : 1) : k === 'goalkick' ? b.s === end : (b.s === end || b.s === (sideY < 0 ? 0 : 1));
+            if (!ok) continue; var dd = Math.hypot(b.x - tx, b.y - ty); if (dd < bd) { bd = dd; best = i; }
+        }
+        if (best < 0) return;
+        var sx, sy;      // görevlinin atış yeri (çizgi dışında, noktaya yakın)
+        if (k === 'throw') { sx = Math.max(-2, Math.min(PW + 2, tx + (tx < PW / 2 ? 2.2 : -2.2))); sy = sideY < 0 ? -2.4 : PH + 2.4; }
+        else if (k === 'goalkick') { sx = tx < PW / 2 ? -2.6 : PW + 2.6; sy = ty + (ty < PH / 2 ? 3.5 : -3.5); }
+        else { sx = tx < PW / 2 ? -2.6 : PW + 2.6; sy = sideY < 0 ? 3.8 : PH - 3.8; }
+        var b0 = V7.bb[best]; b0.tx = sx; b0.ty = sy; b0.v = 4.2; b0.ffx = tx - sx; b0.ffy = ty - sy; var fl = Math.hypot(b0.ffx, b0.ffy) || 1; b0.ffx /= fl; b0.ffy /= fl;
+        V7.dl = { sid: S.sid, d: d, k: k, i: best, t: 0, ph: 0, tx: tx, ty: ty, rest: rest, ob: ob, toss: -1, T: 0, x0: 0, y0: 0, z0: 0, done: 0 };
+        v7Cnt('teslim_' + k);
+    }
+    function v7DlvStep(v, h) {      // h: görüntü saniyesi (hızla ölçekli) · dönüş: görünen topu bu kare değiştirdi mi
+        var D = V7.dl, sim = S.sim; if (!D) return false;
+        if (D.sid !== S.sid || !sqOn() || S.hold) { if (D.ph < 3) V7_DLV_END(); V7.dl = null; return false; }
+        D.t += h; var b = V7.bb[D.i];
+        if (D.ph === 0) { if (D.t < 1.3) return false; D.ph = 1; V7.xbOld = [D.rest.x, Math.max(.17, D.rest.z), D.rest.y]; b.hold = 0; }
+        if (D.ph === 1) {      // görevli yedek topu elinde, atış yerine varıyor
+            var arr = Math.hypot(b.tx - b.x, b.ty - b.y) < .25;
+            if (arr || D.t > 2.1) { D.ph = 2; D.T = 0; D.x0 = b.x + b.fx * .32; D.y0 = b.y + b.fy * .32; D.z0 = .95; var dd = Math.hypot(D.tx - D.x0, D.ty - D.y0); D.dur = Math.max(.45, Math.min(.95, dd / 7.5)); b.g = 23; b.gt = 0; b.gT = .7; }
+            else { v.bx = b.x + b.fx * .32; v.by = b.y + b.fy * .32; v.bz = .78; v.owner = -1; return true; }
+        }
+        if (D.ph === 2) {      // atış yayı (tepe ~1,5 m), noktaya iner, küçük sekme
+            D.T += h; var u = Math.min(1, D.T / D.dur), ap = Math.max(.6, Math.min(2.2, D.dur * 2.2));
+            v.bx = D.x0 + (D.tx - D.x0) * u; v.by = D.y0 + (D.ty - D.y0) * u; v.bz = Math.max(0, D.z0 * (1 - u) + 4 * ap * u * (1 - u) - .17 * u);
+            if (u >= 1) { var e2 = D.T - D.dur; v.bz = e2 < .28 ? .14 * Math.sin(Math.PI * e2 / .28) : 0; if (e2 > .32) { D.ph = 3; V7_DLV_END(); b.tx = D.rest.x; b.ty = D.rest.y; b.v = 3.2; b.ffx = null; } }
+            v.owner = -1; return true;
+        }
+        if (D.ph === 3) {      // eski topu almaya gider (uzaksa yerine döner)
+            var far = Math.hypot(D.rest.x - b.hx, D.rest.y - b.hy) > 30;
+            if (far) { V7.xbOld = null; b.hold = 1; b.tx = b.hx; b.ty = b.hy; b.v = 1.6; b.ffx = b.hfx; b.ffy = b.hfy; V7.dl = null; return false; }
+            if (Math.hypot(b.x - D.rest.x, b.y - D.rest.y) < .55) { D.ph = 4; b.g = 24; b.gt = 0; b.gT = .8; D.T = 0; }
+            return false;
+        }
+        if (D.ph === 4) { D.T += h; if (D.T > .45 && V7.xbOld) { V7.xbOld = null; b.hold = 1; } if (D.T > .8) { b.tx = b.hx; b.ty = b.hy; b.v = 1.6; b.ffx = b.hfx; b.ffy = b.hfy; V7.dl = null; } }
+        return false;
+    }
+    function V7_DLV_END() { V7.dlv = 0; }
+    /* --- değişiklik sahnesi: dördüncü hakem tabelayı kaldırır, çıkan oyuncu kenara gelir, el sıkışırlar, giren sahaya koşar (kesmeyle) --- */
+    function v7SubStart(q) {
+        var now = v7Now(), sim = S.sim; try { if (S.r3.subHold) S.r3.subHold(q.id, false); } catch (e) { }
+        V7.sub = { q: q, t: 0, sid: S.sid, ox: PW / 2 + 6.5, oy: PH - 4.2, ix: PW / 2 - 1.7, iy: PH + 1.5, ph: 0 };
+        V7.band = { kind: 'sub', team: q.team, inN: q.inN, outN: q.outN, min: minOf(sim.t), until: now + 5500 / v7Ls() };
+        S.hold = 'v7sub'; S.last = now; r3Cut(); sqLog('degisiklik'); v7Cnt('degisiklik');
+    }
+    function v7SubStep(h) {
+        var U = V7.sub; if (!U) return; if (U.sid !== S.sid) { V7.sub = null; if (S.hold === 'v7sub') S.hold = null; return; }
+        U.t += h; var t = U.t, ox, oy, ix, iy, og = 0, ig = 0, ofx = -1, ofy = .3, ifx = .3, ify = -1;
+        var hs = 2.7;      // çıkan oyuncu tabelaya varır
+        var oT = Math.min(1, t / hs); ox = U.ox + (PW / 2 + .15 - U.ox) * oT; oy = U.oy + (PH + .35 - U.oy) * oT;
+        if (t < hs) { ofx = (PW / 2 + .15 - U.ox); ofy = (PH + .35 - U.oy); }
+        ix = U.ix; iy = U.iy;
+        if (t >= hs - .4 && t < hs + 1.1) { ig = 7; og = 7; ifx = ox - ix; ify = oy - iy; ofx = -ifx; ofy = -ify; }      // el sıkışma
+        if (t >= hs + 1.1) { var r = Math.min(1, (t - hs - 1.1) / 1.6); ix = U.ix + (PW / 2 - 4 - U.ix) * r; iy = U.iy + (PH - 7.5 - U.iy) * r; ifx = -.4; ify = -1; ox += (t - hs - 1.1) * 1.3; ofx = 1; ofy = .35; }
+        V7.xa.push({ k: 2, id: U.q.id, x: ox, z: oy, fx: ofx, fz: ofy, g: og, gt: t, gh: 1, hold: 0 });
+        V7.xa.push({ k: 1, id: U.q.id, x: ix, z: iy, fx: ifx, fz: ify, g: ig, gt: t, gh: 1, hold: 0 });
+        if (S.r3) S.r3.cutCam = { eye: [PW / 2 - 2.5 + .5 * Math.min(1, t / 5), 2.35, PH + 10.5], at: [PW / 2 + .3, 1.15, PH + .2], fov: 40 }, S.r3.v7Cut = 1;
+        if (t > hs + 2.8) { V7.sub = null; if (S.hold === 'v7sub') { S.hold = null; S.last = v7Now(); } if (S.r3) { S.r3.cutCam = null; S.r3.v7Cut = 0; } r3Cut(); }
+    }
+    /* --- devre arası / maç sonu: oyuncular tokalaşır, tünele yürür (hakemle) --- */
+    function v7HalfStart(fin) {
+        var sim = S.sim, i; V7.half = { fin: fin, t: 0, sid: S.sid, x: new Float32Array(22), y: new Float32Array(22), rx: S.ref ? S.ref.x : PW / 2, ry: S.ref ? S.ref.y : PH / 2, pair: new Int8Array(22).fill(-1), dur: fin ? 5.5 : 4.2 };
+        for (i = 0; i < 22; i++) { V7.half.x[i] = V7.pOk ? V7.px[i] : sim.players[i].x; V7.half.y[i] = V7.pOk ? V7.py[i] : sim.players[i].y; }
+        if (fin) for (i = 0; i < 11; i++) { if (sim.players[i].off) continue; var bj = -1, bd = 12; for (var j = 11; j < 22; j++) { if (sim.players[j].off || V7.half.pair[j] >= 0) continue; var dd = Math.hypot(V7.half.x[i] - V7.half.x[j], V7.half.y[i] - V7.half.y[j]); if (dd < bd) { bd = dd; bj = j; } } if (bj >= 0) { V7.half.pair[i] = bj; V7.half.pair[bj] = i; } }
+        S.hold = 'v7ht'; S.last = v7Now(); sqLog(fin ? 'mac_sonu' : 'devre'); v7Cnt(fin ? 'mac_sonu' : 'devre');
+    }
+    function v7HalfStep(v, h) {
+        var Hh = V7.half, sim = S.sim; if (!Hh) return; if (Hh.sid !== S.sid) { V7.half = null; return; }
+        Hh.t += h; var i, tx = PW / 2 + 1, ty = PH + 4.5;
+        for (i = 0; i < 22; i++) {
+            if (sim.players[i].off || !(v.x[i] > -20)) continue; var x = Hh.x[i], y = Hh.y[i], gx = tx, gy = ty, sp = 1.6 + .25 * oaH(i, 3), pj = Hh.pair[i];
+            if (pj >= 0 && Hh.t < 2.6) { gx = (Hh.x[i] + Hh.x[pj]) / 2 + (i < 11 ? -.42 : .42); gy = (Hh.y[i] + Hh.y[pj]) / 2; sp = 1.5; }
+            var dx = gx - x, dy = gy - y, dl = Math.hypot(dx, dy), st = sp * h; if (dl > st) { x += dx / dl * st; y += dy / dl * st; } else { x = gx; y = gy; }
+            Hh.x[i] = x; Hh.y[i] = y; v.x[i] = x; v.y[i] = y;
+            if (dl > .2) { v.fx[i] = dx / dl; v.fy[i] = dy / dl; } else if (pj >= 0) { var px2 = Hh.x[pj] - x, py2 = Hh.y[pj] - y, pl = Math.hypot(px2, py2) || 1; v.fx[i] = px2 / pl; v.fy[i] = py2 / pl; if (!Hh['g' + i]) { Hh['g' + i] = 1; v7Gest(i, 7, S.viewT, 1.1); } }
+        }
+        var rdx = tx - 2 - Hh.rx, rdy = ty - Hh.ry, rdl = Math.hypot(rdx, rdy), rst = 1.7 * h; if (rdl > rst) { Hh.rx += rdx / rdl * rst; Hh.ry += rdy / rdl * rst; v.rfx = rdx / rdl; v.rfy = rdy / rdl; } v.rx = Hh.rx; v.ry = Hh.ry;
+        if (S.r3) { S.r3.cutCam = { eye: [PW / 2 - 9, 7.5, PH + 24], at: [PW / 2 + 2, .8, PH - 6 + Math.min(6, Hh.t * 1.4)], fov: 40 }; S.r3.v7Cut = 1; }
+        if (Hh.t > Hh.dur) { V7.half = null; if (S.r3) { S.r3.cutCam = null; S.r3.v7Cut = 0; } if (S.hold === 'v7ht') S.hold = null; Hh.done = 1; V7.htDone = S.sid + ':' + sim.half + ':' + (sim.finished ? 1 : 0); afterSteps(); }
+    }
+    /* --- gol: sevinç çeşitleri (uçak koşusu, diz kayması, köşe bayrağında sıçrama, yumruk, kucaklaşma), yenilen tarafta hayal kırıklığı --- */
+    function v7GoalStep(v) {
+        var gi = S.goalInfo, sim = S.sim, C2 = S.gcel; if (!gi || !C2 || !sim || gi.own || gi.scorer < 0) return;
+        if (V7.cel && V7.cel.gi === gi) { var K = V7.cel, tN = S.viewT;
+            if (!K.hug && C2.t > 2.2) { K.hug = 1; var sc0 = gi.scorer; for (var i = 0; i < 22; i++) { var p = sim.players[i]; if (i === sc0 || p.off || p.team !== gi.team || p.role === 'GK') continue; if (Math.hypot(v.x[i] - v.x[sc0], v.y[i] - v.y[sc0]) < 4.5) v7Gest(i, 8, tN, 2.2, v.x[sc0], v.y[sc0]); } }
+            if (!K.fin && C2.t > 2.4) { K.fin = 1; v7Gest(gi.scorer, K.end, tN, K.end === 14 ? 1.6 : 2.4, 0, 0, 1, K.end === 14 ? 4 : 0); }
+            return; }
+        var h = oaH(gi.min + .3, gi.scorer), endK = h < .35 ? 14 : h < .62 ? 15 : 12, tN2 = S.viewT;
+        V7.cel = { gi: gi, end: endK, hug: 0, fin: 0 };
+        v7Gest(gi.scorer, h < .5 ? 13 : 12, tN2 + .35, 2.0);
+        var gx = gi.gx != null ? (gi.gx > PW / 2 ? PW : 0) : (sim.players[gi.scorer].x > PW / 2 ? PW : 0), nG = 0;
+        for (var j = 0; j < 22; j++) {      // yenilen takım: kaleye yakın olanlar
+            var q = sim.players[j]; if (q.off || q.team === gi.team || !(v.x[j] > -20)) continue;
+            var dg = Math.hypot(v.x[j] - gx, v.y[j] - PH / 2); if (dg > 30 && q.role !== 'GK') continue;
+            var hq = oaH(j, gi.min), md = q.role === 'GK' ? (hq < .5 ? 3 : 17) : hq < .3 ? 1 : hq < .55 ? 17 : hq < .75 ? 18 : hq < .9 ? 2 : (nG++ ? 17 : 3);
+            v7Gest(j, md, tN2 + .5 + .4 * hq, 3.2);
+        }
+        v7Cnt('gol_sevinc_' + endK);
+    }
+    /* --- duran top: korner itişmesi, kalecinin barajı yönetmesi --- */
+    function v7DeadStep(sim) {
+        var d = sim.mode === 'dead' ? sim.dead : null; if (!d || d.afterGoal || !sqOn()) return;
+        var tN = sim.t, i, j;
+        if (d.kind === 'freekick' && d.wall && V7.fkGk !== d && d.timer > .5) {
+            V7.fkGk = d; var gk = (1 - d.team) * 11, gp = sim.players[gk];
+            if (gp && gp.role === 'GK' && !gp.off) { v7Gest(gk, 20, tN + .1, Math.max(1.2, Math.min(4.5, (d.wait - d.timer) - 1.2)), d.x, d.y); v7Cnt('kaleci_baraj'); }
+        }
+        if (d.kind === 'corner' && V7.corJ !== d && d.timer > 1.2) {
+            V7.corJ = d; var at = d.team, gx = sim.atkGoalX(at), n = 0;
+            for (i = 0; i < 22 && n < 3; i++) {
+                var a = sim.players[i]; if (a.off || a.team !== at || a === d.taker || a.role === 'GK' || Math.abs(a.x - gx) > 16) continue;
+                var bj = -1, bd = 2.6; for (j = 0; j < 22; j++) { var q = sim.players[j]; if (q.off || q.team === at || q.role === 'GK') continue; var dd = Math.hypot(q.x - a.x, q.y - a.y); if (dd < bd) { bd = dd; bj = j; } }
+                if (bj < 0 || !v7Free(i, tN) || !v7Free(bj, tN)) continue;
+                var dur = Math.max(1.2, Math.min(3.5, (d.wait - d.timer) - .9)); v7Gest(i, 10, tN + .05, dur, sim.players[bj].x, sim.players[bj].y); v7Gest(bj, 10, tN + .05, dur, a.x, a.y); n++;
+            }
+            if (n) v7Cnt('korner_itisme');
+        }
+    }
+    /* --- faul tekrarı: kartlı / sert / penaltı faulünde, kart sahnesinden sonra yakın açıdan ağır çekim --- */
+    function v7FoulRpPlan() {
+        var F = V7.foul; if (!F || F.sid !== S.sid || F.rp || F.adv || !S.replayOn || !sqOn() || liveSpeed() >= 4) return;
+        if (!(F.card || F.pen || F.k === 3 || F.k === 4 || F.k === 6 || F.k === 7 || F.k >= 8)) return;
+        if (S.sim.t - V7.rpT < 25) return;
+        F.rp = 1; V7.rpq = { F: F, due: v7Now() + 1900 / v7Ls() };
+    }
+    function v7FoulRpTick(sim) {
+        var Q = V7.rpq; if (!Q) return; var now = v7Now();
+        if (Q.F.sid !== S.sid || !sqOn() || sim.mode !== 'dead') { V7.rpq = null; return; }
+        if (now < Q.due || S.hold || SQ.card || (S.refCard && now < S.refCard.until) || (S.offWalk && now < S.offWalk.go + 2800 / v7Ls())) return;
+        V7.rpq = null; var F = Q.F, R = S.ring, lo = Math.max(0, R.n - RING + 3), n1 = R.n - 1, i, f0 = -1, f1 = -1;
+        for (i = n1; i >= lo; i--) { var tt = ringT(i); if (f1 < 0 && tt <= F.t + 1.3) f1 = i; if (tt <= F.t - 1.5) { f0 = i; break; } }
+        if (f0 < 0 || f1 < 0 || f1 - f0 < 30) return;
+        var n = f1 - f0 + 1, fr = new Float32Array(n * FS); for (i = 0; i < n; i++) { var src = ((f0 + i) % RING) * FS; fr.set(R.buf.subarray(src, src + FS), i * FS); }
+        S.rp = { fr: fr, n: n, ng: n, s0: 0, tc: 0, t: 0, endHold: 0, rings: [{ id: F.p, col: '#ff5a6b' }, { id: F.p2, col: '#7fd1ff' }], gi: { scorer: -1, min: minOf(F.t), team: 0 }, zoom: 1.8, rate: 1, gk: null, by: rpBadgeY(),
+            title: 'TEKRAR', sub: 'Faul · ' + V7_FN[F.k] + ' · ' + minOf(F.t) + '\'', loop: false, slow: .42, v7: { x: F.x, y: F.y, p: F.p, p2: F.p2 } };
+        V7.rpT = sim.t; r3Cut(); S.rpCount++; S.hold = 'replay'; S.last = now; showReplayUI(); sqLog('faul_tekrar'); v7Cnt('faul_tekrar');
+    }
+    /* --- kamera: faul tekrarında yakın açı (temasa dik, yayın tarafından), gol tekrarında golün türüne göre açı --- */
+    function v7Cam(v, now, live) {
+        var R3 = S.r3; if (!R3) return;
+        if (!live && S.rp && S.rp.v7) {
+            var q = S.rp.v7, a = q.p >= 0 ? q.p : -1, b = q.p2 >= 0 ? q.p2 : -1, cx = b >= 0 && v.x[b] > -20 ? v.x[b] : q.x, cy = b >= 0 && v.x[b] > -20 ? v.y[b] : q.y;
+            if (a >= 0 && v.x[a] > -20) { cx = (cx * 2 + v.x[a]) / 3; cy = (cy * 2 + v.y[a]) / 3; }
+            var c = S.rp.v7c || (S.rp.v7c = { x: cx, y: cy }); c.x += (cx - c.x) * .12; c.y += (cy - c.y) * .12;
+            var dx = a >= 0 && b >= 0 ? v.x[b] - v.x[a] : 1, dy = a >= 0 && b >= 0 ? v.y[b] - v.y[a] : 0, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl; if (ny < 0) { nx = -nx; ny = -ny; }
+            var orb = .35 * Math.sin((S.rp.tc / Math.max(1, S.rp.n)) * 2.2 - 1.1), cs = Math.cos(orb), sn = Math.sin(orb), ex = nx * cs - ny * sn, ey = nx * sn + ny * cs; if (ey < .25) ey = .25;
+            R3.cutCam = { eye: [c.x + ex * 8.2, 2.1, c.y + ey * 8.2], at: [c.x, .85, c.y], fov: 34 }; R3.v7Cut = 1; return;
+        }
+        if (!live && S.rp && S.rp.gi && S.rp.gi.scorer >= 0 && S.rp.v7g) {      // gol tekrarı açısı
+            var G2 = S.rp.v7g, rem = (S.rp.n - 1 - S.rp.tc) / 25;
+            if (G2.ang === 'arka' && rem < 2.2) { var gx = G2.gx, dir = gx > PW / 2 ? 1 : -1; R3.cutCam = { eye: [gx + dir * 9.5, 3.2, PH / 2 + (G2.gy - PH / 2) * .2], at: [gx - dir * 9, 1.0, PH / 2 + (v.by - PH / 2) * .5], fov: 46 }; R3.v7Cut = 1; return; }
+            if (G2.ang === 'yuksek' && rem < 3.2) { R3.cutCam = { eye: [v.bx - (G2.gx > PW / 2 ? 14 : -14), 15, PH + 6], at: [v.bx + (G2.gx > PW / 2 ? 4 : -4), 0, v.by], fov: 40 }; R3.v7Cut = 1; return; }
+            if (G2.ang === 'kenar' && rem < 2.6) { R3.cutCam = { eye: [v.bx - (G2.gx > PW / 2 ? 6 : -6), 1.7, PH + 5.5], at: [v.bx + (G2.gx > PW / 2 ? 3 : -3), 1.0, v.by], fov: 38 }; R3.v7Cut = 1; return; }
+        }
+        if (R3.v7Cut && !V7.sub && !V7.half) { R3.cutCam = null; R3.v7Cut = 0; }
+    }
+    function v7GoalAngle(gi) {      // kafa golü: kale arkası · uzaktan şut: yüksek · ceza sahası içi ayak: kenar çizgisi (yer seviyesi)
+        var ls = S.lastShot, sim = S.sim, gx = gi.gx != null ? (gi.gx > PW / 2 ? PW : 0) : PW, ang = 'kenar';
+        var sp = gi.scorer >= 0 ? sim.players[gi.scorer] : null, R = S.ring, i, sx = sp ? sp.x : gx;
+        if (ls && ls.p === gi.scorer && ls.tag === 'HEAD') ang = 'arka';
+        else { for (i = R.n - 1; i > Math.max(0, R.n - 200); i--) { var o = (i % RING) * FS; if (R.buf[o + 4] === gi.scorer) { sx = R.buf[o + 6 + gi.scorer * 4]; break; } } if (Math.abs(gx - sx) > 22) ang = 'yuksek'; else if (oaH(gi.min, gi.scorer) < .4) ang = 'arka'; }
+        return { ang: ang, gx: gx, gy: gi.gy != null ? gi.gy : PH / 2 };
+    }
+    /* --- her kare (canlı çizimde): görünüm hedefleri, top görevlileri, değişiklik, devre, sevinç, hakem işareti --- */
+    function v7Live(v, dt) {
+        var sim = S.sim, now = v7Now(), h = Math.min(.1, dt || .016) * v7Ls(), i; V7.xa.length = 0; V7.xb.length = 0;
+        if (!sim || !V7.on || !S.r3 || !S.use3) { V7.pOk = 0; return; }
+        if (!V7.bb) v7BBInit();
+        if (V7.half) v7HalfStep(v, h);
+        if (V7.sub) { v7SubStep(h); if (V7.sub && V7.sub.q.id >= 0) v.x[V7.sub.q.id] = -99; }
+        else if (V7.subQ.length && sqOn() && !S.hold && sim.mode === 'dead' && !SQ.card && !(S.refCard && now < S.refCard.until) && !S.offWalk && !V7.dl) { var q = V7.subQ.shift(); if (q.sid === S.sid) v7SubStart(q); }
+        else if (V7.subQ.length && (!sqOn() || sim.finished)) { var q2 = V7.subQ.shift(); try { if (S.r3.subHold) S.r3.subHold(q2.id, false); } catch (e) { } }
+        if (S.hold === 'goal') try { v7GoalStep(v); } catch (e) { }
+        if (sqOn() && !S.hold) {
+            if (SQ.ob && SQ.ob !== V7.obSeen && sim.mode === 'dead' && sim.dead) { V7.obSeen = SQ.ob; try { v7DlvStart(sim, sim.dead, SQ.ob); } catch (e) { V7.dl = null; } }
+            try { v7DeadStep(sim); } catch (e) { }
+            try { v7FoulRpTick(sim); } catch (e) { }
+        }
+        v7GvApply(v, dt);
+        v7BBStep(h);
+        V7.dlv = 0; if (V7.dl && !V7.half && !V7.sub) { if (v7DlvStep(v, h)) V7.dlv = 1; else if (V7.dl && V7.dl.ph === 1) V7.dlv = 1; }
+        if (V7.xbOld) V7.xb.push(V7.xbOld[0], V7.xbOld[1], V7.xbOld[2]);
+        v7BBOut();
+        var rp = V7.refP; if (rp && now >= rp.t0 && now < rp.until && v.rx != null) { v.rfx = rp.fx; v.rfy = rp.fy; }
+        for (i = 0; i < 22; i++) { V7.px[i] = v.x[i]; V7.py[i] = v.y[i]; } V7.pOk = 1;
+        if (G.__abLab) try { G.__abLab(v, S, V7); } catch (e) { }
+    }
+    function v7RefPose(now) { var rp = V7.refP; if (!rp || now >= rp.until) return null; if (now < rp.t0) return now >= rp.wh ? 'whistle' : null; return rp.pose; }
+    function v7CardShown(c, now) {      /* kart gösterildi: oyuncu hakemin önünde kalır; takım arkadaşlarından 1–3'ü itiraz eder (kırmızıda hep) */
+        var sim = S.sim, id = c.id, p = sim && sim.players[id], ls = v7Ls(); if (!p) return;
+        var g = V7.gv[id]; if (g) g.until = now + 3000 / ls;
+        var red = c.kind === 'R', h = oaH(sim.t + .11, id), n = red ? 3 : h < .5 ? 2 : h < .78 ? 1 : 0, L = [], i, k;
+        var px = p.off && S.offWalk ? S.offWalk.x : p.x, py = p.off && S.offWalk ? S.offWalk.y : p.y;
+        for (i = 0; i < 22; i++) { var q = sim.players[i]; if (i === id || q.off || q.team !== p.team || q.role === 'GK') continue; var dd = Math.hypot(q.x - px, q.y - py); if (dd < 22) L.push([dd, i]); }
+        L.sort(function (a, b) { return a[0] - b[0]; });
+        for (k = 0; k < Math.min(n, L.length); k++) { var j = L[k][1]; v7Go(j, 0, 0, 3.2, 3.8, { fol: 1, stop: 2.5 + .45 * k }); v7Gest(j, 4, S.viewT + .55 + .25 * k, 2.3, S.ref ? S.ref.x : px, S.ref ? S.ref.y : py); }
+        sqLog('itiraz', Math.min(n, L.length)); if (n) v7Cnt('itiraz');
+    }
+
+    /* [v187] izleme düzeyleri (FM'deki beş düzey): Tam (tüm maç) · Kapsamlı (pozisyonlar normal hızda, sakin bölümler hızlı) · Geniş (yarım fırsatlar,
+       isabetli şutlar, tehlikeli duran toplar, kartlar) · Önemli anlar (goller, net fırsatlar, penaltı, kırmızı, VAR) · Yalnız anlatım (saha yok; anlatım ve skor).
+       Dinamik özet: fark ≥ 3 ve 60'+ → yalnız gol / penaltı / kırmızı / VAR; fark ≤ 1 ve 75'+ → daha çok an. "Kritik ana atla" ve "Sonuna simüle et" her düzeyde çalışır. */
+    var V7W = { lvl: 'key' }; try { var lv7 = localStorage.getItem('adoball_v187_izleme'); if (lv7 === 'ext' || lv7 === 'yaz' || lv7 === 'key') V7W.lvl = lv7; } catch (e) { }
+    var V7W_TIP = { ext: 'Geniş: yarım fırsatlar, isabetli şutlar, tehlikeli duran toplar ve kartlar; aralar maç arası panelinde hızlı akar', key: 'Önemli anlar: goller, net fırsatlar, penaltılar, kırmızı kartlar ve VAR; her an hazırlığıyla başlar', yaz: 'Yalnız anlatım: saha gösterilmez; anlatım satırları, skor ve istatistik akar' };
+    var V7W_HINT = { ext: 'Geniş · yarım fırsatlar ve duran toplar da gösterilir', key: 'Önemli anlar · gerçek hızda', yaz: 'Yalnız anlatım · saha yok, maç anlatımla akar' };
+    var setWatch0_ = setWatch;
+    setWatch = function (w) {
+        if (w === 'ext' || w === 'yaz' || w === 'fm') { V7W.lvl = w === 'fm' ? 'key' : w; try { localStorage.setItem('adoball_v187_izleme', V7W.lvl); } catch (e) { } w = 'fm'; sqLog('izleme:' + V7W.lvl); }
+        else sqLog('izleme:' + w);
+        var r = setWatch0_(w); v7WatchUI(); return r;
+    };
+    function v7WatchUI() {
+        try {
+            var fm = S.watch === 'fm';
+            [['watch-fm', 'key'], ['watch-ext', 'ext'], ['watch-yaz', 'yaz']].forEach(function (x) { var b = $(x[0]); if (!b) return; var on = fm && V7W.lvl === x[1]; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.title = V7W_TIP[x[1]]; });
+            var hint = $('eng-hint'); if (fm && hint && mode === '2d' && V7W_HINT[V7W.lvl] && !/Pro modu|Hakem modu|Oyuncun sahada/.test(hint.textContent)) hint.textContent = V7W_HINT[V7W.lvl];
+        } catch (e) { }
+    }
+    var syncWatchUI0_ = syncWatchUI; syncWatchUI = function () { syncWatchUI0_(); v7WatchUI(); };
+    (function v7WatchInit() {
+        try {
+            var seg = $('watch-seg'); if (!seg || $('watch-ext')) return;
+            var mk = function (id, w, t) { var b = document.createElement('button'); b.type = 'button'; b.id = id; b.textContent = t; b.title = V7W_TIP[w]; b.setAttribute('aria-pressed', 'false'); b.onclick = function () { setWatch(w); }; return b; };
+            var ww = $('watch-wide'), wk = $('watch-key'), wf = $('watch-fm'), be = mk('watch-ext', 'ext', 'Geniş'), by = mk('watch-yaz', 'yaz', 'Yalnız anlatım');
+            if (ww) { ww.textContent = 'Tam'; seg.appendChild(ww); } if (wk) { wk.textContent = 'Kapsamlı'; seg.appendChild(wk); } seg.appendChild(be); if (wf) { wf.textContent = 'Önemli anlar'; seg.appendChild(wf); } seg.appendChild(by);
+            seg.classList.add('v7-watch5');
+        } catch (e) { }
+    })();
+    var fmTrigger0_ = fmTrigger;
+    fmTrigger = function (ev) {
+        var L = V7W.lvl, k = fmTrigger0_(ev), sim = S.sim; if (!sim) return k;
+        if (L === 'yaz') return '';
+        var mi = sim.t * CK / 60, sd = Math.abs(sim.teams[0].score - sim.teams[1].score), m = ev.meta || {}, fkd = function (r) { return ev.team >= 0 && ev.x != null && Math.hypot(sim.atkGoalX(1 - ev.team) - ev.x, PH / 2 - ev.y) < r; };
+        if (L === 'ext' && !k) {
+            if (ev.type === 'SHOT' && (m.on || (m.xg || 0) >= .05)) k = 'HALF';
+            else if (ev.type === 'FOUL' && !m.adv && fkd(35)) k = 'FKD';
+            else if (ev.type === 'CARD') k = 'CARD';
+            else if (ev.type === 'CORNER') k = 'COR';
+        }
+        if (k && sd >= 3 && mi >= 60 && !/^(GOAL|VAR|PEN|PENF|RED)$/.test(k)) { v7Cnt('ozet_kisaldi'); return ''; }      // dinamik özet: maç koptu
+        if (!k && sd <= 1 && mi >= 75) {      // dinamik özet: son dakikalar, çekişmeli maç
+            if (ev.type === 'SHOT' && (m.xg || 0) >= .06) k = 'CCC'; else if (ev.type === 'CORNER') k = 'COR'; else if (ev.type === 'FOUL' && !m.adv && fkd(30)) k = 'FKD';
+            if (k) v7Cnt('ozet_uzadi');
+        }
+        return k;
+    };
+    FM_LBL.HALF = 'POZİSYON'; FM_LBL.CARD = 'KART';
+    var fmTick0_ = fmTick;
+    fmTick = function (dt, sim) { var r = fmTick0_(dt, sim); if (V7W.lvl === 'yaz' && S.fm && S.fm.ph === 'tail') { S.fm.ph = 'gap'; S.fm.acc = 0; } return r; };
+    function v7YazPanel(x, y, w, h, F) {      // yalnız anlatım: saha yerine son anlatım satırları (en yenisi üstte)
+        g.save(); g.fillStyle = 'rgba(8,14,26,.9)'; g.fillRect(x, y, w, h);
+        g.fillStyle = '#7fd1ff'; g.font = '800 12px ' + fd(); g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillText('YALNIZ ANLATIM', x + 12, y + 20);
+        var L = (F.lines || []).slice(-8).reverse(), ly = y + 44, i;
+        g.font = '600 13px ' + fd();
+        for (i = 0; i < L.length && ly < y + h - 8; i++) { var q = L[i]; g.fillStyle = i ? 'rgba(220,230,245,' + Math.max(.35, 1 - i * .12) + ')' : '#fff'; g.fillText((minOf(q.t) + '\'  ') + fmFit(q.s, w - 70), x + 12, ly); ly += 22; }
+        if (!L.length) { g.fillStyle = 'rgba(220,230,245,.6)'; g.fillText('Maç anlatımla sürüyor…', x + 12, ly); }
+        g.restore();
+    }
+    function v7BandHTML(b) {
+        var tag = b.kind === 'sub' ? 'DEĞİŞİKLİK' : b.kind === 'adv' ? 'AVANTAJ' : b.kind === 'var' ? 'VAR' : '', col = b.kind === 'sub' ? '#1fa34a;color:#fff' : b.kind === 'adv' ? '#2f7dff;color:#fff' : '#7a3cff;color:#fff', crest = '';
+        if (b.kind === 'sub') { try { crest = renderTeamCrestHTML(teamObj(b.team), 34); } catch (e) { } }
+        var main = b.kind === 'sub' ? '<span class="gb-p"><b style="color:#3ddc6a">▲</b> ' + esc(b.inN || '') + '</span><span class="gb-s"><b style="color:#ff5a5a">▼</b> ' + esc(b.outN || '') + ' · ' + b.min + '\' · ' + esc(teamObj(b.team).name) + '</span>'
+            : '<span class="gb-p">' + esc(b.txt || '') + '</span>' + (b.sub ? '<span class="gb-s">' + esc(b.sub) + '</span>' : '');
+        return '<div class="gb"><span class="gb-tag" style="background:' + col + '">' + (crest ? '<span class="ab-hud-crest">' + crest + '</span>' : '') + tag + '</span><span class="gb-main">' + main + '</span></div>';
+    }
+    var afterSteps0_ = afterSteps;      /* [v187] devre / maç sonu: önce tokalaşma ve tünele yürüyüş, sonra devre arası / maç sonu ekranı */
+    afterSteps = function () {
+        var sim = S.sim;
+        if (V7.on && sim && (S.halfPending || sim.finished) && !V7.half && sqOn() && S.r3 && !S.hold) {
+            var key7 = S.sid + ':' + sim.half + ':' + (sim.finished ? 1 : 0);
+            if (V7.htDone !== key7) { try { v7HalfStart(!!sim.finished && !S.halfPending); return; } catch (e) { V7.half = null; if (S.hold === 'v7ht') S.hold = null; } }
+        }
+        return afterSteps0_();
+    };
+    var varFinish0_ = varFinish;      /* [v187] VAR kararı alt bandı */
+    varFinish = function () {
+        var vs = S.vs, r = varFinish0_.apply(this, arguments);
+        try { if (vs && V7.on) { var m = vs.m || {}, oc = m.outcome || '', txt = vs.kind === 'goal' ? (oc === 'cancel' ? 'GOL İPTAL' : 'GOL GEÇERLİ') : vs.kind === 'pen' ? (oc === 'confirm' ? 'PENALTI VERİLDİ' : oc === 'cancel' ? 'PENALTI İPTAL' : 'KARAR DEĞİŞTİ') : oc === 'downgrade' ? 'KART DEĞİŞTİ' : oc === 'cancel' ? 'KARAR İPTAL' : 'KARAR GEÇERLİ';
+            V7.band = { kind: 'var', txt: 'VAR · ' + txt, sub: (vs.info && vs.info.label) || '', team: vs.ev ? vs.ev.team : 0, until: performance.now() + 4500 / v7Ls() }; sqLog('var_bant'); } } catch (e) { }
+        return r;
+    };
 
     G.ado2d = {
         setMode: setMode, mode: function () { return mode; }, active: function () { return mode === '2d'; }, running: function () { return mode === '2d' && S.running; },

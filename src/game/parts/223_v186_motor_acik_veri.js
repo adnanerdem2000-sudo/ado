@@ -17,6 +17,7 @@ function v186Pick(sim,tm,by,rnd){const W=V186.W,p=by!=null?sim.players[by]:null,
   const hea=a.hea!=null?a.hea:65,h=a.h||180,lon=a.lon!=null?a.lon:60,ment=(sim.tactics?sim.tactics(1-tm).ment:0)||0;
   const kf=Math.max(.15,Math.min(1.6,(hea-55)/25+(h-180)*.03));
   o.kontra=W.kontra*(ment>=0?1.3:.8);o.kafa_orta=W.kafa_orta*kf;o.kafa_duran=W.kafa_duran*kf;o.orta_ayak=W.orta_ayak;o.ara=W.ara*Math.max(.5,Math.min(1.5,(a.pac||70)/75));
+  if(W.pen){const tk=sim.takers&&sim.takers[tm]?sim.takers[tm].pen:null;o.pen=W.pen*(tk!=null&&tk>=0?(p&&p.id===tm*11+tk?1.4:.35):(p&&p.role==='ST'?1.3:.6));}
   o.donen=W.donen;o.fk=W.fk*Math.max(.3,Math.min(1.6,((a.fk!=null?a.fk:55)-45)/30));o.uzak=W.uzak*Math.max(.2,Math.min(1.6,(lon-50)/30));o.acik=W.acik;
   let s=0;for(const k in o)s+=o[k];let x=rnd()*s;for(const k in o){x-=o[k];if(x<=0)return k;}return 'acik';}
 /* not: motorda forceDist 0 "30 m" demektir (S.forceDist || 30); şut istenmeyen evrede .01 */
@@ -84,12 +85,138 @@ function v186Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const by=sim
       return true;}
   }
   return false;}
+/* ================= v187: zorla golün türü sim içinde zincir olarak planlanır ================= */
+/* v186'da tür yalnız "fırsat beklenirken" kurgulanıyordu: penceresi (35–60 sn) dolan türler açık oyuna düşüyordu (görüntüsüz laboratuvar: türlü gollerin ~%10'u amaçlanan zincirle).
+   v187: her tür adım adım bir motor zinciridir (hepsi gerçek motor pası / şutu / dribbling; ışınlanma yok):
+   kontra — top kendi yarı alanımızda kazanılınca (rakip orada topu kaybeder) golcü hattın arkasına koşar, en çok 4 pas, 15 sn içinde ≤ 18 m'den bitiriş ·
+   orta (kafa / ayak) — top kanattaki arkadaşa taşınır, o çizgiye iner, golcü ön / uzak direk hücresine koşar, orta (havadan: golcü düelloyu kazanır, kafa · yerden geri çevirme: tek dokunuş) ·
+   duran top kafa — arkadaşın şutunu kaleci kornere çeler (S.forceParryOut), korner golcünün kafasına · ara pası — golcü ofsayt çizgisinden koşar, ara pası, bitiriş ·
+   dönen top — arkadaş 9–24 m'den vurur, kaleci golcünün önüne çeler · uzaktan şut — golcü 19–27 m'de topla, köşeye · serbest vuruş / penaltı — golcüye 18–27 m'de / ceza sahasında
+   faul (S.forceFoul), vuruşu golcü kullanır (hakem modunda penaltı kurgulanmaz). Bitiriş ancak gol sayımının zinciri doğru okuyacağı anda (kontra dışı türlerde topa sahip olma
+   kendi yarı alanında 15 sn içinde başlamışsa, taçtan 12 sn içinde ya da duran toptan sonra beklenir). Penceresi dolan tür v183 açık oyun kademelerine düşer. Defter (214 V177) değişmez. */
+V186.K2=1;V186.W.pen=.081;V186.W.acik=.351;
+V186.WIN2={kontra:80,kafa_orta:75,orta_ayak:75,kafa_duran:90,ara:70,donen:70,uzak:65,fk:70,pen:70};
+function v187Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const P=sim.players,by=sim.forceBy,gp=by!=null?P[by]:null,hy=Math.hypot;
+  if(!q.av){const seed=Math.round((q.t0||0)*1000)^(tm*7919)^((q.side||0)*104729)^Math.round((q.t||0)*37);const rnd=v186Rnd(seed);let tip=gp?v186Pick(sim,tm,by,rnd):'acik';if(tip==='pen'&&sim.userRef)tip='acik';
+    q.av={tip,t0:sim.t,rnd,st:0,k2:1};{const u=rnd();q.av.dT=u<.45?6+5*rnd():u<.86?11+5.5*rnd():16.5+7*rnd();}try{V186.log.push(tip);}catch(e){}}
+  const A=q.av,el=sim.t-A.t0;
+  const clr=()=>{sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;sim.forceFK=null;sim.forceFoul=null;sim.forceParryOut=null;sim.forceSafe=null;};
+  if(A.tip==='acik'||!gp||gp.off||gp.team!==tm||(el>(V186.WIN2[A.tip]||60)&&!(A.ok>sim.t))){if(A.tip!=='acik'){A.from=A.tip;A.tip='acik';q.t0=sim.t;}
+    if(A.dT)sim.forceDist=Math.min(sim.forceDist||30,A.dT+Math.max(0,sim.t-q.t0-40)*.12);clr();return false;}
+  const dir=sim.teams[tm].dir,gx=dir>0?105:0,og=105-gx,o=sim.ball.owner,live=sim.mode==='live',mine=live&&o&&o.team===tm,dG=p=>hy(gx-p.x,34-p.y),gl=p=>Math.abs(gx-p.x);
+  /* topa sahip olma kaydı (gol sayımının zincir sınıflandırmasıyla aynı mantık) */
+  if(sim.mode==='dead')A.wd=1;
+  if(live&&o&&o.team!==A.pt){A.reg=!A.wd&&A.pt===1-o.team;A.pt=o.team;A.ps=sim.t;A.px=Math.abs(o.x-og);A.pn=0;A.set=null;A.thr=null;A.wd=0;}      /* reg: top canlı oyunda rakipten kazanıldı */
+  if(sim.pass&&sim.pass!==A.lpo){A.lpo=sim.pass;if(sim.pass.team===tm&&A.pt===tm){A.pn++;const tg=sim.pass.tag;if(tg==='CORNER'||tg==='FREEKICK')A.set=tg;if(tg==='THROW')A.thr=sim.t;}}
+  sim.forceSafe=null;const safe=p=>{sim.forceSafe=p.id;};
+  const cl=()=>{if(clean0){A.rw=null;return true;}if(A.rw==null)A.rw=sim.t;if(kl&&settled&&o!==gp&&sim.t-(A.fd||-9)>1.2)feed(o,z=>{const d=hy(z.x-o.x,z.y-o.y);return d>=6&&d<=24&&dG(z)<dG(o)+10?1:0;},1.3);return sim.t-A.rw>5;};      /* kontra benzeri sahiplikte top bir iki kez dolaştırılır (5 pası geçince açık oyun) */      /* bitiriş hazırken zincir sınıflandırması için en çok 5 sn beklenir */
+  const ktr=A.pt===tm&&A.reg&&A.px<52&&sim.t-A.ps<=14.5&&A.pn<=4,kl=A.pt===tm&&A.px<53.5&&sim.t-A.ps<=16&&A.pn<=5,clean0=!kl&&!A.set&&!(A.thr!=null&&sim.t-A.thr<12.5);
+  sim.forceHold=true;sim.forceNoFeed=true;sim.forceGap=Math.min(sim.forceGap||0,1.2);sim.forceDist=.01;
+  const okOn=sim.t<(A.ok||-9);sim.forceOK=okOn?gp.id:null;if(!okOn){sim.forceOKKind=null;sim.forceOKMax=0;}
+  const okFor=(s,kd,mx)=>{A.ok=Math.max(A.ok||-9,sim.t+s);sim.forceOK=gp.id;sim.forceOKKind=kd||null;sim.forceOKMax=mx||0;};
+  const pdOf=p=>{let d=99;for(const z of P)if(z.team!==p.team&&!z.off){const e=hy(z.x-p.x,z.y-p.y);if(e<d)d=e;}return d;};
+  const offD=()=>{const a=[];for(const z of P)if(z.team!==tm&&!z.off)a.push(Math.abs(gx-z.x));a.sort((u,v)=>u-v);return a[1]||0;};
+  const pass=(fr,to,high,info)=>{A.lp=sim.t;try{sim._lab.doPass(fr,to,high,null,info);}catch(e){}};
+  const shoot=p=>{A.lsh=sim.t;try{sim._lab.doShot(p,sim.xgAt(p.x,p.y,dir,pdOf(p)),pdOf(p),null);}catch(e){}};
+  const settled=mine&&!sim.pass&&!sim.shot&&hy(sim.ball.x-o.x,sim.ball.y-o.y)<1.4&&sim.t-(A.lp||-9)>.5;
+  const lane=(a,b)=>{let m=9;for(const z of P){if(z.team===tm||z.off)continue;const vx=b.x-a.x,vy=b.y-a.y,l2=vx*vx+vy*vy||1,t=Math.max(0,Math.min(1,((z.x-a.x)*vx+(z.y-a.y)*vy)/l2));m=Math.min(m,hy(z.x-a.x-vx*t,z.y-a.y-vy*t));}return m;};
+  const box=(x,y)=>{gp.boxT={x:gx-dir*x,y:34+y,t:sim.t};if(gp.run&&!gp.run.v186)gp.run=null;gp.late=null;gp.chk=null;};
+  const carry=(p,t,ns)=>{p.dribble=true;p.dribType='carry';p.knock=false;p.wideLine=false;p.think=Math.max(p.think||0,t||.35);if(A.cid!==p.id){A.cid=p.id;A.ct0=sim.t;}if(sim.t-A.ct0<3&&!ns)safe(p);if(ns)p.keepT=sim.t+.3;};      /* kurgunun taşıdığı top en çok 3 sn müdahalesiz */
+  /* en iyi aktarım: want(q) > 0 olan, koridoru açık arkadaş (golcü hariç) */
+  const feed=(fr,want,minL)=>{if(!settled||sim.t-(A.fd||-9)<1.2)return false;let b=null,bs=-1e9;for(const z of P){if(z.team!==tm||z.off||z.role==='GK'||z===fr||z===gp)continue;const dq=hy(z.x-fr.x,z.y-fr.y);if(dq<5||dq>44)continue;const w=want(z);if(!(w>0))continue;const ln=lane(fr,z);if(ln<Math.min(minL||1.6,1.3))continue;const sc=w+Math.min(ln,4)*.15-dq*.01;if(sc>bs){bs=sc;b=z;}}
+    if(b){A.fd=sim.t;pass(fr,b,hy(b.x-fr.x,b.y-fr.y)>32,null);A.fto=b.id;return true;}return false;};
+  if(sim.pass&&sim.pass.team===tm&&sim.pass.to&&sim.pass.to.id===A.fto&&sim.t-(A.fd||-9)<2.5)sim.forceSafe=A.fto;      /* kurgunun aktarım pası kesilmez */
+  /* top rakipteyken: rakibin kötü pası (gerçek pas; kontrada yalnız rakip bizim yarı alanımızdayken → kendi yarımızda top kazanma) */
+  if(live&&o&&o.team!==tm&&o.role!=='GK'&&!sim.pass&&!sim.shot&&el>(A.tip==='kontra'?2:3.5)&&sim.t-(A.bp||-9)>5&&(A.tip!=='kontra'||Math.abs(o.x-og)<48||el>40)){
+    let to=null,bd=34;for(const z of P){if(z.team!==tm||z.off||z.role==='GK')continue;const d=hy(z.x-o.x,z.y-o.y);if(d<bd&&d>4){bd=d;to=z;}}
+    if(to){A.bp=sim.t;pass(o,to,bd>24,null);}}
+  if(A.ok>sim.t&&mine&&o===gp&&!sim.shot&&sim.t-(A.lsh||-9)>1&&(!A.okD||dG(gp)<=A.okD)){shoot(gp);return true;}      /* bitiriş anı: golcü topu aldı */
+  const sg=A.sg||(A.sg=(mine&&Math.abs(o.y-34)>6?(o.y>34?1:-1):(gp.y>34?1:-1)));
+  switch(A.tip){
+    case 'kontra':{
+      if(!mine)return true;
+      if(!ktr){if(o!==gp&&settled&&sim.t-A.ps>16)A.ktw=1;return true;}      /* kontra penceresi geçti: yeni top kazanmayı bekle */
+      if(o!==gp){if(dG(gp)>14&&!(gp.run&&gp.run.until>sim.t))gp.run={v186:1,until:sim.t+2.2,x:gx-dir*Math.max(11,Math.min(gl(gp)-9,30)),y:34+(gp.y>34?3:-3)};
+        if(sim.pass&&sim.pass.to===gp)safe(gp);else safe(o);
+        if(settled){const ah=(gp.x-o.x)*dir,dq=hy(gp.x-o.x,gp.y-o.y);if(dq<40&&dG(gp)<dG(o)+12&&lane(o,gp)>1.2){pass(o,gp,dq>30,{run:ah>3&&!!(gp.run&&gp.run.until>sim.t)});safe(gp);return true;}
+          feed(o,z=>hy(gp.x-z.x,gp.y-z.y)<dq-6?1+(z.x-o.x)*dir/30:0,1.2);}
+        else if(mine)carry(o,.25);return true;}
+      if(dG(gp)>48&&settled&&feed(gp,z=>(z.x-gp.x)*dir>8?1+(z.x-gp.x)*dir/40:0,1.3)){if(!(gp.run&&gp.run.until>sim.t))gp.run={v186:1,until:sim.t+2.5,x:gx-dir*Math.max(12,gl(gp)-22),y:34+(gp.y>34?4:-4)};return true;}      /* derindeki golcü öne verir, koşar (ver-kaç) */
+      safe(gp);carry(gp,.3);if(dG(gp)<=17||(sim.t-A.ps>11&&dG(gp)<26)){okFor(.6,null,27);shoot(gp);}return true;}
+    case 'kafa_orta':case 'orta_ayak':{
+      const head=A.tip==='kafa_orta',sx=head?6.8:8.3,sy=-sg*(head?2.2:3.2);
+      if(sim.t-(A.fs||-9)<2.5)safe(gp);
+      if(!mine){A.cr0=null;return true;}
+      if(dG(gp)>9&&gl(o)<60)box(Math.max(sx,offD()+.6),sy);      /* ofsayt çizgisinde bekler, orta anında hücreye koşar */
+      if(o===gp){if(!feed(gp,z=>Math.abs(z.y-34)>=10&&gl(z)<=48?1+(48-gl(z))/48:0,1.4)&&settled)carry(gp,.25);return true;}
+      const inZ=Math.abs(o.y-34)>=11&&gl(o)<=33&&gl(o)>=3;
+      if(inZ){safe(o);carry(o,.3);if(A.cr0==null)A.cr0=sim.t;const spx=gx-dir*sx,spy=34+sy,dsp=hy(gp.x-spx,gp.y-spy);
+        if(settled&&(dsp<3.2||sim.t-A.cr0>2.4)&&dsp<9&&(gx-gp.x)*dir>0&&(head||hy(spx-o.x,spy-o.y)<=27)&&gl(gp)>=offD()-.3&&cl()){const ux=spx-gp.x,uy=spy-gp.y,ul=hy(ux,uy)||1,sp=Math.min(7.5,ul/1),vx0=gp.vx,vy0=gp.vy;
+          gp.run={v186:1,until:sim.t+2.2,x:spx,y:spy};if(head){sim.forceAir=gp.id;okFor(4,'HEAD',17);}else{sim.forceQuick=gp.id;okFor(4,null,18);A.okD=18;A.fs=sim.t;}
+          gp.vx=ux/ul*sp;gp.vy=uy/ul*sp;pass(o,gp,head,{cross:true});gp.vx=vx0;gp.vy=vy0;A.cr0=null;}
+        return true;}
+      if(Math.abs(o.y-34)>=10&&gl(o)<60){carry(o,.3);o.wideLine=true;return true;}      /* kanattaki oyuncu çizgiye iner */
+      if(!feed(o,z=>Math.abs(z.y-34)>=10&&gl(z)<=50&&(z.x-o.x)*dir>-8?1+(50-gl(z))/50+(Math.abs(z.y-34)-10)/20:0,1.5)&&settled&&sim.t-(A.fd||-9)>4)feed(o,z=>(z.x-o.x)*dir>2?1:0,1.5);
+      return true;}
+    case 'kafa_duran':{
+      sim.forceCorner=gp.id;      /* korner vuruşçusu golcü olmaz; korner golcüye */
+      if(sim.mode==='dead'&&sim.dead&&sim.dead.kind==='corner'&&sim.dead.team===tm){A.cw=1;return true;}
+      if(sim.forceAir===gp.id){okFor(4,'HEAD',17);return true;}
+      if(A.cw&&live){A.cw=0;}
+      if(!mine)return true;
+      const sh=z=>{const d=dG(z);return d>=12&&d<=26&&Math.abs(z.y-34)<15;};
+      if(o!==gp&&sh(o)&&settled&&sim.t-(A.lsh||-9)>4){sim.forceParryOut=tm;safe(o);shoot(o);return true;}
+      if(o===gp){feed(gp,z=>sh(z)?2:(z.x-gp.x)*dir>-10?.5:0,1.3);return true;}
+      if(!feed(o,z=>sh(z)?2-dG(z)/26:0,1.5)&&settled){if(!(dG(o)>26&&feed(o,z=>dG(z)<dG(o)-6?1-dG(z)/80:0,1.4)))carry(o,.3);}
+      return true;}
+    case 'ara':{
+      if(A.thru&&sim.t-A.thru<6)safe(gp);
+      if(!mine)return true;
+      if(o===gp){if(A.thru&&sim.t-A.thru<6){carry(gp,.3);if(dG(gp)<=16||sim.t-(gp.gainT||sim.t)>1.8){okFor(.6,null,22);shoot(gp);}}else feed(gp,z=>(gp.x-z.x)*dir>6&&(gp.x-z.x)*dir<30?1:0,1.4);return true;}
+      const od=offD(),dq=gl(gp),ah=(gp.x-o.x)*dir;
+      if(ah<4||hy(gp.x-o.x,gp.y-o.y)>40){feed(o,z=>{const a2=(gp.x-z.x)*dir;return a2>8&&a2<30&&(z.x-o.x)*dir>-4?1+(z.x-o.x)*dir/30:0;},1.5);return true;}
+      if(!(gp.run&&gp.run.v186&&gp.run.until>sim.t)&&dq>=od-.5&&dq<od+12&&dq>14&&sim.t-(A.rt||-9)>3){A.rt=sim.t;gp.run={v186:1,until:sim.t+2.8,x:gx-dir*Math.max(9,od-11),y:34+(gp.y>34?3:-3)};}
+      if(gp.run&&gp.run.v186&&gp.run.until>sim.t&&sim.t-A.rt>.3&&settled&&dq>=od-.25&&cl()){sim.forceQuick=null;A.thru=sim.t;okFor(6,null,22);A.okD=17;pass(o,gp,false,{run:true});safe(gp);return true;}
+      if(settled)carry(o,.25);return true;}
+    case 'donen':{
+      if(!mine)return true;
+      const od2=offD();if(dG(gp)>8.5&&gl(o)<60)box(Math.max(7,od2+.6),-sg*2.8);      /* dönen topa ofsayt çizgisinden */
+      if(sim.forceRebound===gp.id&&sim.t-(A.lsh||-9)<3)return true;
+      if(sim.t-(A.lsh||-9)<3.5)safe(gp);
+      const sh=z=>{const d=dG(z);return d>=9&&d<=24&&Math.abs(z.y-34)<15;};
+      if(o!==gp&&sh(o)&&settled&&dG(gp)<Math.max(12,od2+3.5)&&gl(gp)>=od2-.3&&dG(o)>dG(gp)+3&&sim.t-(A.lsh||-9)>4&&cl()){sim.forceRebound=gp.id;okFor(4.5,null,16);A.okD=16;safe(o);shoot(o);return true;}
+      if(o===gp){feed(gp,z=>sh(z)?2:0,1.3)||feed(gp,z=>(gp.x-z.x)*dir>-14?.5:0,1.3);return true;}
+      if(!sh(o)&&!feed(o,z=>sh(z)?2-dG(z)/24:0,1.5)&&settled){if(dG(o)>24)carry(o,.3);}else if(sh(o))carry(o,.2);
+      return true;}
+    case 'uzak':case 'fk':{
+      const fk=A.tip==='fk';sim.forceFK=fk&&(sim.forceFoul||(sim.mode==='dead'&&sim.dead&&sim.dead.kind==='freekick'))?gp.id:null;
+      if(fk&&sim.mode==='dead'&&sim.dead&&sim.dead.kind==='freekick'&&sim.dead.team===tm&&sim.dead.taker===gp){okFor(4,'FK',30);return true;}
+      if(!mine)return true;
+      const d1=dG(gp),zone=d1>=19&&d1<=27&&Math.abs(gp.y-34)<13;
+      if(o===gp){if(!fk)safe(gp);if(zone&&cl()){if(fk){sim.forceFoul={by:gp.id};carry(gp,.4,1);}else{okFor(.6,null,29);shoot(gp);}}
+        else if(d1>27)carry(gp,.3,fk);else if(fk&&d1>=17)carry(gp,.4,1);else feed(gp,z=>(gp.x-z.x)*dir>3?1:0,1.3);return true;}
+      if(gl(o)<62)box(22.5,(gp.y>34?1:-1)*3.5);
+      if(sim.pass&&sim.pass.to===gp)safe(gp);
+      if(zone&&settled&&lane(o,gp)>1.4&&hy(gp.x-o.x,gp.y-o.y)<34&&pdOf(gp)>2.2){pass(o,gp,false,null);safe(gp);return true;}
+      if(settled&&sim.t-(A.fd||-9)>3&&hy(gp.x-o.x,gp.y-o.y)>34)feed(o,z=>hy(gp.x-z.x,gp.y-z.y)<hy(gp.x-o.x,gp.y-o.y)-6?1:0,1.5);
+      return true;}
+    case 'pen':{
+      sim.forceFK=gp.id;
+      if(!mine)return true;
+      const ib=gl(gp)<=15&&Math.abs(gp.y-34)<17;
+      if(o===gp){if(ib)sim.forceFoul={by:gp.id};carry(gp,.4,1);return true;}      /* golcü ceza sahasına sürer; içeride ilk müdahale faul */
+      sim.forceFoul=null;if(sim.pass&&sim.pass.to===gp)safe(gp);if(dG(gp)>12&&gl(o)<60)box(11,(gp.y>34?1:-1)*4);
+      if(settled&&gl(gp)<=17&&lane(o,gp)>1.3&&hy(gp.x-o.x,gp.y-o.y)<36){pass(o,gp,hy(gp.x-o.x,gp.y-o.y)>28,null);return true;}
+      if(settled&&sim.t-(A.fd||-9)>3)feed(o,z=>(z.x-o.x)*dir>3&&hy(gp.x-z.x,gp.y-z.y)<hy(gp.x-o.x,gp.y-o.y)?1:0,1.5);
+      return true;}
+  }
+  return false;}
 /* v183 zorla gol akışını sarar: tür etkinken dış şut zorlaması ve uzun bekleme kuralı bekler, mesafe/aralık türe göre */
 if(typeof v183ForceTick==='function'){v183ForceTick=(old=>function(S,sim){const q=ABM.fq&&ABM.fq[0];const act=!!(q&&q.av&&q.av.tip!=='acik');const tk=V183.TK,ow=V183.OWN;
-  const dT=!!(q&&q.av&&q.av.dT);if(act||dT)V183.TK=1e9;if(act)V183.OWN=1e9;let r;try{r=old.apply(this,arguments);}finally{V183.TK=tk;V183.OWN=ow;}
-  try{const q2=ABM.fq&&ABM.fq[0];if(q2&&ABM.fcur===q2&&sim.forceGoal!=null){v186Kurgu(sim,q2,sim.forceGoal);
+  const dT=!!(q&&q.av&&q.av.dT),bp0=V183.BP[0];if(act||dT)V183.TK=1e9;if(act)V183.OWN=1e9;if(act&&V186.K2)V183.BP[0]=1e9;let r;try{r=old.apply(this,arguments);}finally{V183.TK=tk;V183.OWN=ow;V183.BP[0]=bp0;}
+  try{const q2=ABM.fq&&ABM.fq[0];if(q2&&ABM.fcur===q2&&sim.forceGoal!=null){if(V186.K2)v187Kurgu(sim,q2,sim.forceGoal);else v186Kurgu(sim,q2,sim.forceGoal);
     /* açık oyun yedeğinde v183'ün dış şut zorlaması da bitiriş mesafesine (dT) uyar: eskiden pencerenin sınırından (26–32 m) vurduruyordu */
     const A=q2.av;if(A&&A.tip==='acik'&&A.dT&&sim.t-q2.t0>tk&&sim.mode==='live'&&!sim.shot){const o=sim.ball.owner,gx=v183GoalX(sim,sim.forceGoal);
-      if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&(sim.forceBy==null||o.id===sim.forceBy)&&Math.hypot(gx-o.x,34-o.y)<(sim.forceDist||30)&&Math.abs(o.y-34)<22){try{sim._lab.doShot(o,sim.xgAt(o.x,o.y,sim.teams[o.team].dir,3),3,null);}catch(e){}}}}else if(!ABM.fq||!ABM.fq.length){sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceFK=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;}}catch(e){console.warn('v186',e);}
+      if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&(sim.forceBy==null||o.id===sim.forceBy)&&Math.hypot(gx-o.x,34-o.y)<(sim.forceDist||30)&&Math.abs(o.y-34)<22){try{sim._lab.doShot(o,sim.xgAt(o.x,o.y,sim.teams[o.team].dir,3),3,null);}catch(e){}}}}else if(!ABM.fq||!ABM.fq.length){sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceFK=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;sim.forceFoul=null;sim.forceParryOut=null;}}catch(e){console.warn('v186',e);}
   return r;})(v183ForceTick);
   abForceTick=function(S,sim){if(ABM.hz)return;return v183ForceTick(S,sim);};}
