@@ -45,8 +45,18 @@
         while (q.length && (all || !S.hold)) { var e = q[0]; if (!all && e.t - DT > DL.dT + 1e-6) break; q.shift(); try { handle(e); } catch (x) { warn('olay ' + e.type, x); } }
     }
     function dlOff() { if (!DL.on) return; DL.on = 0; dlFlush(true); DL.fz = 0; if (S.sim) DL.dT = S.sim.t; }
+    /* [v188] görüntü saatine düşen halka karesi kayıtlı sim zamanından bulunur. Eskiden kare = n1 - (sim.t - görüntü saati) / DT idi; top ölüyken sim saati
+       adım başına 3·DT ilerlediği için (AV_CLKD) canlıdan ölüye geçişte (top dışarı, faul, gol) görüntü her ölü adımda 2 kare GERİ sıçrıyordu: top ileri-geri
+       titriyor (testere), gol vuruşunun son ~.3 sn'si çizgiye varmadan donuyordu. */
+    var V8B = { dl: 1, gt: 1, ld: 1 };
+    function dlFa(R, lo, n1, t) {
+        var b = R.buf, tl = b[(lo % RING) * FS], th = b[(n1 % RING) * FS];
+        if (!(th >= tl)) return -1; if (t >= th) return n1; if (t <= tl) return lo;
+        var a = lo, c = n1, m; while (c - a > 1) { m = (a + c) >> 1; if (b[(m % RING) * FS] <= t) a = m; else c = m; }
+        var ta = b[(a % RING) * FS], tc = b[(c % RING) * FS]; return a + (tc > ta + 1e-9 ? Math.min(1, (t - ta) / (tc - ta)) : 0);
+    }
     function dlView() {      // goruntu saatindeki kare (halka kayit, kareler arasi ara deger) - canlidaki gibi aksiyon saati payi (clkOff) ile
-        var R = S.ring, sim = S.sim, n1 = R.n - 1, lo = Math.max(0, R.n - RING + 3), fa = n1 - (sim.t - DL.dT) / DT; if (fa < lo) fa = lo; if (fa > n1) fa = n1;
+        var R = S.ring, sim = S.sim, n1 = R.n - 1, lo = Math.max(0, R.n - RING + 3), fa = n1 - (sim.t - DL.dT) / DT; if (V8B.dl) { var fa8 = dlFa(R, lo, n1, DL.dT); if (fa8 >= 0) fa = fa8; } if (fa < lo) fa = lo; if (fa > n1) fa = n1;
         if (!DLV) DLV = newView();
         var v = ringView(fa, n1, DLV), fo = S.clkOff || 0, i0 = Math.floor(fa); if (fo) { v.dtl += fo; v.dtp += fo; if (v.dtn > 0) v.dtn += fo; }
         v.dead = S.ring.buf[(Math.min(n1, i0 + (fa - i0 > .5 ? 1 : 0)) % RING) * FS + 5] === 1 ? 1 : 0; S.viewT = DL.dT;
@@ -230,7 +240,8 @@
         else if (type === 7) { if (R3.oaOut) R3.oaOut(id, a1, t0 + off, a2 > 0 ? a2 + off : 0); }    // [oa] oyuncu aksiyonu sonucu (kafa kazandı/kaybetti, kart)
     }
     function gkIssue(type, id, a1, a2, t0, d) { var t = S.sim ? S.sim.t : 0;
-        if (DL.on && type === 1 && DL_ACT[a1] && t0 < t - 1e-6 && a2 > t - DT + 1e-6) { var sh = a2 - (t - DT), t0n = Math.max(DL.dT + .02, t0 - sh); if (t0n < a2 - sh - .02) { t0 = t0n; a2 -= sh; } }      // [v135] tepkisel temas (vurus/kafa/mudahale/blok) topun hiz degistirdigi ana: gosterim gecikmesi hazirligi onceden oynatir
+        var tR8 = t - DT;      // [v188] denendi: t'ye kaydırmak top çıkışını 1 kare öne aldı ama temas karesinde ayak-top uzaklığını büyüttü (ölçüm) - eski hâli
+        if (DL.on && type === 1 && DL_ACT[a1] && t0 < t - 1e-6 && a2 > tR8 + 1e-6) { var sh = a2 - tR8, t0n = Math.max(DL.dT + .02, t0 - sh); if (t0n < a2 - sh - .02) { t0 = t0n; a2 -= sh; } }      // [v135] tepkisel temas (vurus/kafa/mudahale/blok) topun hiz degistirdigi ana: gosterim gecikmesi hazirligi onceden oynatir
         gkLog(type, t, id, a1, a2, t0, d); gkSend(type, id, a1, a2, t0, d, S.clkOff || 0); }
     function gkHandSet(id, t, h) { var G3 = S.gk; if (G3.hand === id) return; G3.hand = id; if (id >= 0) { G3.posN++; G3.handT = t; G3.handH = h || null; G3.pk = null; } gkLog(3, t, id, 0, 0, t, null); }
     function gkDistKind(hi, dist) { return hi ? 6 : dist < 24 ? 4 : 5; }
@@ -691,6 +702,7 @@
         var ft = m.foot === 'L' || m.foot === 'R' ? m.foot : p.ft === 'L' ? 'L' : 'R';
         var vl = Math.hypot(B.vx, B.vy), ux = vl > .1 ? B.vx / vl : p.fx, uy = vl > .1 ? B.vy / vl : p.fy;
         var lead = prof === 2 ? .24 : prof === 3 ? .18 : prof === 1 ? .18 : .15;      // [mocap]                               // temas: olaydan sonra (geri savurma görünsün)
+        if (V8B.ld && DL.on) lead = prof === 2 ? .34 : prof === 3 ? .27 : prof === 1 ? .29 : .25;      // [v188] geri savurma + vuruş ~.27-.37 sn (gerçek pas/şut salınımı)
         var cdo = (CRD.on || CRD.pon) && Math.hypot(CRD.x - p.x, CRD.y - p.y) < 2.2, kx = cdo ? CRD.x + (DL.on ? 0 : CRD.vx * DT) : DL.on ? S.prevB.x : B.x, ky = cdo ? CRD.y + (DL.on ? 0 : CRD.vy * DT) : DL.on ? S.prevB.y : B.y, kz = cdo ? CRD.z : Math.max(0, DL.on ? S.prevB.z || 0 : B.z || 0);      // [v135] gecikmede temas noktasi: topun ayrildigi (adim basi) konum      // [carry] temas: görünen top
         gkIssue(1, ev.p, 18, ev.t + lead, ev.t - .03, oaD(d, kx, ky, kz, ux, uy, ft === 'L' ? -1 : 1, prof, pw, p.vx, p.vy, cdo && CRD.knock ? 1 : 0));
         return true;
@@ -707,7 +719,7 @@
             var osp4 = Math.hypot(op.vx, op.vy), ux4 = osp4 > 1 ? op.vx / osp4 : op.fx, uy4 = osp4 > 1 ? op.vy / osp4 : op.fy, rx4 = dp.x - op.x, ry4 = dp.y - op.y, rl4 = Math.hypot(rx4, ry4) || 1, ca4 = (rx4 * ux4 + ry4 * uy4) / rl4;
             if (osp4 > .9 && ca4 > -.55 && ca4 < .85 && Math.min(dl, Math.hypot(tbx - dp.x, tby - dp.y)) < 2.2) mode = 4;      /* dl: motor topu */
         }
-        gkIssue(1, ev.p, 12, ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), ev.t - .03, oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));
+        gkIssue(1, ev.p, 12, ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));      // [v188] müdahale hareketi temastan önce başlar
         if (mode === 3) OA.gnd[ev.p] = ev.t + .95;                             // kayan oyuncu yerde: motor topu hemen oynatsa da bacak vuruşu kurulmaz
         // topu kaptıran sendeler: savunmacıdan uzağa, kendi koşu yönüyle karışık
         var px = op.x - dp.x, py = op.y - dp.y, pl = Math.hypot(px, py) || 1, osp = Math.hypot(op.vx, op.vy), mx = osp > .5 ? op.vx / osp : 0, my = osp > .5 ? op.vy / osp : 0;
@@ -825,7 +837,7 @@
         if (m.wall) return;                                                   // baraj: duran top aksiyonu (sıçrama)
         var bp = sim.players[ev.p], sp = ev.p2 >= 0 ? sim.players[ev.p2] : null, B = sim.ball, d = OA.tmp; if (!bp) return;
         var sx = sp ? bp.x - sp.x : -bp.fx, sy = sp ? bp.y - sp.y : -bp.fy, sl = Math.hypot(sx, sy) || 1; sx /= sl; sy /= sl;
-        gkIssue(1, ev.p, 17, ev.t + .02, ev.t - .08, oaD(d, B.x, B.y, sx, sy, oaSideY(Math.atan2(-sx, -sy), bp.x, bp.y, B.x, B.y), S.prevB.z || 0, m.gain ? 1 : 0, 0, 0, 0, 0));
+        gkIssue(1, ev.p, 17, ev.t + .02, ev.t - (V8B.ld && DL.on ? .3 : .08), oaD(d, B.x, B.y, sx, sy, oaSideY(Math.atan2(-sx, -sy), bp.x, bp.y, B.x, B.y), S.prevB.z || 0, m.gain ? 1 : 0, 0, 0, 0, 0));      // [v188] blok: şut anında başlayan uzanma
     }
     /* olay: true → bacak vuruşu (R3.kick) oynatılmaz (vuruş/kafa aksiyonu kuruldu) */
     function oaEvent(ev) {
@@ -967,6 +979,10 @@
         if (!S.scHold) { sc0 = sc0.slice(); if (T0 === 0 || T0 === 1) sc0[T0] = Math.max(0, sc0[T0] - 1); S.scHold = sc0; }
         S.hold = 'goal';
         S.goalInfo = { scorer: ev.p, ast: (m0.assist != null && m0.assist >= 0) ? m0.assist : -1, own: !!m0.own, team: T0, min: minOf(ev.t), pen: !!m0.pen, gx: ev.x, gy: ev.y };
+        if (V8B.gt) {      /* [v188] gol: yenilen takımın kalecisinin "tuttu / çeldi" kestirimi geçersiz (top görüntüde avuçta / kestirilen yolda kalıp çizgiye varmıyordu) · üretilen (v177) gol işaretlenir */
+            S.goalInfo.syn = !!m0.v177;
+            try { for (var gi8 = 0; gi8 < 22; gi8++) { var gp8 = S.sim.players[gi8]; if (gp8 && gp8.role === 'GK' && gp8.team !== T0 && S.r3 && S.r3.gkCancel) S.r3.gkCancel(gi8, ev.t - DT + (S.clkOff || 0), 1); } } catch (e) { }
+        }
         S.goalPend = { ev: ev, t0: performance.now(), sid: S.sid };
     }
     function goalPendTick() {      // [v139] her kare: cizilen top cizgiyi gecti mi (top yaricapi kadar icerde) - gtLive yoksa kisa sure sonra, en gec 1.6 sn
@@ -1000,7 +1016,7 @@
             if (S.sid !== sidNow || S.hold !== 'goal') return;
             var go = function () {
                 if (S.sid !== sidNow || S.hold !== 'goal') return;
-                if (S.replayOn && startReplay()) return;      // gol tekrarı açıksa tekrar oynar, bitince maç devam eder
+                if (S.replayOn && !(V8B.gt && S.goalInfo && S.goalInfo.syn) && startReplay()) return;      // gol tekrarı açıksa tekrar oynar, bitince maç devam eder · [v188] defterden üretilen golün kaydı yok (kayıttaki an başka bir pozisyon): tekrar oynatılmaz
                 S.hold = null; S.last = performance.now();
             };
             /* [v186] TV akışı: GOL bandı kalkınca kamera sevinçteki golcü ve arkadaşlarında kalır (sevinç → tekrar → santra); eskiden bant kalkar kalkmaz tekrar başlıyordu, sevinç görünmüyordu */
@@ -1748,6 +1764,7 @@
                     var dlw = dlWant(); if (dlw && !DL.on) { DL.on = 1; DL.q.length = 0; DL.fz = 0; DL.dT = sim.t - (1 - Math.max(0, Math.min(1, S.acc / DT))) * DT; } else if (!dlw && DL.on) dlOff();      // [v135]
                     if (DL.on) {      // [v135] goruntu saati gercek hizla akar; sim onu DL.D onde tutar (yetisme en cok ~12 adim)
                         DL.fz = !!(S.vs || S.goalPend) || DL.q.some(function (e) { return e.type === 'GOAL' || e.type === 'CARD' || e.type === 'VAR'; });      // [v139] gol/kart/VAR goruntude bitene dek sim bekler (VAR sonrasi gol: son kare golun karesi kalir)
+                        DL.D = V8B.ld ? .45 : .32;      // [v188] daha uzun ön görü: vuruş / müdahale / blok hareketi topun çıkışından ~.3 sn önce başlayabilir (eskiden en çok ~.18 sn: temas anı okunmuyordu)
                         DL.dT += dt * rate; var nD = 0, tgD = DL.dT + DL.D;
                         while (!DL.fz && sim.t < tgD - 1e-9 && nD < 12 && !S.hold && !sim.finished && !S.halfPending) { var tq = sim.t; stepOnce(); nD++; if (sim.t === tq) break; }
                         if (DL.dT > sim.t) DL.dT = sim.t; if (DL.dT < sim.t - DL.D - .25) DL.dT = sim.t - DL.D - .25;
@@ -3007,15 +3024,29 @@
         }
         return nf;
     }
+    /* [v188] gol beklemesinde topu ağa götüren yol yoksa (son canlı kare çizgiden uzak, kayıt kesik) ya da gol defterinden üretilmiş (v177 "synth")
+       bir golse: top, golcünün tarafından ceza sahası içinden (çizgiye ~12,5 m; görünen top kaleye 30 m'den yakın ve öndeyse oradan) 23 m/sn'lik
+       bir vuruşla kalenin içine (direklerin ~1,2–2,6 m içi, .6–1,5 m yükseklik) gider; ağa çarpar, gtStep'in file fiziğiyle düşer. Uzaktan
+       başlıyorsa görüntü kesilir (top ışınlanıp kayarak gelmez). */
+    function gtSyn(v, gi) {
+        if (!gi || gi.gx == null) return null;
+        var dirG = gi.gx > PW / 2 ? 1 : -1, gl = dirG > 0 ? PW : 0, bx = v.bx, by = v.by, dg = (gl - bx) * dirG, sx, sy, cut = 0;
+        if (!gi.syn && dg > .3 && dg < 30 && Math.abs(by - PH / 2) < 22) { sx = bx; sy = by; }
+        else { sx = gl - dirG * 12.5; sy = PH / 2 + Math.max(-7, Math.min(7, (by - PH / 2) * .3)); cut = Math.hypot(bx - sx, by - sy) > 3 ? 1 : 0; }
+        var hs = ((gi.min * 7 + (gi.scorer + 3) * 13) % 10) / 10, side = sy >= PH / 2 ? -1 : 1, ty = gi.syn ? PH / 2 + side * (1.2 + 1.4 * hs) : PH / 2 + Math.max(-2.9, Math.min(2.9, (gi.gy || PH / 2) - PH / 2));
+        var tz = .6 + .9 * ((hs * 3.7) % 1), z0 = .12, dx = gl - sx, dy = ty - sy, d = Math.hypot(dx, dy) || 1, T = Math.max(.25, d / 23);
+        return { x: sx, y: sy, z: z0, vx: dx / T, vy: dy / T, vz: (tz - z0 + 4.905 * T * T) / T, dirG: dirG, gl: gl, inN: false, syn: 1, cut: cut };
+    }
     /* canlı: 'goal' beklemesinde top son canlı karede donmasın; aynı fizikle ağa girer (yalnızca görüntü) */
     function gtLive(v, dt) {
         var gi = S.goalInfo; if (!gi) return;
         if (S.gb === undefined || S.gbSid !== S.sid || S.gbGi !== gi) {
-            S.gbSid = S.sid; S.gbGi = gi; S.gb = null;
+            S.gbSid = S.sid; S.gbGi = gi; S.gb = null; S.gb8 = 0;
             var R = S.ring, b = R.buf, k = R.n - 1, lim = Math.max(2, R.n - 14);      // [v139] golun son canli karesi daha geride de aranir
             while (k > lim && b[(k % RING) * FS + 5] === 1) k--;
             if (k >= 2 && b[(k % RING) * FS + 5] !== 1 && R.n - 1 - k <= 12) S.gb = gtInit(b, (k % RING) * FS, ((k - 1) % RING) * FS, gi);
         }
+        if (V8B.gt && S.gbGi === gi && !S.gb8) { S.gb8 = 1; if (!S.gb || gi.syn) { S.gb = gtSyn(v, gi); if (S.gb && S.gb.cut) try { if (S.r3 && S.r3.cutBall) S.r3.cutBall(); if (S.r3 && S.r3.cutActors) S.r3.cutActors(); } catch (e) { } } }      // kurgu kesmesi: kamera kale ağzına atlar      // [v188] çizgiye varan son kare yoksa / üretilen gol: top ağa canlandırılır
         var g2 = S.gb; if (!g2) return;
         var h = Math.min(.05, dt || .016); g2.acc = (g2.acc || 0) + h; if (g2.acc < 4) {      // [v186] file fiziği gerçek zamanlı (eskiden bilerek .8 hızla)
                  var st = Math.ceil(h / .01); for (var j = 0; j < st; j++) gtStep(g2, h / st); }
@@ -4453,6 +4484,7 @@
     G.ado2d = {
         setMode: setMode, mode: function () { return mode; }, active: function () { return mode === '2d'; }, running: function () { return mode === '2d' && S.running; },
         sim: function () { return S.sim; }, state: S, _cr: function () { return CRD; },      // [carry] test kancası: görünen top durumu
+        _v188: function (o) { if (o) for (var k in o) if (k in V8B) V8B[k] = o[k]; return V8B; },      // [v188] A/B ölçümü
         // test/hata ayıklama: çizim beklemeden maçı belirtilen hızla oynat
         setSpeedFactor: function (v) { S.speed = v; S.raw = true; }, _tlog: function () { return S.tlog || []; }, _rp: function () { return S.rp; }, _rpFreeze: function (v) { S.rpFreeze = !!v; }, _gb: function () { return S.gb; },
         setReplay: setReplay, replayCount: function () { return S.rpCount; }, skipReplay: function () { endReplay(); }, replaying: function () { return S.hold === 'replay'; },

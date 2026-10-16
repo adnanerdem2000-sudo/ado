@@ -129,9 +129,9 @@ function v187Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const P=sim.
     if(b){A.fd=sim.t;pass(fr,b,hy(b.x-fr.x,b.y-fr.y)>32,null);A.fto=b.id;return true;}return false;};
   if(sim.pass&&sim.pass.team===tm&&sim.pass.to&&sim.pass.to.id===A.fto&&sim.t-(A.fd||-9)<2.5)sim.forceSafe=A.fto;      /* kurgunun aktarım pası kesilmez */
   /* top rakipteyken: rakibin kötü pası (gerçek pas; kontrada yalnız rakip bizim yarı alanımızdayken → kendi yarımızda top kazanma) */
-  if(live&&o&&o.team!==tm&&o.role!=='GK'&&!sim.pass&&!sim.shot&&el>(A.tip==='kontra'?2:3.5)&&sim.t-(A.bp||-9)>5&&(A.tip!=='kontra'||Math.abs(o.x-og)<64||el>50)){
+  if(live&&o&&o.team!==tm&&o.role!=='GK'&&!sim.pass&&!sim.shot&&el>(A.tip==='kontra'?2:3.5)&&sim.t-(A.bp||-9)>6&&(A.tip!=='kontra'||Math.abs(o.x-og)<64||el>50)&&(el>25||(typeof v183Press!=='function'||v183Press(sim,o,tm)))){
     let to=null,bd=34;for(const z of P){if(z.team!==tm||z.off||z.role==='GK')continue;if(A.tip==='kontra'&&el<=50&&Math.abs(z.x-og)>48)continue;const d=hy(z.x-o.x,z.y-o.y);if(d<bd&&d>4){bd=d;to=z;}}      /* kontrada top kendi yarı alanımızdaki oyuncuya kaybedilir */
-    if(to){A.bp=sim.t;pass(o,to,bd>24,null);}}
+    if(to){A.bp=sim.t;A.lp=sim.t;if(typeof v183MisPass!=='function'||!v183MisPass(sim,o,to))pass(o,to,bd>24,null);}}      /* [v188] baskı altında kendi arkadaşına hatalı pas, top bizim oyuncunun yoluna (eskiden doğrudan bizim oyuncuya; 25 sn'den sonra baskısız da) */
   if(sim.shot&&sim.shot.team===tm&&sim.t-(A.lsh||-9)<2.5&&sim.shot.shooter)sim.forceSafe=sim.shot.shooter.id;      /* kurgunun şutu yolda bloklanmaz */
   if(A.ok>sim.t&&sim.forceOKKind!=='HEAD'&&mine&&o===gp&&!sim.shot&&sim.t-(A.lsh||-9)>1&&(!A.okD||dG(gp)<=A.okD)){shoot(gp);return true;}      /* bitiriş anı: golcü topu aldı */
   const sg=A.sg||(A.sg=(mine&&Math.abs(o.y-34)>6?(o.y>34?1:-1):(gp.y>34?1:-1)));
