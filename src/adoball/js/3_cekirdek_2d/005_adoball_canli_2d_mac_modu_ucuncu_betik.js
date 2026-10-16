@@ -48,7 +48,7 @@
     /* [v188] görüntü saatine düşen halka karesi kayıtlı sim zamanından bulunur. Eskiden kare = n1 - (sim.t - görüntü saati) / DT idi; top ölüyken sim saati
        adım başına 3·DT ilerlediği için (AV_CLKD) canlıdan ölüye geçişte (top dışarı, faul, gol) görüntü her ölü adımda 2 kare GERİ sıçrıyordu: top ileri-geri
        titriyor (testere), gol vuruşunun son ~.3 sn'si çizgiye varmadan donuyordu. */
-    var V8B = { dl: 1, gt: 1, ld: 1 };
+    var V8B = { dl: 1, gt: 1, ld: 1, an: 1 };
     function dlFa(R, lo, n1, t) {
         var b = R.buf, tl = b[(lo % RING) * FS], th = b[(n1 % RING) * FS];
         if (!(th >= tl)) return -1; if (t >= th) return n1; if (t <= tl) return lo;
@@ -705,6 +705,9 @@
         if (V8B.ld && DL.on) lead = prof === 2 ? .34 : prof === 3 ? .27 : prof === 1 ? .29 : .25;      // [v188] geri savurma + vuruş ~.27-.37 sn (gerçek pas/şut salınımı)
         var cdo = (CRD.on || CRD.pon) && Math.hypot(CRD.x - p.x, CRD.y - p.y) < 2.2, kx = cdo ? CRD.x + (DL.on ? 0 : CRD.vx * DT) : DL.on ? S.prevB.x : B.x, ky = cdo ? CRD.y + (DL.on ? 0 : CRD.vy * DT) : DL.on ? S.prevB.y : B.y, kz = cdo ? CRD.z : Math.max(0, DL.on ? S.prevB.z || 0 : B.z || 0);      // [v135] gecikmede temas noktasi: topun ayrildigi (adim basi) konum      // [carry] temas: görünen top
         gkIssue(1, ev.p, 18, ev.t + lead, ev.t - .03, oaD(d, kx, ky, kz, ux, uy, ft === 'L' ? -1 : 1, prof, pw, p.vx, p.vy, cdo && CRD.knock ? 1 : 0));
+        if (V8B.an && DL.on && ev.type === 'PASS' && !m.tag && ev.p2 >= 0) try {      /* [v188] pas isteme: uzak (≥14 m) alıcı, vuruştan ~.4 sn önce kolunu kaldırıp topu ister (oyuncuya göre kararlı; herkes her pasta değil) */
+            var rq = sim.players[ev.p2]; if (rq && !rq.off && rq.role !== 'GK' && Math.hypot(rq.x - p.x, rq.y - p.y) > 14 && oaH(ev.t, ev.p2) < .55 && v7Free(ev.p2, ev.t - .4)) v7Gest(ev.p2, 31, ev.t - .4, .95, p.x, p.y, oaH(ev.p2, ev.t) < .5 ? 1 : -1);
+        } catch (e) { }
         return true;
     }
     var SI_ON = 1;      // [sav] p_sav_02 araya girme
@@ -719,6 +722,7 @@
             var osp4 = Math.hypot(op.vx, op.vy), ux4 = osp4 > 1 ? op.vx / osp4 : op.fx, uy4 = osp4 > 1 ? op.vy / osp4 : op.fy, rx4 = dp.x - op.x, ry4 = dp.y - op.y, rl4 = Math.hypot(rx4, ry4) || 1, ca4 = (rx4 * ux4 + ry4 * uy4) / rl4;
             if (osp4 > .9 && ca4 > -.55 && ca4 < .85 && Math.min(dl, Math.hypot(tbx - dp.x, tby - dp.y)) < 2.2) mode = 4;      /* dl: motor topu */
         }
+        if (V8B.ld && !air) { var tco8 = mode === 3 ? .12 : mode === 4 ? .14 : .06, bv8x = tco ? (CRD.vx || op.vx) : (B.vx || op.vx), bv8y = tco ? (CRD.vy || op.vy) : (B.vy || op.vy); tbx += bv8x * tco8; tby += bv8y * tco8; }      /* [v188] müdahale hedefi: topun temas anındaki yeri (top sürülürken ~.1 sn'de .3-.5 m ilerliyor) */
         gkIssue(1, ev.p, 12, ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));      // [v188] müdahale hareketi temastan önce başlar
         if (mode === 3) OA.gnd[ev.p] = ev.t + .95;                             // kayan oyuncu yerde: motor topu hemen oynatsa da bacak vuruşu kurulmaz
         // topu kaptıran sendeler: savunmacıdan uzağa, kendi koşu yönüyle karışık
@@ -838,6 +842,7 @@
         var bp = sim.players[ev.p], sp = ev.p2 >= 0 ? sim.players[ev.p2] : null, B = sim.ball, d = OA.tmp; if (!bp) return;
         var sx = sp ? bp.x - sp.x : -bp.fx, sy = sp ? bp.y - sp.y : -bp.fy, sl = Math.hypot(sx, sy) || 1; sx /= sl; sy /= sl;
         gkIssue(1, ev.p, 17, ev.t + .02, ev.t - (V8B.ld && DL.on ? .3 : .08), oaD(d, B.x, B.y, sx, sy, oaSideY(Math.atan2(-sx, -sy), bp.x, bp.y, B.x, B.y), S.prevB.z || 0, m.gain ? 1 : 0, 0, 0, 0, 0));      // [v188] blok: şut anında başlayan uzanma
+        if (V8B.an && bp.role !== 'GK') try { v7Gest(ev.p, 32, ev.t + .04, .65, 0, 0, oaH(ev.t, ev.p) < .5 ? 1 : -1); } catch (e) { }      // [v188] vücuda çarpan topa irkilme (blok temasından hemen sonra)
     }
     /* olay: true → bacak vuruşu (R3.kick) oynatılmaz (vuruş/kafa aksiyonu kuruldu) */
     function oaEvent(ev) {
@@ -863,10 +868,24 @@
         }
         return false;
     }
+    /* [v188] omuz omuza mücadele: top sahibi ve ≤1,05 m yanındaki rakip (ikisi de ≥2,2 m/sn, yan yana: aradaki doğrultu koşu yönüne dik) birlikte
+       gövdelerini birbirine yaslar (jest 30, ~1 sn, oyuncu başına 2,5 sn'de bir) - görüntü */
+    var OSH = new Float64Array(22);
+    function oaShoulder(sim) {
+        if (sim.mode !== 'live') return; var B = sim.ball, o = B.owner; if (!o || o.role === 'GK' || o.off) return;
+        var osp = Math.hypot(o.vx, o.vy); if (osp < 2.2 || OSH[o.id] > sim.t) return;
+        var ux = o.vx / osp, uy = o.vy / osp, best = null, bd = 1.05, i;
+        for (i = 0; i < 22; i++) { var q = sim.players[i]; if (q.team === o.team || q.off || q.role === 'GK') continue; var dx = q.x - o.x, dy = q.y - o.y, dl = Math.hypot(dx, dy); if (dl < bd && Math.abs(dx * ux + dy * uy) < .6 * dl && Math.hypot(q.vx, q.vy) > 2.2) { bd = dl; best = q; } }
+        if (!best || OSH[best.id] > sim.t || !v7Free(o.id, sim.t) || !v7Free(best.id, sim.t)) return;
+        var sd = (best.x - o.x) * uy - (best.y - o.y) * ux;      // rakip koşu yönünün hangi yanında
+        v7Gest(o.id, 30, sim.t, 1.0, 0, 0, sd > 0 ? -1 : 1); v7Gest(best.id, 30, sim.t, 1.0, 0, 0, sd > 0 ? 1 : -1);
+        OSH[o.id] = OSH[best.id] = sim.t + 2.5;
+    }
     /* her sim adımından sonra: yüksek top kafa adayları, havadaki topun kontrolü (göğüs/uyluk), geçilen savunmacı */
     function oaStep(sim) {
         if (!OA_ON) return;
         oaAerial(sim);
+        if (V8B.an) try { oaShoulder(sim); } catch (e) { }
         var B = sim.ball, o = B.owner, oid = o ? o.id : -1, i;
         if (oid !== OA.own) {
             OA.own = oid;
@@ -4003,7 +4022,7 @@
     function v7Cnt(k) { V7.cnt[k] = (V7.cnt[k] || 0) + 1; sqLog('v7:' + k); }
     function v7Free(id, t) { return !(V7.busy[id] > t) && !(OA.fall[id] > t) && !(OA.gnd[id] > t); }
     function v7Act(id, k, t0, tc, d, until) { gkIssue(1, id, k, tc, t0, d); V7.busy[id] = Math.max(V7.busy[id], until != null ? until : tc + 1); }
-    function v7Gest(id, md, t0, dur, tx, ty, h, pow) { if (id < 0 || !S.sim || !S.sim.players[id] || S.sim.players[id].off) return; v7Act(id, 20, t0, t0, oaD(OA.tmp, tx || 0, ty || 0, md, dur, pow || 0, h || 1, 0, 0, 0, 0, 0), t0 + dur); }
+    function v7Gest(id, md, t0, dur, tx, ty, h, pow) { if (id < 0 || !S.sim || !S.sim.players[id] || S.sim.players[id].off) return; if (md >= 30) { V8B.gN = (V8B.gN || 0) + 1; V8B.gL = [id, md, t0]; }      /* [v188] ölçüm: son yeni jest */ v7Act(id, 20, t0, t0, oaD(OA.tmp, tx || 0, ty || 0, md, dur, pow || 0, h || 1, 0, 0, 0, 0, 0), t0 + dur); }
     /* --- görünüm hedefi: oyuncunun GÖRÜNEN konumu hedefe yürür (ışınlanma yok), bırakılınca motor konumuna yürüyerek döner --- */
     function v7Go(id, tx, ty, vmax, dur, o) { var g = V7.gv[id] || (V7.gv[id] = { x: NaN, y: NaN }); g.tx = tx; g.ty = ty; g.v = vmax; g.until = v7Now() + dur * 1000 / v7Ls(); g.fol = o && o.fol || 0; g.stop = o && o.stop || 0; g.fcx = o && o.fcx != null ? o.fcx : NaN; g.fcy = o && o.fcy != null ? o.fcy : NaN; g.hide = 0; return g; }
     function v7GvApply(v, dt) {

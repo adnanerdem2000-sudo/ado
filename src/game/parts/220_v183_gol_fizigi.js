@@ -6,8 +6,8 @@
    - Şut mesafesi zamanla açılır (18 → 22 → 24 → 26 → 28 m; yan açı |y−orta| ≤ 0,75–1,2 × uzaklık) ve şut ancak gerçek fırsatta: kalecinin uzak köşesi açık, yolda savunmacı yok,
      açı çok dar değil (motor: fgOpen, S.forceGap/forceAng). Gol gecikirse koşullar gevşer; 90 sn'den sonra kaleci aralığı aranmaz, açı sınırı kalır.
    - Şut kalecinin uzak köşesine; kaleci yerinde kalır, plonjona çıkar ama yetişemez (motor 000: fgAim, saveY).
-   - Top rakipteyken ışınlanma yok: 25 sn'den sonra topu tutan rakip savunmacı baskı altında (60 sn'den sonra baskısız da) kendi arkadaşına hatalı pas verir,
-     top bizim oyuncunun yoluna sapar ve araya girilir [v188; eskiden doğrudan bizim oyuncuya pas]; pas aralığı en az 7 sn.
+   - Top rakipteyken ışınlanma yok: 25 sn'den sonra topu tutan rakip savunmacı baskı altında (40 sn'den sonra baskısız da) kendi arkadaşına hatalı pas verir,
+     top bizim oyuncunun yoluna sapar ve araya girilir [v188; eskiden doğrudan bizim oyuncuya pas; 40 sn'den sonra baskısız da]; pas aralığı en az 7 sn.
    - Oyuncumuzun golünde uzaktan (70 m'ye kadar) zorlama yok; 60 sn'den sonra golcü top ayağında ve şut mesafesindeyse motor vurdurur.
    Skor/golcü/asist akışı değişmez: kuyruk (ABM.fq), V177 yeniden planlama ve tamamlama kuralları aynı. */
 /* F: [geçen motor sn, şut mesafesi m, kaleci-yol aralığı m, yan açı sınırı (|y−orta| / uzaklık)] · BP: rakip hatası [başlangıç sn, aralık sn] · TK: dış şut zorlaması (sn)
@@ -28,7 +28,7 @@ function v183Press(sim,o,tm){for(const z of sim.players)if(z.team===tm&&!z.off&&
 function v183ForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fcur){sim.forceGoal=null;sim.forceGap=0;sim.forceAng=0;}return;}
   const q=ABM.fq[0];if(!ABM.fcur||ABM.fcur!==q){ABM.fcur=q;q.g0=sim.teams[abS2E(q.side)].score;q.t0=sim.t;sim.forceGoal=abS2E(q.side);const me=q.k?abFxPk(q.k):null;sim.forceBy=me&&me.ei!=null?me.ei:null;}
   if(sim.teams[abS2E(q.side)].score>q.g0){ABM.fq.shift();ABM.fcur=null;sim.forceGoal=null;sim.forceBy=null;sim.forceGap=0;sim.forceAng=0;return;}
-  const el=sim.t-q.t0,w=v183Win(el);sim.forceDist=w[1];sim.forceGap=w[2];sim.forceAng=w[3];
+  const el=sim.t-q.t0,w=v183Win(el);sim.forceEl=el;sim.forceDist=w[1];sim.forceGap=w[2];sim.forceAng=w[3];
   /* v177: planlanan golcü sahadan çıktıysa yeni golcü; 45 sn'de bitiremezse kaleye en yakın arkadaş (oyuncumuzun golü hariç) */
   if(sim.forceBy!=null){const fp=sim.players[sim.forceBy],fo=abFxP(sim.forceBy);if(!fp||fp.off||fp.team!==sim.forceGoal||!fo||(q.k&&fo.k!==q.k)){let np=null;try{if(q.k!=='ME'&&typeof v177Replan==='function')np=v177Replan(q);}catch(e){}sim.forceBy=np&&np.ei!=null?np.ei:null;}}
   if(q.k!=='ME'&&sim.t-(q.tr||q.t0)>45){q.tr=sim.t;let np=null;try{if(typeof v177Replan==='function')np=v177Replan(q,true);}catch(e){}if(np&&np.ei!=null)sim.forceBy=np.ei;}
@@ -41,7 +41,7 @@ function v183ForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fc
     if(o0&&o0.team!==sim.forceGoal&&o0.role!=='GK'&&sim.t-(q.lp||-99)>V183.BP[1]){const fp=sim.forceBy!=null?sim.players[sim.forceBy]:null;
       const c=sim.players.filter(p=>p.team===sim.forceGoal&&!p.off&&p.role!=='GK');const near=c.slice().sort((a,b)=>Math.hypot(a.x-o0.x,a.y-o0.y)-Math.hypot(b.x-o0.x,b.y-o0.y))[0];
       const to=fp&&!fp.off&&fp.team===sim.forceGoal&&Math.hypot(fp.x-o0.x,fp.y-o0.y)<30?fp:near;
-      if(to&&Math.hypot(to.x-o0.x,to.y-o0.y)<38&&(el>60||v183Press(sim,o0,sim.forceGoal))){q.lp=sim.t;v183MisPass(sim,o0,to);}}}
+      if(to&&Math.hypot(to.x-o0.x,to.y-o0.y)<38&&(el>40||v183Press(sim,o0,sim.forceGoal))){q.lp=sim.t;v183MisPass(sim,o0,to);}}}
   /* çok uzun bekleme (110 sn+): top golcü adayında değil ama takımdan biri kaleye yakın taşıyorsa golcü o olur (defter ve anlatım satırı da; oyuncumuzun golü hariç) */
   if(el>V183.OWN&&q.k!=='ME'&&sim.mode==='live'&&!sim.shot){const o=sim.ball.owner;if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&o.id!==sim.forceBy&&Math.abs(gx-o.x)<w[1]){const fo=abFxP(o.id);if(fo&&fo.k&&fo.k!=='ME'){q.k=fo.k;const L=q.v177;if(L&&!L.done&&!L.me){L.k=fo.k;try{v177FeedSet(L);}catch(e){}}sim.forceBy=o.id;q.tr=sim.t;}}}
   /* uzun bekleme (60 sn+): golcü top ayağındayken şut mesafesindeyse motorun karar sırasını beklemeden vurur */
