@@ -3025,7 +3025,7 @@
             }
             if (cur && cur.init && c > cur.te) {                            // bitti: son çizim konumundaki fark artık ofsete
                 gkK(a, cur, cur.te, false); gkRootApply(a, cur, x, z, 1, cur.te);
-                a.rOx = (a.rOx || 0) + a.dX - x; a.rOz = (a.rOz || 0) + a.dZ - z; a.dX = x; a.dZ = z; a.rY = 0; a.dYaw = a.yaw; cur = a.ac = null;
+                var oxE = a.dX - x, ozE = a.dZ - z; a.rOx = (a.rOx || 0) + oxE; a.rOz = (a.rOz || 0) + ozE; if (V7_ON) { a.px += oxE; a.pz += ozE; } else { a.dX = x; a.dZ = z; } a.rY = 0; a.dYaw = a.yaw; cur = a.ac = null;      /* [v187] D1: bitiş karesi de aksiyonun bittiği yerde çizilir (eskiden bir kare motor konumuna sıçrayıp geri dönüyordu) */
                 if (!prv) return;
             }
             var wp = 0, wc = 0;

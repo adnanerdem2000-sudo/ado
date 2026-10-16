@@ -4204,9 +4204,9 @@
         var rdx = tx - 2 - Hh.rx, rdy = ty - Hh.ry, rdl = Math.hypot(rdx, rdy), rst = 1.7 * h; if (rdl > rst) { Hh.rx += rdx / rdl * rst; Hh.ry += rdy / rdl * rst; v.rfx = rdx / rdl; v.rfy = rdy / rdl; } v.rx = Hh.rx; v.ry = Hh.ry;
         var gcx = 0, gcy = 0, gn = 0; (Hh.grp || []).forEach(function (j) { if (!sim.players[j].off) { gcx += Hh.x[j]; gcy += Hh.y[j]; gn++; } }); if (gn) { gcx /= gn; gcy /= gn; } else { gcx = Hh.rx; gcy = Hh.ry; }
         if (!(Hh.cx === Hh.cx)) { Hh.cx = gcx; Hh.cy = gcy; } else { var kk = Math.min(1, h * 2.5); Hh.cx += (gcx - Hh.cx) * kk; Hh.cy += (gcy - Hh.cy) * kk; }
-        var ex = tx - 7, ey = PH + 8, cd = Math.hypot(Hh.cx - ex, Hh.cy - ey), fv = Math.max(16, Math.min(50, 2 * Math.atan(7.5 / Math.max(1, cd)) * 180 / Math.PI));
+        var ex = tx - 12, ey = PH + 8.5, cd = Math.hypot(Hh.cx - ex, Hh.cy - ey), fv = Math.max(16, Math.min(50, 2 * Math.atan(7.5 / Math.max(1, cd)) * 180 / Math.PI));
         if (!(Hh.fv > 0)) Hh.fv = fv; else Hh.fv += (fv - Hh.fv) * Math.min(1, h * 1.5);
-        V7.scam = { eye: [ex, 4.2, ey], at: [Hh.cx, 1.0, Hh.cy], fov: Hh.fv };      // tünel ağzındaki sabit kamera: yürüyen grup yaklaştıkça büyür (devre / maç sonu)
+        V7.scam = { eye: [ex, 4.6, ey], at: [Hh.cx, 1.0, Hh.cy], fov: Hh.fv };      // tünel ağzındaki sabit kamera: yürüyen grup yaklaştıkça büyür (devre / maç sonu)
         if (Hh.t > Hh.dur) { V7.half = null; if (S.r3) { S.r3.cutCam = null; S.r3.v7Cut = 0; } if (S.hold === 'v7ht') S.hold = null; Hh.done = 1; V7.htDone = S.sid + ':' + sim.half + ':' + (sim.finished ? 1 : 0); afterSteps(); }
     }
     /* --- gol: sevinç çeşitleri (uçak koşusu, diz kayması, köşe bayrağında sıçrama, yumruk, kucaklaşma), yenilen tarafta hayal kırıklığı --- */
@@ -4264,7 +4264,7 @@
         var n = f1 - f0 + 1, fr = new Float32Array(n * FS); for (i = 0; i < n; i++) { var src = ((f0 + i) % RING) * FS; fr.set(R.buf.subarray(src, src + FS), i * FS); }
         S.rp = { fr: fr, n: n, ng: n, s0: 0, tc: 0, t: 0, endHold: 0, rings: [{ id: F.p, col: '#ff5a6b' }, { id: F.p2, col: '#7fd1ff' }], gi: { scorer: -1, min: minOf(F.t), team: 0 }, zoom: 1.8, rate: 1, gk: null, by: rpBadgeY(),
             title: 'TEKRAR', sub: 'Faul · ' + V7_FN[F.k] + ' · ' + minOf(F.t) + '\'', loop: false, slow: .42, v7: { x: F.x, y: F.y, p: F.p, p2: F.p2 } };
-        V7.rpT = sim.t; r3Cut(); S.rpCount++; S.hold = 'replay'; S.last = now; showReplayUI(); sqLog('faul_tekrar'); v7Cnt('faul_tekrar');
+        V7.rpT = sim.t; V7.rpCut = 1; S.rpCount++; S.hold = 'replay'; S.last = now; showReplayUI(); sqLog('faul_tekrar'); v7Cnt('faul_tekrar');
     }
     /* --- kamera: faul tekrarında yakın açı (temasa dik, yayın tarafından), gol tekrarında golün türüne göre açı --- */
     function v7Cam(v, now, live) {
@@ -4293,6 +4293,7 @@
         }
         if (R3.v7Cut && !V7.sub && !V7.half) { R3.cutCam = null; R3.v7Cut = 0; }
     }
+    var drawReplay0_ = drawReplay; drawReplay = function () { if (V7.rpCut) { V7.rpCut = 0; r3Cut(); } return drawReplay0_.apply(this, arguments); };      /* [v187] faul tekrarı çizim içinde kurulur: kesme, tekrarın ilk karesinden hemen önce (yoksa canlı kare kesmeyi tüketiyor, tekrarın ilk karesi ışınlanma oluyordu) */
     var V7RC = { v: 'auto' }; try { var rc7 = localStorage.getItem('adoball_v187_tekrar'); if (/^(auto|bcast|arka|kenar|yuksek)$/.test(rc7 || '')) V7RC.v = rc7; } catch (e) { }
     (function v7RcInit() {      /* ayarlar: tekrar kamerası canlı kameradan ayrı seçilir (B4.4) */
         try {
