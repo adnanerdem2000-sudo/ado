@@ -4427,6 +4427,8 @@
     }
     var goalPendTick0_ = goalPendTick; goalPendTick = function () {
         if (V7.on && (V7.half || V7.sub)) try { v7Watchdog(); } catch (e) { }
+        /* [v187] maç bitti ama gecikmeli gösterimde (DL) son olaylar kuyrukta kaldı: döngü bitmiş simi adımlamadığından afterSteps hiç çağrılmıyordu (maç sonu ekranı gelmiyordu). Kısa beklemeden sonra kuyruğu boşalt, maçı bitir. */
+        var sm7 = S.sim; if (sm7 && sm7.finished && S.running && !S.hold && !S.halfPending && mode === '2d') { var nw7 = performance.now(); if (!V7.finW) V7.finW = nw7; else if (nw7 - V7.finW > 600 / v7Ls()) { V7.finW = 0; if (DL.on) dlOff(); sqLog('dl_bitis'); if (!S.hold) afterSteps(); } } else V7.finW = 0;
         if (V7.subQ.length && S.sim && (S.sim.t - V7.subQ[0].t > 60 || V7.subQ[0].sid !== S.sid)) { var q7 = V7.subQ.shift(); try { if (S.r3 && S.r3.subHold) S.r3.subHold(q7.id, false); } catch (e) { } }      // sahne gösterilemedi: yuva yeni görünüme geçer
         return goalPendTick0_();
     };
