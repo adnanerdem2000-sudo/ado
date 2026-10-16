@@ -243,9 +243,12 @@
         //   ivme p99 ≤ 4 m/sn² (Metrica / Hawk-Eye: ivme tavanı AV_CA0 + .022·Hızlanma)
         AV_CAL: 1,
         // AV_CLK: maç saati ölçeği. Eski motor 90 dakikanın olaylarını 1400 fiziksel sn'ye sıkıştırıyordu (CK ≈ 3,86); gerçekçi blok ve gerçek ölü top payıyla (top ~%60 oyunda)
-        //   oyun içi süre yetmiyordu (takım başına ~7 şut). Şimdi saat AV_CLKS sim-sn (CK = 5400 / AV_CLKS ≈ 2,45) ve top ölüyken saat AV_CLKD kat hızlı akar:
-        //   ölü top maç saatinde gerçek süresini korur (taç ~17, aut ~27, korner ~33 maç sn), fiziksel bekleme kısalır; top oyundayken her fiziksel saniye daha az maç saniyesidir
-        AV_CLK: 1, AV_CLKS: 2200, AV_CLKD: 2,
+        //   oyun içi süre yetmiyordu (takım başına ~7 şut). Şimdi saat AV_CLKS sim-sn (CK = 5400 / AV_CLKS ≈ 1,93) ve top ölüyken saat AV_CLKD kat hızlı akar:
+        //   ölü top maç saatinde gerçek süresini korur (bekleme × AV_CLKD × CK: taç ~13, aut ~21, serbest vuruş ~19, korner ~25 maç sn), fiziksel bekleme kısalır;
+        //   top oyundayken her fiziksel saniye daha az maç saniyesidir. Fiziksel maç ≈ 2080 sn (canlı ~1730 + ölü ~360; eski 1400 = canlı ~875 + ölü ~525). AV_CLK açıkken bazı AV_* ayarları
+        //   (taç/korner üretimi, faul, sarı, ofsayt, şut sapması, kaleci, orta, blok) uzayan canlı oyuna göre ayrı varsayılan alır: 96 maçta gol 1,2–1,4, şut 11–14, faul 11–15 / takım
+        //   açıkça MATCH_S verilirse AV_CLK kapanır (eski ölçek)
+        AV_CLK: 1, AV_CLKS: 2800, AV_CLKD: 3,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
     // [av] gerçek şut verisinden lojistik xG (IRLS; test log-kayıp .2412, AUC .804 — StatsBomb'un kendi xG'si .2400 / .806)
@@ -413,13 +416,13 @@
         var RA = mulberry(((opts.seed || 1) ^ 0x3c6ef372) >>> 0);
         function gaussA() { return (RA() + RA() + RA() + RA() - 2) * 1.732; }
         function avp(k, d) { return opts.params && opts.params[k] != null ? +opts.params[k] : d; }      // [av] ince ayar anahtarı (laboratuvar; DEFAULTS dışında)
-        if (AV_SHOT) { KY_MIN = PRM.AV_SMIN; KY_LON = PRM.AV_SLON; AC_HSH = PRM.AV_HSH; GK_S0 = PRM.AV_GKS0; SHOT_SD = avp('AV_SSD', .29); AC_SBL = avp('AV_SBL', AV_BLK ? 1.5 : .75); AC_SBR = avp('AV_SBR', AV_BLK ? 2.1 : 1.35); KY_SW = avp('AV_KSW', 1.7); }
+        if (AV_SHOT) { KY_MIN = PRM.AV_SMIN; KY_LON = PRM.AV_SLON; AC_HSH = PRM.AV_HSH; GK_S0 = PRM.AV_GKS0; SHOT_SD = avp('AV_SSD', AV_CLK ? .17 : .29); AC_SBL = avp('AV_SBL', AV_BLK ? (AV_CLK ? 1.75 : 1.5) : .75); AC_SBR = avp('AV_SBR', AV_BLK ? (AV_CLK ? 2.4 : 2.1) : 1.35); KY_SW = avp('AV_KSW', 1.7); }
         if (AV_PASS) { PP_C0 = PRM.AV_PC0; PP_HH = PRM.AV_PHH; PASS_MISS = PRM.AV_PMISS; INT_SLACK = PRM.AV_ISLK; }
         if (AV_MOVE) { MV_BRK = avp('AV_BRK', 5.5); MV_LAT0 = avp('AV_LAT0', 5.2); MV_LATV = avp('AV_LATV', .1); AIS_EFF = avp('AV_EFF', .25); }
         if (AV_OUT) { DEAD_T = avp('AV_DT', 4); DEAD_G = avp('AV_DG', 6); DEAD_F = avp('AV_DF', 5.5); DEAD_C = avp('AV_DC', 7); }
-        if (AV_CAL) { OFFS_MISS = avp('AV_OFM', .012); Y_BASE = avp('AV_YB', .23); AC_PL = avp('AV_CPL', .11); if (AV_SHOT) GK_S0 = avp('AV_CGK', -.03); SHOT_LOSS = avp('AV_SLS', .3); THINK_A = avp('AV_THA', .55); THINK_B = avp('AV_THB', .25); TEMPO_A = avp('AV_TPA', .35); TEMPO_B = avp('AV_TPB', .35); }      // [av2] AV_CAL: ofsayt (pasçının yanlış görmesi) ve sarı kart oranı
+        if (AV_CAL) { OFFS_MISS = avp('AV_OFM', AV_CLK ? .03 : .012); Y_BASE = avp('AV_YB', AV_CLK ? .1 : .23); AC_PL = avp('AV_CPL', AV_CLK ? .04 : .11); if (AV_SHOT) GK_S0 = avp('AV_CGK', AV_CLK ? .28 : -.03); SHOT_LOSS = avp('AV_SLS', .3); THINK_A = avp('AV_THA', .55); THINK_B = avp('AV_THB', .25); TEMPO_A = avp('AV_TPA', .35); TEMPO_B = avp('AV_TPB', .35); }      // [av2] AV_CAL: ofsayt (pasçının yanlış görmesi) ve sarı kart oranı
         if (AV_LIVE) { DEAD_T = avp('AV_LT', 5.8); DEAD_G = avp('AV_LG', 8); DEAD_F = avp('AV_LF', 7.2); DEAD_C = avp('AV_LC', 9.5); }
-        if (AV_LIVE && AV_CLK) { DEAD_T = avp('AV_KT', 3.5); DEAD_G = avp('AV_KG', 5.5); DEAD_F = avp('AV_KF', 5.1); DEAD_C = avp('AV_KC', 6.7); }      // [av2] fiziksel sn; maç saatinde × AV_CLKD × CK (taç ≈ 17, aut ≈ 27, serbest vuruş ≈ 25, korner ≈ 33 maç sn)      // [av2] AV_LIVE
+        if (AV_LIVE && AV_CLK) { DEAD_T = avp('AV_KT', 2.25); DEAD_G = avp('AV_KG', 3.6); DEAD_F = avp('AV_KF', 3.35); DEAD_C = avp('AV_KC', 4.4); }      // [av2] fiziksel sn; maç saatinde × AV_CLKD × CK (taç ≈ 17, aut ≈ 27, serbest vuruş ≈ 25, korner ≈ 33 maç sn)      // [av2] AV_LIVE
         var keepBall = false, ballPending = false, hdZ = null;      // [dead]/[air] bir sonraki vuruşta top yerinde kalır · [ball] bu adımda top adımı henüz işlemedi · [air] kafa temasındaki top yüksekliği
         var GH = 2.44, BRAD = .11;      // kale yüksekliği, top yarıçapı (m)
         var BS = { x: CX, y: CY };      // [ais] takım bloğunun izlediği (gecikmeli) top konumu
@@ -946,7 +949,7 @@
                 var sw = 0; if (BR_ON) { if (d > 24 && Math.abs(ly - p.y) > 18) sw += BR_LONG * .004 * p.br.vz; if (q.run && q.run.until > S.t && prog > 8) sw += BR_LONG * .003 * p.br.vz; }     // vizyon: oyun değiştirme ve koşucuya ara pas
                 var ev = pr * vq - (1 - pr) * lossCost(p.x + (lx - p.x) * .7, p.y + (ly - p.y) * .7, p.team, bk.loss) + PROG_W * bk.prog * pr * clamp(prog, -12, 40) + sw + (noNoise ? 0 : gauss() * nz);
                 if (AV_PASS && cross && !(AV_CLK && off && pr <= .03)) ev += avp('AV_XV', AV_AIR ? .2 : .1);      // [av2] AV_CLK: ofsayttaki arkadaşa orta değeri eklenmez (eskiden orta değeri ofsayt cezasını örtüyordu)
-                if (AV_SHAPE && AV_CLK && !cross && inBox(lx, ly, p.team)) ev += avp('AV_BPV', .03) * pr;      // [av2] AV_CLK: ceza sahasına pas değeri (kompakt bloğa karşı; gerçekte şutların ~%60'ı ceza sahası içinden)
+                if (AV_SHAPE && AV_CLK && !cross && inBox(lx, ly, p.team)) ev += avp('AV_BPV', .06) * pr;      // [av2] AV_CLK: ceza sahasına pas değeri (kompakt bloğa karşı; gerçekte şutların ~%60'ı ceza sahası içinden)
                 if (AV_AIR && !cross && pr > .5 && Math.abs(ly - CY) >= 14 && Math.abs(gx - lx) <= 34 && Math.abs(gx - lx) >= 4) ev += avp('AV_WV', .04) * pr;      // [av2] AV_AIR: son 34 m'de kanattaki arkadaşa pas (orta öncesi; gerçekte atakların ~%40'ı kanattan)      // [av] ortanın değeri: dönen top / korner / kafa şansı (gerçekte takım başına ~12 orta, %28 tamamlanır)
                 var s = ev * 100;
                 if (wantProg && prog < wantProg) s -= 4;
@@ -1101,10 +1104,10 @@
                 var evC = -lossCost(p.x + dir * 25, p.y, p.team, bk.loss) * .5 - .003 + gauss() * DEC_ACT * decK(p) + (AV_OUT ? avp('AV_CLV', .03) * clamp((30 - Math.abs(p.x - ownGoalX(p.team))) / 20, 0, 1) * (pd < 2 ? 1.5 : 1) : 0); alt.clear = evC;      // [av] AV_OUT: kendi ceza sahası çevresinde baskı altındaki savunmacı daha sık uzaklaştırır (StatsBomb ~18 uzaklaştırma / takım)
                 if (evC > ev) { ev = evC; act = 'clear'; }
             }
-            if (AV_AIR && act === 'pass' && crossZone(p) && Math.abs(atkGoalX(p.team) - p.x) > 3 && RB() < avp('AV_XP', .8)) {      // [av2] AV_AIR: kanattaki oyuncu ceza sahasına orta açar (StatsBomb ~11 orta / takım; motorun beklenen değer seçimi ortayı az seçiyordu)
-                var xo = null; opts.forEach(function (o) { if (o.cross && !isOffside(o.q, p.x) && (!xo || o.pr > xo.pr)) xo = o; }); if (xo && xo.pr > avp('AV_XPM', .12)) { passTarget = xo; S.dbg.a2x = (S.dbg.a2x || 0) + 1; }
+            if (AV_AIR && act === 'pass' && crossZone(p) && Math.abs(atkGoalX(p.team) - p.x) > 3 && RB() < avp('AV_XP', AV_CLK ? 1.2 : .8)) {      // [av2] AV_AIR: kanattaki oyuncu ceza sahasına orta açar (StatsBomb ~11 orta / takım; motorun beklenen değer seçimi ortayı az seçiyordu)
+                var xo = null; opts.forEach(function (o) { if (o.cross && !isOffside(o.q, p.x) && (!xo || o.pr > xo.pr)) xo = o; }); if (xo && xo.pr > avp('AV_XPM', AV_CLK ? .06 : .12)) { passTarget = xo; S.dbg.a2x = (S.dbg.a2x || 0) + 1; }
             }
-            if (AV_OUT2 && act !== 'shot' && pd < avp('AV_O2Q', 5) && Math.min(p.y, PH - p.y) < avp('AV_O2E', 20) && Math.abs(p.x - ownGoalX(p.team)) < avp('AV_O2X', 55) && (!best || best.pr < avp('AV_O2R', .9)) && RB() < avp('AV_O2K', 1)) { act = 'clear'; p.kOut = S.t; }      // [av2] AV_OUT2: kendi yarı alanında kenarda sıkışan oyuncu topu taça atar
+            if (AV_OUT2 && act !== 'shot' && pd < avp('AV_O2Q', AV_CLK ? 3.5 : 5) && Math.min(p.y, PH - p.y) < avp('AV_O2E', AV_CLK ? 14 : 20) && Math.abs(p.x - ownGoalX(p.team)) < avp('AV_O2X', 55) && (!best || best.pr < avp('AV_O2R', .9)) && RB() < avp('AV_O2K', AV_CLK ? .8 : 1)) { act = 'clear'; p.kOut = S.t; }      // [av2] AV_OUT2: kendi yarı alanında kenarda sıkışan oyuncu topu taça atar
             S.dbg.dec[act] = (S.dbg.dec[act] || 0) + 1;
             p.dec = { t: S.t, act: act, alt: alt, q: (act === 'pass' && passTarget) ? passTarget.q.id : -1, pr: passTarget ? passTarget.pr : null, urg: bk.urg }; p.n.dec++;      // karar kaydı: katman ve laboratuvar için
             if (act === 'shot') { p.n.shot++; doShot(p, xg, pd, null); return; }
@@ -1334,7 +1337,7 @@
                 if (AV_SHAPE && has === p.team && /^(LW|RW|LB|RB)$/.test(p.role)) hy = clamp(CY + (hy - CY) * avp('AV_HW', 1.05), 2.5, PH - 2.5);      // [av2] AV_SHAPE: hücumda kanatlar çizgiye (Metrica: hücum eden takımın genişliği 45–52 m)
             }
             var tx = hx + d * push + d * lsh;
-            if (has === p.team && (p.role === 'ST' || p.role === 'LW' || p.role === 'RW' || p.role === 'AM')) { var gxo = atkGoalX(p.team), lineD = offDist(p.team) - (CURVE ? clamp(1.4 - (p.a.posi - 60) * .03, .15, 2.2) : .6); if (AV_CLK) lineD -= avp('AV_OFX', .6); if (Math.abs(gxo - tx) < lineD && p.role !== 'AM') tx = gxo - d * lineD; }      // [av2] AV_CLK: uzayan canlı oyunda forvetler çizginin biraz gerisinde bekler (ofsayt 1,6–2,4)
+            if (has === p.team && (p.role === 'ST' || p.role === 'LW' || p.role === 'RW' || p.role === 'AM')) { var gxo = atkGoalX(p.team), lineD = offDist(p.team) - (CURVE ? clamp(1.4 - (p.a.posi - 60) * .03, .15, 2.2) : .6); if (AV_CLK) lineD -= avp('AV_OFX', 1.2); if (Math.abs(gxo - tx) < lineD && p.role !== 'AM') tx = gxo - d * lineD; }      // [av2] AV_CLK: uzayan canlı oyunda forvetler çizginin biraz gerisinde bekler (ofsayt 1,6–2,4)
             var ty = hy + (BY - hy) * (p.role === 'LW' || p.role === 'RW' || p.role === 'LB' || p.role === 'RB' ? .12 : .24);
             // rakip topla tehlikeli bölgedeyse: kale önünde kompakt blok
             if (has !== p.team && has !== -1 && p.role !== 'GK') {
@@ -1352,7 +1355,7 @@
                 }
             }
             if (AV_SHAPE && has !== p.team && has !== -1 && p.role !== 'GK' && !(avp('AV_SXF', 0) && /^(ST|LW|RW|AM)$/.test(p.role))) {      // [av2] AV_SHAPE: savunan takımın blok çerçevesi
-                var sb3 = shpBand(p, BX), kW = avp('AV_SW0', .56) + avp('AV_SW1', .14) * clamp(sb3.bd / 70, 0, 1);
+                var sb3 = shpBand(p, BX), kW = avp('AV_SW0', AV_CLK ? .54 : .56) + avp('AV_SW1', .14) * clamp(sb3.bd / 70, 0, 1);
                 var wb3 = shpW(p.team); tx += (ownGoalX(p.team) + d * sb3.x - tx) * wb3; ty += (CY + (hy - CY) * kW + (BY - CY) * avp('AV_SSH', .3) - ty) * wb3;      // geçişte (top kaybından sonra) blok birkaç saniyede kurulur: kontra fırsatı
             }
             return [clamp(tx, 2, PW - 2), clamp(ty, 2, PH - 2)];
@@ -1373,7 +1376,7 @@
             if (shpC.t !== S.t || shpC.bx !== bx || shpC.b2 !== B.x) { shpC.b2 = B.x; shpC.t = S.t; shpC.bx = bx; for (var tm = 0; tm < 2; tm++) { var r0 = shpDt(tm, bx); shpC.Dt[tm] = r0.Dt; shpC.bd[tm] = r0.bd; } }
             var off = SHP_OFF[p.role] != null ? SHP_OFF[p.role] : 10;
             if (p.home) { var f0 = FORMR[p.role]; if (f0) off = Math.max(0, off + (p.home[1] - f0[1]) * PW * .5); }      // özel dizilişte ev konumu farkının yarısı
-            off *= avp('AV_SSC', 1.3) * (1 + avp('AV_SPR', .06) * tacOf(p.team).press);
+            off *= avp('AV_SSC', AV_CLK ? 1.22 : 1.3) * (1 + avp('AV_SPR', .06) * tacOf(p.team).press);
             var Dt = shpC.Dt[p.team]; return { x: Dt + off, Dt: Dt, off: off, bd: shpC.bd[p.team] };
         }
         // ---------- savunma organizasyonu ----------
@@ -1432,8 +1435,8 @@
             defs.forEach(function (q) { if (!used[q.id]) q.markId = null; });
             if (AV_BLK && ow && ow.role !== 'GK') {      // [av2] AV_BLK: şut yoluna giren savunmacı (pres yapan hariç; markajı bırakır)
                 var gdx = gxc - ow.x, gdy = CY - ow.y, gdl = hyp(gdx, gdy);
-                if (gdl < avp('AV_BKD', 30) && gdl > 6 && Math.abs(ow.y - CY) < 22) {
-                    var bkq = null, bkd = avp('AV_BKR', 9), ux3 = gdx / gdl, uy3 = gdy / gdl;
+                if (gdl < avp('AV_BKD', AV_CLK ? 34 : 30) && gdl > 6 && Math.abs(ow.y - CY) < 22) {
+                    var bkq = null, bkd = avp('AV_BKR', AV_CLK ? 12 : 9), ux3 = gdx / gdl, uy3 = gdy / gdl;
                     defs.forEach(function (q) { if (out[q.id] && out[q.id].kind === 'press') return; var px3 = (q.x - ow.x) * ux3 + (q.y - ow.y) * uy3; if (px3 < 1 || px3 > gdl - 2) return; var pe = Math.abs((q.x - ow.x) * uy3 - (q.y - ow.y) * ux3); if (pe < bkd) { bkd = pe; bkq = q; } });
                     if (bkq) { var bt = clamp(((bkq.x - ow.x) * ux3 + (bkq.y - ow.y) * uy3), avp('AV_BK0', 2.5), Math.min(avp('AV_BK1', 4.5), gdl - 3)); out[bkq.id] = { kind: 'block', tx: ow.x + ux3 * bt + ow.vx * .2, ty: ow.y + uy3 * bt + ow.vy * .2, sf: 1 }; used[bkq.id] = 1; bkq.blkT = S.t; S.dbg.b2 = (S.dbg.b2 || 0) + 1; }      // blkT: görüntü katmanı için (şut yoluna adım)
                 }
@@ -1536,11 +1539,11 @@
                 var farW = null; mates.forEach(function (q) { if ((q.role === 'LW' || q.role === 'RW') && Math.abs(q.y - ow.y) > 25) farW = q; });
                 mates.forEach(function (q) {
                     var c = q.role === 'ST' ? cells.ST : q.role === 'AM' ? cells.AM : q === farW ? cells.far : null; if (!c) return;
-                    var dq = Math.abs(gx - c[0]), ofP = AV_PASS ? avp('AV_OFP', 2) : .6; if (dq < offL - ofP) c = [gx - dir * (offL - ofP), c[1]];      // [av] ofsayt payı (ortaya hazırlık hücresi hattın gerisinde)
+                    var dq = Math.abs(gx - c[0]), ofP = AV_PASS ? avp('AV_OFP', AV_CLK ? 3 : 2) : .6; if (dq < offL - ofP) c = [gx - dir * (offL - ofP), c[1]];      // [av] ofsayt payı (ortaya hazırlık hücresi hattın gerisinde)
                     q.boxT = { x: c[0], y: c[1], t: S.t }; boxTaken[q.id] = 1;
                 });
                 if (OB_ON) {
-                    if (OB_NEAR) mates.forEach(function (q) { if ((q.role === 'LW' || q.role === 'RW') && !boxTaken[q.id] && (q.y - CY) * sideY > 0 && Math.abs(gx - q.x) < 32) { var cn = cells.near, ofN = AV_PASS ? avp('AV_OFP', 2) : .6; if (Math.abs(gx - cn[0]) < offL - ofN) cn = [gx - dir * (offL - ofN), cn[1]]; q.boxT = { x: cn[0], y: cn[1], t: S.t }; boxTaken[q.id] = 1; } });      // [ob] ön direğe atak
+                    if (OB_NEAR) mates.forEach(function (q) { if ((q.role === 'LW' || q.role === 'RW') && !boxTaken[q.id] && (q.y - CY) * sideY > 0 && Math.abs(gx - q.x) < 32) { var cn = cells.near, ofN = AV_PASS ? avp('AV_OFP', AV_CLK ? 3 : 2) : .6; if (Math.abs(gx - cn[0]) < offL - ofN) cn = [gx - dir * (offL - ofN), cn[1]]; q.boxT = { x: cn[0], y: cn[1], t: S.t }; boxTaken[q.id] = 1; } });      // [ob] ön direğe atak
                     if (S.lateOw !== ow) {      // [ob] geç gelen orta saha: bir an bekler, sonra ceza yayına (geri çevrilen top bölgesi) koşar
                         S.lateOw = ow; var lm = null, ls = -1;
                         mates.forEach(function (q) { if (!(q.role === 'LDM' || q.role === 'RDM') || boxTaken[q.id] || Math.abs(gx - q.x) > 44) return; var sc0 = q.a.posi + .6 * q.a.sta + 30 * q.stam - .5 * Math.abs(gx - q.x); if (sc0 > ls) { ls = sc0; lm = q; } });
@@ -1603,8 +1606,8 @@
         //   x, y: çekişme yeri · atk: topu kaybeden (hücum eden) takım · k: olasılık çarpanı. Top hızını korur, yönü en yakın çizgiye (yan çizgi → taç, kale çizgisi → korner) döner
         function avOut(x, y, atk, k) {
             if (!AV_OUT) return false;
-            var dy = Math.min(y, PH - y), gx = atkGoalX(atk), dxg = Math.abs(gx - x), wl = avp('AV_OW', AV_OUT2 ? 26 : 14);
-            var pT = dy < wl ? avp('AV_TKO', AV_OUT2 ? 3.5 : 1) * (1 - dy / wl) : 0, tb = AV_OUT2 ? avp('AV_TKB', 16) : 9, pC = dxg < tb && Math.abs(y - CY) > GW / 2 + 1 ? avp('AV_TKC', AV_OUT2 ? 1.5 : .7) * (1 - dxg / tb) : 0, u = RA();
+            var dy = Math.min(y, PH - y), gx = atkGoalX(atk), dxg = Math.abs(gx - x), wl = avp('AV_OW', AV_OUT2 ? (AV_CLK ? 22 : 26) : 14);
+            var pT = dy < wl ? avp('AV_TKO', AV_OUT2 ? (AV_CLK ? .95 : 3.5) : 1) * (1 - dy / wl) : 0, tb = AV_OUT2 ? avp('AV_TKB', 16) : 9, pC = dxg < tb && Math.abs(y - CY) > GW / 2 + 1 ? avp('AV_TKC', AV_OUT2 ? 1.5 : .7) * (1 - dxg / tb) : 0, u = RA();
             if (AV_OUT2) { S.dbg.a2n = (S.dbg.a2n || 0) + 1; if (pC > 0) S.dbg.a2c = (S.dbg.a2c || 0) + 1; if (pT > 0) S.dbg.a2t = (S.dbg.a2t || 0) + 1; }
             if (u >= (pT + pC) * k) return false;
             var v = Math.max(avp('AV_OV', 6.5), hyp(B.vx, B.vy)), a; B.avo = S.t;      // çekişmedeki iki oyuncu topa hemen yeniden dokunamaz (top gövdeden seker)
@@ -1688,7 +1691,7 @@
                 if (has === p.team && B.owner && p !== B.owner && p.boxT && S.t - p.boxT.t < .8) { tx = p.boxT.x; ty = p.boxT.y; sf = .9; }
                 if (OB_ON && has === p.team && p !== B.owner) {
                     if (p.chk && p.chk.until > S.t) { if (S.t < p.chk.ft) { tx = p.chk.fx; ty = p.chk.fy; sf = .9; } else { tx = p.chk.x; ty = p.chk.y; sf = 1; } }
-                    if (p.late && S.t >= p.late.t0 && S.t < p.late.until) { var gxl = atkGoalX(p.team), oL = offDist(p.team), ofL = AV_PASS ? avp('AV_OFP', 2) : .6; tx = Math.abs(gxl - p.late.x) < oL - ofL ? gxl - d * (oL - ofL) : p.late.x; ty = p.late.y; sf = .97; }
+                    if (p.late && S.t >= p.late.t0 && S.t < p.late.until) { var gxl = atkGoalX(p.team), oL = offDist(p.team), ofL = AV_PASS ? avp('AV_OFP', AV_CLK ? 3 : 2) : .6; tx = Math.abs(gxl - p.late.x) < oL - ofL ? gxl - d * (oL - ofL) : p.late.x; ty = p.late.y; sf = .97; }
                 } else if (p.chk || p.late) { p.chk = null; p.late = null; }
                 if (has === p.team && p !== B.owner && p.run && p.run.until > S.t) { if (p.run.wt && S.t < p.run.wt) { tx = p.run.wx; ty = p.run.wy; sf = .92; } else { tx = p.run.x; ty = p.run.y; sf = 1; } } else if (p.run && (has !== p.team || p.run.until <= S.t)) p.run = null;
                 if (dr && dr.kind === 'mark') {
@@ -2025,7 +2028,7 @@
             if (CARDS_ON && !f.off) {      // hakem: hava topu faulünde sarı (dirsek / ısrarlı faul), hakem akışından
                 var pYel = AC_AFY * Math.pow(Math.max(agg, 8) / 45, Y_EXP) + (f.nf >= 3 ? .2 : f.nf === 2 ? .1 : 0);
                 if ((f.yc || 0) >= 1) pYel *= Y_AGAIN;
-                if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .8 : 1);      // [av2] AV_CLK: uzayan canlı oyunda kart oranı (sarı 1,8–2,1 / takım)
+                if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .85 : 1);      // [av2] AV_CLK: uzayan canlı oyunda kart oranı (sarı 1,8–2,1 / takım)
                 if (RR() < pYel) { if ((f.yc || 0) >= 1) { f.yc++; cardEv(f, v, 'R', 'ikinci_sari', true, false); sendOff(f); } else cardEv(f, v, 'Y', 'faul', false, false); }
             }
             return true;
@@ -2096,7 +2099,7 @@
                 }
                 if (S.shot) { S.shot.off = true; emit('OFF', { team: S.shot.team, p: S.shot.shooter.id, meta: { xg: S.shot.xg } }); }
                 var defTm = 1 - atkTm;
-                if (AV_OUT2 && S.shot && S.shot.team === atkTm && B.last === S.shot.shooter && !S.shot.on && RB() < avp('AV_SDC', .8)) {      // [av2] AV_OUT2: auta giden şut yoldaki savunmacıdan sekip kornere (kale çizgisini savunmacı geçirdi)
+                if (AV_OUT2 && S.shot && S.shot.team === atkTm && B.last === S.shot.shooter && !S.shot.on && RB() < avp('AV_SDC', AV_CLK ? .2 : .8)) {      // [av2] AV_OUT2: auta giden şut yoldaki savunmacıdan sekip kornere (kale çizgisini savunmacı geçirdi)
                     var sdx = null, sdd = avp('AV_SDR', 3.5); for (var si2 = 0; si2 < 22; si2++) { var sq = S.players[si2]; if (sq.team !== defTm || sq.off || sq.role === 'GK') continue; var sdq = segDist(sq.x, sq.y, S.shot.ox, S.shot.oy, px, py); if (sdq < sdd) { sdd = sdq; sdx = sq; } }
                     if (sdx) { B.last = sdx; S.lastTeam = defTm; S.dbg.a2d = (S.dbg.a2d || 0) + 1; }
                 }
@@ -2574,7 +2577,7 @@
             var ic = S.dbg.ic || (S.dbg.ic = {}); ic.n = (ic.n || 0) + 1; ic.perp = (ic.perp || 0) + perp;
             if (R() >= pT) { o.cd = .3; ic.miss = (ic.miss || 0) + 1; return 'miss'; }
             var pC = clamp(AC_IC - .025 * Math.max(0, v - 10) - .25 * Math.max(0, perp - .35) + .004 * (ds - 75), .25, .95) * (inB ? .7 : 1);
-            if (R() < pC) { if (AV_OUT && avOut(B.x, B.y, 1 - o.team, avp('AV_ICO', AV_OUT2 ? 3 : .8))) { o.cd = .3; B.last = o; S.lastTeam = o.team; emit('BLOCK', { team: o.team, p: o.id, p2: S.pass.from ? S.pass.from.id : -1, meta: { cross: true, kind: 'pass' } }); S.pass = null; return 'defl'; }      // [av] AV_OUT: çizgi kenarında pası kesen savunmacı topu dışarı atar
+            if (R() < pC) { if (AV_OUT && avOut(B.x, B.y, 1 - o.team, avp('AV_ICO', AV_OUT2 ? (AV_CLK ? 1.4 : 3) : .8))) { o.cd = .3; B.last = o; S.lastTeam = o.team; emit('BLOCK', { team: o.team, p: o.id, p2: S.pass.from ? S.pass.from.id : -1, meta: { cross: true, kind: 'pass' } }); S.pass = null; return 'defl'; }      // [av] AV_OUT: çizgi kenarında pası kesen savunmacı topu dışarı atar
                 ic.win = (ic.win || 0) + 1; gain(o); return 'win'; }
             ic.defl = (ic.defl || 0) + 1;
             var pf = S.pass.from;
@@ -2631,7 +2634,7 @@
         function resolveContest(d, o, base, g) {
             var pw = tackleP(d, o, base), pf = (.032 + .0003 * (60 - d.a.tac + 30)) * FOUL_K * (inBox(o.x, o.y, o.team) ? .15 : 1), r = R(), ffl = S.forceFoul != null && S.forceFoul.by === o.id && o.team === S.forceGoal && S.mode === 'live';      // [v187] zorla gol kurgusu: golcüye faul (penaltı / serbest vuruş)
             if (TACKLE) {      // [tackle] açı, gövde yönü, göreli hız, topun açıklığı; ceza sahasında savunmacı ayakta kalır (daha az faul, biraz daha az kapma)
-                tkG = g || tkGeo(d, o); pw = clamp(pw * tkG.w, .02, .8); pf *= TK_FOUL * tkG.f * (AV_MOVE ? avp('AV_FOUL', AV_CAL ? 2 : 1.55) : 1);      // [av] AV_MOVE: yavaşlayan çekişmelerde faul oranı korunur (faul 11–15 / takım)
+                tkG = g || tkGeo(d, o); pw = clamp(pw * tkG.w, .02, .8); pf *= TK_FOUL * tkG.f * (AV_MOVE ? avp('AV_FOUL', AV_CAL ? (AV_CLK ? 1.05 : 2) : 1.55) : 1);      // [av] AV_MOVE: yavaşlayan çekişmelerde faul oranı korunur (faul 11–15 / takım)
                 if (inBox(o.x, o.y, o.team)) { pf *= .65; pw *= .9; }
             }
             if (ffl) { r = pw + pf * .5; S.forceFoul = null; }
@@ -2717,7 +2720,7 @@
                     var g2 = tkGeo(d, o);
                     if (!(S.forceFoul != null && S.forceFoul.by === o.id) && R() > ENGAGE * (1 + PR_E * tacOf(d.team).press) * tkEng(d, o, g2)) continue;      // [v187] zorla faul: temas kaçmaz
                     var res3 = resolveContest(d, o, .24 * TK_WIN, g2); S.dbg.press[res3] = (S.dbg.press[res3] || 0) + 1; tkLog(g2, res3);
-                    if (res3 === 'beaten' && AV_OUT && B.owner === o) { var dyo = Math.min(o.y, PH - o.y); if (dyo < 6 && RA() < avp('AV_DUO', AV_OUT2 ? 1.5 : .6) * (1 - dyo / 6)) { var lt = RA() < .5 ? d : o; B.owner = null; B.vx = (RA() - .5) * 4; B.vy = (o.y < CY ? -1 : 1) * (5 + 3 * RA()); B.avo = S.t; B.last = lt; S.lastTeam = lt.team; o.cd = .4; d.cd = .4; o.dribble = false; S.pass = null; return; } }      // [av] AV_OUT: çizgi kenarındaki ikili mücadelede top çoğu kez taça (son dokunan rastgele)
+                    if (res3 === 'beaten' && AV_OUT && B.owner === o) { var dyo = Math.min(o.y, PH - o.y); if (dyo < 6 && RA() < avp('AV_DUO', AV_OUT2 ? (AV_CLK ? 1 : 1.5) : .6) * (1 - dyo / 6)) { var lt = RA() < .5 ? d : o; B.owner = null; B.vx = (RA() - .5) * 4; B.vy = (o.y < CY ? -1 : 1) * (5 + 3 * RA()); B.avo = S.t; B.last = lt; S.lastTeam = lt.team; o.cd = .4; d.cd = .4; o.dribble = false; S.pass = null; return; } }      // [av] AV_OUT: çizgi kenarındaki ikili mücadelede top çoğu kez taça (son dokunan rastgele)
                     if (res3 !== 'beaten') return;
                     d.stunT = S.t + Math.max(tkStun(g2), tacOf(d.team).press > 0 ? PR_STUN : 0);
                     continue;
@@ -2796,7 +2799,7 @@
             var pSer = TK_SER * (.5 + agg / 50) * (.2 + 2.5 * g.sev * g.sev), pDog = dogR ? TK_DOG * clamp((dogso - .4) / .4, 0, 1) : 0, pRed = pSer + pDog;
             var pYel = TK_Y * (Y_BASE * Math.pow(Math.max(agg, 8) / 45, Y_EXP) * (.35 + 1.3 * g.sev) + (d.nf >= 3 ? .2 : d.nf === 2 ? .1 : 0)) + .5 * spa * (TK_SPAPEN && pen && att ? 0 : 1) + (pen && dogso >= .3 ? .9 : 0);      // [tackle] TK_SPAPEN: ceza sahasında topa oynama girişimli SPA → penaltı yeter
             if ((d.yc || 0) >= 1) pYel *= Y_AGAIN;      // sarı kartlı oyuncu temkinli oynar, hakem de ikinci kartta daha çekingendir
-            if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .8 : 1);      // [av2] AV_CLK: kart oranı ölçeği
+            if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .85 : 1);      // [av2] AV_CLK: kart oranı ölçeği
             if (RR() < pRed) {
                 var whyR = pDog >= pSer ? 'son_adam' : 'sert', rv = VAR_ON ? varCard(d, o, 'R', whyR, pen, { sev: g.sev, dogso: dogso }) : null;
                 if (rv) emit('VAR', rv.ev);
@@ -2827,7 +2830,7 @@
             var pRed = R_SERIOUS * (.5 + agg / 50) * rf + R_DOGSO * dogso * (pen ? .6 : 1);
             var pYel = (Y_BASE * Math.pow(Math.max(agg, 8) / 45, Y_EXP) + (d.nf >= 3 ? .2 : d.nf === 2 ? .1 : 0)) * rf + (behind <= 1 && dGoal < 55 && !pen ? .12 : 0) + (pen ? .3 : 0);
             if ((d.yc || 0) >= 1) pYel *= Y_AGAIN;      // sarı kartlı oyuncu temkinli oynar, hakem de ikinci kartta daha çekingendir
-            if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .8 : 1);      // [av2] AV_CLK: kart oranı ölçeği
+            if (AV_CAL) pYel *= avp('AV_YK', AV_CLK ? .85 : 1);      // [av2] AV_CLK: kart oranı ölçeği
             if (RR() < pRed) {
                 var whyR = dogso >= .25 ? 'son_adam' : 'sert', rv = VAR_ON ? varCard(d, o, 'R', whyR, pen, { sev: null, dogso: dogso }) : null;      // VAR bazı kırmızıları kontrol eder: onay ya da sarıya düşürme
                 if (rv) emit('VAR', rv.ev);
@@ -3068,7 +3071,7 @@
         S.tactics = function (tm) { var t = S.teams[tm].tac; return { ment: t.ment, tempo: t.tempo, line: t.line, press: t.press, width: t.width, gk: t.gk }; };
         S.run = function (sec) { var n = Math.round(sec / DT) + 1; for (var i = 0; i < n && !S.finished; i++) step(); };
         S.possPct = function () { var a = pos(0), b = pos(1), s = a + b || 1; return [Math.round(100 * a / s), 100 - Math.round(100 * a / s)]; };
-        S.C = { PW: PW, PH: PH, CX: CX, CY: CY, GW: GW, GY0: GY0, GY1: GY1, PA_D: PA_D, PA_Y0: PA_Y0, PA_Y1: PA_Y1, DT: DT, ROLE_TR: ROLE_TR, HALF_S: HALF_S, FULL_S: FULL_S, CLOCK_S: CLOCK_S, CK: CK };
+        S.C = { PW: PW, PH: PH, CX: CX, CY: CY, GW: GW, GY0: GY0, GY1: GY1, PA_D: PA_D, PA_Y0: PA_Y0, PA_Y1: PA_Y1, DT: DT, ROLE_TR: ROLE_TR, HALF_S: HALF_S, FULL_S: FULL_S, CLOCK_S: CLOCK_S, CK: CK, CLKD: AV_CLKD };      // [av2] CLKD: top ölüyken sim.t'nin fiziksel adıma oranı (AV_CLK kapalıyken 1)
         S.clock = function () { return S.t * CK; };
         S.audit.accCap = Math.max.apply(null, S.players.map(function (p) { return p.acc; }));
         S.footFor = footFor;
