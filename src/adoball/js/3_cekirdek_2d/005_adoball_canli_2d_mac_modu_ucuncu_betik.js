@@ -1136,6 +1136,7 @@
         var r = S.ref, t = refTarget(sim), rcd = HK_ON && S.refCard && performance.now() < S.refCard.until && S.refCard.id >= 0 && sim.players[S.refCard.id] ? sim.players[S.refCard.id] : null;
         if (HK_ON && SQ.card && sim.players[SQ.card.id]) rcd = sim.players[SQ.card.id];      /* [v186] kart bekliyor: hakem oyuncuya koşar */
         if (rcd && rcd.off) rcd = S.offWalk && S.offWalk.id === rcd.id ? S.offWalk : null;      /* [v186] atılan oyuncu motorda saha dışına park edilir: görünen yerine */
+        if (rcd && V7.on && rcd.id != null && V7.gv[rcd.id] && V7.gv[rcd.id].x === V7.gv[rcd.id].x) rcd = { x: V7.gv[rcd.id].x, y: V7.gv[rcd.id].y, id: rcd.id };      /* [v187] hakem, kendisine yürüyen oyuncunun GÖRÜNEN konumuna gider */
         var rq = HK_ON && !!SQ.card, RV = rq ? 7.2 : REF.vmax;      /* [v186] kart için hakem oyuncuya hızlı koşar (FM: düdükten 1–2,5 sn sonra yanında) */
         if (rcd) { var cux = r.x - rcd.x, cuy = r.y - rcd.y, cul = Math.hypot(cux, cuy) || 1; t = [rcd.x + cux / cul * 2.2, rcd.y + cuy / cul * 2.2]; }      /* [hakem] kartlanan oyuncuya ~2.2 m */
         var i, p, dead = sim.mode === 'dead', k = 1 - Math.exp(-DT / (dead ? REF.tauD : REF.tau));
@@ -3911,6 +3912,7 @@
         H.comm.classList.toggle('on', !!line && now < H.lineUntil);
         // duran top bayrağı: canlı oyunda (tekrar, VAR ve gol kutlaması dışında)
         var dd = sim && sim.mode === 'dead' ? sim.dead : null, lab = dd ? DEAD_LAB[dd.kind] : null;
+        if (S.hold === 'v7ht' && V7.half) lab = V7.half.fin ? 'MAÇ SONU' : 'DEVRE ARASI';      // [v187]
         var show = !!(lab && S.hold !== 'replay' && S.hold !== 'goal' && !S.vs);
         if (show && H.dead.textContent !== lab) H.dead.textContent = lab;
         H.dead.classList.toggle('on', show);
@@ -4162,7 +4164,7 @@
     /* --- değişiklik sahnesi: dördüncü hakem tabelayı kaldırır, çıkan oyuncu kenara gelir, el sıkışırlar, giren sahaya koşar (kesmeyle) --- */
     function v7SubStart(q) {
         var now = v7Now(), sim = S.sim; try { if (S.r3.subHold) S.r3.subHold(q.id, false); } catch (e) { }
-        V7.sub = { q: q, t: 0, sid: S.sid, ox: PW / 2 + 6.5, oy: PH - 4.2, ix: PW / 2 - 1.7, iy: PH + 1.5, ph: 0 };
+        V7.sub = { q: q, t: 0, sid: S.sid, ox: PW / 2 - .5, oy: PH - 4.6, ix: PW / 2 - 6.1, iy: PH + 1.05, ph: 0 };      // VAR monitörü (orta çizgide) kadraja girmesin: dördüncü hakemin solunda
         V7.band = { kind: 'sub', team: q.team, inN: q.inN, outN: q.outN, min: minOf(sim.t), until: now + 5500 / v7Ls() };
         V7.sub.w0 = now; S.hold = 'v7sub'; S.last = now; r3Cut(); sqLog('degisiklik'); v7Cnt('degisiklik');
     }
@@ -4170,21 +4172,22 @@
         var U = V7.sub; if (!U) return; if (U.sid !== S.sid) { V7.sub = null; if (S.hold === 'v7sub') S.hold = null; return; }
         U.t += h; var t = U.t, ox, oy, ix, iy, og = 0, ig = 0, ofx = -1, ofy = .3, ifx = .3, ify = -1;
         var hs = 2.7;      // çıkan oyuncu tabelaya varır
-        var oT = Math.min(1, t / hs); ox = U.ox + (PW / 2 + .15 - U.ox) * oT; oy = U.oy + (PH + .35 - U.oy) * oT;
-        if (t < hs) { ofx = (PW / 2 + .15 - U.ox); ofy = (PH + .35 - U.oy); }
+        var oT = Math.min(1, t / hs), oX = PW / 2 - 5.25; ox = U.ox + (oX - U.ox) * oT; oy = U.oy + (PH + .35 - U.oy) * oT;
+        if (t < hs) { ofx = (oX - U.ox); ofy = (PH + .35 - U.oy); }
         ix = U.ix; iy = U.iy;
         if (t >= hs - .4 && t < hs + 1.1) { ig = 7; og = 7; ifx = ox - ix; ify = oy - iy; ofx = -ifx; ofy = -ify; }      // el sıkışma
-        if (t >= hs + 1.1) { var r = Math.min(1, (t - hs - 1.1) / 1.6); ix = U.ix + (PW / 2 - 4 - U.ix) * r; iy = U.iy + (PH - 7.5 - U.iy) * r; ifx = -.4; ify = -1; ox += (t - hs - 1.1) * 1.3; ofx = 1; ofy = .35; }
+        if (t >= hs + 1.1) { var r = Math.min(1, (t - hs - 1.1) / 1.6); ix = U.ix + (PW / 2 - 9 - U.ix) * r; iy = U.iy + (PH - 7.5 - U.iy) * r; ifx = -.4; ify = -1; ox += (t - hs - 1.1) * 1.3; ofx = 1; ofy = .35; }
         V7.xa.push({ k: 2, id: U.q.id, x: ox, z: oy, fx: ofx, fz: ofy, g: og, gt: t, gh: 1, hold: 0 });
         V7.xa.push({ k: 1, id: U.q.id, x: ix, z: iy, fx: ifx, fz: ify, g: ig, gt: t, gh: 1, hold: 0 });
-        V7.scam = { eye: [PW / 2 - 2.5 + .5 * Math.min(1, t / 5), 2.35, PH + 10.5], at: [PW / 2 + .3, 1.15, PH + .2], fov: 40 };
+        V7.scam = { eye: [PW / 2 - 8.6 + .5 * Math.min(1, t / 5), 2.35, PH + 10], at: [PW / 2 - 4.6, 1.15, PH + .2], fov: 40 };
         if (t > hs + 2.8) { V7.sub = null; if (S.hold === 'v7sub') { S.hold = null; S.last = v7Now(); } if (S.r3) { S.r3.cutCam = null; S.r3.v7Cut = 0; } r3Cut(); }
     }
     /* --- devre arası / maç sonu: oyuncular tokalaşır, tünele yürür (hakemle) --- */
     function v7HalfStart(fin) {
-        var sim = S.sim, i; V7.half = { fin: fin, t: 0, sid: S.sid, x: new Float32Array(22), y: new Float32Array(22), rx: S.ref ? S.ref.x : PW / 2, ry: S.ref ? S.ref.y : PH / 2, pair: new Int8Array(22).fill(-1), dur: fin ? 5.5 : 4.2 };
+        var sim = S.sim, i; V7.half = { fin: fin, t: 0, sid: S.sid, x: new Float32Array(22), y: new Float32Array(22), rx: S.ref ? S.ref.x : PW / 2, ry: S.ref ? S.ref.y : PH / 2, pair: new Int8Array(22).fill(-1), dur: fin ? 7.2 : 5.6 };
         for (i = 0; i < 22; i++) { V7.half.x[i] = V7.pOk ? V7.px[i] : sim.players[i].x; V7.half.y[i] = V7.pOk ? V7.py[i] : sim.players[i].y; }
         if (fin) for (i = 0; i < 11; i++) { if (sim.players[i].off) continue; var bj = -1, bd = 12; for (var j = 11; j < 22; j++) { if (sim.players[j].off || V7.half.pair[j] >= 0) continue; var dd = Math.hypot(V7.half.x[i] - V7.half.x[j], V7.half.y[i] - V7.half.y[j]); if (dd < bd) { bd = dd; bj = j; } } if (bj >= 0) { V7.half.pair[i] = bj; V7.half.pair[bj] = i; } }
+        var od = []; for (i = 0; i < 22; i++) if (!sim.players[i].off) od.push([Math.hypot(V7.half.x[i] - PW / 2 - 1, V7.half.y[i] - PH - 4.5), i]); od.sort(function (p, q) { return p[0] - q[0]; }); V7.half.grp = od.slice(0, 7).map(function (p) { return p[1]; });      // kameranın izlediği, tünele en yakın grup
         V7.half.w0 = v7Now(); S.hold = 'v7ht'; S.last = v7Now(); sqLog(fin ? 'mac_sonu' : 'devre'); v7Cnt(fin ? 'mac_sonu' : 'devre');
     }
     function v7HalfStep(v, h) {
@@ -4198,7 +4201,10 @@
             if (dl > .2) { v.fx[i] = dx / dl; v.fy[i] = dy / dl; } else if (pj >= 0) { var px2 = Hh.x[pj] - x, py2 = Hh.y[pj] - y, pl = Math.hypot(px2, py2) || 1; v.fx[i] = px2 / pl; v.fy[i] = py2 / pl; if (!Hh['g' + i]) { Hh['g' + i] = 1; v7Gest(i, 7, S.viewT, 1.1); } }
         }
         var rdx = tx - 2 - Hh.rx, rdy = ty - Hh.ry, rdl = Math.hypot(rdx, rdy), rst = 1.7 * h; if (rdl > rst) { Hh.rx += rdx / rdl * rst; Hh.ry += rdy / rdl * rst; v.rfx = rdx / rdl; v.rfy = rdy / rdl; } v.rx = Hh.rx; v.ry = Hh.ry;
-        V7.scam = { eye: [PW / 2 - 9, 7.5, PH + 24], at: [PW / 2 + 2, .8, PH - 6 + Math.min(6, Hh.t * 1.4)], fov: 40 };
+        var gcx = 0, gcy = 0, gn = 0; (Hh.grp || []).forEach(function (j) { if (!sim.players[j].off) { gcx += Hh.x[j]; gcy += Hh.y[j]; gn++; } }); if (gn) { gcx /= gn; gcy /= gn; } else { gcx = Hh.rx; gcy = Hh.ry; }
+        if (!(Hh.cx === Hh.cx)) { Hh.cx = gcx; Hh.cy = gcy; } else { var kk = Math.min(1, h * 2.5); Hh.cx += (gcx - Hh.cx) * kk; Hh.cy += (gcy - Hh.cy) * kk; }
+        var tdx = tx - Hh.cx, tdy = ty - Hh.cy, tdl = Math.hypot(tdx, tdy) || 1, ed = Math.min(10, Math.max(4, tdl - 1)), ex = Hh.cx + tdx / tdl * ed - 2.2, ey = Math.min(PH + 6.5, Hh.cy + tdy / tdl * ed);
+        V7.scam = { eye: [ex, 2.9, ey], at: [Hh.cx, 1.0, Hh.cy], fov: 40 };      // tünel tarafından, yürüyen grubu önden izler (devre / maç sonu)
         if (Hh.t > Hh.dur) { V7.half = null; if (S.r3) { S.r3.cutCam = null; S.r3.v7Cut = 0; } if (S.hold === 'v7ht') S.hold = null; Hh.done = 1; V7.htDone = S.sid + ':' + sim.half + ':' + (sim.finished ? 1 : 0); afterSteps(); }
     }
     /* --- gol: sevinç çeşitleri (uçak koşusu, diz kayması, köşe bayrağında sıçrama, yumruk, kucaklaşma), yenilen tarafta hayal kırıklığı --- */
@@ -4261,6 +4267,7 @@
     /* --- kamera: faul tekrarında yakın açı (temasa dik, yayın tarafından), gol tekrarında golün türüne göre açı --- */
     function v7Cam(v, now, live) {
         var R3 = S.r3; if (!R3) return;
+        if (S.vs && live) { if (R3.v7Cut) { R3.cutCam = null; R3.v7Cut = 0; } return; }      // VAR sahnesi kendi kamerasını kullanır
         if (live && V7.scam && (V7.sub || V7.half)) { R3.cutCam = V7.scam; R3.v7Cut = 1; return; }      // değişiklik / devre sahnesi
         if (!live && S.rp && S.rp.v7) {
             var q = S.rp.v7, a = q.p >= 0 ? q.p : -1, b = q.p2 >= 0 ? q.p2 : -1, cx = b >= 0 && v.x[b] > -20 ? v.x[b] : q.x, cy = b >= 0 && v.x[b] > -20 ? v.y[b] : q.y;
@@ -4271,13 +4278,13 @@
             R3.cutCam = { eye: [c.x + ex * 8.2, 2.1, c.y + ey * 8.2], at: [c.x, .85, c.y], fov: 34 }; R3.v7Cut = 1; return;
         }
         if (!live && S.rp && S.rp.gi && S.rp.gi.scorer >= 0 && S.rp.v7g) {      // gol tekrarı açısı
-            var G2 = S.rp.v7g, rem = (S.rp.n - 1 - S.rp.tc) / 25;
+            var G2 = S.rp.v7g, rem = ((S.rp.ng || S.rp.n) - 1 - S.rp.tc) / 25 + .6;      // golün karesine kalan süre (+ file payı)
             if (G2.ang === 'arka' && rem < 2.2) { var gx = G2.gx, dir = gx > PW / 2 ? 1 : -1; R3.cutCam = { eye: [gx + dir * 9.5, 3.2, PH / 2 + (G2.gy - PH / 2) * .2], at: [gx - dir * 9, 1.0, PH / 2 + (v.by - PH / 2) * .5], fov: 46 }; R3.v7Cut = 1; return; }
             if (G2.ang === 'yuksek' && rem < 3.2) { R3.cutCam = { eye: [v.bx - (G2.gx > PW / 2 ? 14 : -14), 15, PH + 6], at: [v.bx + (G2.gx > PW / 2 ? 4 : -4), 0, v.by], fov: 40 }; R3.v7Cut = 1; return; }
             if (G2.ang === 'kenar' && rem < 2.6) { R3.cutCam = { eye: [v.bx - (G2.gx > PW / 2 ? 6 : -6), 1.7, PH + 5.5], at: [v.bx + (G2.gx > PW / 2 ? 3 : -3), 1.0, v.by], fov: 38 }; R3.v7Cut = 1; return; }
         }
         var fc = V7.fcam;
-        if (live && fc && fc.sid === S.sid && now >= fc.t0 && now < fc.until && !(S.refCard && now < S.refCard.until) && !(S.r3.sqCut) && !(S.arCut) && v.x[fc.p2] > -20) {      // [v187] faul yakın planı
+        if (live && fc && !S.vs && fc.sid === S.sid && now >= fc.t0 && now < fc.until && !(S.refCard && now < S.refCard.until) && !(S.r3.sqCut) && !(S.arCut) && v.x[fc.p2] > -20) {      // [v187] faul yakın planı
             var px = v.x[fc.p2], py = v.y[fc.p2], qx = v.x[fc.p] > -20 ? v.x[fc.p] : px, qy = v.x[fc.p] > -20 ? v.y[fc.p] : py, mx = px * .6 + qx * .4, my = py * .6 + qy * .4, ddx = qx - px, ddy = qy - py, dd = Math.hypot(ddx, ddy);
             var nx = dd > .3 ? -ddy / dd : 0, ny = dd > .3 ? ddx / dd : 1; if (ny < 0) { nx = -nx; ny = -ny; } nx = nx * .6; ny = ny * .6 + .4; var nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
             var ds = 8 + .4 * Math.min(dd, 10); R3.cutCam = { eye: [mx + nx * ds, 2.5, my + ny * ds], at: [mx, .7, my], fov: 32 }; R3.v7Cut = 1; return;
@@ -4366,7 +4373,7 @@
             var ww = $('watch-wide'), wk = $('watch-key'), wf = $('watch-fm'), be = mk('watch-ext', 'ext', 'Geniş'), by = mk('watch-yaz', 'yaz', 'Yalnız anlatım');
             if (ww) { ww.textContent = 'Tam'; seg.appendChild(ww); } if (wk) { wk.textContent = 'Kapsamlı'; seg.appendChild(wk); } seg.appendChild(be); if (wf) { wf.textContent = 'Önemli anlar'; seg.appendChild(wf); } seg.appendChild(by);
             seg.classList.add('v7-watch5');
-            if (!$('v7-style')) { var st7 = document.createElement('style'); st7.id = 'v7-style'; st7.textContent = '.watch-seg.v7-watch5{flex-wrap:wrap;row-gap:4px}.watch-seg.v7-watch5 button{padding:5px 9px}@media (max-width:520px){.watch-seg.v7-watch5 button{padding:4px 7px;font-size:.76rem}}'; document.head.appendChild(st7); }
+            if (!$('v7-style')) { var st7 = document.createElement('style'); st7.id = 'v7-style'; st7.textContent = '.watch-seg.v7-watch5{flex-wrap:wrap;row-gap:4px}.watch-seg.v7-watch5 button{padding:5px 9px}@media (max-width:520px){.watch-seg.v7-watch5 button{padding:4px 7px;font-size:.76rem}}#v7-rcam .seg{flex-wrap:wrap}#v7-rcam .seg button{padding-left:5px;padding-right:5px;min-width:0;flex:1 1 auto}'; document.head.appendChild(st7); }
         } catch (e) { }
     })();
     var fmTrigger0_ = fmTrigger;

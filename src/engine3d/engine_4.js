@@ -4625,9 +4625,18 @@
            { k: 0 top görevlisi | 1 giren (yuvanın yeni görünümü) | 2 çıkan (değişiklik anındaki görünüm), id: yuva, x, z, fx, fz, g: jest, gt: jest saati, gh: el, hold: topu elde tutar } */
         var V7X = { n: 0, A: [], M: [], ball: new Float32Array(24), nb: 0 };
         function v7Pal() {
-            if (S.bbPal) return S.bbPal; var pv = new Float32Array(SLOT_N * 3);
-            [[.12, .6, .95], [.06, .06, .08], [.06, .06, .08], SKIN[2], HAIR[0], [.08, .08, .09], SKIN[2], [.98, .98, .98], [.07, .07, .08], [.08, .42, .75], [.2, .11, .05], mixc(SKIN[2], [.62, .28, .27], .3)].forEach(function (c, k) { pv[k * 3] = c[0]; pv[k * 3 + 1] = c[1]; pv[k * 3 + 2] = c[2]; });
+            var sg = v7PalSig(); if (S.bbPal && S.bbSig === sg) return S.bbPal; var pv = new Float32Array(SLOT_N * 3), bc = v7BibColor(); S.bbSig = sg;
+            [bc, [.06, .06, .08], [.06, .06, .08], SKIN[2], HAIR[0], [.08, .08, .09], SKIN[2], [.98, .98, .98], [.07, .07, .08], mixc(bc, [0, 0, 0], .3), [.2, .11, .05], mixc(SKIN[2], [.62, .28, .27], .3)].forEach(function (c, k) { pv[k * 3] = c[0]; pv[k * 3 + 1] = c[1]; pv[k * 3 + 2] = c[2]; });
             return (S.bbPal = pv);
+        }
+        /* top görevlisi yeleği: iki takımın (kaleciler dahil) ve hakemin forma renginden en uzak aday renk (çim yeşili aday değil) */
+        var V7_BIB = [[.12, .6, .95], [1, .45, .05], [.78, .95, .1], [.92, .15, .62], [.5, .22, .85], [.05, .85, .85], [.98, .98, .98]];
+        function v7PalSig() { var P = S.pal, s = '', i; if (!P) return ''; for (i = 0; i < P.length; i++) if (P[i]) s += (P[i][0] * 9 | 0) + '' + (P[i][1] * 9 | 0) + (P[i][2] * 9 | 0); if (S.refPal) s += 'r' + (S.refPal[0] * 9 | 0) + (S.refPal[1] * 9 | 0) + (S.refPal[2] * 9 | 0); return s; }
+        function v7ColD(a, b) { var rm = (a[0] + b[0]) * .5, dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2]; return Math.sqrt((2 + rm) * dr * dr + 4 * dg * dg + (3 - rm) * db * db); }
+        function v7BibColor() {
+            var P = S.pal || [], K = [], i, j; for (i = 0; i < P.length; i++) if (P[i]) K.push([P[i][0], P[i][1], P[i][2]]); if (S.refPal) K.push([S.refPal[0], S.refPal[1], S.refPal[2]]);
+            var best = V7_BIB[0], bd = -1; for (j = 0; j < V7_BIB.length; j++) { var c = V7_BIB[j], m = 9; for (i = 0; i < K.length; i++) m = Math.min(m, v7ColD(c, K[i])); if (m > bd + .05) { bd = m; best = c; } }
+            S.bbBib = { c: best, d: bd }; return best;
         }
         function v7KitInfo(j) {      // 1: top görevlisi yeleği · 2: çıkan oyuncunun değişiklik anındaki forması/yüzü
             var so = j === 2 ? S.v7so : null, pv = so ? so.pal : v7Pal(), c1 = [pv[0], pv[1], pv[2]], skinC = [pv[9], pv[10], pv[11]], hairC = [pv[12], pv[13], pv[14]];
@@ -4688,6 +4697,7 @@
             }
             OLC7.cut = 0;
         }
+        R.bbBib = function () { try { v7Pal(); } catch (e) { } return S.bbBib ? { c: S.bbBib.c.slice(), d: +S.bbBib.d.toFixed(3) } : null; };      // [v187] sınama: seçilen yelek rengi ve formalara en yakın uzaklık
         R.olc7 = function (on) { if (on === 'get') return JSON.parse(JSON.stringify(OLC7)); OLC7.on = on ? 1 : 0; OLC7.n = OLC7.tp = OLC7.mv = OLC7.ok = OLC7.lo = OLC7.hi = OLC7.idle = OLC7.idleW = OLC7.mvA = 0; OLC7.tpS = []; return true; };
         function drawActor(a, pal, x, z, yaw, sc, mods, t, hairStyle, layer, beard) {
             var root = stk[0]; mtrs(root, x, a.rY || 0, z, 0, yaw, 0, sc, a.wScale);   // sc: boy ölçeği (yerel Y) · a.wScale: yapı/genişlik ölçeği (yerel X/Z) - bkz mtrs · a.rY: [gk] kök yüksekliği (plonjon/sıçrama)

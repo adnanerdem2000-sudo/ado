@@ -160,8 +160,8 @@ function v187Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const P=sim.
       const wy=34+sg*20,wx=gx-dir*18;
       if(o===gp){prog(wx,wy,null,0);return true;}
       const inZ=Math.abs(o.y-34)>=11&&gl(o)<=33&&gl(o)>=3;
-      if(inZ){safe(o);if(A.cr0==null)A.cr0=sim.t;const spx=gx-dir*sx,spy=34+sy,dsp=hy(gp.x-spx,gp.y-spy);
-        if(gl(o)>9){carry(o,.3);o.wideLine=true;}else{o.dribble=false;}
+      if(inZ){safe(o);if(A.cr0==null)A.cr0=sim.t;const spx=gx-dir*Math.max(sx,offD()+.6),spy=34+sy,dsp=hy(gp.x-spx,gp.y-spy);
+        if(gl(o)>9){carry(o,.3);o.wideLine=Math.abs(o.y-34)<30;}else{o.dribble=false;}      /* çizgiye yapışan oyuncu içeri keser */
         if(settled&&(dsp<3.2||sim.t-A.cr0>2.4)&&dsp<9&&(gx-gp.x)*dir>0&&(head||hy(spx-o.x,spy-o.y)<=33)&&gl(gp)>=offD()-.3&&cl()){const ux=spx-gp.x,uy=spy-gp.y,ul=hy(ux,uy)||1,sp=Math.min(7.5,ul/1),vx0=gp.vx,vy0=gp.vy;
           gp.run={v186:1,until:sim.t+2.2,x:spx,y:spy};if(head){sim.forceAir=gp.id;okFor(4,'HEAD',17);}else{sim.forceQuick=gp.id;okFor(4,null,18);A.okD=18;A.fs=sim.t;}
           gp.vx=ux/ul*sp;gp.vy=uy/ul*sp;pass(o,gp,head,{cross:true});gp.vx=vx0;gp.vy=vy0;A.cr0=null;did();}
