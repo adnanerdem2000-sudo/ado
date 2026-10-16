@@ -945,7 +945,7 @@
                 var vq = posValue(lx, ly, p.team) * (.55 + .45 * Math.min(free, 6) / 6);
                 var sw = 0; if (BR_ON) { if (d > 24 && Math.abs(ly - p.y) > 18) sw += BR_LONG * .004 * p.br.vz; if (q.run && q.run.until > S.t && prog > 8) sw += BR_LONG * .003 * p.br.vz; }     // vizyon: oyun değiştirme ve koşucuya ara pas
                 var ev = pr * vq - (1 - pr) * lossCost(p.x + (lx - p.x) * .7, p.y + (ly - p.y) * .7, p.team, bk.loss) + PROG_W * bk.prog * pr * clamp(prog, -12, 40) + sw + (noNoise ? 0 : gauss() * nz);
-                if (AV_PASS && cross) ev += avp('AV_XV', AV_AIR ? .2 : .1);
+                if (AV_PASS && cross && !(AV_CLK && off && pr <= .03)) ev += avp('AV_XV', AV_AIR ? .2 : .1);      // [av2] AV_CLK: ofsayttaki arkadaşa orta değeri eklenmez (eskiden orta değeri ofsayt cezasını örtüyordu)
                 if (AV_SHAPE && AV_CLK && !cross && inBox(lx, ly, p.team)) ev += avp('AV_BPV', .03) * pr;      // [av2] AV_CLK: ceza sahasına pas değeri (kompakt bloğa karşı; gerçekte şutların ~%60'ı ceza sahası içinden)
                 if (AV_AIR && !cross && pr > .5 && Math.abs(ly - CY) >= 14 && Math.abs(gx - lx) <= 34 && Math.abs(gx - lx) >= 4) ev += avp('AV_WV', .04) * pr;      // [av2] AV_AIR: son 34 m'de kanattaki arkadaşa pas (orta öncesi; gerçekte atakların ~%40'ı kanattan)      // [av] ortanın değeri: dönen top / korner / kafa şansı (gerçekte takım başına ~12 orta, %28 tamamlanır)
                 var s = ev * 100;
