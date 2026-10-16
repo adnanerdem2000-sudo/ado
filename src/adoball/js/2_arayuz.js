@@ -794,8 +794,7 @@
         if (KM.has && hs.length) { hs[0].km = KM.pending || null; }                       // addHighlight'ın hemen ardından: az önce eklenen kayıt sınıflandırılır
         KM.has = false; KM.pending = null;
         kmHead();
-        var ks = [], i;
-        for (i = 0; i < hs.length; i++) if (hs[i].km) ks.push(hs[i].km);
+        var ks = kmList(), i;
         var sig = ks.length + '|' + (ks.length ? kmLabel(ks[0]) + '|' + ks[0].k + '|' + ks[0].n : '');
         if (sig === KM.sig) return;
         KM.sig = sig;
@@ -808,6 +807,31 @@
         }
         list.innerHTML = out.join('');
     };
+    /* [v187] çerçeve maçı yeniden kurunca (yeni sim, ör. motor yeniden başlatıldı) eski simin gol kayıtları yuva/ad karışır, defterin ürettiği
+       goller listeye hiç düşmeyebilir. Bu durumda gol satırlarının tek kaynağı oyunun gol defteri (V177 → FX.gl): taraf, golcü, asist, dakika
+       oradan; kart ve VAR iptali satırları motor kaydından kalır. Görüntüden önce gelmesin diye maç bitene dek yalnız görünen dakikaya kadarki goller. */
+    function kmSrcGoals() {
+        try {
+            var P = G.parent; if (!P || P === G) return null;
+            var A = P.ABM, V = P.V177; if (!A || A.win !== G || !A.fx || !V || !(V.rb > 0) || V.mid == null || (P.PL3 && V.mid !== P.PL3.mid)) return null;
+            var gl = A.fx.gl; if (!Array.isArray(gl)) return null;
+            var lm = Math.max(0, matchData.lastSimulatedMinute | 0), cur = matchData.currentHalf === 2 && lm <= 45 ? 45 + lm : lm, fin = !!(A.done || V.settled || (A.sim && A.sim.finished));
+            var out = [], i, g, m;
+            for (i = 0; i < gl.length; i++) { g = gl[i]; if (!g) continue; m = Math.max(1, g.m | 0); if (!fin && m > cur) continue;
+                out.push({ k: 'goal', s: g.s === A.s0 ? 0 : 1, n: String(g.n || ''), a: String(g.an || ''), pen: !!g.pen, fk: false, cor: false, og: !!g.own, v: null, b: Math.min(m, 90), x: Math.max(0, m - 90), src: 'v177' }); }
+            return out;
+        } catch (e) { return null; }
+    }
+    function kmList() {      // listelenecek kritik anlar (en yeni başta)
+        var hs = matchData.highlights || [], ks = [], i;
+        for (i = 0; i < hs.length; i++) if (hs[i].km) ks.push(hs[i].km);
+        var src = kmSrcGoals(); if (!src) return ks;
+        var old = ks.filter(function (k) { return k.k === 'goal'; }), used = [];
+        src.forEach(function (k) { for (var j = 0; j < old.length; j++) { var o = old[j]; if (used[j] || o.s !== k.s || o.n !== k.n) continue; used[j] = 1; k.v = o.v || null; k.fk = !!o.fk; k.cor = !!o.cor; if (!k.a && o.a) k.a = o.a; break; } });      // VAR etiketi, frikik/korner bilgisi korunur
+        var all = ks.filter(function (k) { return k.k !== 'goal'; }).concat(src), ix = all.map(function (k, j) { return j; });
+        ix.sort(function (p, q) { var a = all[p], b = all[q], d = (b.b + (b.x || 0)) - (a.b + (a.x || 0)); return d || (p - q); });
+        return ix.map(function (j) { return all[j]; });
+    }
     function kmReset() { KM.sig = null; KM.next = null; KM.pending = null; KM.has = false; KM.varCtx = null; KM.head = ''; }
     before('addHighlight', function (team, detail, type, minOv) {
         var k = KM.next; KM.next = null;
@@ -825,7 +849,7 @@
     // köprü (2D) ve testler
     ado.km = {
         next: function (k) { KM.next = k || null; },
-        rows: function () { return (matchData.highlights || []).filter(function (h) { return !!h.km; }).map(function (h) { return h.km; }); },
+        rows: function () { return kmList(); },
         kinds: ['goal', 'yellow', 'red', 'varno'], label: kmLabel, classify: kmClassic, clock: kmClock
     };
 
