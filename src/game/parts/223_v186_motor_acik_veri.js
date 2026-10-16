@@ -101,7 +101,7 @@ function v187Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const P=sim.
     q.av={tip,t0:sim.t,rnd,st:0,k2:1};{const u=rnd();q.av.dT=u<.45?6+5*rnd():u<.86?11+5.5*rnd():16.5+7*rnd();}try{V186.log.push(tip);}catch(e){}}
   const A=q.av,el=sim.t-A.t0;
   const clr=()=>{sim.forceAir=null;sim.forceRebound=null;sim.forceCorner=null;sim.forceNoFeed=false;sim.forceHold=false;sim.forceOK=null;sim.forceOKKind=null;sim.forceOKMax=0;sim.forceFK=null;sim.forceFoul=null;sim.forceParryOut=null;sim.forceSafe=null;sim.forcePen=null;};
-  if(A.tip==='acik'||!gp||gp.off||gp.team!==tm||(el>(V186.WIN2[A.tip]||60)+(ABM.fq&&ABM.fq.length>1?0:40)&&!(A.ok>sim.t))){if(A.tip!=='acik'){A.from=A.tip;A.tip='acik';q.t0=sim.t;}
+  if(A.tip==='acik'||!gp||gp.off||gp.team!==tm||(el>(V186.WIN2[A.tip]||60)*(ABM.fq&&ABM.fq.length>2?.25:ABM.fq&&ABM.fq.length>1?.5:1)+(ABM.fq&&ABM.fq.length>1?0:40)&&!(A.ok>sim.t)&&!(A.tip==='kafa_duran'&&((sim.mode==='dead'&&sim.dead&&sim.dead.kind==='corner'&&sim.dead.team===tm)||(gp&&sim.forceAir===gp.id))))){if(A.tip!=='acik'){A.from=A.tip;A.tip='acik';q.t0=sim.t;}
     if(A.dT)sim.forceDist=Math.min(sim.forceDist||30,A.dT+Math.max(0,sim.t-q.t0-40)*.12);clr();sim.forcePen=gp&&!gp.off&&gp.team===tm?gp.id:null;return false;}
   const dir=sim.teams[tm].dir,gx=dir>0?105:0,og=105-gx,o=sim.ball.owner,live=sim.mode==='live',mine=live&&o&&o.team===tm,dG=p=>hy(gx-p.x,34-p.y),gl=p=>Math.abs(gx-p.x);
   /* topa sahip olma kaydı (gol sayımının zincir sınıflandırmasıyla aynı mantık) */

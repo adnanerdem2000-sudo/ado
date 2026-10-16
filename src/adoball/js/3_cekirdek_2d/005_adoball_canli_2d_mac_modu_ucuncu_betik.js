@@ -759,7 +759,7 @@
         if (!sqOn() || !p) { sqBand(kind, id, now); if (S.feedCard) { try { S.feed.push(S.feedCard); } catch (e) { } S.feedCard = null; } S.refCard = { kind: kind, id: id, until: now + 2600 }; if (S.offWalk) { S.offWalk.go = now; S.offWalk.end = now; } if (scene) scene(); return; }
         var r = S.ref, tx = p.off && S.offWalk ? S.offWalk.x : p.x, ty = p.off && S.offWalk ? S.offWalk.y : p.y, dist = r ? Math.hypot(r.x - tx, r.y - ty) : 0;
         SQ.card = { kind: kind, id: id, red: red, scene: scene, sid: S.sid, fev: S.feedCard && S.feedCard.p === id ? S.feedCard : null, max: now + Math.max(1.2, Math.min(3.2, dist / 5.5)) * 1000 / Math.max(.5, liveSpeed()) };      /* en geç 3,2 sn: hakem uzaktaysa kartı oradan gösterir */ S.feedCard = null;
-        if (V7.on && !red && !p.off) try { v7Go(id, 0, 0, 1.75, 7, { fol: 1, stop: 1.45 }); V7.cardW = id; } catch (e) { }      // [v187] oyuncu hakeme yürür (≤ 2 m/sn), önünde durur
+        if (V7.on && (red ? !!S.offWalk : !p.off)) try { v7Go(id, 0, 0, 1.75, 7, { fol: 1, stop: 1.45 }); V7.cardW = id; } catch (e) { }      // [v187] oyuncu hakeme yürür (≤ 2 m/sn), önünde durur (kırmızıda da: kart ≤ 3 m'de)
     }
     function sqBand(kind, id, now) { try { var p = S.sim.players[id]; S.cardBand = { kind: kind, id: id, team: p ? p.team : 0, min: minOf(S.sim.t), until: now + 5000 / Math.max(.5, liveSpeed()) }; } catch (e) { } }      /* [v186] kart alt bandı ~5 sn (ad, dakika, takım) */
     function sqTick(sim, now) {      /* her karede: bekleyen kart (hakem vardı mı), yeni ölü top sekansı */
@@ -814,6 +814,7 @@
         var w = S.offWalk, sim = S.sim, now = performance.now(); if (!w || w.sid !== S.sid || !sim || now > w.end) { S.offWalk = null; return; }
         var i = w.id, r = S.ref; if (!(i >= 0 && i < v.x.length)) { S.offWalk = null; return; }
         if (now >= w.go && !(S.hold === 'goal')) {
+            if (!w.v7h) { w.v7h = 1; var g7 = V7.on && V7.gv[i]; if (g7 && g7.x === g7.x) { w.x = g7.x; w.y = g7.y; V7.gv[i] = null; } }      // [v187] hakeme yürüdüğü yerden çıkar (ışınlanma yok)
             var ey = w.y < PH / 2 ? -4.5 : PH + 4.5, ex = w.x + (PW / 2 - w.x) * .25, dx = ex - w.x, dy = ey - w.y, dl = Math.hypot(dx, dy), st = Math.min(dl, 1.45 * Math.max(.5, liveSpeed()) * Math.min(dt, .1));
             if (dl < .3) { S.offWalk = null; return; }
             w.x += dx / dl * st; w.y += dy / dl * st; w.fx = dx / dl; w.fy = dy / dl; w.gp += st * crGaitK(1.45, 0);
