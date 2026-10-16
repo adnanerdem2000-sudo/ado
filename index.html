@@ -24147,8 +24147,8 @@ pl3Close=(old=>function(mid){try{const S=FX,sim=ABM.sim;if(!PL3.closed&&(mid==nu
    - Şut mesafesi zamanla açılır (18 → 22 → 24 → 26 → 28 m; yan açı |y−orta| ≤ 0,75–1,2 × uzaklık) ve şut ancak gerçek fırsatta: kalecinin uzak köşesi açık, yolda savunmacı yok,
      açı çok dar değil (motor: fgOpen, S.forceGap/forceAng). Gol gecikirse koşullar gevşer; 90 sn'den sonra kaleci aralığı aranmaz, açı sınırı kalır.
    - Şut kalecinin uzak köşesine; kaleci yerinde kalır, plonjona çıkar ama yetişemez (motor 000: fgAim, saveY).
-   - Top rakipteyken ışınlanma yok: 25 sn'den sonra topu tutan rakip savunmacı kötü bir pas verir (top gerçekten yuvarlanır, araya
-     girilir); pas aralığı en az 7 sn.
+   - Top rakipteyken ışınlanma yok: 25 sn'den sonra topu tutan rakip savunmacı baskı altında (40 sn'den sonra baskısız da) kendi arkadaşına hatalı pas verir,
+     top bizim oyuncunun yoluna sapar ve araya girilir [v188; eskiden doğrudan bizim oyuncuya pas; 40 sn'den sonra baskısız da]; pas aralığı en az 7 sn.
    - Oyuncumuzun golünde uzaktan (70 m'ye kadar) zorlama yok; 60 sn'den sonra golcü top ayağında ve şut mesafesindeyse motor vurdurur.
    Skor/golcü/asist akışı değişmez: kuyruk (ABM.fq), V177 yeniden planlama ve tamamlama kuralları aynı. */
 /* F: [geçen motor sn, şut mesafesi m, kaleci-yol aralığı m, yan açı sınırı (|y−orta| / uzaklık)] · BP: rakip hatası [başlangıç sn, aralık sn] · TK: dış şut zorlaması (sn)
@@ -24157,10 +24157,19 @@ pl3Close=(old=>function(mid){try{const S=FX,sim=ABM.sim;if(!PL3.closed&&(mid==nu
 const V183={F:[[0,18,2.0,.75],[20,22,1.7,.85],[40,24,1.3,.95],[60,26,.8,1.05],[90,28,0,1.2],[120,32,0,1.4]],BP:[25,7],TK:60,OWN:110};
 function v183Win(el){let r=V183.F[0];for(const f of V183.F)if(el>=f[0])r=f;return r;}
 function v183GoalX(sim,tm){return sim.teams[tm].dir>0?105:0;}
+/* [v188] rakibin kasıtsız hatalı pası: eskiden rakip topçu topu doğrudan bizim oyuncuya veriyordu (izleyen için "rakibe pas"). Şimdi topçu kendi arkadaşına yerden pas verir
+   (pas yolu bizim oyuncunun yakınından geçen arkadaş seçilir), top o yola doğru sapar ve bizim oyuncu araya girer (gerçek motor pası ve pas arası çekişmesi). Döner: pas verildi mi */
+function v183MisPass(sim,o,to){const P=sim.players,hy=Math.hypot;let t=null,bs=1e9;const ax=to.x-o.x,ay=to.y-o.y,al=hy(ax,ay)||1;
+  for(const z of P){if(z.team!==o.team||z===o||z.off||z.role==='GK')continue;const zx=z.x-o.x,zy=z.y-o.y,zl=hy(zx,zy);if(zl<6||zl>40)continue;const c=(zx*ax+zy*ay)/(zl*al),sc=(1-c)*30+Math.abs(zl-al*1.25)*.12;if(sc<bs){bs=sc;t=z;}}
+  if(!t)return false;try{sim._lab.doPass(o,t,false,null,{mis:1});}catch(e){return false;}
+  const b=sim.ball;let v=hy(b.vx,b.vy);if(v>.5&&!b.high){const tl=hy(t.x-o.x,t.y-o.y)||1;if(tl<al)v=Math.min(22,v*Math.sqrt(al/tl));const ta=al/Math.max(6,v),px=to.x+(to.vx||0)*ta*.6,py=to.y+(to.vy||0)*ta*.6,a=Math.atan2(py-b.y,px-b.x);b.vx=Math.cos(a)*v;b.vy=Math.sin(a)*v;}      /* top bizim oyuncuya yetişecek hızda (yer topu ~ v² ile yol alır) */
+  return true;}
+/* [v188] baskı: topçunun 7 m yakınında hücum eden takımdan biri var mı (hata baskı altında) */
+function v183Press(sim,o,tm){for(const z of sim.players)if(z.team===tm&&!z.off&&z.role!=='GK'&&Math.hypot(z.x-o.x,z.y-o.y)<7)return true;return false;}
 function v183ForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fcur){sim.forceGoal=null;sim.forceGap=0;sim.forceAng=0;}return;}
   const q=ABM.fq[0];if(!ABM.fcur||ABM.fcur!==q){ABM.fcur=q;q.g0=sim.teams[abS2E(q.side)].score;q.t0=sim.t;sim.forceGoal=abS2E(q.side);const me=q.k?abFxPk(q.k):null;sim.forceBy=me&&me.ei!=null?me.ei:null;}
   if(sim.teams[abS2E(q.side)].score>q.g0){ABM.fq.shift();ABM.fcur=null;sim.forceGoal=null;sim.forceBy=null;sim.forceGap=0;sim.forceAng=0;return;}
-  const el=sim.t-q.t0,w=v183Win(el);sim.forceDist=w[1];sim.forceGap=w[2];sim.forceAng=w[3];
+  const el=sim.t-q.t0,w=v183Win(el);sim.forceEl=el;sim.forceDist=w[1];sim.forceGap=w[2];sim.forceAng=w[3];
   /* v177: planlanan golcü sahadan çıktıysa yeni golcü; 45 sn'de bitiremezse kaleye en yakın arkadaş (oyuncumuzun golü hariç) */
   if(sim.forceBy!=null){const fp=sim.players[sim.forceBy],fo=abFxP(sim.forceBy);if(!fp||fp.off||fp.team!==sim.forceGoal||!fo||(q.k&&fo.k!==q.k)){let np=null;try{if(q.k!=='ME'&&typeof v177Replan==='function')np=v177Replan(q);}catch(e){}sim.forceBy=np&&np.ei!=null?np.ei:null;}}
   if(q.k!=='ME'&&sim.t-(q.tr||q.t0)>45){q.tr=sim.t;let np=null;try{if(typeof v177Replan==='function')np=v177Replan(q,true);}catch(e){}if(np&&np.ei!=null)sim.forceBy=np.ei;}
@@ -24173,7 +24182,7 @@ function v183ForceTick(S,sim){if(!ABM.fq.length){if(sim.forceGoal!=null&&!ABM.fc
     if(o0&&o0.team!==sim.forceGoal&&o0.role!=='GK'&&sim.t-(q.lp||-99)>V183.BP[1]){const fp=sim.forceBy!=null?sim.players[sim.forceBy]:null;
       const c=sim.players.filter(p=>p.team===sim.forceGoal&&!p.off&&p.role!=='GK');const near=c.slice().sort((a,b)=>Math.hypot(a.x-o0.x,a.y-o0.y)-Math.hypot(b.x-o0.x,b.y-o0.y))[0];
       const to=fp&&!fp.off&&fp.team===sim.forceGoal&&Math.hypot(fp.x-o0.x,fp.y-o0.y)<30?fp:near;
-      if(to&&Math.hypot(to.x-o0.x,to.y-o0.y)<38){q.lp=sim.t;try{sim._lab.doPass(o0,to,Math.hypot(to.x-o0.x,to.y-o0.y)>22,null);}catch(e){}}}}
+      if(to&&Math.hypot(to.x-o0.x,to.y-o0.y)<38&&(el>40||v183Press(sim,o0,sim.forceGoal))){q.lp=sim.t;v183MisPass(sim,o0,to);}}}
   /* çok uzun bekleme (110 sn+): top golcü adayında değil ama takımdan biri kaleye yakın taşıyorsa golcü o olur (defter ve anlatım satırı da; oyuncumuzun golü hariç) */
   if(el>V183.OWN&&q.k!=='ME'&&sim.mode==='live'&&!sim.shot){const o=sim.ball.owner;if(o&&o.team===sim.forceGoal&&o.role!=='GK'&&o.id!==sim.forceBy&&Math.abs(gx-o.x)<w[1]){const fo=abFxP(o.id);if(fo&&fo.k&&fo.k!=='ME'){q.k=fo.k;const L=q.v177;if(L&&!L.done&&!L.me){L.k=fo.k;try{v177FeedSet(L);}catch(e){}}sim.forceBy=o.id;q.tr=sim.t;}}}
   /* uzun bekleme (60 sn+): golcü top ayağındayken şut mesafesindeyse motorun karar sırasını beklemeden vurur */
@@ -24677,9 +24686,9 @@ function v187Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const P=sim.
     if(b){A.fd=sim.t;pass(fr,b,hy(b.x-fr.x,b.y-fr.y)>32,null);A.fto=b.id;return true;}return false;};
   if(sim.pass&&sim.pass.team===tm&&sim.pass.to&&sim.pass.to.id===A.fto&&sim.t-(A.fd||-9)<2.5)sim.forceSafe=A.fto;      /* kurgunun aktarım pası kesilmez */
   /* top rakipteyken: rakibin kötü pası (gerçek pas; kontrada yalnız rakip bizim yarı alanımızdayken → kendi yarımızda top kazanma) */
-  if(live&&o&&o.team!==tm&&o.role!=='GK'&&!sim.pass&&!sim.shot&&el>(A.tip==='kontra'?2:3.5)&&sim.t-(A.bp||-9)>5&&(A.tip!=='kontra'||Math.abs(o.x-og)<64||el>50)){
+  if(live&&o&&o.team!==tm&&o.role!=='GK'&&!sim.pass&&!sim.shot&&el>(A.tip==='kontra'?2:3.5)&&sim.t-(A.bp||-9)>6&&(A.tip!=='kontra'||Math.abs(o.x-og)<64||el>50)&&(el>25||(typeof v183Press!=='function'||v183Press(sim,o,tm)))){
     let to=null,bd=34;for(const z of P){if(z.team!==tm||z.off||z.role==='GK')continue;if(A.tip==='kontra'&&el<=50&&Math.abs(z.x-og)>48)continue;const d=hy(z.x-o.x,z.y-o.y);if(d<bd&&d>4){bd=d;to=z;}}      /* kontrada top kendi yarı alanımızdaki oyuncuya kaybedilir */
-    if(to){A.bp=sim.t;pass(o,to,bd>24,null);}}
+    if(to){A.bp=sim.t;A.lp=sim.t;if(typeof v183MisPass!=='function'||!v183MisPass(sim,o,to))pass(o,to,bd>24,null);}}      /* [v188] baskı altında kendi arkadaşına hatalı pas, top bizim oyuncunun yoluna (eskiden doğrudan bizim oyuncuya; 25 sn'den sonra baskısız da) */
   if(sim.shot&&sim.shot.team===tm&&sim.t-(A.lsh||-9)<2.5&&sim.shot.shooter)sim.forceSafe=sim.shot.shooter.id;      /* kurgunun şutu yolda bloklanmaz */
   if(A.ok>sim.t&&sim.forceOKKind!=='HEAD'&&mine&&o===gp&&!sim.shot&&sim.t-(A.lsh||-9)>1&&(!A.okD||dG(gp)<=A.okD)){shoot(gp);return true;}      /* bitiriş anı: golcü topu aldı */
   const sg=A.sg||(A.sg=(mine&&Math.abs(o.y-34)>6?(o.y>34?1:-1):(gp.y>34?1:-1)));
@@ -27978,6 +27987,55 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 var jump = ac.h > .06;
                 mxApply(nm, mxSeg(c, G, K), mr, jump ? MX_UP : null, jump ? .85 : 1);
             }
+            if (V8.mc) mxOver8(a, ac, c, P);
+        }
+        /* [v188] kullanılmayan Mixamo klipleri (anahtar anları klip sondasıyla - Ado3D._mcProbe - ölçüldü: el/ayak yüksekliği, kalça):
+           taç (throw in: bırakış 1,57 sn; yalnız üst gövde - iki ayak yerde), kaleci omuz üstü atış (bırakış 1,45; üst gövde), kaleci yerden toplama
+           (scoop: eller yerde 0,75), kayarak müdahale (soccer tackle: temas 1,05, kalkış 1,75-2,7; kalça klipten - kök alçaltma kapalı), uyluk kontrolü
+           (kneeing: diz tepesi 0,5), makas / rövaşata (scissor kick: temas 0,8; yalnız top ≥1,3 m'de vurulan şut/uzaklaştırma), faul sonrası yerde
+           bekleme (fallen idle) ve kalkış (standing up). Giriş/çıkış ağırlıkla karışır (PW_). */
+        var MX8 = { fl: 'fallen idle', su: 'standing up', tk: 0 };
+        function mxOver8(a, ac, c, P) {
+            var k = ac.k, nm, G, K, mr, w;
+            if (k === 9 && ADO_MOCAP['throw in'] && ac.tc > 0) {
+                var tc9 = ac.tc; w = sm(rmp(c, tc9 - .85, tc9 - .55)) * (1 - sm(rmp(c, tc9 + .35, tc9 + .6))); if (w < .01 || !P) return;
+                mxApply('throw in', mxSeg(c, [tc9 - .55, tc9, tc9 + .45], [1.02, 1.57, 2.02]), 0, MX_UP, w); return;
+            }
+            if (k === 5 && ADO_MOCAP['goalkeeper overhand throw']) {
+                if (!P) return; mr = ac.hand > 0 ? 0 : 1;      // stüdyoda doğrulandı: klip ac.hand tarafıyla atar
+                mxApply('goalkeeper overhand throw', mxSeg(c, [ac.t0, ac.tc, ac.te], [Math.max(.45, 1.45 - (ac.tc - ac.t0)), 1.45, 2.05]), mr, MX_UP, 1); return;
+            }
+            if (k === 3 && ADO_MOCAP['goalkeeper scoop']) {
+                if (!P) return; var dn3 = ac.t0 + .26;
+                mxApply('goalkeeper scoop', mxSeg(c, [ac.t0, dn3, ac.te], [.35, .75, 1.3]), 0, null, sm(rmp(c, ac.t0, ac.t0 + .08))); return;
+            }
+            if (MX8.tk && k === 12 && ac.mode === 3 && ADO_MOCAP['soccer tackle'] && ac.tu > ac.tc) {      // stüdyoda: klibin kalça sapması (yaw) iskelette yok, oyuncu havada süzülüyordu - kapalı, yordamsal kayma kalır
+                G = [ac.t0, ac.tc, ac.tu, ac.te]; K = [Math.max(.6, 1.05 - (ac.tc - ac.t0)), 1.05, 1.75, 2.7]; mr = ac.side > 0 ? 0 : 1;
+                RT.Y = 0;      // kalça yüksekliği klipten (çift alçalma yok)
+                if (P) mxApply('soccer tackle', mxSeg(c, G, K), mr, null, 1); return;
+            }
+            if (k === 16 && ac.mode === 1 && (ac.d[2] || 0) < .5 && ADO_MOCAP['stall soccerball']) {      /* [v188] diz altı top: ayak havada durdurma (klip ölçümü: sol ayak t .4'te .35 m yukarıda, öne .63 m; t 2.6'da iner) */
+                if (!P) return; mr = ac.side > 0 ? 0 : 1;
+                mxApply('stall soccerball', mxSeg(c, [ac.t0, ac.tc, ac.te], [Math.max(.05, .4 - (ac.tc - ac.t0)), .4, 2.9]), mr, null, sm(rmp(c, ac.t0, ac.t0 + .08))); return;
+            }
+            if (k === 1 && ac.H > .5 && ac.H < 1.45 && Math.abs(ac.lx8 || 9) < .5 && ADO_MOCAP['goalkeeper catch']) {      /* [v188] gövdeye gelen top: kaleci göğüste tutar (klip ölçümü: eller t .4'te göğüs önünde, t .6'da birleşir, t 1.0'da göğse çeker); yalnız üst gövde */
+                if (!P) return;
+                mxApply('goalkeeper catch', mxSeg(c, [ac.t0, ac.tc, ac.te], [Math.max(.1, .45 - (ac.tc - ac.t0)), .45, 1.05]), 0, MX_UP, sm(rmp(c, ac.t0, ac.t0 + .1)) * (1 - sm(rmp(c, ac.te - .2, ac.te)))); return;
+            }
+            if (k === 16 && ac.mode === 1 && ADO_MOCAP['kneeing soccerball']) {
+                if (!P) return; mr = ac.side > 0 ? 0 : 1;
+                mxApply('kneeing soccerball', mxSeg(c, [ac.t0, ac.tc, ac.te], [Math.max(.15, .5 - (ac.tc - ac.t0)), .5, .9]), mr, null, 1); return;
+            }
+            if (k === 18 && ac.sc8 && ADO_MOCAP['scissor kick']) {
+                G = [ac.t0, ac.tc, ac.te]; K = [Math.max(.3, .8 - (ac.tc - ac.t0)), .8, 2.7]; mr = ac.foot > 0 ? 1 : 0;
+                RT.lk = 1; RT.gait = 1;      // yere düşüp kalkarken kök kilitli (motor oyuncuyu taşısa da kaymaz)
+                if (P) mxApply('scissor kick', mxSeg(c, G, K), mr, null, 1); return;
+            }
+            if (k === 14 && ac.type === 1 && ADO_MOCAP[MX8.fl] && ADO_MOCAP[MX8.su] && ac.tu > ac.tli) {      // öne düşüş: yerde bekleme + klipten kalkış
+                var wl = sm(rmp(c, ac.tf, ac.tf + .2)); if (wl < .01) return;
+                if (c < ac.tli) { RT.Y *= 1 - wl; if (P) mxApply(MX8.fl, (c - ac.tf) % 1.3, 0, null, wl); return; }
+                RT.Y = 0; if (P) mxApply(MX8.su, mxSeg(c, [ac.tli, ac.tu], [0, 1.62]), 0, null, 1); return;
+            }
         }
         var gkK0_ = gkK; gkK = function (a, ac, c, P) { gkK0_(a, ac, c, P); if (MX_ON) { try { mxOver(a, ac, c, P); } catch (e) { MX_ON = 0; console.warn('[mx]', e); } } };
         /* aksiyon başlangıcı: kök tabanı (o anki görünen konum) kilitlenir; kurtarış/almada temas noktası ve temas pozundaki avuç noktasından kök ofseti */
@@ -28011,8 +28069,9 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 } else { px = pp[bi * 3]; pz = pp[bi * 3 + 1]; ph = pp[bi * 3 + 2]; ac.tc = d[0] + bi * GK_DT; }
             } else { px = d[1]; pz = d[2]; ph = d[3]; if (k === 2) { px = d[0]; pz = d[1]; ph = d[2]; } }
             if (ac.tc < ac.t0 + .14) ac.tc = ac.t0 + .14;                  // topa yetişemeyen (geç kalmış) refleks: en az ~.14 sn'lik hamle
+            if (k === 1) { ac.cpx = px; ac.cpz = pz; ac.cph = ph; ac.csy = sy; ac.ccy = cy; ac.cL = 0; ac.cF = 0; ac.cY = 0; ac.cT0 = 0; }      // [v188] kestirilen temas noktası (motorun kurtarış noktasıyla düzeltme için)
             var qx2 = px - x, qz2 = pz - z, lx = qx2 * cy - qz2 * sy, lf = qx2 * sy + qz2 * cy, H = ph + .17, D = Math.abs(lx), sg = lx >= 0 ? 1 : -1;
-            ac.sgn = sg; ac.H = H;
+            ac.sgn = sg; ac.H = H; ac.lx8 = lx;
             var v = k === 2 ? 4 : (D < .55 || (D < .95 && H > 1.75)) ? (H < .8 ? 3 : H < 1.75 ? 2 : 4) : 1;
             ac.v = v; ac.win = v === 1 ? .06 : .1;
             ac.rho = (H > 1.9 ? .62 : H > 1.25 ? .9 : H > .6 ? 1.12 : 1.36) + clamp((D - 1.6) * .08, -.12, .1);
@@ -28036,6 +28095,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         function gkDive(a, ac, c, P) {
             var sg = ac.sgn, AA = sg > 0 ? kAR : kAL, AT = sg > 0 ? kAL : kAR, FA = AA + 3, FT = AT + 3, LA = sg > 0 ? kLR : kLL, LT = sg > 0 ? kLL : kLR, SA = LA + 3, ST = LT + 3;
             var tl = ac.tl, tc = ac.tc, tla = ac.tland, ca = ac.out === 1, tli = tla + (ca ? .2 : .42), tri = tli + .72, oL = ac.oL, oF = ac.oF, oY = ac.oY;
+            if (ac.cT0) { var wc8 = sm(rmp(c, ac.cT0, Math.max(ac.cT0 + .08, tc))); oL += ac.cL * wc8; oF += ac.cF * wc8; oY += ac.cY * wc8; }      // [v188] motorun kurtarış noktasına düzeltme (uçuşta yumuşak)
             var s, u, e, roll;
             ac.te = tri; RT.lk = 1;
             if (c < tl) {                                                  // yükleme: dalış tarafına kısa güç adımı, dizler yaylanır, kollar öne-yukarı
@@ -28332,7 +28392,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             if (!CLKOK) { GB.x = bx; GB.y = by; GB.z = bz; GB.rel = 0; GB.lh = -1; return; }
             for (i = 0; i < S.n; i++) {
                 ac = S.st[i].ac; if (!ac || ac.k !== 1 || !ac.init || !ac.path || ac.d[10] || (ac.out !== 1 && ac.out !== 2)) continue;
-                if (CLK < ac.tc) { gkPathAt(ac, CLK, gkP); GB.x = gkP[0]; GB.y = gkP[1]; GB.z = gkP[2]; if (CT2_ON && CLK > ac.tc - .1) ctGkPalm(S.st[i], ac); return; }
+                if (CLK < ac.tc) { if (ac.fix8 && R._dl) { GB.x = bx; GB.y = by; GB.z = bz; } else { gkPathAt(ac, CLK, gkP); GB.x = gkP[0]; GB.y = gkP[1]; GB.z = gkP[2]; } if (CT2_ON && CLK > ac.tc - .1) ctGkPalm(S.st[i], ac); return; }      // [v188] düzeltilmiş kurtarışta top motorun yolunda
                 if (ac.out === 2 && !ac.rel) { ac.rel = true; gkPathAt(ac, ac.tc, gkP); if (CT2_ON && ac.ctp) { gkP[0] = ac.ctp[0]; gkP[1] = ac.ctp[1]; gkP[2] = ac.ctp[2]; } if (Math.abs(gkP[0] - bx) + Math.abs(gkP[2] - bz) < 9) gkRelSet(gkP[0] - bx, gkP[1] - by, gkP[2] - bz, CLK, .12, 0, 0, 0); }
             }
             var h = GB_HOLD;
@@ -28693,16 +28753,89 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         }
         function ctKickIK(a, root) {      // [temas] vuran ayak temas aninda topun arkasinda
             var ac = a.ac; if (!CLKOK || !ac || !ac.init || ac.k !== 18 || ac.hx0 == null) return;
-            var c = CLK, w = sm(rmp(c, ac.tc - .14, ac.tc - .03)) * (1 - sm(rmp(c, ac.tc + .02, ac.tc + .1))); if (w < .01) return;
+            var c = CLK, w = V8.kk ? sm(rmp(c, ac.tc - .2, ac.tc - .07)) * (1 - sm(rmp(c, ac.tc + .06, ac.tc + .16))) : sm(rmp(c, ac.tc - .14, ac.tc - .03)) * (1 - sm(rmp(c, ac.tc + .02, ac.tc + .1))); if (w < .01) return;      /* [v188] temas penceresi: ayak tc ± .06 sn topta kalır (izleyici teması görür; vuruş ayağı kilitsiz) */
             if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
             bodyDQ(pose, CT_DQ);      // kemik dunya matrisleri (_bw) guncel poza
             var lf = ac.foot > 0, iL = lf ? BB.LegL : BB.LegR, iS = lf ? BB.ShinL : BB.ShinR, iF = lf ? BB.FootL : BB.FootR, FB = BODY_BIND[iF], mF = _bw[iF];
             dqsPt(CT_DQ, iF, FB[0], FB[1] - .025, FB[2] + .1, CT_Q); xform(root, CT_Q, CT_W);
             xform(root, fkT(mF), CT_A);
             var R = .11 * BSC + .015, kx = Math.sin(ac.ky), kz = Math.cos(ac.ky), lo = ac.pr && (ac.pr.kind === 'pass_high' || ac.pr.kind === 'clear') ? .05 : .02;
-            var dx = ac.hx0 - kx * R - CT_W[0], dy = ballY(ac.hy) - lo - CT_W[1], dz = ac.hz0 - kz * R - CT_W[2], dl = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (dl < .005) return; var k = Math.min(1, .35 / dl) * w;
+            var tbx8 = ac.hx0, tby8 = ballY(ac.hy), tbz8 = ac.hz0; if (V8.kk && Math.hypot(GB.x - ac.hx0, GB.z - ac.hz0) < 1.5 && !GB.held) { tbx8 = GB.x; tby8 = ballY(GB.y); tbz8 = GB.z; }      /* [v188] ölçüm: temas karesinde görünen top tutuş noktasından .15-.6 m uzaktaydı (tutuşa yumuşak geçiş) - ayak görünen topa */
+            var dx = tbx8 - kx * R - CT_W[0], dy = tby8 - lo - CT_W[1], dz = tbz8 - kz * R - CT_W[2], dl = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (dl < .005) return; var k = Math.min(1, (V8.kk ? 1.2 : .35) / dl) * w;      // [v188] temas penceresinde ayak topa yetişir (klibin teması tc'den önce/sonra kalsa da)
             fkLeg(lf ? 0 : 1, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [CT_A[0] + dx * k, CT_A[1] + dy * k, CT_A[2] + dz * k]), fkR(mF));
+            if (OT.on && Math.abs(c - ac.tc) < .06 && OT.kd8.length < 300) { bodyDQ(pose, CT_DQ); dqsPt(CT_DQ, iF, FB[0], FB[1] - .025, FB[2] + .1, CT_Q); xform(root, CT_Q, CT_W); xform(root, fkT(_bw[iL]), CT_A); OT.kd8.push([+c.toFixed(3), +ac.tc.toFixed(3), +dl.toFixed(3), +w.toFixed(2), +Math.hypot(CT_W[0] - ac.hx0, CT_W[1] - ballY(ac.hy), CT_W[2] - ac.hz0).toFixed(3), +Math.hypot(CT_A[0] - ac.hx0, CT_A[2] - ac.hz0).toFixed(3), +Math.hypot(GB.x - ac.hx0, GB.z - ac.hz0).toFixed(3), +ac.hx0.toFixed(2), +ac.hz0.toFixed(2)]); }      // ölçüm: [saat, tc, IK öncesi uzaklık, ağırlık, IK sonrası ayak-top merkezi, kalça-top yatay, görünen top - tutuş noktası]
+        }
+        /* [v188] müdahale teması (12): topa uzanan ayak temas anında topun yüzüne (bacak IK, en çok .45 m; kayarak müdahalede kayan bacak).
+           Ölçüm: müdahalelerin temas karesinde ayak topa 0,6-1,6 m uzaktı. */
+        /* [v188] kilitli ayağın yere değen noktası (parmak ucu / topuk) bütün IK düzeltmelerinden (bacak çaprazlama, zemin, eklem sınırları) sonra ölçülür;
+           kilit noktasından 1 cm'den fazla kaymışsa bilek hedefi farkla düzeltilip bacak bir kez daha çözülür (kapalı döngü: taban yerinde kalır) */
+        var PIN_Q = new Float32Array(3), PIN_W = new Float32Array(3);
+        function fkPin(a, root) {
+            if (!a.fk || !((a.fk[0].lk && a.fk[0].pp >= 0) || (a.fk[1].lk && a.fk[1].pp >= 0))) return;
+            if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
+            bodyDQ(pose, CT_DQ);
+            for (var sd = 0; sd < 2; sd++) {
+                var st = a.fk[sd]; if (!st.lk || !(st.pp >= 0) || st.w < .8 || st.sw > 0) continue;
+                var iL = sd ? BB.LegR : BB.LegL, iS = sd ? BB.ShinR : BB.ShinL, iF = sd ? BB.FootR : BB.FootL, FB = BODY_BIND[iF];
+                dqsPt(CT_DQ, iF, FB[0], FB[1] + (st.pp ? -.07 : -.04), FB[2] + (st.pp ? -.05 : .16), PIN_Q); xform(root, PIN_Q, PIN_W);
+                var ex = st.px - PIN_W[0], ez = st.pz - PIN_W[2]; if (ex * ex + ez * ez < 1e-4) continue;
+                xform(root, fkT(_bw[iF]), PIN_W);
+                fkLeg(sd, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [PIN_W[0] + ex, PIN_W[1], PIN_W[2] + ez]), fkR(_bw[iF]));
+                bodyDQ(pose, CT_DQ);
+            }
+        }
+        function gbNow8(o) { var dt = CLKOK && CC.lt > -1e8 ? Math.max(0, Math.min(.1, CLK - CC.lt)) : 0; o[0] = GB.x + (CC8.vx || 0) * dt; o[1] = GB.z + (CC8.vz || 0) * dt; return o; }      // [v188] görünen topun bu karedeki tahmini (IK sırasında top henüz güncellenmedi)
+        var GBN8 = [0, 0];
+        function poseBad8() { for (var q = 0; q < pose.length; q++) if (pose[q] !== pose[q]) return true; return false; }
+        function touch8(a) {      // dokunuş penceresindeki ayak (0 sol, 1 sağ) ya da -1
+            if (!CLKOK || !(CLK - (a.tch8s || -9) < .25)) return -1;
+            if ((a.tch8n > 0 && CLK > a.tch8n - .24 && CLK < a.tch8n + .1) || (a.tch8l > 0 && CLK > a.tch8l - .05 && CLK < a.tch8l + .12)) return a.tch8f;
+            return -1;
+        }
+        /* [v188] sürme dokunuşu: dokunan ayağın ucu dokunuş anında (± .05 sn) görünen topun arkasına (bacak IK, en çok .45 m) - top ayağa, ayak topa */
+        function ctDribIK(a, root) {
+            if (!V8.kk || !CLKOK || !(CLK - (a.tch8s || -9) < .25) || !(a.tch8n > 0 || a.tch8l > 0) || GB.held) return;
+            var tn = a.tch8n > 0 && Math.abs(CLK - a.tch8n) < Math.abs(CLK - (a.tch8l || -9)) ? a.tch8n : a.tch8l, c = CLK;
+            var w = sm(rmp(c, tn - .16, tn - .05)) * (1 - sm(rmp(c, tn + .05, tn + .14))); if (w < .01) return;
+            if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
+            bodyDQ(pose, CT_DQ);
+            var lf = a.tch8f === 0, iL = lf ? BB.LegL : BB.LegR, iS = lf ? BB.ShinL : BB.ShinR, iF = lf ? BB.FootL : BB.FootR, FB = BODY_BIND[iF], mF = _bw[iF];
+            dqsPt(CT_DQ, iF, FB[0], FB[1] - .04, FB[2] + .14, CT_Q); xform(root, CT_Q, CT_W); xform(root, fkT(mF), CT_A);
+            var R = .11 * BSC + .01, nx = CT_W[0] - GB.x, nz = CT_W[2] - GB.z, nl = Math.hypot(nx, nz) || 1;      // ölçüm: daha geniş pencere / uzanma / bu kare kestirimi sürme temasını kötüleştirdi (%67 → %52-60)
+            var dx = GB.x + nx / nl * R - CT_W[0], dz = GB.z + nz / nl * R - CT_W[2], dl = Math.hypot(dx, dz);
+            if (dl < .01 || dl > 1.2) return; var k = Math.min(1, .45 / dl) * w;
+            fkLeg(lf ? 0 : 1, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [CT_A[0] + dx * k, CT_A[1], CT_A[2] + dz * k]), fkR(mF));
+        }
+        function ctTackleIK(a, root) {
+            var ac = a.ac; if (!CLKOK || !ac || !ac.init || ac.k !== 12 || ac.res === 3) return;
+            var c = CLK, w = sm(rmp(c, ac.tc - .2, ac.tc - .07)) * (1 - sm(rmp(c, ac.tc + .07, ac.tc + .2)));      // [v188] müdahale teması: ayak tc ± .07 sn topta if (w < .01) return;
+            if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
+            bodyDQ(pose, CT_DQ);
+            var rf = ac.side > 0, iL = rf ? BB.LegR : BB.LegL, iS = rf ? BB.ShinR : BB.ShinL, iF = rf ? BB.FootR : BB.FootL, FB = BODY_BIND[iF], mF = _bw[iF];
+            dqsPt(CT_DQ, iF, FB[0], FB[1] - .03, FB[2] + .1, CT_Q); xform(root, CT_Q, CT_W);
+            xform(root, fkT(mF), CT_A);
+            var bx = ac.d[0], bz = ac.d[1]; if (V8.kk && Math.hypot(GB.x - bx, GB.z - bz) < 2 && !GB.held) { bx = GB.x; bz = GB.z; }      // [v188] görünen topa
+            var R = .11 * BSC + .02, nx = CT_W[0] - bx, nz = CT_W[2] - bz, nl = Math.hypot(nx, nz) || 1;
+            var dx = bx + nx / nl * R - CT_W[0], dz = bz + nz / nl * R - CT_W[2], dl = Math.hypot(dx, dz);
+            if (dl < .01) return; var k = Math.min(1, .7 / dl) * w;
+            fkLeg(rf ? 1 : 0, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [CT_A[0] + dx * k, CT_A[1], CT_A[2] + dz * k]), fkR(mF));
+        }
+        /* [v188] ayakla karşılama (16, mod 3) teması: karşılayan ayağın iç yüzü temas anında topa (bacak IK, en çok .3 m). Ölçüm: karşılamaların ~%30'unda
+           temas karesinde ayak topa .3-.5 m uzaktı, en yakın an temastan ~.1 sn sonraydı (top kendiliğinden duruyor, ayak geç geliyordu). */
+        function ctRecvIK(a, root) {
+            var ac = a.ac; if (!CLKOK || !ac || !ac.init || ac.k !== 16 || ac.mode !== 3 || !(ac.hx > -1e9)) return;
+            var c = CLK, w = sm(rmp(c, ac.tc - .17, ac.tc - .04)) * (1 - sm(rmp(c, ac.tc + .04, ac.tc + .18))); if (w < .01) return;
+            if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
+            bodyDQ(pose, CT_DQ);
+            var lf = ac.side > 0, iL = lf ? BB.LegL : BB.LegR, iS = lf ? BB.ShinL : BB.ShinR, iF = lf ? BB.FootL : BB.FootR, FB = BODY_BIND[iF], mF = _bw[iF], sx = lf ? 1 : -1;
+            dqsPt(CT_DQ, iF, FB[0] + .05 * sx, FB[1] - .045, FB[2] + .07, CT_Q); xform(root, CT_Q, CT_W);
+            xform(root, fkT(mF), CT_A);
+            var R = .11 * BSC + .01, bx = ac.hx, bz = ac.hz, nx = CT_W[0] - bx, nz = CT_W[2] - bz, nl = Math.hypot(nx, nz);
+            if (nl < 1e-3) { nx = -Math.sin(a.dYaw); nz = -Math.cos(a.dYaw); nl = 1; }
+            var dx = bx + nx / nl * R - CT_W[0], dz = bz + nz / nl * R - CT_W[2], dl = Math.hypot(dx, dz);
+            if (dl < .01) return; var k = Math.min(1, .3 / dl) * w;
+            fkLeg(lf ? 0 : 1, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [CT_A[0] + dx * k, CT_A[1], CT_A[2] + dz * k]), fkR(mF));
         }
         /* [v133] fk yardimcilari halka havuzundan doner (kare basina binlerce kucuk dizi tahsisi yok); sonuc kisa omurlu - kalici tutulacaksa kopyalanir */
         var FK3 = [], FK9 = [], FK3i = 0, FK9i = 0; for (var fki = 0; fki < 1024; fki++) FK3.push(new Float64Array(3)); for (fki = 0; fki < 256; fki++) FK9.push(new Float64Array(9));
@@ -28724,7 +28857,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         }
         function fkLeg(sd, iL, iS, iF, Wh, tgt, keepFootW) {      // model uzayinda bilegi tgt'ye goturen kalca / diz / bilek acilari -> pose
             var H = fkT(_bw[iL]), K = fkT(_bw[iS]), A = fkT(_bw[iF]), L1 = fkL(fkS(K, H)), L2 = fkL(fkS(A, K)), dv = fkS(tgt, H), D = fkL(dv);
-            if (D < .05) return; D = Math.min(D, (L1 + L2) * .97);      /* [ayak] diz hic tam gerilmez */ var u = fkK(dv, 1 / fkL(dv)), a1 = (L1 * L1 - L2 * L2 + D * D) / (2 * D), h = Math.sqrt(Math.max(0, L1 * L1 - a1 * a1));
+            if (D < .05) return; if (OT.on && D !== D && !OT.nan2) OT.nan2 = String(new Error('fkLeg NaN').stack).slice(0, 700); D = Math.min(D, (L1 + L2) * .97);      /* [ayak] diz hic tam gerilmez */ var u = fkK(dv, 1 / fkL(dv)), a1 = (L1 * L1 - L2 * L2 + D * D) / (2 * D), h = Math.sqrt(Math.max(0, L1 * L1 - a1 * a1));
             var n0 = fkP(fkS(K, H), u);
             if (BK_ON) { var Wb0 = fkR(_bw[iL]), zk0 = fkP([Wb0[2], Wb0[5], Wb0[8]], u), lz0 = fkL(zk0), ln0 = fkL(n0); if (lz0 > 1e-3 && !(ln0 > .03 && fkD(n0, zk0) > .5 * ln0 * lz0)) n0 = zk0; }      /* [bacak] diz kapagi yonu */
             if (fkL(n0) < 1e-3) { var Wl0 = fkR(_bw[iL]); n0 = fkP([Wl0[2], Wl0[5], Wl0[8]], u); } n0 = fkN(n0);
@@ -28744,7 +28877,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             var AL = fkT(_bw[BB.FootL]), AR = fkT(_bw[BB.FootR]), xc = (AL[0] - AR[0]) * sx[0] + (AL[2] - AR[2]) * sx[2];
             if (xc <= NC_M) return;
             var need = xc - NC_M, lo = Math.min(AL[1], AR[1]), fk = a.fk || [{}, {}];
-            var wL = Math.max(.01, AL[1] - lo + .02) * (fk[0].lk ? .15 : 1), wR = Math.max(.01, AR[1] - lo + .02) * (fk[1].lk ? .15 : 1), sw = wL + wR;
+            var lkK = V8.fl ? .01 : .15, wL = Math.max(.01, AL[1] - lo + .02) * (fk[0].lk ? lkK : 1), wR = Math.max(.01, AR[1] - lo + .02) * (fk[1].lk ? lkK : 1), sw = wL + wR;      // [v188] kilitli ayak çapraz düzeltmesinde neredeyse kımıldamaz
             var mL = need * wL / sw, mR = need * wR / sw, mFL = fkR(_bw[BB.FootL]), mFR = fkR(_bw[BB.FootR]);
             if (mL > .002) fkLeg(0, BB.LegL, BB.ShinL, BB.FootL, Wh, [AL[0] - sx[0] * mL, AL[1], AL[2] - sx[2] * mL], mFL);
             if (mR > .002) fkLeg(1, BB.LegR, BB.ShinR, BB.FootR, Wh, [AR[0] + sx[0] * mR, AR[1], AR[2] + sx[2] * mR], mFR);
@@ -28752,16 +28885,20 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         function footIK(a, root) {
             var dt = Math.max(1e-3, FRM[5] || FRM[2]), sd, q;      // [v133] kilit esikleri sim saatiyle (hizli oynatmada da ayak kayamaz)
             if (!a.fk) a.fk = [{ lk: 0, w: 0, t: 0 }, { lk: 0, w: 0, t: 0 }];
-            var ack = a.ac && a.ac.init ? a.ac.k : 0, act = (!(a.acW < .3) && !((ack === 16 && a.ac.mode === 3 && !OA3_FULL) || ack === 18)) || (a.rY || 0) > .05;      // tek bacakli karsilama (16 mod 3) ve vurusta destek ayagi kilitlenir
+            var ack = a.ac && a.ac.init ? a.ac.k : 0, act = (!(a.acW < .3) && !(V8.fl && CLKOK && a.ac && a.ac.init && CLK > a.ac.te - .04 && a.acW < .7) && !((ack === 16 && a.ac.mode === 3 && !OA3_FULL) || ack === 18 || (V8.fl && ack === 20 && [3, 13, 14, 15].indexOf(a.ac.mode) < 0))) || (a.rY || 0) > .05;      // [v188] jestte ayak kilidi sürer      // tek bacakli karsilama (16 mod 3) ve vurusta destek ayagi kilitlenir
             if (!FK_DQ) FK_DQ = new Float32Array(BODY_BONES.length * 8);
             bodyDQ(pose, FK_DQ);
             var Wh = fkR(_bw[0]), any = false;
+            if (V8.fl) for (sd = 0; sd < 2; sd++) {      /* [v188] her ayağın en alçak noktası (parmak ucu / topuk, dünya) - basan ayak seçimi */
+                var mF8 = _bw[sd ? BB.FootR : BB.FootL];
+                FK8[sd] = Math.min(root[13] + root[5] * (mF8[13] + mF8[5] * -.04 + mF8[9] * .16), root[13] + root[5] * (mF8[13] + mF8[5] * -.07 + mF8[9] * -.05));
+            }
             for (sd = 0; sd < 2; sd++) {
                 var st = a.fk[sd], iL = sd ? BB.LegR : BB.LegL, iS = sd ? BB.ShinR : BB.ShinL, iF = sd ? BB.FootR : BB.FootL, mF = _bw[iF];
                 var A = fkT(mF), toe = [mF[12] + mF[4] * -.04 + mF[8] * .16, mF[13] + mF[5] * -.04 + mF[9] * .16, mF[14] + mF[6] * -.04 + mF[10] * .16];
                 xform(root, A, FK_M); var Aw = [FK_M[0], FK_M[1], FK_M[2]]; xform(root, toe, FK_M); var tY = FK_M[1];
-                var v = st.pA ? Math.hypot(Aw[0] - st.pA[0], Aw[2] - st.pA[2]) / dt : 9; st.pA = Aw;
-                if (act) { st.lk = 0; st.w = 0; continue; }
+                var pAp = st.pA, v = st.pA ? Math.hypot(Aw[0] - st.pA[0], Aw[2] - st.pA[2]) / dt : 9; st.pA = Aw;
+                if (act || (V8.fl && touch8(a) === sd)) { st.lk = 0; st.w = 0; st.sw = 0; st.nl = 1; continue; }      // [v188] dokunuş yapan ayak dokunuştan önce/sonra kilitsiz
                 var acR = a.ac && a.ac.init && a.ac.k === 16 && a.ac.mode === 3 && !OA3_FULL ? a.ac : null;      // [karsila] karsilayan ayak topa uzanir
                 if (acR && (acR.side > 0) === (sd === 0) && GB.ok !== false) {
                     var cR = CLK, eR = sm(rmp(cR, acR.tc - .16, acR.tc - .03)) * (1 - sm(rmp(cR, acR.tc + .05, acR.tc + .2)));
@@ -28771,19 +28908,55 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                         st.lk = 0; st.w = 0; fkLeg(sd, iL, iS, iF, Wh, tgm, fkR(mF)); any = true; continue;
                     }
                 }
-                if (!st.lk && tY < .04 && v < .9) { st.lk = 1; st.x = Aw[0]; st.y = Aw[1]; st.z = Aw[2]; st.t = 0; st.fw = Float64Array.from(fkR(mF)); st.yw = a.dYaw; }      // [v133] havuzdan kopya (kalici)
-                else if (st.lk) { var hW = fkT(_bw[iL]); xform(root, hW, FK_M); var sup = !!(a.ac && a.ac.init && a.ac.k === 16 && a.ac.mode === 3); if (tY > .07 || Math.hypot(Aw[0] - st.x, Aw[2] - st.z) > (sup ? .28 : .2) || Math.hypot(FK_M[0] - st.x, FK_M[2] - st.z) > (sup ? .55 : .48) || st.t > (sup ? 1.2 : .9)) st.lk = 0; }      /* [ayak] bacak acilmadan birak */
+                if (OT.on && V8.fl && FK8[sd] < .03 && FK8[sd] <= FK8[1 - sd] + .008 && v < 8 && (a.gaW || 0) > .5) { var fwd8 = st.pA0 ? ((Aw[0] - st.pA0[0]) * Math.sin(a.dYaw) + (Aw[2] - st.pA0[2]) * Math.cos(a.dYaw)) / dt : 0, sb8 = 'v' + Math.min(9, Math.floor((a.spd || 0) * 2)), q9 = OT.fs[sb8] || (OT.fs[sb8] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); q9[0]++; q9[1] += v; q9[8] += fwd8; q9[9] += a.spd || 0; }      // ölçüm: animasyondaki basan ayağın (IK öncesi) hızı
+                st.pA0 = Aw;
+                var pY8 = st.pY, low8 = V8.fl && FK8[sd] < .05 && (FK8[sd] <= FK8[1 - sd] + .012 || FK8[sd] < .02) && (a.spd || 0) < 7.5 && (!(st.pY < 9) || FK8[sd] <= st.pY + .002 || FK8[sd] < .025); st.pY = FK8[sd];      // yere inen (alçalan) basan ayak 5 cm'den kilitlenir      // [v188] basan ayak: yerde ve diğerinden alçak - hızı ne olursa olsun kilitlenir (yürüyüşte ayak bileği .9 m/sn'yi aştığı için çoğu adım kilitlenmeden kayıyordu)
+                if (st.sw > 0 && st.sw - dt / .16 <= 0) st.sw = 0;      // [v188] adımın son karesi: ayak yerine indi, aynı karede kilitlenebilir (bir kare kayma yok)
+                if (OT.on && !st.lk) st.nl = st.sw > 0 ? 2 : FK8[sd] >= .05 ? 3 : !(FK8[sd] <= FK8[1 - sd] + .012 || FK8[sd] < .02) ? 4 : (a.spd || 0) >= 7.5 ? 5 : low8 ? 7 : 6;      // ölçüm: kilit neden kurulmadı
+                if (!st.lk && !(st.sw > 0) && (tY < .04 || low8) && (v < .9 || low8)) { st.lk = 1; st.ur = 0; st.nl0 = st.nl; st.pp = -1; if (low8 || V8.fl) st.w = 1; st.x = Aw[0]; st.y = Aw[1]; st.z = Aw[2]; st.t = 0; if (V8.fl && pAp && pY8 < .03 && Math.hypot(Aw[0] - pAp[0], Aw[2] - pAp[2]) < .15) { st.x = pAp[0]; st.z = pAp[2]; }      /* [v188] ayak önceki karede de yerdeydi: kilit oradan başlar (yere değdiği yerde kalır) */ st.fw = Float64Array.from(fkR(mF)); st.yw = a.dYaw; }      // [v133] havuzdan kopya (kalici)
+                else if (st.lk) { var hW = fkT(_bw[iL]); xform(root, hW, FK_M); var sup = !!(a.ac && a.ac.init && a.ac.k === 16 && a.ac.mode === 3); var ur8 = (V8.fl && !sup ? FK8[sd] > .08 : tY > .07) ? 1 : Math.hypot(Aw[0] - st.x, Aw[2] - st.z) > (sup ? .28 : V8.fl ? ((a.spd || 0) < 2.5 ? .42 : .34) : .2) ? 2 : Math.hypot(FK_M[0] - st.x, FK_M[2] - st.z) > (sup ? .55 : .48) ? 3 : st.t > (sup ? 1.2 : .9) ? 4 : 0; if (ur8) { st.lk = 0; st.ur = ur8; if (V8.fl && ur8 > 1 && st.w > .5) { st.sw = 1; st.sx = st.x; st.sz = st.z; } } }      /* [v188] yerdeyken bırakılan kilit: ayak kayarak değil kısa bir adımla (kalkıp) animasyondaki yerine gider */      /* [ayak] bacak acilmadan birak */
+                if (st.sw > 0) {      /* adım: .16 sn'de kilit noktasından animasyondaki yerine, yay çizerek (taban en az 7 cm kalkar) */
+                    st.sw -= dt / .16; st.t += dt; st.w = 0; if (st.sw <= 0 || act) { st.sw = 0; continue; }
+                    var u8 = 1 - st.sw, e8 = u8 * u8 * (3 - 2 * u8), h8 = Math.max(0, .085 * Math.sqrt(Math.sin(Math.PI * u8)) - Math.max(0, FK8[sd]));
+                    fkLeg(sd, iL, iS, iF, Wh, fkW2M(root, [st.sx + (Aw[0] - st.sx) * e8, Aw[1] + h8, st.sz + (Aw[2] - st.sz) * e8]), fkR(mF)); any = true; continue;
+                }
                 st.t += dt; st.w += ((st.lk ? 1 : 0) - st.w) * (1 - Math.exp(-dt / .05));
                 if (st.w < .01) continue;
                 var tw = [Aw[0] + (st.x - Aw[0]) * st.w, Aw[1], Aw[2] + (st.z - Aw[2]) * st.w], tm = fkW2M(root, tw);
                 var fW = fkR(mF); if (st.fw && st.lk) {
                     var ry = (st.yw || 0) - a.dYaw;
-                    if (BK_ON) { ry = Math.atan2(Math.sin(ry), Math.cos(ry)); if (ry > BK_YW) { ry = BK_YW; st.yw = a.dYaw + ry; } else if (ry < -BK_YW) { ry = -BK_YW; st.yw = a.dYaw + ry; } }      /* [bacak] pivot: ayak govdeden en cok BK_YW geride */
-                    var rc = Math.cos(ry), rs = Math.sin(ry); fW = fkMM([rc, 0, rs, 0, 1, 0, -rs, 0, rc], st.fw);
+                    if (BK_ON) { ry = Math.atan2(Math.sin(ry), Math.cos(ry)); if (V8.fl && Math.abs(ry) > BK_YW + (st.pp === 0 ? 1.4 : .25)) { st.lk = 0; st.ur = 5; if (st.w > .5) { st.sw = 1; st.sx = st.x; st.sz = st.z; } } if (ry > BK_YW) { ry = BK_YW; st.yw = a.dYaw + ry; } else if (ry < -BK_YW) { ry = -BK_YW; st.yw = a.dYaw + ry; } }      /* [v188] pivot sınırı çok aşılınca ayak döndürülerek sürüklenmez: kilit bırakılır (adım) */      /* [bacak] pivot: ayak govdeden en cok BK_YW geride */
+                    var rc = Math.cos(ry), rs = Math.sin(ry); fW = fkMM([rc, 0, rs, 0, 1, 0, -rs, 0, rc], V8.fl ? fW : st.fw);      /* [v188] kilitte ayak animasyondaki eğimiyle yuvarlanır (topuk → parmak ucu), yalnız gövde dönüşü geri alınır */
                 }      // kilitteki dunya yonu (govde dondukce ters)
+                if (V8.fl && st.lk && st.w > .3) {      /* [v188] kilitli ayak, ayak bileği değil yere değen noktası (parmak ucu / topuk) çevresinde döner: gövde dönerken taban yerde kaymaz */
+                    var ws8 = Math.sqrt(root[0] * root[0] + root[2] * root[2]) || 1, c8 = root[0] / ws8, s8 = root[8] / ws8;
+                    var tx8 = fW[1] * -.04 + fW[2] * .16, ty8 = fW[4] * -.04 + fW[5] * .16, tz8 = fW[7] * -.04 + fW[8] * .16, hx8 = fW[1] * -.07 + fW[2] * -.05, hy8 = fW[4] * -.07 + fW[5] * -.05, hz8 = fW[7] * -.07 + fW[8] * -.05;
+                    var pp8 = Math.abs(a.yawR || 0) > 1.2 && ty8 < hy8 + .03 ? 0 : st.pp >= 0 ? (st.pp === 0 ? (hy8 < ty8 - .006 ? 1 : 0) : (ty8 < hy8 - .006 ? 0 : 1)) : (ty8 <= hy8 ? 0 : 1), ox8 = pp8 ? hx8 : tx8, oz8 = pp8 ? hz8 : tz8, wx8 = ws8 * (ox8 * c8 + oz8 * s8), wz8 = ws8 * (-ox8 * s8 + oz8 * c8);
+                    if (st.pp !== pp8) { st.pp = pp8; st.px = st.x + wx8; st.pz = st.z + wz8; }
+                    else { st.x = st.px - wx8; st.z = st.pz - wz8; tw = [Aw[0] + (st.x - Aw[0]) * st.w, Aw[1], Aw[2] + (st.z - Aw[2]) * st.w]; tm = fkW2M(root, tw); }
+                }
                 fkLeg(sd, iL, iS, iF, Wh, tm, fW); any = true;
             }
             return any;
+        }
+        var GAR = {}, GAR_DQ = null, GAR_Q = new Float32Array(3);
+        /* [v188] adım evresi düzeltmesi: klipte basan ayak kök çerçevesinde hareket yönünün tersine yol boyunun ancak r katı kadar süpürülüyor (ölçüm, Ado3D renderer _gaProbe:
+           ileri koşuda r ≈ .86-.97, yanlamasına yavaş adımda çok daha az) - evre d / (D·r) ile ilerler: basan ayak dünyada yerinde kalır (kadans biraz artar). Hız (0,5 m/sn) ve yön (45°) dilimi başına bir kez hesaplanır. */
+        function gaR(sp, th) {
+            var si = Math.max(1, Math.min(18, Math.round(sp * 2))), ti = Math.round(th / (Math.PI / 4)), key = si * 16 + ti + 8;
+            if (GAR[key] != null) return GAR[key];
+            var G0 = gaspInit(); if (!G0.ok) return 1;
+            if (!GAR_DQ) GAR_DQ = new Float32Array(BODY_BONES.length * 8);
+            var th0 = ti * Math.PI / 4, ux = Math.sin(th0), uz = Math.cos(th0), sp0 = si / 2, fk = { latV: ux * sp0, lonV: uz * sp0, gaP: 0, gaC: 0, dYaw: 0 }, N = 48, P = [], c, k, sv = pose.slice(), FL = BODY_BIND[BB.FootL], FR = BODY_BIND[BB.FootR], Q = GAR_Q;
+            for (c = 0; c < 2; c++) for (k = 0; k < N; k++) {
+                fk.gaP = k / N; fk.gaC = c; pose.fill(0); if (!gaspLoco(fk, sp0, 1)) { pose.set(sv); GAR[key] = 1; return 1; } bodyDQ(pose, GAR_DQ); var e = [fk.gaD, fk.gaRX || 0, fk.gaRZ || 0];
+                for (var f = 0; f < 2; f++) { var bb = f ? BB.FootR : BB.FootL, B = f ? FR : FL; dqsPt(GAR_DQ, bb, B[0], B[1], B[2], Q); var ax = Q[0], az = Q[2]; dqsPt(GAR_DQ, bb, B[0], B[1] - .045, B[2] + .15, Q); var ty = Q[1]; dqsPt(GAR_DQ, bb, B[0], B[1] - .07, B[2] - .05, Q); e.push(ax + e[1], az + e[2], Math.min(ty, Q[1])); }
+                P.push(e);
+            }
+            pose.set(sv);
+            var n = P.length, sR = 0, m = 0, ymin = 9; for (k = 0; k < n; k++) ymin = Math.min(ymin, P[k][5], P[k][8]);
+            for (k = 0; k < n; k++) { var a0 = P[k], a1 = P[(k + 1) % n], o = a0[5] <= a0[8] ? 3 : 6; if (a0[o + 2] > ymin + .03 || a1[o + 2] > ymin + .03 || !(a0[0] > .01)) continue; sR += -((a1[o] - a0[o]) * ux + (a1[o + 1] - a0[o + 1]) * uz) / (a0[0] / N); m++; }
+            var r = m > 6 && sR / m > 0 ? clamp(sR / m, .65, 1.5) : 1; GAR[key] = r; return r;
         }
         var GFT = null;
         function gaspFeet() {      // ileri kosu: cevrim mesafesi D[hiz*2] ve dokunus tablosu (motorla ortak)
@@ -29013,6 +29186,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             var hc0 = OAB.hc === ac, et0 = Math.max(0, CLK - OAB.ht), e0 = hc0 ? Math.exp(-et0 / OAB.etau) : 0, ey0 = hc0 ? oaEy(et0) : 0;      // [fiz] kalan giris ofseti
             if (OAB.hc === ac) OAB.hc = null;
             var tl = R._dl ? ac.tc : ac.t0 + .03, L = clamp(CLK - tl, 0, .35);      // [v135] gecikmede motor topu temas aninda ayrilir: gecikmesiz birakis
+            if (V8.kk && R._dl && L < .2) L = 0;      // [v188] gecikmeli gösterimde zaman kaydırma yok: motor topu tc'de ayrıldı, top temas karesinden itibaren onun yolunda (eskiden L kadar geride kalıp sonra yetişiyordu)
             if (L < .015 || !bhAt(tl, TSP)) { oaRelE(ac, CLK, ac.tau, ac.drop, ac.vz0); return; }
             OAB.on = 0;
             OAB.ts = { rt: CLK, L: L, T: Math.max(.4, L * 5), rx: ac.hx + OAB.ex * e0 - TSP[0], ry: ac.hy + ey0 - TSP[1], rz: ac.hz + OAB.ez * e0 - TSP[2] };
@@ -29111,7 +29285,8 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 pose.fill(0); PW_ = 1; spStrike(a, ac, ac.tc); PW_ = o0; bodyDQ(pose, gkDQ);
                 fb = ac.foot > 0 ? BB.FootL : BB.FootR; fp = BODY_BIND[fb]; dqsPt(gkDQ, fb, fp[0], fp[1] - .025, fp[2] + .1, gkQ);
                 oaAlign(ac, x, z, d[8], d[9], gkQ[0] * ws, gkQ[2] * ws, d[0], d[1], d[10] > 0 ? 1.3 : .75, .45);      // [carry] vur-koşla öndeki topa daha uzun uzanır
-                ac.hold = 1; ac.h0t = R._dl ? Math.max(ac.t0, ac.tc - .06) : ac.t0; ac.h1t = ac.tc; ac.hx = d[0]; ac.hy = .17 + d[2];      /* [v135] gecikmede top temastan hemen once ayaga (geri savurmada yuvarlanir) */
+                ac.hold = 1; ac.h0t = R._dl ? Math.max(ac.t0, ac.tc - .06) : ac.t0; ac.h1t = ac.tc + (V8.kk && R._dl ? .035 : 0); ac.hx = d[0]; ac.hy = .17 + d[2];      /* [v188] top ayakta .035 sn kalır (temas karesi izleyiciye geçer), sonra zaman kaydırmalı iz motor topuna yetişir */      /* [v135] gecikmede top temastan hemen once ayaga (geri savurmada yuvarlanir) */
+                if (V8.mc && d[2] >= 1.3 && (d[6] | 0) >= 2 && ADO_MOCAP['scissor kick']) { ac.sc8 = 1; ac.te = ac.tc + 1.9; }      // [v188] yüksek topa şut / uzaklaştırma: makas vuruşu
                 ac.hz = d[1]; ac.tau = ac.pr.kind === 'shot' ? .09 : .07;
                 ac.hx0 = ac.hx; ac.hz0 = ac.hz; ac.act = a;      /* [temas] ilk tutus noktasi ve vuran */
                 return;
@@ -29196,6 +29371,12 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             }
             if (k === 17) {                                                  // blok: şutu atana döner
                 ac.yaw = d[2] * d[2] + d[3] * d[3] > .01 ? Math.atan2(-d[2], -d[3]) : a.yaw; ac.side = d[4] < 0 ? -1 : 1; ac.hi = d[5] > .75 ? 1 : 0; ac.te = ac.tc + .6; ac.win = .06;
+                if (V8.kk) {      /* [v188] blok teması: temas pozundaki engelleyen uzuv (alçak topta uzanan bacağın baldırı, yüksekte göğüs) topun geleceği yere - kök hizası
+                                     (en çok .8 m). Ölçüm: blokların temas karesinde gövde/bacak topa ortalama 1,3 m uzaktı (top kimseye değmeden sekiyordu). */
+                    pose.fill(0); PW_ = 1; oaBlock(a, ac, ac.tc, true); PW_ = o0; bodyDQ(pose, gkDQ);
+                    var bb8 = ac.hi ? BB.Torso : (ac.side > 0 ? BB.ShinR : BB.ShinL), bp8 = BODY_BIND[bb8]; if (ac.hi) dqsPt(gkDQ, bb8, bp8[0], bp8[1] + .3, bp8[2] + .14, gkQ); else dqsPt(gkDQ, bb8, bp8[0], bp8[1] - .25, bp8[2] + .05, gkQ);
+                    oaAlign(ac, x, z, 0, 0, gkQ[0] * ws, gkQ[2] * ws, d[0], d[1], .8, .8); ac.al8 = 1;
+                }
                 return;
             }
         }
@@ -29210,6 +29391,11 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             if (hc && ry > OAB.ey * e + .01) { vz = -(OAB.v0 + 9.81 * et); drop = 1; }          // top tutuş noktasına henüz inmedi: düşmeye devam eder
             if (hc) OAB.hc = null;
             if (CLKOK && CLK - OAB.lt >= 0 && CLK - OAB.lt < .15) { hx = OAB.lx; hy = OAB.ly; hz = OAB.lz; rt = CLK; }     // [oa] görünen son konumdan (süreklilik)
+            if (V8.kk && ac.k === 18 && R._dl && CLKOK && CLK >= ac.tc - 1e-3 && CLK - ac.tc < .2 && !drop && bhAt(ac.tc, TSP)) {      /* [v188] gecikmeli gösterimde motor topu temas anında (tc) ayrılır:
+                   bırakış farkı tutuş noktası ile motorun tc'deki topu arasındaki (küçük) uzamsal farktır. Eskiden şimdiki motor topuna göre alınıyordu: top
+                   temas karesinde geride kalıp ~.1 sn'de hızlanıyordu (yumuşak, "temassız" çıkış). Şimdi top temas karesinden itibaren tam hızla gider. */
+                oaRel(hx - TSP[0], hy - TSP[1], hz - TSP[2], ac.tc, .06, 0, hy, 0); return;
+            }
             oaRel(hx - GB.x, hy - GB.y, hz - GB.z, rt, tau, drop, hy, vz);
         }
         /* [oa] motor topu ışınlanırsa (top kazanma/çelme: motor topu oyuncunun ayağına koyar; > 38 m/sn ve < 6 m, ölü top değil) görünen top
@@ -29255,6 +29441,9 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             R._dOnP = R._dOn ? 1 : 0; R._dOn = on; R._dOwn = on ? v.owner : -1;
         }
         var CS_ON = 1;      // [temas] surme dokunusu (p_temas_03)
+        /* [v188] görüntü düzeltmeleri (A/B ölçümü için tek tek kapatılabilir: R._v188({cc:0}) ) */
+        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1 }, FK8 = [9, 9]; R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
+        var CC8 = { bx: 0, bz: 0, t: -1e9, vx: 0, vz: 0, ex: 0, ez: 0 };
         var CC = { ox: 0, oz: 0, lt: -1e9 }, CC_DQ = null, CC_M = null, CC_Q = new Float32Array(3), CC_W = new Float32Array(3), CC_T = new Float32Array(5), CC_T2 = new Float32Array(5);
         function ccToe(dq, root, left, out) {      // [fiz] ayak ucu (dunya) ve ayak yonu (orta -> uc)
             var b = left ? BB.FootL : BB.FootR, F = BODY_BIND[b];
@@ -29263,6 +29452,8 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         }
         function carryContact(v) {
             var dt = CLKOK && CC.lt > -1e8 ? Math.max(0, Math.min(.2, CLK - CC.lt)) : 0, tx = 0, tz = 0, a = v.owner >= 0 && S.st ? S.st[v.owner] : null; CC.lt = CLKOK ? CLK : -1e9;
+            if (a && CLKOK && v.dOn) { a.tch8s = CLK; a.tch8n = v.dtn > 0 ? v.dtn : -9; a.tch8l = v.dtl > 0 ? v.dtl : -9; a.tch8f = v.dfn > 0 ? 0 : 1; }      // [v188] dokunuş bilgisi: ayak kilidi / dokunuş IK'sı için
+            if (CLKOK) { var dc8 = CLK - CC8.t; if (dc8 > 1e-4 && dc8 < .2) { var k8 = 1 - Math.exp(-dc8 / .05), ivx = (v.bx - CC8.bx) / dc8, ivz = (v.by - CC8.bz) / dc8; if (ivx * ivx + ivz * ivz < 900 && isFinite(ivx + ivz)) { CC8.vx += (ivx - CC8.vx) * k8; CC8.vz += (ivz - CC8.vz) * k8; } } else if (dc8 < -1e-4 || dc8 >= .2) { CC8.vx = 0; CC8.vz = 0; } CC8.bx = v.bx; CC8.bz = v.by; CC8.t = CLK; }      // [v188] görünen sürme topunun hızı
             if (CLKOK && v.dOn && a && a.ok && a.rM && a.dqc && !GB.held && !OAB.hc && !(a.ac && a.ac.init && a.ac.k >= 11 && CLK < (a.ac.h1t > 0 ? a.ac.h1t : a.ac.tc) + .05)) {      // aksiyonun tutusu bitince (geri donus) temas surer
                 var wIn = 0, wOut = 0, u;
                 if (v.dtn > 0 && v.dfn) { u = CS_ON ? (CLK - (v.dtn - .18)) / .18 : (CLK - (v.dtn - .12)) / .12; if (u > 0) { u = Math.min(1, u); wIn = u * u * (3 - 2 * u); } }
@@ -29281,13 +29472,19 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                     }
                     var fl = Math.hypot(CC_T[3], CC_T[4]) || 1, Rv = .11 * BSC + .02; if (CS_ON) { var csR = .11 * BSC + .012, csH = ballY(GB.y) - CC_T[1]; Rv = Math.abs(csH) < csR ? Math.sqrt(csR * csR - csH * csH) : .02; }      /* [temas] kure geometrisi */
                     var ex = CC_T[0] + CC_T[3] / fl * Rv - GB.x, ez = CC_T[2] + CC_T[4] / fl * Rv - GB.z, el = Math.hypot(ex, ez);
+                    if (V8.cc) {      /* [v188] dokunuştan önce: ayağın dokunuş anındaki ucu, topun da O ANDAKİ yeriyle karşılaştırılır (eskiden şimdiki topla: top
+                                         dokunuştan .18 sn önce koşu hızı × kalan süre kadar, ~0,5-0,7 m öne çekilip dokunuştan sonra geri sıçrıyordu - testere).
+                                         Dokunuştan sonra top ayağı izlemez: dokunuştaki küçük fark ~.1 sn'de söner (top dokunuşla ayaktan ayrılır). */
+                        if (wIn >= wOut) { var ld8 = Math.max(0, v.dtn - CLK); ex -= CC8.vx * ld8; ez -= CC8.vz * ld8; el = Math.hypot(ex, ez); if (el > .3) { ex *= .3 / el; ez *= .3 / el; } CC8.ex = ex; CC8.ez = ez; }
+                        else { ex = CC8.ex; ez = CC8.ez; }
+                    }
                     var csM = CS_ON ? .7 : .5; if (el > csM) { ex *= csM / el; ez *= csM / el; }
                     tx = ex * w; tz = ez * w;
                 }
             }
             var mx = (CS_ON ? 5.5 : 4) * dt + .002, ddx = tx - CC.ox, ddz = tz - CC.oz, dl = Math.hypot(ddx, ddz);      // ofset hiz sinirli: sicrama yok
             if (dl > mx) { ddx *= mx / dl; ddz *= mx / dl; }
-            CC.ox += ddx; CC.oz += ddz; if (!CLKOK) { CC.ox = 0; CC.oz = 0; }
+            CC.ox += ddx; CC.oz += ddz; if (!CLKOK || !isFinite(CC.ox + CC.oz)) { if (OT.on && !OT.nan && CLKOK) OT.nan = ['cc', v.owner, tx, tz, CC8.vx, CC8.vz]; CC.ox = 0; CC.oz = 0; }      // [v188] NaN koruması
             if (Math.abs(CC.ox) + Math.abs(CC.oz) > 1e-5) { GB.x += CC.ox; GB.z += CC.oz; }
         }
         var CT2_ON = 1, CT2_O = [0, 0, 0], CT2_P = new Float32Array(3), CT2_S = [], CT2_U = { x: 0, y: 0, z: 0, t: -1 };
@@ -29699,6 +29896,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         /* 17 şut bloğu: kollar arkada (el ile temas olmasın), gövde öne ve yan döner, alçak topta bacak topa */
         function oaBlock(a, ac, c, P) {
             RT.hy = 1; RT.ya = ac.yaw; RT.yw = sm(rmp(c, ac.t0, ac.tc)) * (1 - sm(rmp(c, ac.te - .2, ac.te)));
+            if (ac.al8) { var wo8 = sm(rmp(c, ac.t0, ac.tc)) * (1 - sm(rmp(c, ac.tc + .1, ac.te - .1))); RT.L = ac.oL * wo8; RT.F = ac.oF * wo8; }      // [v188] blok kök hizası
             if (!P) return;
             var e = sm(rmp(c, ac.t0, ac.tc)), sd = ac.side, TL = sd > 0 ? kLR : kLL, SL = TL === kLR ? kLL : kLR, az = TL === kLR ? 1 : -1;
             PA(kAL, .6 * e, 0, .12 * e); PA(kAR, .6 * e, 0, -.12 * e); PA(kFL, -1.25 * e, 0, 0); PA(kFR, -1.25 * e, 0, 0);
@@ -29847,6 +30045,9 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 case 19: var c19 = Math.max(0, Math.sin(c * 11)); PA(kAL, -2.5, 0, .2 - .25 * c19); PA(kAR, -2.5, 0, -.2 + .25 * c19); PA(kFL, -1.0, 0, 0); PA(kFR, -1.0, 0, 0); PA(kHe, -.2, null, null); break;
                 case 20: if (!(a && mxApply('goalkeeper directing', 1.2 + (c % 5.2), 0, null, 1))) { PA(kAL, -1.5, 0, -.9 - .25 * os); PA(kFL, -.1, 0, 0); PA(kHe, -.1, null, null); } break;
                 case 21: PA(kAL, -.75, 0, -.25); PA(kFL, -2.0, 0, 0); break;      // düdük (el ağızda)
+                case 30: { var pu = .16 + .07 * Math.max(0, Math.sin(c * 8.5)); PA(kTo, .18, -rz * .12, -rz * pu); PA(kHi, null, null, -rz * .06); PA(RA, -.45, 0, rz * .42); PA(RF, -1.05, 0, 0); PA(OA, -.35, 0, -rz * .25); PA(OF, -.9, 0, 0); PA(kHe, .05, -rz * .15, null); break; }      // [v188] omuz omuza: gövde rakibe yaslanır, yakın kol bükük önde (itişme)
+                case 31: { var pc = Math.min(1, c / .25); PA(RA, -2.45 - .3 * pc, 0, rz * (.35 - .15 * pc)); PA(RF, -.25, 0, 0); PA(OA, -.3, 0, -rz * .15); PA(OF, -.6, 0, 0); PA(kHe, -.12, null, null); break; }      // [v188] pas isteme: kol havada, açık el, baş topa
+                case 32: { var fq = Math.min(1, c / .07) * Math.exp(-Math.max(0, c - .07) / .3); PA(kTo, -.42 * fq, 0, .16 * rz * fq); PA(kHe, .45 * fq, -rz * .4 * fq, null); PA(kAL, -.85 * fq, 0, -1.0 * fq); PA(kAR, -.85 * fq, 0, 1.0 * fq); PA(kFL, -1.0 * fq, 0, 0); PA(kFR, -1.0 * fq, 0, 0); PA(kHi, -.06 * fq, null, null); break; }      // [v188] vücuda çarpan topa irkilme: gövde geri, kollar açılır, baş yana
                 case 22: PA(kAL, -2.72, 0, .22); PA(kAR, -2.72, 0, -.22); PA(kFL, -.55, 0, 0); PA(kFR, -.55, 0, 0); PA(kHe, -.08, null, null); break;      // dördüncü hakem: tabela baş üstünde
                 case 23: var u23 = clamp(c / .7, 0, 1), sw23 = u23 < .45 ? -.35 + .75 * sm(u23 / .45) : .4 - 2.3 * sm((u23 - .45) / .55);      // top görevlisi: iki elle alttan atış (geri savurma → öne yukarı)
                     PA(kAL, sw23, 0, .25); PA(kAR, sw23, 0, -.25); PA(kFL, -.35, 0, 0); PA(kFR, -.35, 0, 0); PA(kTo, .35 * (1 - u23) + .05, null, null); PA(kLL, -.25, null, null); PA(kSL, .45 * (1 - u23), 0, 0); PA(kSR, .4 * (1 - u23), 0, 0); break;
@@ -29862,8 +30063,8 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             ac.sF = ac.mode === 14 ? clamp(d[4] || 4, 1.5, 7) : 0;
         }
         function v7GestK(a, ac, c, P) {
-            var e = v7Ramp(c, ac.t0, ac.t0 + (ac.mode === 14 ? .12 : .3)) * (1 - v7Ramp(c, ac.te - .35, ac.te)), md = ac.mode;
-            RT.hy = 1; RT.ya = ac.yaw; RT.yw = (ac.d[0] || ac.d[1]) && md !== 13 && md !== 15 ? e * clamp(1 - ((a.spd || 0) - 2.5) / 2.5, 0, 1) : 0;
+            var e = v7Ramp(c, ac.t0, ac.t0 + (ac.mode === 14 ? .12 : ac.mode === 32 ? .05 : .3)) * (1 - v7Ramp(c, ac.te - (ac.mode === 32 ? .2 : .35), ac.te)), md = ac.mode;
+            RT.hy = 1; RT.ya = ac.yaw; RT.yw = (ac.d[0] || ac.d[1]) && md !== 13 && md !== 15 && md !== 30 && md !== 32 ? e * clamp(1 - ((a.spd || 0) - 2.5) / 2.5, 0, 1) : 0;
             if (md === 14) {                                                 // diz kayması: koşudan dizlerin üstüne düşer, yavaşlayarak kayar
                 var u = c - ac.t0, T = Math.max(.4, ac.sF / 3.2); RT.lk = 1; RT.gait = 1; RT.yw = e;
                 RT.F = ac.sF * (1 - Math.pow(1 - Math.min(1, u / T), 2)); RT.Y = -.5 * sm(rmp(c, ac.t0, ac.t0 + .18)) * (1 - v7Ramp(c, ac.te - .4, ac.te));
@@ -29973,6 +30174,78 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         }
         R.bbBib = function () { try { v7Pal(); } catch (e) { } if (!S.bbBib) return null; var ks = {}; (S.pal || []).forEach(function (q) { if (q) ks[[q[0], q[1], q[2]].map(function (x) { return +x.toFixed(2); }).join(',')] = 1; }); return { c: S.bbBib.c.slice(), d: +S.bbBib.d.toFixed(3), formalar: Object.keys(ks), hakem: S.refPal ? [S.refPal[0], S.refPal[1], S.refPal[2]].map(function (x) { return +x.toFixed(2); }) : null }; };      // [v187] sınama: seçilen yelek rengi ve formalara en yakın uzaklık
         R.olc7 = function (on) { if (on === 'get') return JSON.parse(JSON.stringify(OLC7)); OLC7.on = on ? 1 : 0; OLC7.n = OLC7.tp = OLC7.mv = OLC7.ok = OLC7.lo = OLC7.hi = OLC7.idle = OLC7.idleW = OLC7.mvA = 0; OLC7.tpS = []; return true; };
+        /* [v188] temas ölçücüsü (OT, yalnız sınama; kapalıyken maliyet yok): kare başına çizilen top (merkez), görünürlüğü ve topa 2,6 m'den
+           yakın aktörlerin temas yüzeylerine uzaklığı (ayak: ayak bileği altından parmak ucuna doğru parça; baş merkezi; göğüs; avuç).
+           Aksiyon kuruluşları (gkAct: tür, t0, tc) ve canlı vuruş planları (R.kick: temas anı) ayrıca kaydedilir. */
+        var OT = { on: 0, f: [], k: [], cut: 0, shx: 0, shz: 0, fs: {}, lc: -1e9, dbg: [], kd8: [] }, OT_A = new Float32Array(3), OT_B = new Float32Array(3), OT_C = new Float32Array(3);
+        function otSeg(a, bone, B, cx, cy, cz) {
+            dqsPt(a.dqc, bone, B[0], B[1] - .05, B[2] + .17, CP_T); xform(a.rM, CP_T, OT_A); dqsPt(a.dqc, bone, B[0], B[1] - .06, B[2] - .05, CP_T); xform(a.rM, CP_T, OT_B);
+            var ux = OT_A[0] - OT_B[0], uy = OT_A[1] - OT_B[1], uz = OT_A[2] - OT_B[2], l2 = ux * ux + uy * uy + uz * uz, t = l2 > 1e-8 ? clamp(((cx - OT_B[0]) * ux + (cy - OT_B[1]) * uy + (cz - OT_B[2]) * uz) / l2, 0, 1) : 0;
+            return Math.hypot(cx - OT_B[0] - ux * t, cy - OT_B[1] - uy * t, cz - OT_B[2] - uz * t);
+        }
+        function otPt(a, bone, ox, oy, oz, cx, cy, cz) { var B = BODY_BIND[bone]; dqsPt(a.dqc, bone, B[0] + ox, B[1] + oy, B[2] + oz, CP_T); xform(a.rM, CP_T, OT_A); return Math.hypot(cx - OT_A[0], cy - OT_A[1], cz - OT_A[2]); }
+        function otFrame(v, st) {
+            if (OT.f.length > 60000) return;
+            var cx = GB.ok ? GB.x : v.bx, cy = ballY(GB.ok ? GB.y : .17 + clamp(v.bz || 0, 0, 30)), cz = GB.ok ? GB.z : v.by, i, a;
+            var fl = (GB.held ? 1 : 0) | (BJ.sc < .999 || BJ.hide ? 2 : 0) | (GHB.on ? 4 : 0) | (OT.cut ? 8 : 0) | (SP_DEAD ? 16 : 0) | (NETS.c[0] || NETS.c[1] ? 32 : 0) | (V7_DLV ? 64 : 0) | (st.cam && st.cam.replay ? 128 : 0);
+            OT.cut = 0;
+            if (v.dOn && v.dtl > 0 && v.dtl !== OT.ldt) { OT.ldt = v.dtl; OT.k.push([+CLK.toFixed(3), v.owner, 'D', +v.dtl.toFixed(3), v.dk || 0]); }      // sürme dokunuşu (görüntü saati)
+            var pj = R.projectTo ? R.projectTo(OT_PJ, cx, cy, cz) : null, vis = pj && pj.x >= 0 && pj.x <= W && pj.y >= 0 && pj.y <= H ? (pj.x > W * .05 && pj.x < W * .95 && pj.y > H * .05 && pj.y < H * .95 ? 2 : 1) : 0;
+            var row = [+CLK.toFixed(3), +cx.toFixed(3), +cy.toFixed(3), +cz.toFixed(3), fl, v.owner, vis, GHB.on ? +GHB.x.toFixed(2) : 0, GHB.on ? +GHB.y.toFixed(2) : 0, GHB.on ? +GHB.z.toFixed(2) : 0, +Math.hypot((OT.shx || 0) - cx, (OT.shz || 0) - cz).toFixed(3), +v.bx.toFixed(3), +v.by.toFixed(3), +(v.bz || 0).toFixed(3), OAB.hc ? OAB.hc.k : (OAB.on ? -2 : OAB.ts ? -3 : -1), (v.dOn ? 1 : 0) | (CT2_U.x || CT2_U.z ? 2 : 0) | (BJ.on ? 4 : 0) | (SPB.on ? 8 : 0), +CC.ox.toFixed(3), +CC.oz.toFixed(3), +CT2_U.x.toFixed(3), +CT2_U.z.toFixed(3)];
+            for (i = 0; i < S.n; i++) {
+                a = S.st[i]; if (!a.ok || !a.rM || !a.dqc || !(a.vM || a.vS || a.needHand) || v.x[i] < -20) continue;
+                if (Math.abs(a.dX - cx) > 2.6 || Math.abs(a.dZ - cz) > 2.6) continue;
+                var ac = a.ac && a.ac.init && CLK >= a.ac.t0 - .05 && CLK < a.ac.te ? a.ac : null, kq = ((a.kickC && CLKOK ? CLK : FRM[3]) - a.kickT) / (a.kickDur || .42);
+                var dh = a.needHand && a.hR ? Math.min(Math.hypot(cx - a.hR[0], cy - a.hR[1], cz - a.hR[2]), Math.hypot(cx - a.hL[0], cy - a.hL[1], cz - a.hL[2])) : 9;
+                row.push(i, +otSeg(a, BB.FootL, FB_L, cx, cy, cz).toFixed(3), +otSeg(a, BB.FootR, FB_R, cx, cy, cz).toFixed(3), +otPt(a, BB.Head, 0, .12, .02, cx, cy, cz).toFixed(3), +otPt(a, BB.Torso, 0, .3, .12, cx, cy, cz).toFixed(3), +dh.toFixed(3), ac ? ac.k : 0, kq >= 0 && kq < 1 ? +kq.toFixed(2) : -1, +a.dX.toFixed(2), +a.dZ.toFixed(2), +(a.spd || 0).toFixed(2), +a.dYaw.toFixed(2));
+            }
+            OT.f.push(row);
+            /* ayak kayması: yere basan ayağın (taban yüksekliği < 4,5 cm, iki karede de) yatay hızı; kök hızına göre kümeler (0 duran, 1 yürüme <2, 2 koşu <5, 3 hızlı <7, 4 depar) */
+            var dtc = CLK - OT.lc; OT.lc = CLK;
+            for (i = 0; i < S.n; i++) {
+                a = S.st[i]; if (!a.ok || !a.rM || !a.dqc || !a.vM || v.x[i] < -20) { a.otV = 0; continue; }
+                if (!a.otF) a.otF = new Float32Array(6);
+                var hadF = a.otV && dtc > 1e-3 && dtc < .2 && !(fl & 8), sp8 = a.spd || 0, bn = sp8 < .3 ? 0 : sp8 < 2 ? 1 : sp8 < 5 ? 2 : sp8 < 7 ? 3 : 4, inAc = a.ac && a.ac.init && CLK >= a.ac.t0 && CLK < a.ac.te ? 1 : 0;
+                if (!a.otG) a.otG = new Float32Array(12);
+                var lw8 = [9, 9]; for (var fj = 0; fj < 2; fj++) { var Bj = fj ? FB_R : FB_L, bj = fj ? BB.FootR : BB.FootL; dqsPt(a.dqc, bj, Bj[0], Bj[1] - .045, Bj[2] + .15, CP_T); xform(a.rM, CP_T, OT_A); lw8[fj] = OT_A[1]; dqsPt(a.dqc, bj, Bj[0], Bj[1] - .07, Bj[2] - .05, CP_T); xform(a.rM, CP_T, OT_A); lw8[fj] = Math.min(lw8[fj], OT_A[1]); }
+                for (var fi = 0; fi < 2; fi++) {
+                    if (lw8[fi] > lw8[1 - fi] + .01) { a.otG[fi * 6 + 1] = a.otG[fi * 6 + 4] = 1; continue; }      // salınımdaki ayak (diğerinden yüksek) sayılmaz      /* ayağın yere değen noktası (parmak ucu / topuk, yerden < 2,5 cm); aynı nokta iki karede de yerdeyse yatay hızı kaymadır */
+                    var Bf = fi ? FB_R : FB_L, bn8 = fi ? BB.FootR : BB.FootL, o6 = fi * 6, sl = 9;
+                    dqsPt(a.dqc, bn8, Bf[0], Bf[1] - .045, Bf[2] + .15, CP_T); xform(a.rM, CP_T, OT_A); dqsPt(a.dqc, bn8, Bf[0], Bf[1] - .07, Bf[2] - .05, CP_T); xform(a.rM, CP_T, OT_B);
+                    var tLow = OT_A[1] < .025, hLow = OT_B[1] < .025, tP = a.otG[o6 + 1] < .025, hP = a.otG[o6 + 4] < .025;
+                    if (hadF && tLow && tP) sl = Math.min(sl, Math.hypot(OT_A[0] - a.otG[o6], OT_A[2] - a.otG[o6 + 2]) / dtc);
+                    if (hadF && hLow && hP) sl = Math.min(sl, Math.hypot(OT_B[0] - a.otG[o6 + 3], OT_B[2] - a.otG[o6 + 5]) / dtc);
+                    if (!a.otN) a.otN = new Uint8Array(2); var low2 = tLow || hLow; a.otN[fi] = low2 && hadF ? Math.min(9, a.otN[fi] + 1) : low2 ? 1 : 0;
+                    if (sl < 8.9 && a.otN[fi] < 3) { var qd = OT.fs.ini || (OT.fs.ini = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); qd[0]++; qd[1] += sl; if (sl > .3) qd[2]++; if (sl > 1) qd[3]++; if (sl > 2.5) qd[4]++; sl = 9; }      // basma anı (ayak yere yeni değdi): ayrı sayılır
+                    if (sl < 8.9) {
+                        var key = (inAc ? 'a' : Math.abs(a.yawR || 0) > 1.5 ? 't' : (a.gaW || 0) > .5 ? 'g' : (a.carryK || 0) > .5 ? 'c' : 'k') + bn, q8 = OT.fs[key] || (OT.fs[key] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+                        var lk8 = a.fk && a.fk[fi] && a.fk[fi].lk && a.fk[fi].w > .8 ? 1 : 0, spo = Math.hypot(a.spX || 0, a.spZ || 0) > .05 ? 1 : 0;
+                        q8[0]++; q8[1] += sl; if (sl > .3) { q8[2]++; if (!lk8 && a.fk && a.fk[fi]) { var qu = OT.fs['u' + (a.fk[fi].lk ? 9 : a.fk[fi].ur || 0)] || (OT.fs['u' + (a.fk[fi].lk ? 9 : a.fk[fi].ur || 0)] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); qu[0]++; qu[1] += sl; var qn = OT.fs['n' + (a.fk[fi].nl || 0)] || (OT.fs['n' + (a.fk[fi].nl || 0)] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); qn[0]++; qn[1] += sl; } if (lk8) { q8[5]++; var fst = a.fk[fi]; dqsPt(a.dqc, bn8, Bf[0], Bf[1], Bf[2], CP_T); xform(a.rM, CP_T, OT_C); if (Math.hypot(OT_C[0] - fst.x, OT_C[2] - fst.z) > .03) q8[8]++; else q8[9]++; if (OT.dbg.length < 400) OT.dbg.push([+CLK.toFixed(3), i, fi, +sl.toFixed(2), +Math.hypot(OT_C[0] - fst.x, OT_C[2] - fst.z).toFixed(3), +((fst.yw || 0) - a.dYaw).toFixed(3), +fst.t.toFixed(2), +a.spd.toFixed(2), +(a.yawR || 0).toFixed(2), +OT_C[1].toFixed(3), +OT_A[1].toFixed(3), +OT_B[1].toFixed(3), tLow ? 1 : 0, hLow ? 1 : 0, +OT_A[0].toFixed(3), +OT_A[2].toFixed(3), +a.otG[o6].toFixed(3), +a.otG[o6 + 2].toFixed(3), fst.nl0 || 0]); } if (spo) q8[6]++; } if (sl > 1) q8[3]++; if (sl > 2.5) q8[4]++; if (lk8) q8[7]++;
+                    }
+                    a.otG[o6] = OT_A[0]; a.otG[o6 + 1] = OT_A[1]; a.otG[o6 + 2] = OT_A[2]; a.otG[o6 + 3] = OT_B[0]; a.otG[o6 + 4] = OT_B[1]; a.otG[o6 + 5] = OT_B[2];
+                }
+                a.otV = 1;
+            }
+        }
+        var OT_PJ = { x: 0, y: 0, w: 0 };
+        R._gaProbe = function (sp, lat) {      // ölçüm: GASP döngüsünde basan ayağın kök çerçevesinde geriye süpürme oranı (1 = ayak dünyada sabit)
+            var G0 = gaspInit(); if (!G0.ok) return null;
+            var DQ = new Float32Array(BODY_BONES.length * 8), Q = new Float32Array(3), FL = BODY_BIND[BB.FootL], FR = BODY_BIND[BB.FootR], fk = { latV: lat || 0, lonV: sp, gaP: 0, gaC: 0, dYaw: 0 }, N = 96, P = [], c, k, j, sv = pose.slice();
+            for (c = 0; c < 2; c++) for (k = 0; k < N; k++) {
+                fk.gaP = k / N; fk.gaC = c; pose.fill(0); gaspLoco(fk, Math.hypot(sp, lat || 0), 1); bodyDQ(pose, DQ); var e = [fk.gaD, fk.gaRX || 0, fk.gaRZ || 0];
+                [[BB.FootL, FL], [BB.FootR, FR]].forEach(function (f) { dqsPt(DQ, f[0], f[1][0], f[1][1], f[1][2], Q); var ax = Q[0], az = Q[2]; dqsPt(DQ, f[0], f[1][0], f[1][1] - .045, f[1][2] + .15, Q); var ty = Q[1]; dqsPt(DQ, f[0], f[1][0], f[1][1] - .07, f[1][2] - .05, Q); e.push(ax + e[1], az + e[2], Math.min(ty, Q[1])); });
+                P.push(e);
+            }
+            pose.set(sv);
+            var n = P.length, sR = 0, sL = 0, m = 0, ymin = 9; for (k = 0; k < n; k++) ymin = Math.min(ymin, P[k][5], P[k][8]);
+            for (k = 0; k < n; k++) {
+                var a0 = P[k], a1 = P[(k + 1) % n], f = a0[5] <= a0[8] ? 3 : 6; if (a0[f + 2] > ymin + .03 || a1[f + 2] > ymin + .03) continue;
+                var dd = a0[0] / N; sR += -(a1[f + 1] - a0[f + 1]) / dd; sL += (a1[f] - a0[f]) / dd; m++;
+            }
+            return { sp: sp, D: +P[0][0].toFixed(3), r: m ? +(sR / m).toFixed(3) : null, rl: m ? +(sL / m).toFixed(3) : null, n: m };
+        };
+        R._actPos = function (i) { var a = S.st[i]; return a && a.px > -1e9 ? [a.px, 0, a.pz] : null; };      // ölçüm: oyuncunun görünen kökü
+        R.olcT = function (on) { if (on === 'get') { var o = { kd8: OT.kd8, f: OT.f, k: OT.k, fs: OT.fs, dbg: OT.dbg, nan: OT.nan || null, nan2: OT.nan2 || null, nan3: OT.nan3 || null }; OT.f = []; OT.k = []; OT.fs = {}; OT.dbg = []; OT.kd8 = []; return o; } OT.on = on ? 1 : 0; OT.f = []; OT.k = []; OT.fs = {}; return true; };
         function drawActor(a, pal, x, z, yaw, sc, mods, t, hairStyle, layer, beard) {
             var root = stk[0]; mtrs(root, x, a.rY || 0, z, 0, yaw, 0, sc, a.wScale);   // sc: boy ölçeği (yerel Y) · a.wScale: yapı/genişlik ölçeği (yerel X/Z) - bkz mtrs · a.rY: [gk] kök yüksekliği (plonjon/sıçrama)
             poseFor(a, a.spd, t, mods);
@@ -30066,7 +30339,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             if (!a.rM) { a.rM = new Float32Array(16); a.dqc = new Float32Array(BODY_BONES.length * 8); }
             var root = a.rM, cyw = Math.cos(a.dYaw), syw = Math.sin(a.dYaw);      // [opt] kök matrisi satır içi: mtrs(root, x, ry, z, 0, yaw, 0, sc, ws) ile aynı
             root[0] = cyw * ws; root[1] = 0; root[2] = -syw * ws; root[3] = 0; root[4] = 0; root[5] = sc; root[6] = 0; root[7] = 0; root[8] = syw * ws; root[9] = 0; root[10] = cyw * ws; root[11] = 0; root[12] = x; root[13] = ry; root[14] = z; root[15] = 1;
-            a.gaRT = -1; poseFor(a, a.spd, t, mods); if (a.gaRT === t && (a.gaRX || a.gaRZ)) { root[12] += a.gaRX; root[14] += a.gaRZ; } if (FK_ON) footIK(a, root); if (NC_ON && BK_ON) legNoCross(a); if (GD_ON) ctGround(a, root); if (CT_ON && a.ac && a.ac.k === 18) ctKickIK(a, root); if (CT3_ON && a.needHand && (a.holdK || 0) > .05 && !(a.ac && a.ac.init && CLK >= a.ac.t0 && a.ac.k >= 4 && a.ac.k <= 9)) ctGkHoldIK(a, root); else a.hik = 0; if (GKIK_ON && CLKOK && a.ac && a.ac.init && (a.ac.k === 1 || a.ac.k === 2) && !(a.hik > .05)) ctGkSaveIK(a, root); bodyDQ(pose, a.dqc);      // [gasp] kalca salinimi kokte
+            a.gaRT = -1; poseFor(a, a.spd, t, mods); if (a.gaRT === t && (a.gaRX || a.gaRZ)) { root[12] += a.gaRX; root[14] += a.gaRZ; } if (FK_ON) footIK(a, root); if (NC_ON && BK_ON) legNoCross(a); if (GD_ON) ctGround(a, root); if (CT_ON && a.ac && a.ac.k === 18) ctKickIK(a, root); if (V8.kk && a.ac && a.ac.k === 16) ctRecvIK(a, root); if (V8.kk && a.ac && a.ac.k === 12) ctTackleIK(a, root); if (V8.kk && (a.carryK || 0) > .3 && !(a.ac && a.ac.init && CLKOK && CLK >= a.ac.t0 && CLK < a.ac.te)) ctDribIK(a, root); if (CT3_ON && a.needHand && (a.holdK || 0) > .05 && !(a.ac && a.ac.init && CLK >= a.ac.t0 && a.ac.k >= 4 && a.ac.k <= 9)) ctGkHoldIK(a, root); else a.hik = 0; if (GKIK_ON && CLKOK && a.ac && a.ac.init && (a.ac.k === 1 || a.ac.k === 2) && !(a.hik > .05)) ctGkSaveIK(a, root); if (V8.fl && FK_ON) fkPin(a, root); if (V8.fl && poseBad8()) { if (OT.on && !OT.nan3) OT.nan3 = 'poz NaN: ' + (a.ac && a.ac.init ? 'k' + a.ac.k + ' m' + a.ac.mode : 'aksiyonsuz') + ' fk ' + JSON.stringify(a.fk && a.fk.map(function (q) { return [q.lk, q.sw > 0 ? 1 : 0, q.pp]; })); a.gaRT = -1; poseFor(a, a.spd, t, mods); } bodyDQ(pose, a.dqc);      // [v188] NaN koruması: IK bozduysa IK'sız poz      // [gasp] kalca salinimi kokte
             if (a.needHand) { if (!a.hR) { a.hR = new Float32Array(3); a.hL = new Float32Array(3); } handsModel(a.dqc); xform(root, gkQ, a.hR); xform(root, gkQ2, a.hL); }   // [gk] avuç noktaları (top elde)
             if (VQ.sh) {                                                     // [vq] temas gölgesi için göğüs + ayak ortası (dünya)
                 if (!a.cP) a.cP = new Float32Array(6);
@@ -30156,6 +30429,18 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             var pp = postEnsure.prog; if (pp && (pp.br.fail || pp.bl.fail || pp.cp.fail)) postEnsure.prog = null;
             return true;
         }
+        /* [v188] görünen topun bu karedeki konumu. Eskiden gölge geçişinden (gölge haritası + temas gölgesi) SONRA hesaplanıyordu: topun gölgesi
+           bir kare geride kalıyordu (25 m/sn şutta ~0,8 m). Şimdi aktörlerden sonra, gölgelerden önce (V8.sh). */
+        function ballStep8(v, bx, bz) {
+            gkBall(v);                                                       // [gk] görsel top: kalecinin elinde / kestirilen yolda / bırakış sonrası
+            spBall(v);                                                       // [sp] duran top: temasa dek noktada, taçta ellerde, bırakışta motor topuna sönen ofset / yay
+            carryHand(v);                                                    // [carry] sahiplik bitti: görünen top motor topuna süzülür
+            oaBall(bx, bz, v.owner);                                         // [oa] vuruş/kafa/kontrol/müdahale: temasa dek temas noktasında, sonra motor topuna (motor topu ışınlanırsa süzülür)
+            carryContact(v);                                                 // [fiz] dokunus aninda top ayagin ucunda
+            if (CT2_ON) { ctRecv(); ctPush(v); ctGkPost(); }                 // [temas] karsilama temasi, top - govde ic ice gecmesi
+            ballJump(S.ball);
+            if (!(isFinite(GB.x) && isFinite(GB.y) && isFinite(GB.z))) { if (OT.on && !OT.nan) OT.nan = ['gb', v.owner, CC.ox, CC.oz, CC8.vx, CC8.ex]; GB.x = v.bx; GB.z = v.by; GB.y = ballY(v.bz || 0); CC8.vx = CC8.vz = CC8.ex = CC8.ez = 0; }      // [v188] NaN koruması: görünen top motor topuna döner
+        }
         R.render = function (st) {
             if (R.lost || !SC || !S.st) return false;
             if (PEND.length && !progsReady()) return false;                  // [opt] programlar henüz hazır değil
@@ -30215,7 +30500,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 var lo0 = d > 1e-5 ? ((x - a.px) * Math.sin(a.yaw) + (z - a.pz) * Math.cos(a.yaw)) / (dt * ts) : 0; a.lonV = (a.lonV || 0) + (Math.max(-10.5, Math.min(10.5, lo0)) - (a.lonV || 0)) * (1 - Math.exp(-dt * ts / .15));   // [oa] ileri hız (geri koşu)
                 var bkS = d > 1e-4 && ((x - a.px) * Math.sin(a.yaw) + (z - a.pz) * Math.cos(a.yaw)) < -.35 * d ? -1 : 1;      // geri geri koşu: adım döngüsü ters
                 if (GA_ON) { var gOn = (!cTarget || (GA_OWN && v.gpOn && v.gp)) && !(S.roles && S.roles[i]) ? 1 : 0;
-                    if (cTarget && GA_OWN && v.gpOn && v.gp) { var gpu = v.gp[i] / (2 * Math.PI); a.gaC = Math.floor(gpu); a.gaP = gpu - a.gaC; a.gaD = 0; }      /* [gasp] top sahibi: evre motordan */ a.gaW = (a.gaW || 0) + (gOn - (a.gaW || 0)) * (1 - Math.exp(-dt * ts / .15)); if (a.gaD > .01) { a.gaP = (a.gaP || 0) + d / a.gaD; if (a.gaP >= 1) { var gfl = Math.floor(a.gaP); a.gaP -= gfl; a.gaC = (a.gaC || 0) + gfl; } } }      // [gasp]
+                    if (cTarget && GA_OWN && v.gpOn && v.gp) { var gpu = v.gp[i] / (2 * Math.PI); a.gaC = Math.floor(gpu); a.gaP = gpu - a.gaC; a.gaD = 0; }      /* [gasp] top sahibi: evre motordan */ a.gaW = (a.gaW || 0) + (gOn - (a.gaW || 0)) * (1 - Math.exp(-dt * ts / .15)); if (a.gaD > .01) { a.gaP = (a.gaP || 0) + d / (a.gaD * (V8.fl ? gaR(a.spd, (a.latV || 0) * (a.latV || 0) + (a.lonV || 0) * (a.lonV || 0) > .09 ? Math.atan2(a.latV || 0, a.lonV || 0) : 0) : 1)); if (a.gaP >= 1) { var gfl = Math.floor(a.gaP); a.gaP -= gfl; a.gaC = (a.gaC || 0) + gfl; }  if (!isFinite(a.gaP)) { if (OT.on && !OT.nan) OT.nan = ['gaP', i, a.gaD, a.spd, a.latV, a.lonV, d]; a.gaP = 0; a.gaC = 0; }} }      // [gasp]
                 a.ph += bkS * d * gaitPhK(a.spd, a.carryK); if (cTarget && v.gpOn && v.gp && !R._noLock) { var gpe = v.gp[i] - a.ph; gpe -= Math.round(gpe / (2 * Math.PI)) * 2 * Math.PI; a.ph += gpe * (1 - Math.exp(-dt * ts / .05)); }      // [motor] evre motora kilitli
                 else if (cTarget && v.dOn && bkS > 0 && !R._noLock) carrySync(a, d, dt * ts, v); a.px = x; a.pz = z;      // [carry] adımlar dokunuşla eş                      // top sürerken kadans artar (aynı hızda daha kısa/sık adım - araştırma dayanaklı)
                 var ty = Math.atan2(v.fx[i], v.fy[i]), dy = ty - a.yaw, kyw = 1 - Math.exp(-dt * ts / .09);
@@ -30226,6 +30511,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                     dy = ty - a.yaw;
                 }
                 dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.yaw += dy * kyw;      // [fiz] sim saatiyle (kopru YAW ile es)
+                if (V8.ts && GA_ON && (a.gaW || 0) > .5 && a.spd < 1.2 && !cTarget && !(a.ac && a.ac.init && CLKOK && CLK >= a.ac.t0 && CLK < a.ac.te)) { var tw8 = Math.abs(dy * kyw); if (tw8 > 1e-3 && tw8 < .5) { a.gaP = (a.gaP || 0) + tw8 * .42 * (1 - a.spd / 1.2); if (a.gaP >= 1) { a.gaP -= 1; a.gaC = (a.gaC || 0) + 1; } } }      // [v188] yerinde dönüş: ayaklar adım atar (90°'de ~1,3 adım; eskiden kilitli ayak üstünde kayarak dönüyordu)
                 a.yawR = (a.yawR || 0) + (Math.max(-8, Math.min(8, dy * kyw / (dt * ts))) - (a.yawR || 0)) * (1 - Math.exp(-dt * ts / .15));   // [oa] dönüş hızı (rad/sn): viraj yatışı
                 idleState(a, true);                                          // [opt] konum a.px/a.pz, kare değerleri FRM
                 gkUpdate(a, i); a.uX = a.dX; a.uZ = a.dZ; a.uOk = 1; if (SP_ON) { a.dX += a.spX || 0; a.dZ += a.spZ || 0; }      /* [govde] ayirma son cizim konumunda */                                    // [gk] hazır duruş / elde tutuş / aksiyon kökü → a.dX, a.dZ, a.dYaw, a.rY
@@ -30273,6 +30559,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 } else aa.fOk = 0;
             }
             if (V7_ON) { try { v7XUpdate(st, dt, ts, SHD); } catch (e) { V7X.n = 0; V7X.nb = 0; } }      // [v187] top görevlileri, giren / çıkan oyuncu
+            var BS8 = V8.sh ? 1 : 0; if (BS8) ballStep8(v, bx, bz);      // [v188] top gölgelerden önce
             if (SHD) {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFB); gl.viewport(0, 0, SHADOW_SIZE * SHX, SHADOW_SIZE);
                 gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.colorMask(false, false, false, false); gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -30383,7 +30670,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 var a7 = S.st[i]; if (v.x[i] < -20 || !a7.cP || a7.cP[1] > .8) continue;
                 lieShadow(a7, clamp((.8 - a7.cP[1]) / .4, 0, 1) * (bshadowA + .25));
             }
-            var bh = GB.ok ? clamp(GB.y - .17, 0, 30) : clamp(v.bz, 0, 30), bsz = (.3 + Math.max(0, .5 - bh * .05)) * bshadowS * BSC / 1.45, bgx = GB.ok ? GB.x : bx, bgz = GB.ok ? GB.z : bz;
+            var bh = GB.ok ? clamp(GB.y - .17, 0, 30) : clamp(v.bz, 0, 30), bsz = (.3 + Math.max(0, .5 - bh * .05)) * bshadowS * BSC / 1.45, bgx = GB.ok ? GB.x : bx, bgz = GB.ok ? GB.z : bz; OT.shx = bgx; OT.shz = bgz;      // [v188] ölçücü: top gölgesinin konumu
             qFlat(bgx + sx * (1 + bh * .4), bgz + sz * (1 + bh * .4), bsz, bsz * .8, .035, 1, 1, 1, clamp(bshadowA - bh * .04, .18, bshadowA));
             qFlush(T.blob);
             var rgN = st.rings ? (st.ringN != null ? st.ringN : st.rings.length) : 0;      // [opt] arayüz halka havuzu: geçerli sayı ringN
@@ -30450,13 +30737,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             }
             // --- top ---
             gl.useProgram(pLit.p); gl.uniformMatrix4fv(pLit.u.uVP, false, VP); light(pLit); gl.uniform1f(pLit.u.uEmis, 0);
-            gkBall(v);                                                       // [gk] görsel top: kalecinin elinde / kestirilen yolda / bırakış sonrası
-            spBall(v);                                                       // [sp] duran top: temasa dek noktada, taçta ellerde, bırakışta motor topuna sönen ofset / yay
-            carryHand(v);                                                    // [carry] sahiplik bitti: görünen top motor topuna süzülür
-            oaBall(bx, bz, v.owner);                                                  // [oa] vuruş/kafa/kontrol/müdahale: temasa dek temas noktasında, sonra motor topuna (motor topu ışınlanırsa süzülür)
-            carryContact(v);                                                 // [fiz] dokunus aninda top ayagin ucunda
-            if (CT2_ON) { ctRecv(); ctPush(v); ctGkPost(); }      // [temas] karsilama temasi, top - govde ic ice gecmesi
-            ballJump(S.ball);
+            if (!BS8) ballStep8(v, bx, bz);      // [v188] eski sıra (V8.sh kapalı): top gölge geçişinden sonra
             if (R._trace && R._trace.length < 40000) {
                 var trr = [+CLK.toFixed(3), +GB.x.toFixed(3), +GB.y.toFixed(3), +GB.z.toFixed(3), +v.bx.toFixed(3), +v.by.toFixed(3), +v.bz.toFixed(3), GB.held ? 1 : 0, v.owner, OAB.hc ? OAB.hc.k : (OAB.on ? -2 : OAB.ts ? -3 : -1), GB_HOLD, +BJ.sc.toFixed(2)];
                 if (R._traceFeet) {      // [olcum] cizilen pozdan ayak uclari (top sahibi)
@@ -30472,6 +30753,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 }
                 R._trace.push(trr);
             }
+            if (OT.on && CLKOK) otFrame(v, st);      // [v188] temas ölçücüsü
             var bo = S.ball, bxm = GB.x, bzm = GB.z, by = GB.y, SPS_W = v && v.sps ? v.sps * 2 * Math.PI : 0;      // [v139] motorun yan donusu (rad/sn)
             // [fx] top dönüşü: yerde yuvarlanma (kaymadan yuvarlanmaya hızlı geçiş), havada açısal hız korunur ve yavaşça söner;
             // kalkışta tür: yüksek top geri dönüş (backspin), sert yerden/alçak şut az üst dönüş + yan falso. Zaman: görünen saat (yavaş çekimde yavaş döner)
@@ -30552,6 +30834,7 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             if (tc != null && CLKOK) a.kickT = tc - (pr.cf != null ? pr.cf : .3) * pr.dur;      // [v135] gecikmeli gosterim: temas karesi topun cikis anina
             a.kickKind = pr.kind; a.kickDur = pr.dur; a.kickCf = pr.cf; a.kickLg0 = pr.lg0; a.kickLg1 = pr.lg1; a.kickKn0 = pr.kn0; a.kickArm = pr.arm; a.kickTorso = pr.torso;
             a.kickFoot = foot === 'L' || foot === 'R' ? foot : (S.ft && S.ft[id]) || 'R';
+            if (OT.on) OT.k.push([+CLK.toFixed(3), id, 'K:' + pr.kind, +(a.kickT + (pr.cf != null ? pr.cf : .3) * pr.dur).toFixed(3), +a.kickT.toFixed(3)]);      // [v188] ölçücü
         };
         /* [gk] kaleci aksiyonu başlat: id, tür (1-7), t0 (başlangıç), tc (temas/bırakış), d (türüne göre veri, kopyalanır):
              1 kurtarış: [şut anı, top x, y, z, vx, vy, vz, bakış x, bakış y, penaltı, doğrudan nokta (1: x,y,z temas noktası)]
@@ -30565,7 +30848,8 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
                 else if (k >= 8 && k <= 10 && o.k >= 13 && o.k <= 15 && CLK < o.te) t0 = Math.min(Math.max(t0, o.te - .15), Math.max(t0, tc - .3));
             }
             var n = gkNew(k, t0, tc, d);
-            if (V7_ON && CLKOK && o && (!o.init || CLK < o.t0) && t0 > o.t0 + .02 && o.k >= 11 && k >= 11) {      // [v187] aynı anda kurulan ardışık aksiyonlar (faul hareketi → tepki, düşme → acı): sonraki sıraya girer, öncekini ezmez
+            if (OT.on) OT.k.push([+CLK.toFixed(3), id, k, +tc.toFixed(3), +t0.toFixed(3), n && n.mode != null ? n.mode : -1, k === 12 && d ? (d[7] | 0) * 10 + (d[5] | 0) : -1]);      // müdahale: sonuç*10 + mod (sonuç 3 = kaçan, boşa uzanma)      // [v188] ölçücü
+            if (V7_ON && CLKOK && o && (!o.init || CLK < o.t0) && t0 > o.t0 + .02 && o.k >= 11 && k >= 11 && !(V8.mc && o.k === 20 && k !== 20 && k !== 13 && k !== 14)) {      /* [v188] jest (pas isteme, omuz, irkilme) top aksiyonunu (vuruş / kontrol / kafa / müdahale) sıraya sokmaz: top aksiyonu jesti ezer */      // [v187] aynı anda kurulan ardışık aksiyonlar (faul hareketi → tepki, düşme → acı): sonraki sıraya girer, öncekini ezmez
                 var q7 = a.acQ || (a.acQ = []); q7.push(n); q7.sort(function (x, y) { return x.t0 - y.t0; }); if (q7.length > 4) q7.shift(); return n;
             }
             if (a.acQ && a.acQ.length) { for (var qi = a.acQ.length - 1; qi >= 0; qi--) if (a.acQ[qi].t0 >= t0 - .02) a.acQ.splice(qi, 1); }      // [v187] yeni (erken) aksiyon: sonraki sıradakiler geçersiz
@@ -30579,6 +30863,11 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             var ac = a.ac;
             if (ac && (ac.k === 1 || ac.k === 2) && t <= (ac.init ? ac.te : ac.tc + 1.5)) {
                 ac.out = out;
+                if (V8.gs && ac.init && ac.k === 1 && ac.v === 1 && (out === 1 || out === 2) && CLKOK && CLK < ac.tc - .03 && ac.cpx != null && x === x && z === z) {      /* [v188] kestirim yerine motorun gerçek kurtarış noktası:
+                       gövde uçuşta oraya kayar, görünen top da (gecikmeli gösterimde) motorun gerçek yolunda kalır - eskiden top kestirilen yoldan avuca
+                       gidip (motor topundan 2-4 m) bırakışta motor topuna sıçrıyordu */
+                    var dx8 = x - ac.cpx, dz8 = z - ac.cpz; ac.cL = clamp(dx8 * ac.ccy - dz8 * ac.csy, -1.2, 1.2); ac.cF = clamp(dx8 * ac.csy + dz8 * ac.ccy, -.8, .8); ac.cY = clamp((h || 0) - ac.cph, -.6, .6); ac.cT0 = CLK; ac.fix8 = 1;
+                }
                 if (!ac.init && ac.t0 > t - .08) ac.t0 = t - .08;          // motor erken kurtardı (dar açı/penaltı): hamle hemen başlar, top görüntüde ele kadar gider
                 return;
             }
@@ -30587,12 +30876,12 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
             var n = R.gkAct(id, 1, t - .14, t, null); n.d[0] = t; n.d[1] = x; n.d[2] = z; n.d[3] = h || 0; n.d[7] = px + Math.sin(yw) * 6; n.d[8] = pz + Math.cos(yw) * 6; n.d[10] = 1; n.out = out;
         };
         // şut engellendi/saptı: henüz başlamamış plonjon iptal (başladıysa sürer, top kestirimi kullanılmaz)
-        R.gkCancel = function (id, t) {
+        R.gkCancel = function (id, t, force) {
             var a = S.st && S.st[id]; if (!a || !a.ac) return;
             var ac = a.ac; if (ac.k !== 1 && ac.k !== 2) return;
-            if (!ac.init && t < ac.t0) { a.ac = a.acP; a.acP = null; } else if (!ac.out) ac.out = 3;
+            if (!ac.init && t < ac.t0) { a.ac = a.acP; a.acP = null; } else if (!ac.out || (force && (ac.out === 1 || ac.out === 2) && CLKOK && CLK < ac.tc + .05)) { ac.out = 3; }      // [v188] gol oldu: tutuş / çelme kestirimi iptal (top avuca gitmez)
         };
-        R.cutBall = function () { if (S.ball) S.ball.gx = null; BJ.on = 0; BJ.sc = 1; GB.cut = 1; };
+        R.cutBall = function () { OT.cut = 1; if (S.ball) S.ball.gx = null; BJ.on = 0; BJ.sc = 1; GB.cut = 1; };
         /* [v132] kurgu kesmesi (tekrar başı/sonu, döngü, önemli an, VAR görüntüsü): aktör süzgeçleri yeni kareden başlar (dönme/hız rampası yok), kamera hedefe atlar */
         R.cutActors = function () { OLC7.cut = 1;
             if (S.st) for (var i = 0; i < S.st.length; i++) { var a = S.st[i]; if (!a) continue; a.px = NaN; a.pz = NaN; a.latV = 0; a.lonV = 0; a.accS = 0; a.yawR = 0; a.spX = 0; a.spZ = 0; a.cutN = 2; }
@@ -30729,7 +31018,15 @@ var ADO_MOCAP_G=adoZYerinde("engine3d/data/ado_mocap_g.js");
         R.dispose = function () { try { var e = gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (er) { } };
         return R;
     }
-    G.Ado3D = { supported: supported, hw: function () { supported(); return !!supported._hw; }, create: create, SKIN: SKIN, HAIR: HAIR, gkPredict: gkPredict, ballPhys: ballPhys, _m: { proceduralBall: proceduralBall, m4: m4, mmul: mmul, mlook: mlook, mpersp: mpersp, mtrs: mtrs, parseGLB: parseGLB, fitEllipseR: fitEllipseR, ringsFromMesh: ringsFromMesh, revolvePart: revolvePart, upgradePlayerMeshes: upgradePlayerMeshes, PLAYER_HD_SEGS: PLAYER_HD_SEGS, JOINT_MARGIN: JOINT_MARGIN }, _body: { buildBody: buildBody, bodyDQ: bodyDQ, dqsPoint: dqsPoint, BONES: BODY_BONES, BIND: BODY_BIND, SLOT_N: SLOT_N, HAIR_STYLES: HAIR_STYLES, headPoint: headPoint } };
+    /* [v188] sınama: mocap klibinin zaman içinde uç noktaları (model uzayı): avuçlar, ayak uçları/topukları, baş, kalça yüksekliği, kök hareketi - klip anahtar anlarını bulmak için */
+    function mcProbe(nm, mr, st) {
+        var c = mcClip(nm); if (!c) return null; var P = new Float32Array(39), DQ = new Float32Array(BODY_BONES.length * 8), R = [0, 0, 0], out = [], t, B = BODY_BIND;
+        var pt = function (b, x, y, z) { var q = dqsPoint(DQ, b, b, 0, [B[b][0] + x, B[b][1] + y, B[b][2] + z]); return [+q[0].toFixed(3), +q[1].toFixed(3), +q[2].toFixed(3)]; };
+        for (t = 0; t <= c.len + 1e-6; t += st || .05) { mcPose(nm, t, P, false, mr); P[1] = P[1]; bodyDQ(P, DQ); mcRoot(nm, t, R, mr);
+            out.push({ t: +t.toFixed(3), hy: +P[1].toFixed(3), r: [+R[0].toFixed(3), +R[1].toFixed(3), +R[2].toFixed(3)], hL: pt(BB.ForeR, 0, -.27, 0), hR: pt(BB.ForeL, 0, -.27, 0), tL: pt(BB.FootL, 0, -.045, .15), eL: pt(BB.FootL, 0, -.07, -.05), tR: pt(BB.FootR, 0, -.045, .15), eR: pt(BB.FootR, 0, -.07, -.05), hd: pt(BB.Head, 0, .12, .02) }); }
+        return { len: c.len, n: c.n, fps: c.fps, f: out };
+    }
+    G.Ado3D = { _mcProbe: mcProbe, _mcList: function () { return Object.keys(ADO_MOCAP).map(function (k) { var c = mcClip(k); return [k, c ? +c.len.toFixed(2) : 0]; }); }, supported: supported, hw: function () { supported(); return !!supported._hw; }, create: create, SKIN: SKIN, HAIR: HAIR, gkPredict: gkPredict, ballPhys: ballPhys, _m: { proceduralBall: proceduralBall, m4: m4, mmul: mmul, mlook: mlook, mpersp: mpersp, mtrs: mtrs, parseGLB: parseGLB, fitEllipseR: fitEllipseR, ringsFromMesh: ringsFromMesh, revolvePart: revolvePart, upgradePlayerMeshes: upgradePlayerMeshes, PLAYER_HD_SEGS: PLAYER_HD_SEGS, JOINT_MARGIN: JOINT_MARGIN }, _body: { buildBody: buildBody, bodyDQ: bodyDQ, dqsPoint: dqsPoint, BONES: BODY_BONES, BIND: BODY_BIND, SLOT_N: SLOT_N, HAIR_STYLES: HAIR_STYLES, headPoint: headPoint } };
 })();
 
 </script>
@@ -39163,6 +39460,15 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         //   (taç/korner üretimi, faul, sarı, ofsayt, şut sapması, kaleci, orta, blok) uzayan canlı oyuna göre ayrı varsayılan alır: 96 maçta gol 1,2–1,4, şut 11–14, faul 11–15 / takım
         //   açıkça MATCH_S verilirse AV_CLK kapanır (eski ölçek)
         AV_CLK: 1, AV_CLKS: 2800, AV_CLKD: 3,
+        // AV_DEC: karar kalitesi (v188). Serbest vuruş: 16–35 m'de bölgeye göre doğrudan şut (merkez 16–25 m ~%60, 25–30 m ~%35, 30–35 m ~%15; yana açıldıkça orta / pas; takım başına maçta ~.6 şut, veri .57),
+        //   baraj mesafeye göre 2–5 kişi, şut barajın üstünden (yakın direk; top barajda ≥ 2,15 m, gerekirse daha yumuşak vuruş) ya da kalecinin tuttuğu uzak köşeye; baraja çarpma ve
+        //   isabet StatsBomb'a göre (doğrudan serbest vuruşun %32'si bloklanır, %30'u isabetli, %5,9'u gol) · kaleciden elle oyuna sokma yalnız boş (≥ 5 m) ve koridoru açık arkadaşa
+        //   (yoksa uzun vole), elle atılan top rakipçe kesilmez (eskiden elle atışların %9–12'si ilk rakipte) · ceza sahasında şut yolu açık, baskısız topçu vurmayı tercih eder
+        AV_DEC: 1,
+        // AV_FGR: zorla gol (futbolcu / gözlemci / hakem modu) gerçekçiliği (v188): "gol yok" kipinde şutlar köşelere gider, isabetli olanı kaleci uzanarak çıkarır ya da top direğin
+        //   yanından geçer (eskiden %45'i kalecinin üstüne); kurgunun topçusuna savunmacılar yine müdahaleye girer (aşılır), pasına uzanır (kaçırır); kalecinin çeldiği top golcünün
+        //   ayağına değil tehlike bölgesine sert seker (rakip de tepki verir); arkadaşlar golcüye ancak koridor açıksa pas verir
+        AV_FGR: 1,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
     // [av] gerçek şut verisinden lojistik xG (IRLS; test log-kayıp .2412, AUC .804 — StatsBomb'un kendi xG'si .2400 / .806)
@@ -39325,6 +39631,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         var FKD = !!PRM.FKD, FKD_A = PRM.FKD_A, FKD_SK = PRM.FKD_SK, FKD_W = PRM.FKD_W, FKD_MAX = PRM.FKD_MAX;
         // [av] açık veri bayrakları (DEFAULTS [av]); RA: yeni rastgelelik akışı (yalnız bayrak açıkken tüketilir)
         var AV_XG = !!PRM.AV_XG, AV_SHOT = !!PRM.AV_SHOT, AV_DRAG = !!PRM.AV_DRAG && BALL3D, AV_PASS = !!PRM.AV_PASS, AV_GK = !!PRM.AV_GK, AV_MOVE = !!PRM.AV_MOVE && MOVE, AV_OUT = !!PRM.AV_OUT, AV_ATTR = !!PRM.AV_ATTR, AV_TRIG5 = !!PRM.AV_TRIG5, AV_LATE = !!PRM.AV_LATE, AV_ADV = !!PRM.AV_ADV;
+        var AV_DEC = !!PRM.AV_DEC, AV_FGR = !!PRM.AV_FGR;      // [v188] karar kalitesi · zorla gol gerçekçiliği
         var AV_SHAPE = !!PRM.AV_SHAPE, AV_OUT2 = !!PRM.AV_OUT2 && AV_OUT, AV_BLK = !!PRM.AV_BLK, AV_AIR = !!PRM.AV_AIR && BALL3D, AV_LIVE = !!PRM.AV_LIVE, AV_CAL = !!PRM.AV_CAL;      // [av2]
         var RB = mulberry(((opts.seed || 1) ^ 0x5be0cd19) >>> 0);      // [av2] Faz B bayraklarının rastgelelik akışı (yalnız bayrak açıkken tüketilir)
         var RA = mulberry(((opts.seed || 1) ^ 0x3c6ef372) >>> 0);
@@ -39468,6 +39775,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         // açı arttıkça azalır: "saat kadranı" merkez 4 → 3 → 2 → 1) · baraj yakın direği kapatır, kaleci uzak tarafı tutar · baraj vuruşa kadar kıpırdamaz.
         function wallCount(bx, by, attTeam) {
             var dx = Math.abs(atkGoalX(attTeam) - bx), dy = Math.abs(by - CY), dG = hyp(dx, dy);
+            if (AV_DEC) { if (dx < 5 || dG > 38) return 0; var th2 = Math.atan2(dy, dx), f2 = 1 - th2 / (Math.PI / 2) * .8; return clamp(Math.round((5 - (dG - 18) / 4.5) * f2), dG <= 35 && f2 > .55 ? 2 : 1, 5); }      // [v188] AV_DEC: 18 m 5 kişi, 22 m 4, 27 m 3, 31 m+ 2 (merkez; açı daraldıkça azalır, kenarda 1–2)
             if (dx < 11 || dG > 34) return 0;
             var th = Math.atan2(dy, dx), nD = 6 - (dG - 16.5) / 2.75, f = 1 - th / (Math.PI / 2) * .75;
             return clamp(Math.round(nD * f), 0, 7);
@@ -39493,6 +39801,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             var tt = (ag - d.x) / ((fx - d.x) || .001), yInt = d.y + tt * (fy - d.y), covered = (-ns * yInt) >= (-ns * farY);
             var gy = covered ? farY + ns * .9 : yInt + (farY - yInt) * .55; gy = clamp(gy, CY - GW / 2 + .8, CY + GW / 2 - .8);
             d.wall = { n: slots.length, slots: slots, ids: slots.map(function (sl) { return sl.id; }), gk: { x: ag - sg * 1.0, y: gy }, ux: ux, uy: uy, cx: cx, cy: cy, qx: qx, qy: qy };
+            if (AV_DEC) d.wall.ns = ns;      // [v188] barajın kapattığı (yakın direk) taraf: CY + ns
         }
         function wallSlot(d, p) { if (!d.wall) return null; for (var i = 0; i < d.wall.slots.length; i++) if (d.wall.slots[i].id === p.id) return d.wall.slots[i]; return null; }
 
@@ -39633,7 +39942,9 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             S.shot = null;
             if (OFFS2) { if (setPc) S.offSnap = null; else offSnapTake(p.team, B.x, p, q); }
             S.teams[p.team].st.passes++;
-            emit('PASS', { team: p.team, p: p.id, p2: q.id, x: p.x, y: p.y, x2: q.x, y2: q.y, meta: { dist: d, prog: prog, high: !!high, tag: kindTag || null, lane: info ? info.lane : null, free: info ? info.free : null, pd: pd, pr: info && info.pr != null ? info.pr : null, ev: info && info.ev != null ? info.ev : null, run: !!(info && info.run), cross: !!(info && info.cross), sps: CURL ? B.sps || 0 : 0, foot: fo ? fo.foot : null, weak: !!(fo && fo.weak) } });
+            var pmeta = { dist: d, prog: prog, high: !!high, tag: kindTag || null, lane: info ? info.lane : null, free: info ? info.free : null, pd: pd, pr: info && info.pr != null ? info.pr : null, ev: info && info.ev != null ? info.ev : null, run: !!(info && info.run), cross: !!(info && info.cross), sps: CURL ? B.sps || 0 : 0, foot: fo ? fo.foot : null, weak: !!(fo && fo.weak) };
+            if ((AV_DEC || AV_FGR) && info) { if (info.gkd) pmeta.gkd = info.gkd; if (info.fkKind) { pmeta.fkKind = info.fkKind; pmeta.wallIds = info.wallIds || null; } if (info.mis) pmeta.mis = 1; }      // [v188] görüntü: kaleci dağıtım türü (el / yuvarla / vole), serbest vuruş türü (orta / pas) ve baraj, kasıtsız hatalı pas
+            emit('PASS', { team: p.team, p: p.id, p2: q.id, x: p.x, y: p.y, x2: q.x, y2: q.y, meta: pmeta });
         }
         function doShot(p, xg, pd, kindTag, wall) {
             var T = S.teams[p.team], dir = T.dir, gx = dir === 1 ? PW : 0;
@@ -39657,24 +39968,47 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 var bestS = scS[1] > scS[0] ? 1 : -1, pRight = clamp(.55 + .008 * (fa - 55) + .04 * Math.abs(scS[1] - scS[0]), .5, .93);
                 side = R() < pRight ? bestS : -bestS; aimY = CY + side * (GW / 2 - mgS - R() * .9 * (1.2 - fa / 100));
             }
+            var fkSide = null;
+            if (AV_DEC && kindTag === 'FK' && wall && wall.n && wall.ns) { fkSide = RA() < avp('AV_FKW', .55) ? 'baraj' : 'kaleci'; aimY = CY + (fkSide === 'baraj' ? wall.ns : -wall.ns) * (GW / 2 - (.3 + .35 * clamp(1.2 - fa / 100, 0, .6)) - RA() * .4 * clamp(1.2 - fa / 100, 0, .6)); }      // [v188] AV_DEC: serbest vuruş barajın üstünden yakın köşeye ya da kalecinin tuttuğu uzak köşeye
             var d = hyp(gx - ox, aimY - oy);
             var sd = CURVE ? (SHOT_SD + (pd < 2.5 ? .08 : pd < 4 ? .04 : 0) * (AV_ATTR && p.a.cmp != null ? K(p.a.cmp, .3) : 1) + (kindTag === 'HEAD' ? .08 : 0)) * K(kindTag === 'HEAD' ? p.a.hea * .6 + p.a.fin * .4 : fa, .30) + d * .0040 * K(p.a.lon, .22)
                 : .085 + (100 - fa) / 100 * .17 + (pd < 2.5 ? .05 : pd < 4 ? .025 : 0) + d * .0028 + (kindTag === 'HEAD' ? .06 : 0);
             if (kindTag === 'PEN') sd = PEN_FIX ? PEN_SD0 + (100 - (CURVE ? p.a.pen * .6 + p.a.sho * .4 : p.a.sho)) / 100 * PEN_SD1 : .012 + (100 - (CURVE ? p.a.pen * .6 + p.a.sho * .4 : p.a.sho)) / 100 * .04;      /* [pen] */
             var fo = kindTag === 'HEAD' ? null : footFor(p, gx - p.x, aimY - p.y, kindTag === 'PEN' || kindTag === 'FK', pd, true);
             if (fo) sd *= fo.k;
+            if (AV_DEC && kindTag === 'FK') sd *= avp('AV_FKSD', .55);      // [v188] AV_DEC: duran topta yan sapma açık oyundaki uzaktan şutun yarısı kadar (eskiden 24 m'de ~7 m: isabet %9); ıska çoğunlukla barajın üstünden üst direğe / üstüne (StatsBomb: %30 isabetli, %32 baraj, %5,9 gol)
             if (FIN_ON && FIN_CL && kindTag !== 'PEN') { var dsh = hyp(gx - ox, CY - oy); sd *= clamp(.45 + dsh * .026, .55, 1); }      // [fin] 5 m ≈ .58 · 10 m ≈ .71 · 14 m ≈ .81 · 21 m+ = 1
             var ang = Math.atan2(aimY - oy, gx - ox) + gauss() * sd;
+            var ngCap = null;
             var FG = S.forceGoal === p.team && (S.forceBy == null || S.forceBy === p.id || kindTag === 'PEN') && !(S.forceHold && kindTag !== 'PEN' && (S.forceOK !== p.id || (S.forceOKKind && kindTag !== S.forceOKKind) || (S.forceOKMax && hyp(gx - ox, CY - oy) > S.forceOKMax))), NG = false;      // [v186] forceHold: zorla golün türü kurgulanırken golcünün sıradan şutu gol sayılmaz (yalnız kurgunun bitiriş anı: forceOK)      // [port] zorunlu gol / gol yok
             if (FG) { var fgA = fgAim(p, ox, oy, gx, fa); aimY = fgA ? fgA.y : CY + (aimY < CY ? -1 : 1) * (GW / 2 - 1.1); sd = 0; ang = Math.atan2(aimY - oy, gx - ox); }      /* [v183] zorla gol kalecinin uzak köşesine (eskiden rastgele köşe, 1,1 m içeriden: kaleci çoğu kez topun yolundaydı) */
+            else if (S.noGoal && AV_FGR) { NG = true; var gkN = gkOf(1 - p.team), stp = (S.forceRebound != null && p.team === S.forceGoal && p.id !== S.forceRebound) || (S.forceParryOut != null && S.forceParryOut === p.team);      // [v188] AV_FGR: "gol yok" kipinde şut gerçek nişanla; gol olacak isabetli şut kalecinin uzanabileceği yere ya da direğin hemen yanına
+                if (gkN && !gkN.off) {
+                    if (kindTag === 'PEN') { if (RA() < .55) { aimY = clamp(gkN.y + (RA() < .5 ? -1 : 1) * (.8 + .9 * RA()), GY0 + .35, GY1 - .35); ngCap = 1.3; } else aimY = (RA() < .5 ? GY0 - .2 - .7 * RA() : GY1 + .2 + .7 * RA()); ang = Math.atan2(aimY - oy, gx - ox) + gauss() * sd * .2; }      // penaltı: kaleci uzanıp çıkarır ya da direğin yanı
+                    else if (stp) { var sgN = gkN.y < CY - .3 ? 1 : gkN.y > CY + .3 ? -1 : (RA() < .5 ? -1 : 1); aimY = clamp(gkN.y + sgN * (.6 + .7 * RA()), GY0 + .4, GY1 - .4); sd = 0; ang = Math.atan2(aimY - oy, gx - ox); ngCap = 1.5; }      // kurgunun hazırlık şutu: kaleci yana uzanıp çeler (eskiden tam üstüne)
+                    else { var cyN = oy + Math.tan(ang) * (gx - ox);
+                        if (Math.cos(ang) * dir > 0 && cyN > GY0 - .1 && cyN < GY1 + .1) {
+                            var ykN = oy + Math.tan(ang) * (gkN.x - ox), rchN = GK_R0 + clamp((Math.abs(gkN.x - ox) / 30 - gkReact(gkN) - .05) * GK_DIVE, 0, GK_DMAX); if (kindTag === 'HEAD') rchN = Math.min(rchN, 1.2);
+                            if (Math.abs(ykN - gkN.y) > .7 * rchN) { if (RA() < avp('AV_NGS', .6)) { aimY = clamp(gkN.y + (ykN > gkN.y ? 1 : -1) * rchN * (.3 + .35 * RA()), GY0 + .3, GY1 - .3); ngCap = 1.6; } else aimY = cyN < CY ? GY0 - .25 - 1.2 * RA() : GY1 + .25 + 1.2 * RA(); ang = Math.atan2(aimY - oy, gx - ox) + gauss() * sd * .15; }
+                            else ngCap = 1.8;
+                        }
+                    }
+                }
+            }
             else if (S.noGoal) { NG = true; var gkN = gkOf(1 - p.team); if ((R() < .45 || (S.forceRebound != null && p.team === S.forceGoal && p.id !== S.forceRebound) || (S.forceParryOut != null && S.forceParryOut === p.team)) && gkN && !gkN.off) { aimY = clamp(gkN.y + gauss() * .35, GY0 + .3, GY1 - .3); if ((S.forceParryOut != null && S.forceParryOut === p.team) || (S.forceRebound != null && p.team === S.forceGoal)) { aimY = clamp(gkN.y, GY0 + .4, GY1 - .4); sd = 0; } /* [v187] kurgunun hazırlık şutu kaleciye (çelme) */ } else { aimY = CY + (aimY < CY ? -1 : 1) * (GW / 2 + .8 + R() * 2.6); } sd *= .25; ang = Math.atan2(aimY - oy, gx - ox) + gauss() * sd; }
             // serbest vuruş barajı: vuruş barajın üzerinden/yanından aşar ya da baraja çarpar (kişi sayısı ve vuruşçunun becerisine göre); çarpacaksa top gerçekten baraj oyuncusuna gider
             var wl = kindTag === 'FK' && wall && wall.n ? wall : null, wHit = -1;
-            if (wl && !FG && R() < clamp((WALL_B0 + WALL_B1 * wl.n) * (1 + (75 - fa) * .008), .03, .6)) {
+            if (wl && !FG && R() < clamp((AV_DEC ? avp('AV_FKB0', .12) + avp('AV_FKB1', .07) * wl.n : WALL_B0 + WALL_B1 * wl.n) * (1 + (75 - fa) * .008), .03, .6)) {      // [v188] AV_DEC: baraja çarpan vuruş payı gerçek veriye (doğrudan serbest vuruşun %32'si bloklanır)
                 var bs = null, bl = 1e9; wl.slots.forEach(function (sl) { var ld = segDist(sl.x, sl.y, ox, oy, gx, aimY) + R() * 1.1; if (ld < bl) { bl = ld; bs = sl; } });
                 if (bs) { ang = Math.atan2(bs.y - oy, bs.x - ox) + gauss() * .03; wHit = bs.id; }
             }
             var v0 = (AICAL && kindTag === 'HEAD' ? AC_HV + .05 * (p.a.hea - 75) + .03 * (p.a.str - 75) : AV_SHOT && kindTag !== 'HEAD' ? clamp(PRM.AV_SV0 + PRM.AV_SV1 * p.a.sho + (hyp(gx - ox, CY - oy) > 16 ? 3 : 0) + gaussA() * PRM.AV_SVSD, 13, 34) : 21 + .11 * p.a.sho + (kindTag === 'HEAD' ? -6 : 0)) * (fo ? fo.pw : 1);      // [av] AV_SHOT: gerçek şut hızı (Metrica medyan 22 m/sn; p25–p75 19,9–24,1)      // [aical] kafa vuruşu gerçekçi hızda
+            var fkOW = null;
+            if (AV_DEC && wl && wHit < 0 && BALL3D) {      // [v188] AV_DEC: yolu barajdan geçen serbest vuruş barajın üstünden (top barajda ≥ AV_FKH m); gerekirse daha yumuşak vurulur (daha uzun uçuş, dönerek düşer)
+                var wdF = 0; wl.slots.forEach(function (sl) { if (segDist(sl.x, sl.y, ox, oy, ox + Math.cos(ang) * 40, oy + Math.sin(ang) * 40) < .8) wdF = Math.max(wdF, hyp(sl.x - ox, sl.y - oy)); });
+                if (wdF > 0) { fkOW = { dw: wdF, h: avp('AV_FKH', 2.15) }; var LgF = Math.abs(gx - ox) / (Math.abs(Math.cos(ang)) || .01);
+                    for (var itF = 0; itF < 20; itF++) { var tgF = AV_DRAG ? shFlightT(LgF, v0, true) : LgF / v0 * 1.1, twF = AV_DRAG ? shFlightT(wdF, v0, true) : wdF / v0 * 1.05; if ((fkOW.h - BL_G * twF * (tgF - twF) / 2) * tgF / twF <= 2.1 || v0 <= 16.5) break; v0 -= .5; } }
+            }
             var cy = oy + Math.tan(ang) * (gx - ox);
             var onT = Math.cos(ang) * dir > 0 && cy > GY0 + .05 && cy < GY1 - .05;
             var pl = kindTag === 'HEAD' ? 0 : 0;
@@ -39686,7 +40020,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             kick(p, Math.cos(ang) * v0, Math.sin(ang) * v0, { shot: true, sps: cuS });
             if (FG) { ang = Math.atan2(aimY - B.y, gx - B.x); B.vx = Math.cos(ang) * v0; B.vy = Math.sin(ang) * v0; cy = aimY; onT = true; }
             var cz = 0;
-            if (BALL3D) { cz = shotVert(p, kindTag, gx, ang, v0, sd); if (cz >= (TC_SLINE ? GH : GH - BRAD * .5)) onT = false; }      // [ball] üstten giden şut isabetli değildir ([touch] TC_SLINE: gol koşuluyla aynı eşik)
+            if (BALL3D) { cz = (fkOW || ngCap != null) ? shotVert(p, kindTag, gx, ang, v0, sd, { ow: fkOW, zcap: ngCap }) : shotVert(p, kindTag, gx, ang, v0, sd); if (cz >= (TC_SLINE ? GH : GH - BRAD * .5)) onT = false; }      // [ball] üstten giden şut isabetli değildir ([touch] TC_SLINE: gol koşuluyla aynı eşik)
             if (CURL && B.sps) cuShotAim(gx, B.y + Math.tan(Math.atan2(B.vy, B.vx)) * (gx - B.x));      // [v137] kıvrılan şut kale çizgisini düz yoldaki noktada geçer
             S.pass = null;
             S.shot = { t0: S.t, shooter: p, team: p.team, xg: xg, on: onT, cy: cy, cz: cz, gkTried: false, pen: kindTag === 'PEN', blockChecked: false, hd: kindTag === 'HEAD', ox: ox, oy: oy, dist0: hyp(gx - ox, CY - oy), wall: wl ? wl.ids : null, wallHit: wHit };
@@ -39700,6 +40034,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             if (FG && gk && !gk.off) { var yF = B.y + Math.tan(Math.atan2(B.vy, B.vx)) * (gk.x - B.x), gF = yF - gk.y; gk.saveY = gk.y + (gF > 0 ? 1 : -1) * clamp(Math.abs(gF) - 2.4, 0, .5); }      /* [v183] zorla gol: kaleci topun yoluna kaymaz (eskiden tam yola geçip top içinden geçiyordu); uzanır ama yetişemez */
             var shM = { xg: XG_REP ? xgR : xg, xgi: xg, xf: xgF, on: onT, dist: hyp(gx - ox, CY - oy), inBox: inBox(p.x, p.y, p.team), tag: kindTag || null, speed: v0, cy: cy };
             if (BALL3D) { shM.cz = cz; shM.over = cz >= (TC_SLINE ? GH : GH - BRAD * .5); }      // [ball] dikey hedef ve üstten giden şut yalnız 3B topta (BALL3D=0: eski olay verisi aynen)
+            if (AV_DEC && kindTag === 'FK') { shM.fkKind = 'sut'; shM.fkSide = fkSide; shM.wallIds = wl ? wl.ids : null; shM.overWall = !!fkOW; if (fkOW) shM.wallD = fkOW.dw; }      // [v188] görüntü: serbest vuruş şutu (baraj üstünden yakın köşe / kalecinin köşesi), baraj oyuncuları
             shM.wall = wl ? wl.n : 0; shM.foot = fo ? fo.foot : null; shM.weak = !!(fo && fo.weak); if (CURL && B.sps) shM.sps = B.sps;      // [v137] yan dönüş (devir/sn)
             emit('SHOT', { team: p.team, p: p.id, x: p.x, y: p.y, meta: shM });
             if (kindTag === 'PEN') S.shot.pen = true;
@@ -39707,7 +40042,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         // [ball] şutun dikey bileşeni: vuruşçu bir yükseklik hedefler (çoğunlukla alçak köşeler), dikey sapma yatay açısal sapmayla aynı kökenden (beceri, baskı, ayak, mesafe).
         // Topun kale çizgisine varış süresi şut sürüklenmesiyle (.10·v) hesaplanır; dikey hız topun o anda hedef yükseklikte olacağı şekilde seçilir. Dönen: kale çizgisindeki yükseklik (m)
         // [ball] SH_VFIX: yol topun sahadan ilk çıkacağı noktaya kadar (kale çizgisine paralele yakın şutta taç çizgisi), süre / hedef yükseklik / dikey hız sınırlı · [touch] TC_SLINE: ayrık entegrasyon düzeltmesi
-        function shotVert(p, tag, gx, ang, v0, sd) {
+        function shotVert(p, tag, gx, ang, v0, sd, opt) {
             var ca = Math.abs(Math.cos(ang)) || .01, L = Math.abs(gx - B.x) / ca, Ls;
             if (SH_VFIX) { var sa = Math.sin(ang), Ly = sa > .01 ? (PH - B.y) / sa : sa < -.01 ? B.y / -sa : 1e9; L = Math.cos(ang) * (gx - B.x) > 0 ? Math.min(L, Ly) : Math.min(Ly, 30); }
             var q = 1 - .1 * L / v0, t = AV_DRAG ? shFlightT(L, v0, true) : q > .05 ? -Math.log(q) / .1 : L / v0 * 1.6;      // [av] AV_DRAG: v² hava direnciyle varış süresi
@@ -39717,6 +40052,10 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             else aim = SH_AIMZ0 + (SH_AIMZ1 - SH_AIMZ0) * Math.pow(R(), 1.4);
             if (SH_VFIX) { Ls = Math.min(L, hyp(gx - B.x, CY - B.y)); aim *= clamp(Ls / 8, .4, 1); } else Ls = L;      // dikey sapma kaleye uzaklıkla; çok yakından alçak hedef
             var zg = aim + gauss() * Ls * sd * SH_VK;
+            if (opt) {      // [v188] serbest vuruş barajın üstünden (barajdaki yükseklik ≥ ow.h) · "gol yok" kipinde kalecinin erişimindeki şutun tavanı
+                if (opt.ow) { var twV = AV_DRAG ? shFlightT(opt.ow.dw, v0, true) : (1 - .1 * opt.ow.dw / v0 > .05 ? -Math.log(1 - .1 * opt.ow.dw / v0) / .1 : opt.ow.dw / v0 * 1.6); if (twV < t) zg = clamp(Math.max(zg, (opt.ow.h - z0 - BL_G * twV * (t - twV) / 2) * t / twV + z0 + .05) + Math.abs(gauss()) * avp('AV_FKZ', .45), .3, 3.4); }
+                if (opt.zcap != null) zg = Math.min(zg, opt.zcap);
+            }
             if (tag !== 'HEAD' && zg < .25) { B.z = 0; B.vz = 0; return 0; }      // yerden (yuvarlanan) şut
             zg = Math.max(0, zg);
             if (SH_VFIX) zg = Math.min(zg, SH_ZMAX);
@@ -39883,6 +40222,17 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             for (i = 0; i < l.length; i++) { sc = l[i].s - (gkl > 0 && l[i].prog < 25 ? GKD_W : 0); if (!best || sc > bs) { best = l[i]; bs = sc; } }
             return best;
         }
+        // [v188] AV_DEC: kalecinin elden dağıtımı. Kısa (elle atma / yuvarlama, ≤ 32 m): alıcı en az 5 m boş, koridor ≥ 2,5 m, başarı olasılığı ≥ .8 ve ofsaytta değil;
+        //   yoksa uzun vole (≥ 30 m, havadan; hava düellosu olağan). Seçenek yoksa null (uzaklaştırma). Gerçekte elle dağıtımın %95'ten fazlası arkadaşta kalır.
+        function gkSafePass(p, gkl) {
+            var l = passOptions(p, false, 6, false), sh = null, lg = null, i, o, sc;
+            for (i = 0; i < l.length; i++) { o = l[i];
+                if (!o.high && o.d <= 32 && o.free >= 5 && o.lane >= 2.5 && o.pr >= .8 && !isOffside(o.q, p.x)) { sc = o.s - (gkl > 0 && o.prog < 25 ? GKD_W * .5 : 0); if (!sh || sc > sh.sc) sh = { q: o.q, sc: sc, o: o }; }
+                else if (o.d > 30) { sc = o.s + (gkl > 0 ? 4 : 0); if (!lg || sc > lg.sc) lg = { q: o.q, sc: sc, o: o }; }
+            }
+            var b = sh || lg; if (!b) return null;
+            var r = {}; for (var k in b.o) r[k] = b.o[k]; r.lng = !sh; r.cross = false; r.gkd = sh ? (b.o.d <= 14 ? 'yuvarla' : 'el') : 'vole'; return r;
+        }
         function clearance(p) {
             var dir = S.teams[p.team].dir, ty = p.y < CY ? 1.5 : PH - 1.5, tx = clamp(p.x + dir * 38, 6, PW - 6);
             if (AV_OUT) { var cu = avp('AV_CLI', 1.5) - avp('AV_CLW', 7) * RA(); ty = p.y < CY ? cu : PH - cu;
@@ -39962,12 +40312,16 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             var no = nearestOpp(p), pd = no.d, dGoal = hyp(gx - p.x, CY - p.y);
             p.think = (TEMPO_A + TEMPO_B * R()) * (1 - TP_THINK * tacOf(p.team).tempo); p.dribble = false;
             if (p.role === 'GK') {
-                var gkl = tacOf(p.team).gk, bp = gkl ? gkPass(p, 6, gkl) : bestPass(p, false, 6); if (bp) doPass(p, bp.q, bp.d > (gkl > 0 ? 30 : 40), 'GKD'); else clearance(p);
+                var gkl = tacOf(p.team).gk;
+                if (AV_DEC && avp('AV_GKS', 1)) { var gs = gkSafePass(p, gkl); if (gs) { doPass(p, gs.q, gs.lng, 'GKD', gs); if (S.pass && !gs.lng) S.pass.gkSafe = true; } else clearance(p); return; }      // [v188] AV_DEC: elle oyuna sokma yalnız boş, koridoru açık arkadaşa; yoksa uzun vole
+                var bp = gkl ? gkPass(p, 6, gkl) : bestPass(p, false, 6); if (bp) doPass(p, bp.q, bp.d > (gkl > 0 ? 30 : 40), 'GKD'); else clearance(p);
                 return;
             }
             if (S.forceGoal === p.team && (S.forceBy == null || S.forceBy === p.id) && !(S.forceHold && S.forceOK !== p.id) && dGoal < (S.forceDist || 30) && p.role !== 'GK' && fgOpen(p)) { doShot(p, xgAt(p.x, p.y, dir, pd), pd, null); return; }
             if (S.ctl && S.ctl.callT && S.t - S.ctl.callT < 1.6) { var cq0 = S.players[S.ctl.id]; if (cq0 && !cq0.off && cq0.team === p.team && cq0 !== p) { var co0 = passOptions(p, false, 0, true).filter(function (o) { return o.q === cq0; })[0]; if (co0 && co0.pr > .28) { S.ctl.callT = 0; S.ctl.got = (S.ctl.got || 0) + 1; doPass(p, cq0, co0.high, null, co0); return; } } }      /* [port] kullanıcı pas istedi */
-            if (S.forceGoal === p.team && S.forceBy != null && S.forceBy !== p.id && !S.forceNoFeed) { var fq = S.players[S.forceBy]; if (fq && !fq.off && fq.team === p.team && hyp(fq.x - p.x, fq.y - p.y) < 42 && R() < .7) { doPass(p, fq, hyp(fq.x - p.x, fq.y - p.y) > 24, null); return; } }      /* [port] golcü adayına pas */
+            if (S.forceGoal === p.team && S.forceBy != null && S.forceBy !== p.id && !S.forceNoFeed) { var fq = S.players[S.forceBy];
+                if (AV_FGR && !((S.forceEl || 0) > 45)) { if (fq && !fq.off && fq.team === p.team && hyp(fq.x - p.x, fq.y - p.y) < 40 && (fq.x - p.x) * dir > -6 && nearestOpp(fq).d > 1.2 && !isOffside(fq, p.x)) { var lnF = 9; for (var jF = 0; jF < 22; jF++) { var oF = S.players[jF]; if (oF.team === p.team || oF.off || oF.role === 'GK') continue; lnF = Math.min(lnF, segDist(oF.x, oF.y, p.x, p.y, fq.x, fq.y)); } if (lnF > 1.5 && R() < .45) { doPass(p, fq, hyp(fq.x - p.x, fq.y - p.y) > 24, null, { lane: lnF, free: nearestOpp(fq).d }); return; } } }      // [v188] AV_FGR: golcüye ilk 45 sn ancak koridor açık, golcü önde ve markajsızken (sonra eski kural; S.forceEl 220'den)
+                else if (fq && !fq.off && fq.team === p.team && hyp(fq.x - p.x, fq.y - p.y) < 42 && R() < .7) { doPass(p, fq, hyp(fq.x - p.x, fq.y - p.y) > 24, null); return; } }      /* [port] golcü adayına pas */
             var ownThird = (p.x - ownGoalX(p.team)) * dir < 30, bk = brainK(p), alt = {};
             if ((p.holdT || 0) > HOLD_MAX) {      // topu çok tuttu: sıkışmışsa en iyi pas, yoksa uzaklaştır
                 var fb = bestPass(p, true, 0);
@@ -39998,6 +40352,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 var evS = (belief + SPILL) * (KY_ON ? KY_SW : SHOT_W) * bk.shot * (1 + .25 * fwd + (p.a.lon - 66) * (KY_ON ? KY_LON : .003)) - (1 - belief) * lossCost(p.x, p.y, p.team, bk.loss) * SHOT_LOSS + (p.a.agg - 40) * .00006 + gauss() * DEC_ACT * decK(p);
                 if (AV_SHOT) { shMin *= 1 + avp('AV_SDK', .05) * Math.max(0, dGoal - avp('AV_SD0', 16)); if (inBox(p.x, p.y, p.team)) { shMin *= avp('AV_BXM', .3); evS += avp('AV_BXV', .015) * belief / Math.max(.02, belief + .02) * 2; } }      // [av] ceza sahasında fırsat kaçırılmaz (gerçekte şutların %60'ı ceza sahası içinden)      // [av] AV_SHOT: uzaklaştıkça eşik yükselir (gerçek xG ile şutların %60'ı ceza sahası içinden; StatsBomb)
                 if (AV_CLK && !inBox(p.x, p.y, p.team)) evS -= avp('AV_SOP', .015);      // [av2] AV_CLK: ceza sahası dışından şutun değeri pasa göre düşük (gerçekte şutların ~%40'ı dışarıdan; uzayan canlı oyunda motor dışarıdan fazla vuruyordu)
+                if (AV_DEC && laneS >= 2 && pd >= 2.5 && inBox(p.x, p.y, p.team)) evS += avp('AV_OLV', .012);      // [v188] AV_DEC: ceza sahasında şut yolu açık ve baskısız topçu vurmayı pasa tercih eder (eskiden açık yolda şut payı kapalı yoldakinden düşüktü; ceza sahası dışına uygulanınca ceza sahası içi şut payı %57 → %50'ye düşüyordu)
                 if (AV_LATE && S.t > FULL_S * .78 && T.score < opp(p.team).score) shMin *= .8;      // [av] AV_LATE: son 20 dk geride olan takım daha düşük olasılıkla da vurur (gol dakikası 76–90+ %22,5)
                 alt.shot = belief >= shMin * bk.shotMin ? evS : null;
                 if (evS > ev && belief >= shMin * bk.shotMin) { ev = evS; act = 'shot'; }
@@ -40067,6 +40422,14 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         // [dead] TI_FIX: taç atışında top çizginin üstünden (saha içinden) bırakılır ve sahaya doğru gider (IFAB 15)
         function throwIn() { B.y = clamp(B.y, .05, PH - .05); if ((B.y < CY && B.vy < 0) || (B.y >= CY && B.vy > 0)) B.vy = -B.vy; }
         // [fk] FKD: doğrudan serbest vuruşta şut olasılığı (xG, vuruşçunun serbest vuruş becerisi, baraj)
+        // [v188] AV_DEC: 16–35 m doğrudan şut olasılığı bölgeye göre (merkez ≤ 22 m .62, 25 m .50, 30 m .25, 35 m .10; yana açıldıkça orta; vuruşçunun serbest vuruş becerisi) —
+        //   StatsBomb'da takım başına maçta .57 doğrudan serbest vuruş şutu (1604 şut / 2802 takım-maç); .74'lük taban maç başı .9 şut veriyor, ceza sahası içi şut payını %57'den %50'ye düşürüyordu
+        function fkShotP2(p, d, dG) {
+            var ax = Math.abs(atkGoalX(p.team) - p.x), ay = Math.abs(p.y - CY);
+            var a0 = avp('AV_FKA', .62), base = dG <= 22 ? a0 : dG <= 25 ? a0 - (dG - 22) * .04 : dG <= 30 ? a0 - .12 - (dG - 25) * .05 : a0 - .37 - (dG - 30) * .03;
+            var af = ay <= 8 ? 1 : ay <= 14 ? 1 - (ay - 8) * .07 : Math.max(0, .35 - (ay - 14) * .08); if (ax < 11) af *= .3;
+            return clamp(base * af * (1 + .6 * ((p.a.fk != null ? p.a.fk : 60) - 70) / 30), 0, .92);
+        }
         function fkShotP(p, d) { var xgF = xgAt(p.x, p.y, S.teams[p.team].dir, 9) * .8, fk = p.a.fk != null ? p.a.fk : 70; return clamp(FKD_A * (xgF / .04) * (1 + FKD_SK * (fk - 75) / 25) * (1 - FKD_W * Math.max(0, (d.wall ? d.wall.n : 0) - 3)), 0, FKD_MAX); }
         function executeDead(d) {
             var p = d.taker, kind = d.kind;
@@ -40087,14 +40450,14 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             if (kind === 'penalty') { doShot(p, .76, 9, 'PEN'); return; }
             if (kind === 'freekick') {
                 var dG = hyp(atkGoalX(p.team) - p.x, CY - p.y);
-                if (dG < 28 && dG > 15 && !d.indirect && ((S.forceFK != null && S.forceFK === p.id && S.forceGoal === p.team) || !FKD || R() < fkShotP(p, d))) { if (S.forceFK === p.id) S.forceFK = null; doShot(p, xgAt(p.x, p.y, S.teams[p.team].dir, 9) * .8, 9, 'FK', d.wall); return; }      // dolaylı serbest vuruş (ofsayt) doğrudan kaleye vurulamaz
-                if (AV_AIR && dG < avp('AV_AFD', 45) && (dG >= 28 || Math.abs(p.y - CY) > 14 || d.indirect) && !(S.forceFK != null && S.forceFK === p.id) && RB() < avp('AV_AFK', .55)) {      // [av2] AV_AIR: serbest vuruş ceza sahasına orta
+                if ((AV_DEC ? dG <= 35 : dG < 28) && dG > 15 && !d.indirect && ((S.forceFK != null && S.forceFK === p.id && S.forceGoal === p.team) || !FKD || R() < (AV_DEC ? fkShotP2(p, d, dG) : fkShotP(p, d)))) { if (S.forceFK === p.id) S.forceFK = null; doShot(p, xgAt(p.x, p.y, S.teams[p.team].dir, 9) * .8, 9, 'FK', d.wall); return; }      // dolaylı serbest vuruş (ofsayt) doğrudan kaleye vurulamaz
+                if (AV_AIR && dG < avp('AV_AFD', 45) && (dG >= 28 || Math.abs(p.y - CY) > 14 || d.indirect) && !(S.forceFK != null && S.forceFK === p.id) && RB() < (AV_DEC && Math.abs(p.y - CY) > 14 && dG <= 35 ? avp('AV_AFK2', .8) : avp('AV_AFK', .55))) {      // [v188] AV_DEC: kanattan (35 m içi) serbest vuruş çoğunlukla ortadır      // [av2] AV_AIR: serbest vuruş ceza sahasına orta
                     var fat = S.players.filter(function (q) { return !q.off && q.team === p.team && q !== p && q.role !== 'GK' && inBox(q.x, q.y, p.team); }), fbq = null, fbw = -1;
                     fat.forEach(function (q) { var w = aerW(q, 0) * (.6 + .8 * RB()); if (w > fbw) { fbw = w; fbq = q; } });
                     if (S.forceCorner != null && p.team === S.forceGoal) { var fcq2 = S.players[S.forceCorner]; if (fcq2 && !fcq2.off && fcq2.team === p.team && fcq2 !== p && inBox(fcq2.x, fcq2.y, p.team)) { fbq = fcq2; S.forceAir = fcq2.id; } }      // [v187] zorla gol: serbest vuruş ortası golcüye
-                    if (fbq) { S.dbg.a2f = (S.dbg.a2f || 0) + 1; doPass(p, fbq, true, 'FREEKICK', { cross: true }); return; }
+                    if (fbq) { S.dbg.a2f = (S.dbg.a2f || 0) + 1; doPass(p, fbq, true, 'FREEKICK', AV_DEC ? { cross: true, fkKind: 'orta', wallIds: d.wall ? d.wall.ids : null } : { cross: true }); return; }
                 }
-                var bp3 = bestPass(p, false, 0); if (!bp3 && DEADFB) bp3 = shortMate(p, 0); if (bp3) doPass(p, bp3.q, bp3.d > 30, 'FREEKICK'); else if (DEADFB) clearance(p);      // [dead] yedek: kısa pas, o da yoksa uzaklaştırma
+                var bp3 = bestPass(p, false, 0); if (!bp3 && DEADFB) bp3 = shortMate(p, 0); if (bp3) doPass(p, bp3.q, bp3.d > 30, 'FREEKICK', AV_DEC ? { fkKind: bp3.d > 30 || bp3.cross ? 'orta' : 'pas', wallIds: d.wall ? d.wall.ids : null, lane: bp3.lane, free: bp3.free, pr: bp3.pr } : undefined); else if (DEADFB) clearance(p);      // [dead] yedek: kısa pas, o da yoksa uzaklaştırma
             }
         }
 
@@ -41084,7 +41447,8 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             var cand = null, cd = 9;
             for (var i2 = 0; i2 < 22; i2++) {
                 var q = S.players[i2]; if (q.cd > 0 || q.off) continue;
-                if (S.forceSafe != null && S.pass && S.pass.active && S.pass.to && S.pass.to.id === S.forceSafe && q.team !== S.pass.team && S.pass.team === S.forceGoal) continue;      // [v187] zorla gol kurgusu: golcüye giden pas kesilmez
+                if (S.forceSafe != null && S.pass && S.pass.active && S.pass.to && S.pass.to.id === S.forceSafe && q.team !== S.pass.team && S.pass.team === S.forceGoal) { if (AV_FGR && q.role !== 'GK' && hyp(q.x - B.x, q.y - B.y) < 1.2 && !(q.icMiss > S.t - .8)) q.icMiss = S.t; continue; }      // [v187] zorla gol kurgusu: golcüye giden pas kesilmez · [v188] AV_FGR: yakındaki savunmacı uzanır (görüntü: icMiss)
+                if (AV_DEC && S.pass && S.pass.active && S.pass.gkSafe && q.team !== S.pass.team) continue;      // [v188] AV_DEC: kalecinin boş arkadaşa elle attığı top rakipçe kesilmez
                 if (S.fpoT != null && S.t - S.fpoT < 1.2) continue;      // [v187] kornere çelinen top çizgiye yetişir
                 if (S.forceGoal != null && q.team !== S.forceGoal && ((S.frbT != null && S.t - S.frbT < 1.6) || (S.forceSafe != null && S.shot && S.shot.shooter && S.shot.shooter.id === S.forceSafe && S.shot.team === S.forceGoal && q.role !== 'GK'))) continue;      // [v187] kurgunun hazırlık şutu ve kalecinin golcüye çeldiği top rakipçe kesilmez
                 var d = hyp(q.x - B.x, q.y - B.y), R0 = v > 16 ? .8 : 1.0; if (q.role === 'GK') R0 += .5;
@@ -41325,7 +41689,8 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                                 var fpo = false; if (S.forceParryOut != null && S.forceParryOut === sh.team) { outP = true; rs2 = 10 + 3 * R(); S.forceParryOut = null; fpo = true; }      // [v187] zorla gol kurgusu: kaleci kornere çeler (duran top golü)      // [av] AV_OUT: kaleci çoğunlukla kornere çeler
                                 if (outP) { var sgn = dyb >= 0 ? 1 : -1, glx2 = dir === 1 ? PW : 0, tyo = CY + sgn * (GW / 2 + 1 + 4 * R()); ra2 = Math.atan2(tyo - yb, glx2 - gk.x); }      // kenara çelme: direğin dışına (korner)
                                 else ra2 = Math.atan2(gauss() * .9, -dir);
-                                if (frb) { var fbx = frb.x + frb.vx * .35, fby = frb.y + frb.vy * .35; ra2 = Math.atan2(fby - (crossed ? yb : B.y), fbx - gk.x) + gauss() * .06; rs2 = clamp(hyp(fbx - gk.x, fby - (crossed ? yb : B.y)) * 1.6, 4, 9); S.forceQuick = frb.id; S.forceRebound = null; S.frbT = S.t; }      // [v186] çelme golcünün koşu yoluna
+                                if (frb && AV_FGR) { var zxF = atkGoalX(sh.team) - dir * (6 + 3 * RA()), zyF = clamp(frb.y + gaussA() * 1.4, CY - 9, CY + 9); ra2 = Math.atan2(zyF - (crossed ? yb : B.y), zxF - gk.x) + gaussA() * .1; rs2 = 5.5 + 3.5 * RA(); S.forceQuick = frb.id; S.forceRebound = null; S.frbT = S.t - 1; }      // [v188] AV_FGR: kaleci sert şutu tehlike bölgesine (kaleye 6–9 m, golcünün tarafı) çeler; savunmacılar da .6 sn sonra topa gider (eskiden top golcünün ayağına yumuşak pas, rakip 1,6 sn dokunamıyordu)
+                                else if (frb) { var fbx = frb.x + frb.vx * .35, fby = frb.y + frb.vy * .35; ra2 = Math.atan2(fby - (crossed ? yb : B.y), fbx - gk.x) + gauss() * .06; rs2 = clamp(hyp(fbx - gk.x, fby - (crossed ? yb : B.y)) * 1.6, 4, 9); S.forceQuick = frb.id; S.forceRebound = null; S.frbT = S.t; }      // [v186] çelme golcünün koşu yoluna
                                 if (!GK_CPA) { B.x = gk.x - dir * .3; B.y = clamp(yb, .5, PH - .5); B.z = Math.max(.2, zb); }
                                 else if (crossed) { B.x = px + (B.x - px) * tc; B.y = clamp(yb, .5, PH - .5); B.z = Math.max(.2, zb); }      // [gk] çelme temas noktasında (kaleci düzlemi)
                                 else B.z = Math.max(.2, B.z);      // [gk] erişime girdiği yerde
@@ -41338,7 +41703,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                     var dg = hyp(gk.x - B.x, gk.y - B.y), reach = 1.25 + .024 * gk.a.gk, dg3 = hyp(dg, Math.max(0, B.z - 1.7) * .9);
                     if (dg3 < reach) {
                         sh.gkTried = true;
-                        var ps = sh.pen ? (PEN_FIX ? clamp(PEN_S0 + .006 * (gk.a.gk - 72) + PEN_S1 * (1 - dg3 / reach), .05, .6) : clamp(.22 + .006 * (gk.a.gk - 72), .08, .5)) : clamp(SAVE_A - SAVE_XG * sh.xg + .006 * (gk.a.gk - 72) - .010 * Math.max(0, v - 24) + (dg3 < reach * .55 ? .06 : 0) - (sh.wall ? .05 : 0), .06, .94);
+                        var ps = sh.ng && AV_FGR ? 1 : sh.pen ? (PEN_FIX ? clamp(PEN_S0 + .006 * (gk.a.gk - 72) + PEN_S1 * (1 - dg3 / reach), .05, .6) : clamp(.22 + .006 * (gk.a.gk - 72), .08, .5)) : clamp(SAVE_A - SAVE_XG * sh.xg + .006 * (gk.a.gk - 72) - .010 * Math.max(0, v - 24) + (dg3 < reach * .55 ? .06 : 0) - (sh.wall ? .05 : 0), .06, .94);
                         if (R() < ps) {
                             S.teams[gk.team].st.saves++;
                             var catchIt = v < 22 && B.z < 2.2 && R() < .55;
@@ -41354,11 +41719,12 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             }
             if (POSTN && postStep(px, py, pz) === 1) return;      // [ball] direğe çarptı, top sahada
             if (lineCheck(px, py, v, undefined, pz)) return;
-            if (S.shot && S.shot.force) return;
+            if (S.shot && S.shot.force) { if (AV_FGR && B.z < 1.9) for (var iF = 0; iF < 22; iF++) { var qF = S.players[iF]; if (qF.team !== S.shot.team && !qF.off && qF.role !== 'GK' && !(qF.blkTry > S.shot.t0) && hyp(qF.x - B.x, qF.y - B.y) < 1.5) qF.blkTry = S.t; } return; }      // [v188] AV_FGR: zorla golün şutunu bloklamaya uzanan savunmacı (görüntü: blkTry; top yanından geçer)
             var cand = null, cd = 9;
             for (var i2 = 0; i2 < 22; i2++) {
                 var q = S.players[i2]; if (q.cd > 0 || q.off) continue;
-                if (S.forceSafe != null && S.pass && S.pass.active && S.pass.to && S.pass.to.id === S.forceSafe && q.team !== S.pass.team && S.pass.team === S.forceGoal) continue;      // [v187] zorla gol kurgusu: golcüye giden pas kesilmez
+                if (S.forceSafe != null && S.pass && S.pass.active && S.pass.to && S.pass.to.id === S.forceSafe && q.team !== S.pass.team && S.pass.team === S.forceGoal) { if (AV_FGR && q.role !== 'GK' && hyp(q.x - B.x, q.y - B.y) < 1.2 && !(q.icMiss > S.t - .8)) q.icMiss = S.t; continue; }      // [v187] zorla gol kurgusu: golcüye giden pas kesilmez · [v188] AV_FGR: yakındaki savunmacı uzanır (görüntü: icMiss)
+                if (AV_DEC && S.pass && S.pass.active && S.pass.gkSafe && q.team !== S.pass.team) continue;      // [v188] AV_DEC: kalecinin boş arkadaşa elle attığı top rakipçe kesilmez
                 if (S.fpoT != null && S.t - S.fpoT < 1.2) continue;      // [v187] kornere çelinen top çizgiye yetişir
                 if (S.forceGoal != null && q.team !== S.forceGoal && ((S.frbT != null && S.t - S.frbT < 1.6) || (S.forceSafe != null && S.shot && S.shot.shooter && S.shot.shooter.id === S.forceSafe && S.shot.team === S.forceGoal && q.role !== 'GK'))) continue;      // [v187] kurgunun hazırlık şutu ve kalecinin golcüye çeldiği top rakipçe kesilmez
                 if (AV_OUT && B.avo != null && S.t - B.avo < avp('AV_OCD', .45)) continue;      // [av] AV_OUT: seken top
@@ -41378,7 +41744,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 if (TOUCH && cand.role !== 'GK') {      // [touch] ilk dokunuş: kontrol kaçarsa top sekip açılır (alıcı kısa süre ona dokunamaz; yakındaki herkes kapabilir)
                     var pdn = nearestOpp(cand).d, qk = cand.a.dri * .5 + cand.a.pas * .3 + cand.a.bal * .2;
                     var ph = clamp((TC_HEAVY + TC_HV * Math.max(0, v - 8) + (pdn < 2 ? .05 : pdn < 4 ? .015 : 0) + (B.z > .35 ? .04 : 0)) * K(qk, .5), 0, .6);
-                    var fsf = S.forceSafe != null && cand.id === S.forceSafe && cand.team === S.forceGoal; if (fsf) ph = 0;      // [v187] zorla gol kurgusu: golcünün ilk dokunuşu temiz
+                    var fsf = S.forceSafe != null && cand.id === S.forceSafe && cand.team === S.forceGoal; if (fsf) ph = 0; if (AV_DEC && S.pass && S.pass.gkSafe && S.pass.to === cand) ph = 0;      // [v188] AV_DEC: kalecinin elle verdiği top boştaki arkadaşın ayağında kalır      // [v187] zorla gol kurgusu: golcünün ilk dokunuşu temiz
                     if (AV_OUT2 && !fsf) {      // [av2] AV_OUT2: çizgiye doğru giden top çizgi kenarında kontrol edilemez (ayaktan seker, oyun dışı): taçların ve kornerlerin büyük kısmı böyle
                         var dlY = Math.min(B.y, PH - B.y), voY = B.y < CY ? -B.vy : B.vy, dlX = Math.min(B.x, PW - B.x), voX = B.x < CX ? -B.vx : B.vx, oL = avp('AV_O2L', 2), pl = 0;
                         if (dlY < oL && voY > .8) pl = Math.max(pl, (1 - dlY / oL) * clamp(voY / 5, .25, 1));
@@ -41552,6 +41918,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 if (inBox(o.x, o.y, o.team)) { pf *= .65; pw *= .9; }
             }
             if (ffl) { r = pw + pf * .5; S.forceFoul = null; }
+            else if (AV_FGR && S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal && S.mode === 'live') r = 2;      // [v188] AV_FGR: kurgunun topçusu müdahaleden sıyrılır (savunmacı dener, aşılır)
             if (r < pw) {
                 if (VAR2 && TACKLE && tkG.ex > 0 && tkG.ca > 0 && inBox(o.x, o.y, o.team) && RR() < VAR_PWR * tkG.ex * tkG.ca) return penWrong(d, o);      // [var] hakem temiz müdahalede penaltı çaldı
                 S.teams[d.team].st.tackles++; S.lastAst = null; if (AV_SHAPE) (S.lostT || (S.lostT = [-9, -9]))[o.team] = S.t;      // [av2] top kaybı: blok yeniden kurulur
@@ -41590,11 +41957,12 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 referee(d, o, pen);
                 return 'foul';
             }
+            if (AV_DEC || AV_FGR) d.tkMiss = S.t;      // [v188] görüntü: kaçan müdahale anı
             return 'beaten';
         }
         function duels() {
             var o = B.owner; if (!o || o.role === 'GK') return;      // kaleci topu ayağında/elindeyken müdahale edilmez
-            if (S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal) return;      // [v187] zorla gol kurgusu: zincirin son evresinde topçu müdahale almaz (savunmacı izler)
+            if (S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal && !AV_FGR) return;      // [v187] zorla gol kurgusu: zincirin son evresinde topçu müdahale almaz (savunmacı izler) · [v188] AV_FGR: savunmacı müdahaleye girer, topçu sıyrılır (resolveContest)
             for (var i = 0; i < 22; i++) {
                 var d = S.players[i]; if (d.team === o.team || d.role === 'GK' || d.tcd > 0 || d.off) continue;
                 var dd = hyp(d.x - gbx(), d.y - gby());      // [carry] sanal top
@@ -41634,7 +42002,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                     var g2 = tkGeo(d, o);
                     if (!(S.forceFoul != null && S.forceFoul.by === o.id) && R() > ENGAGE * (1 + PR_E * tacOf(d.team).press) * tkEng(d, o, g2)) continue;      // [v187] zorla faul: temas kaçmaz
                     var res3 = resolveContest(d, o, .24 * TK_WIN, g2); S.dbg.press[res3] = (S.dbg.press[res3] || 0) + 1; tkLog(g2, res3);
-                    if (res3 === 'beaten' && AV_OUT && B.owner === o) { var dyo = Math.min(o.y, PH - o.y); if (dyo < 6 && RA() < avp('AV_DUO', AV_OUT2 ? (AV_CLK ? 1 : 1.5) : .6) * (1 - dyo / 6)) { var lt = RA() < .5 ? d : o; B.owner = null; B.vx = (RA() - .5) * 4; B.vy = (o.y < CY ? -1 : 1) * (5 + 3 * RA()); B.avo = S.t; B.last = lt; S.lastTeam = lt.team; o.cd = .4; d.cd = .4; o.dribble = false; S.pass = null; return; } }      // [av] AV_OUT: çizgi kenarındaki ikili mücadelede top çoğu kez taça (son dokunan rastgele)
+                    if (res3 === 'beaten' && AV_OUT && B.owner === o && !(AV_FGR && S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal)) { var dyo = Math.min(o.y, PH - o.y); if (dyo < 6 && RA() < avp('AV_DUO', AV_OUT2 ? (AV_CLK ? 1 : 1.5) : .6) * (1 - dyo / 6)) { var lt = RA() < .5 ? d : o; B.owner = null; B.vx = (RA() - .5) * 4; B.vy = (o.y < CY ? -1 : 1) * (5 + 3 * RA()); B.avo = S.t; B.last = lt; S.lastTeam = lt.team; o.cd = .4; d.cd = .4; o.dribble = false; S.pass = null; return; } }      // [av] AV_OUT: çizgi kenarındaki ikili mücadelede top çoğu kez taça (son dokunan rastgele)
                     if (res3 !== 'beaten') return;
                     d.stunT = S.t + Math.max(tkStun(g2), tacOf(d.team).press > 0 ? PR_STUN : 0);
                     continue;
@@ -41989,7 +42357,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         S.clock = function () { return S.t * CK; };
         S.audit.accCap = Math.max.apply(null, S.players.map(function (p) { return p.acc; }));
         S.footFor = footFor;
-        S._lab = { setOwner: function (p) { S.mode = 'live'; S.dead = null; B.owner = p; B.x = p.x + p.fx * .55; B.y = p.y; B.vx = B.vy = 0; B.high = null; B.last = p; S.lastTeam = p.team; S.pass = null; S.shot = null; }, movePlayers: movePlayers, doPass: doPass, doShot: doShot, resolveAerial: resolveAerial, duels: duels, gkOf: gkOf, fgOpen: fgOpen };
+        S._lab = { setOwner: function (p) { S.mode = 'live'; S.dead = null; B.owner = p; B.x = p.x + p.fx * .55; B.y = p.y; B.vx = B.vy = 0; B.high = null; B.last = p; S.lastTeam = p.team; S.pass = null; S.shot = null; }, movePlayers: movePlayers, doPass: doPass, doShot: doShot, resolveAerial: resolveAerial, duels: duels, gkOf: gkOf, fgOpen: fgOpen, startDead: startDead };
         S.ball3d = BALL3D;
         S.av = { XG: AV_XG, SHOT: AV_SHOT, DRAG: AV_DRAG, PASS: AV_PASS, GK: AV_GK, MOVE: AV_MOVE, OUT: AV_OUT, ATTR: AV_ATTR, TRIG5: AV_TRIG5, LATE: AV_LATE, ADV: AV_ADV, HL: !!PRM.AV_HL };      // [av] görüntü / köprü katmanı için
         S.cardsOn = CARDS_ON; S.varOn = VAR_ON; S.ctxUrg = function (tm) { return BR_ON ? ctxUrg(tm) : 0; }; S.passOptions = passOptions; S.rdec = rdec; S.posValue = posValue; S.xgAt = xgAt; S.xgRepAt = function (x, y, tm, pd, kind) { return xgRep(xgFeat(x, y, tm, pd, kind), kind); }; S.inBox = inBox; S.bestPass = bestPass; S.atkGoalX = atkGoalX; S.ownGoalX = ownGoalX; S.rollSpeed = rollSpeed; S.hiStep = hiStep; S.aero = BL_AERO; S.ballE = BL_E; S.ballHret = BL_HRET;
@@ -43030,8 +43398,18 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         while (q.length && (all || !S.hold)) { var e = q[0]; if (!all && e.t - DT > DL.dT + 1e-6) break; q.shift(); try { handle(e); } catch (x) { warn('olay ' + e.type, x); } }
     }
     function dlOff() { if (!DL.on) return; DL.on = 0; dlFlush(true); DL.fz = 0; if (S.sim) DL.dT = S.sim.t; }
+    /* [v188] görüntü saatine düşen halka karesi kayıtlı sim zamanından bulunur. Eskiden kare = n1 - (sim.t - görüntü saati) / DT idi; top ölüyken sim saati
+       adım başına 3·DT ilerlediği için (AV_CLKD) canlıdan ölüye geçişte (top dışarı, faul, gol) görüntü her ölü adımda 2 kare GERİ sıçrıyordu: top ileri-geri
+       titriyor (testere), gol vuruşunun son ~.3 sn'si çizgiye varmadan donuyordu. */
+    var V8B = { dl: 1, gt: 1, ld: 1, an: 1 };
+    function dlFa(R, lo, n1, t) {
+        var b = R.buf, tl = b[(lo % RING) * FS], th = b[(n1 % RING) * FS];
+        if (!(th >= tl)) return -1; if (t >= th) return n1; if (t <= tl) return lo;
+        var a = lo, c = n1, m; while (c - a > 1) { m = (a + c) >> 1; if (b[(m % RING) * FS] <= t) a = m; else c = m; }
+        var ta = b[(a % RING) * FS], tc = b[(c % RING) * FS]; return a + (tc > ta + 1e-9 ? Math.min(1, (t - ta) / (tc - ta)) : 0);
+    }
     function dlView() {      // goruntu saatindeki kare (halka kayit, kareler arasi ara deger) - canlidaki gibi aksiyon saati payi (clkOff) ile
-        var R = S.ring, sim = S.sim, n1 = R.n - 1, lo = Math.max(0, R.n - RING + 3), fa = n1 - (sim.t - DL.dT) / DT; if (fa < lo) fa = lo; if (fa > n1) fa = n1;
+        var R = S.ring, sim = S.sim, n1 = R.n - 1, lo = Math.max(0, R.n - RING + 3), fa = n1 - (sim.t - DL.dT) / DT; if (V8B.dl) { var fa8 = dlFa(R, lo, n1, DL.dT); if (fa8 >= 0) fa = fa8; } if (fa < lo) fa = lo; if (fa > n1) fa = n1;
         if (!DLV) DLV = newView();
         var v = ringView(fa, n1, DLV), fo = S.clkOff || 0, i0 = Math.floor(fa); if (fo) { v.dtl += fo; v.dtp += fo; if (v.dtn > 0) v.dtn += fo; }
         v.dead = S.ring.buf[(Math.min(n1, i0 + (fa - i0 > .5 ? 1 : 0)) % RING) * FS + 5] === 1 ? 1 : 0; S.viewT = DL.dT;
@@ -43215,7 +43593,8 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         else if (type === 7) { if (R3.oaOut) R3.oaOut(id, a1, t0 + off, a2 > 0 ? a2 + off : 0); }    // [oa] oyuncu aksiyonu sonucu (kafa kazandı/kaybetti, kart)
     }
     function gkIssue(type, id, a1, a2, t0, d) { var t = S.sim ? S.sim.t : 0;
-        if (DL.on && type === 1 && DL_ACT[a1] && t0 < t - 1e-6 && a2 > t - DT + 1e-6) { var sh = a2 - (t - DT), t0n = Math.max(DL.dT + .02, t0 - sh); if (t0n < a2 - sh - .02) { t0 = t0n; a2 -= sh; } }      // [v135] tepkisel temas (vurus/kafa/mudahale/blok) topun hiz degistirdigi ana: gosterim gecikmesi hazirligi onceden oynatir
+        var tR8 = t - DT;      // [v188] denendi: t'ye kaydırmak top çıkışını 1 kare öne aldı ama temas karesinde ayak-top uzaklığını büyüttü (ölçüm) - eski hâli
+        if (DL.on && type === 1 && DL_ACT[a1] && t0 < t - 1e-6 && a2 > tR8 + 1e-6) { var sh = a2 - tR8, t0n = Math.max(DL.dT + .02, t0 - sh); if (t0n < a2 - sh - .02) { t0 = t0n; a2 -= sh; } }      // [v135] tepkisel temas (vurus/kafa/mudahale/blok) topun hiz degistirdigi ana: gosterim gecikmesi hazirligi onceden oynatir
         gkLog(type, t, id, a1, a2, t0, d); gkSend(type, id, a1, a2, t0, d, S.clkOff || 0); }
     function gkHandSet(id, t, h) { var G3 = S.gk; if (G3.hand === id) return; G3.hand = id; if (id >= 0) { G3.posN++; G3.handT = t; G3.handH = h || null; G3.pk = null; } gkLog(3, t, id, 0, 0, t, null); }
     function gkDistKind(hi, dist) { return hi ? 6 : dist < 24 ? 4 : 5; }
@@ -43236,6 +43615,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         if (!m.on && !(wide < 1.1 && (m.cz || 0) < 3.4)) return;           // kaleyi bulmayan uzak şut: kaleci yalnızca izler
         var ref = gp.a ? (gp.a.gk_ref != null ? gp.a.gk_ref : gp.a.gk) : 75, react = pen ? .05 : Math.max(.15, Math.min(.4, .18 - .003 * ((ref || 75) - 75)));
         if (pen && G3.recP) G3.recP.ts = ev.t;
+        if (V8B.an && m.fkKind === 'sut' && m.overWall) react += .1;      // [v188] baraj üstünden şut: kaleci topu geç görür (baraj perdesi), köşeye geç uzanır
         var gxv = gp.x + (pen && G3.recP ? G3.recP.dx : 0), tcE = ev.t + .6, pth = G3.path, n = 72;
         if (G.Ado3D && Ado3D.ballPhys && sim.ballE != null) Ado3D.ballPhys(sim.ballE, sim.ballHret);      // [ball] kestirim motorun sekme katsayılarıyla
         if (G.Ado3D && Ado3D.gkPredict) { Ado3D.gkPredict(B.x, B.y, B.z || 0, B.vx, B.vy, B.vz || 0, pth, n); var s0 = B.x - gxv; for (i = 0; i < n; i++) if ((pth[i * 3] - gxv) * s0 <= 0) { tcE = ev.t + i * DT; break; } }
@@ -43256,7 +43636,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
     function gkDist(ev) {
         var G3 = S.gk, m = ev.meta || {}, id = ev.p, sim = S.sim;
         if (G3.hand !== id || !sim) return false;
-        var p = sim.players[id], k = ev.type === 'CLEAR' ? 6 : gkDistKind(!!m.high, m.dist || 0), d = G3.tmp, pd = G3.dist;
+        var p = sim.players[id], k = ev.type === 'CLEAR' ? 6 : V8B.an && m.gkd ? (m.gkd === 'yuvarla' ? 4 : m.gkd === 'el' ? 5 : 6) : gkDistKind(!!m.high, m.dist || 0), d = G3.tmp, pd = G3.dist;      // [v188] motorun dağıtım türü: el (omuz üstü atış) / yuvarla / vole
         var tx = ev.x2 != null ? ev.x2 : p.x + sim.teams[p.team].dir * 35, ty = ev.y2 != null ? ev.y2 : PH / 2;
         gkDistData(d, p, tx, ty, ev.type === 'CLEAR' ? 40 : (m.dist || 20));
         if (pd && pd.id === id && pd.pos === G3.posN) { if (pd.k !== k || ev.t > pd.tr + .09) gkIssue(1, id, k, Math.max(ev.t, pd.tr), pd.t0, d); }   // önceden kurulmuş: tür/an tuttuysa olduğu gibi
@@ -43592,6 +43972,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             dd[2] = B.vx / vl2; dd[3] = B.vy / vl2; dd[4] = pl && pl.ft === 'L' ? -1 : 1; dd[5] = prof; dd[6] = pw; dd[7] = 0; dd[8] = 0; dd[9] = 4 | (tag === 'PEN' ? 16 : 0); dd[10] = 1;
             gkIssue(1, id, 8, ev.t + .13, ev.t, dd);
         }
+        if (V8B.an && ty === 'SHOT' && m.fkKind === 'sut' && m.wallIds && d && d.wall) for (i = 0; i < m.wallIds.length; i++) { var wi8 = m.wallIds[i]; if (wi8 >= 0 && wi8 < 22 && !SP.w[wi8]) SP.w[wi8] = ev.t; }      /* [v188] motorun baraj listesi: şutta hepsi sıçrar (yerine oturmamış olan da) */
         if (d && d.wall) { var d2 = SP.tmp2; for (i = 0; i < 22; i++) if (SP.w[i]) { d2[0] = d.x; d2[1] = d.y; d2[2] = ty === 'SHOT' ? 1 : 0; for (k = 3; k < 11; k++) d2[k] = 0; gkIssue(5, i, 10, ev.t, ev.t, d2); } }   // baraj: şutta sıçrar, pasta sıçramaz
         return true;
     }
@@ -43676,8 +44057,12 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         var ft = m.foot === 'L' || m.foot === 'R' ? m.foot : p.ft === 'L' ? 'L' : 'R';
         var vl = Math.hypot(B.vx, B.vy), ux = vl > .1 ? B.vx / vl : p.fx, uy = vl > .1 ? B.vy / vl : p.fy;
         var lead = prof === 2 ? .24 : prof === 3 ? .18 : prof === 1 ? .18 : .15;      // [mocap]                               // temas: olaydan sonra (geri savurma görünsün)
+        if (V8B.ld && DL.on) lead = prof === 2 ? .34 : prof === 3 ? .27 : prof === 1 ? .29 : .25;      // [v188] geri savurma + vuruş ~.27-.37 sn (gerçek pas/şut salınımı)
         var cdo = (CRD.on || CRD.pon) && Math.hypot(CRD.x - p.x, CRD.y - p.y) < 2.2, kx = cdo ? CRD.x + (DL.on ? 0 : CRD.vx * DT) : DL.on ? S.prevB.x : B.x, ky = cdo ? CRD.y + (DL.on ? 0 : CRD.vy * DT) : DL.on ? S.prevB.y : B.y, kz = cdo ? CRD.z : Math.max(0, DL.on ? S.prevB.z || 0 : B.z || 0);      // [v135] gecikmede temas noktasi: topun ayrildigi (adim basi) konum      // [carry] temas: görünen top
         gkIssue(1, ev.p, 18, ev.t + lead, ev.t - .03, oaD(d, kx, ky, kz, ux, uy, ft === 'L' ? -1 : 1, prof, pw, p.vx, p.vy, cdo && CRD.knock ? 1 : 0));
+        if (V8B.an && DL.on && ev.type === 'PASS' && !m.tag && ev.p2 >= 0) try {      /* [v188] pas isteme: uzak (≥14 m) alıcı, vuruştan ~.4 sn önce kolunu kaldırıp topu ister (oyuncuya göre kararlı; herkes her pasta değil) */
+            var rq = sim.players[ev.p2]; if (rq && !rq.off && rq.role !== 'GK' && Math.hypot(rq.x - p.x, rq.y - p.y) > 14 && oaH(ev.t, ev.p2) < .55 && v7Free(ev.p2, ev.t - .4)) v7Gest(ev.p2, 31, ev.t - .4, .95, p.x, p.y, oaH(ev.p2, ev.t) < .5 ? 1 : -1);
+        } catch (e) { }
         return true;
     }
     var SI_ON = 1;      // [sav] p_sav_02 araya girme
@@ -43692,7 +44077,8 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             var osp4 = Math.hypot(op.vx, op.vy), ux4 = osp4 > 1 ? op.vx / osp4 : op.fx, uy4 = osp4 > 1 ? op.vy / osp4 : op.fy, rx4 = dp.x - op.x, ry4 = dp.y - op.y, rl4 = Math.hypot(rx4, ry4) || 1, ca4 = (rx4 * ux4 + ry4 * uy4) / rl4;
             if (osp4 > .9 && ca4 > -.55 && ca4 < .85 && Math.min(dl, Math.hypot(tbx - dp.x, tby - dp.y)) < 2.2) mode = 4;      /* dl: motor topu */
         }
-        gkIssue(1, ev.p, 12, ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), ev.t - .03, oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));
+        if (V8B.ld && !air) { var tco8 = mode === 3 ? .12 : mode === 4 ? .14 : .06, bv8x = tco ? (CRD.vx || op.vx) : (B.vx || op.vx), bv8y = tco ? (CRD.vy || op.vy) : (B.vy || op.vy); tbx += bv8x * tco8; tby += bv8y * tco8; }      /* [v188] müdahale hedefi: topun temas anındaki yeri (top sürülürken ~.1 sn'de .3-.5 m ilerliyor) */
+        gkIssue(1, ev.p, 12, ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));      // [v188] müdahale hareketi temastan önce başlar
         if (mode === 3) OA.gnd[ev.p] = ev.t + .95;                             // kayan oyuncu yerde: motor topu hemen oynatsa da bacak vuruşu kurulmaz
         // topu kaptıran sendeler: savunmacıdan uzağa, kendi koşu yönüyle karışık
         var px = op.x - dp.x, py = op.y - dp.y, pl = Math.hypot(px, py) || 1, osp = Math.hypot(op.vx, op.vy), mx = osp > .5 ? op.vx / osp : 0, my = osp > .5 ? op.vy / osp : 0;
@@ -43810,7 +44196,8 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         if (m.wall) return;                                                   // baraj: duran top aksiyonu (sıçrama)
         var bp = sim.players[ev.p], sp = ev.p2 >= 0 ? sim.players[ev.p2] : null, B = sim.ball, d = OA.tmp; if (!bp) return;
         var sx = sp ? bp.x - sp.x : -bp.fx, sy = sp ? bp.y - sp.y : -bp.fy, sl = Math.hypot(sx, sy) || 1; sx /= sl; sy /= sl;
-        gkIssue(1, ev.p, 17, ev.t + .02, ev.t - .08, oaD(d, B.x, B.y, sx, sy, oaSideY(Math.atan2(-sx, -sy), bp.x, bp.y, B.x, B.y), S.prevB.z || 0, m.gain ? 1 : 0, 0, 0, 0, 0));
+        gkIssue(1, ev.p, 17, ev.t + .02, ev.t - (V8B.ld && DL.on ? .3 : .08), oaD(d, B.x, B.y, sx, sy, oaSideY(Math.atan2(-sx, -sy), bp.x, bp.y, B.x, B.y), S.prevB.z || 0, m.gain ? 1 : 0, 0, 0, 0, 0));      // [v188] blok: şut anında başlayan uzanma
+        if (V8B.an && bp.role !== 'GK') try { v7Gest(ev.p, 32, ev.t + .04, .65, 0, 0, oaH(ev.t, ev.p) < .5 ? 1 : -1); } catch (e) { }      // [v188] vücuda çarpan topa irkilme (blok temasından hemen sonra)
     }
     /* olay: true → bacak vuruşu (R3.kick) oynatılmaz (vuruş/kafa aksiyonu kuruldu) */
     function oaEvent(ev) {
@@ -43822,6 +44209,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 if (ev.p === OA.hdr && ev.t - OA.hdrT < .35 && OA.hdrK !== 16) return true;           // kafa pası / kafa şutu: kafa aksiyonu (top alından çıkar) · [oa] göğüs/uyluk kontrolünden pas: bacak vuruşu
                 if (OA.gnd[ev.p] > ev.t || OA.fall[ev.p] > ev.t) return true;                         // yerdeki (kayan / düşen) oyuncu: aksiyon bozulmasın
                 if (ty === 'SHOT' && m.tag === 'HEAD') { oaQuickHead(sim, ev.p, ev.t, 1); return true; }
+                if (V8B.an && ty === 'PASS' && m.mis) try { v7Gest(ev.p, 1, ev.t + .5, 1.15, 0, 0, 1); V8B.mis = (V8B.mis || 0) + 1; V8B.gN = (V8B.gN || 0) + 1; V8B.gL = [ev.p, 1, ev.t + .5]; } catch (e) { }      // [v188] baskı altında hatalı pas: pası atan vuruştan sonra elleri başında
                 return oaKickEv(sim, ev, m);
             case 'HEADER':
                 OA.hdr = ev.p; OA.hdrT = ev.t; OA.hdrK = OA.jump[ev.p] ? OA.jk[ev.p] : 11;      // [oa] kazananın oynadığı: 16 göğüs/uyluk kontrolü, 11 kafa
@@ -43836,10 +44224,44 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         }
         return false;
     }
+    /* [v188] omuz omuza mücadele: top sahibi ve ≤1,05 m yanındaki rakip (ikisi de ≥2,2 m/sn, yan yana: aradaki doğrultu koşu yönüne dik) birlikte
+       gövdelerini birbirine yaslar (jest 30, ~1 sn, oyuncu başına 2,5 sn'de bir) - görüntü */
+    var OSH = new Float64Array(22);
+    function oaShoulder(sim) {
+        if (sim.mode !== 'live') return; var B = sim.ball, o = B.owner; if (!o || o.role === 'GK' || o.off) return;
+        var osp = Math.hypot(o.vx, o.vy); if (osp < 2.2 || OSH[o.id] > sim.t) return;
+        var ux = o.vx / osp, uy = o.vy / osp, best = null, bd = 1.05, i;
+        for (i = 0; i < 22; i++) { var q = sim.players[i]; if (q.team === o.team || q.off || q.role === 'GK') continue; var dx = q.x - o.x, dy = q.y - o.y, dl = Math.hypot(dx, dy); if (dl < bd && Math.abs(dx * ux + dy * uy) < .6 * dl && Math.hypot(q.vx, q.vy) > 2.2) { bd = dl; best = q; } }
+        if (!best || OSH[best.id] > sim.t || !v7Free(o.id, sim.t) || !v7Free(best.id, sim.t)) return;
+        var sd = (best.x - o.x) * uy - (best.y - o.y) * ux;      // rakip koşu yönünün hangi yanında
+        v7Gest(o.id, 30, sim.t, 1.0, 0, 0, sd > 0 ? -1 : 1); v7Gest(best.id, 30, sim.t, 1.0, 0, 0, sd > 0 ? 1 : -1);
+        OSH[o.id] = OSH[best.id] = sim.t + 2.5;
+    }
     /* her sim adımından sonra: yüksek top kafa adayları, havadaki topun kontrolü (göğüs/uyluk), geçilen savunmacı */
+    /* [v188] motorun görüntü damgaları: p.tkMiss (aşılan / kaçan müdahale), p.icMiss (pasa uzanıp kaçırma), p.blkTry (şutu bloklamaya uzanma; top yanından geçer).
+       Hepsi topa değmeyen (sonuç 3) müdahale hareketi: savunmacı bacağını topun yoluna uzatır; hızlı ve uzaktaysa kayar. Aynı oyuncuya .45 sn içinde ikinci kez kurulmaz
+       (motorun 'geçildi' sendelemesiyle - stunT - çift olmasın). */
+    function oaMiss8(sim, B, o) {
+        if (!OA.m8) OA.m8 = { tk: new Float64Array(22).fill(-9), ic: new Float64Array(22).fill(-9), bl: new Float64Array(22).fill(-9), last: new Float64Array(22).fill(-9) };
+        var M = OA.m8, i, p, kind, st;
+        for (i = 0; i < 22; i++) {
+            p = sim.players[i]; if (!p || p.off || p.role === 'GK') continue;
+            kind = 0;
+            if (p.tkMiss != null && p.tkMiss !== M.tk[i]) { M.tk[i] = p.tkMiss; if (sim.t - p.tkMiss < .25) kind = 1; }
+            if (p.icMiss != null && p.icMiss !== M.ic[i]) { M.ic[i] = p.icMiss; if (sim.t - p.icMiss < .25) kind = 2; }
+            if (p.blkTry != null && p.blkTry !== M.bl[i]) { M.bl[i] = p.blkTry; if (sim.t - p.blkTry < .25) kind = 3; }
+            if (!kind || sim.t - M.last[i] < .45 || OA.gnd[i] > sim.t || OA.fall[i] > sim.t || sim.t - OA.stun[i] < .45) continue;
+            var bx = B.x + (B.vx || 0) * .12, by = B.y + (B.vy || 0) * .12, dl = Math.hypot(bx - p.x, by - p.y), sp = Math.hypot(p.vx, p.vy);
+            var md = kind === 1 && dl > 1.1 && sp > 2.6 ? 3 : kind === 1 ? 1 : 2, yw = oaYaw(p), oo = o || p;
+            gkIssue(1, i, 12, sim.t + (md === 3 ? .12 : .08), sim.t - (DL.on ? .2 : .03), oaD(OA.tmp, bx, by, oo.x, oo.y, Math.hypot(p.vx - oo.vx, p.vy - oo.vy), md, oaSideY(yw, p.x, p.y, bx, by), 3, .35, p.vx, p.vy));
+            if (md === 3) OA.gnd[i] = sim.t + 1.1;
+            M.last[i] = sim.t; V8B.gN = (V8B.gN || 0) + 1; V8B.gL = [i, 40 + kind, sim.t + .08];
+        }
+    }
     function oaStep(sim) {
         if (!OA_ON) return;
         oaAerial(sim);
+        if (V8B.an) try { oaShoulder(sim); } catch (e) { }
         var B = sim.ball, o = B.owner, oid = o ? o.id : -1, i;
         if (oid !== OA.own) {
             OA.own = oid;
@@ -43851,6 +44273,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                 }
             }
         }
+        if (V8B.an && sim.mode === 'live') try { oaMiss8(sim, B, o); } catch (e) { }
         for (i = 0; i < 22; i++) {
             var p = sim.players[i], s = p.stunT;
             if (s === OA.stun[i]) continue;
@@ -43952,6 +44375,10 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         if (!S.scHold) { sc0 = sc0.slice(); if (T0 === 0 || T0 === 1) sc0[T0] = Math.max(0, sc0[T0] - 1); S.scHold = sc0; }
         S.hold = 'goal';
         S.goalInfo = { scorer: ev.p, ast: (m0.assist != null && m0.assist >= 0) ? m0.assist : -1, own: !!m0.own, team: T0, min: minOf(ev.t), pen: !!m0.pen, gx: ev.x, gy: ev.y };
+        if (V8B.gt) {      /* [v188] gol: yenilen takımın kalecisinin "tuttu / çeldi" kestirimi geçersiz (top görüntüde avuçta / kestirilen yolda kalıp çizgiye varmıyordu) · üretilen (v177) gol işaretlenir */
+            S.goalInfo.syn = !!m0.v177;
+            try { for (var gi8 = 0; gi8 < 22; gi8++) { var gp8 = S.sim.players[gi8]; if (gp8 && gp8.role === 'GK' && gp8.team !== T0 && S.r3 && S.r3.gkCancel) S.r3.gkCancel(gi8, ev.t - DT + (S.clkOff || 0), 1); } } catch (e) { }
+        }
         S.goalPend = { ev: ev, t0: performance.now(), sid: S.sid };
     }
     function goalPendTick() {      // [v139] her kare: cizilen top cizgiyi gecti mi (top yaricapi kadar icerde) - gtLive yoksa kisa sure sonra, en gec 1.6 sn
@@ -43985,7 +44412,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
             if (S.sid !== sidNow || S.hold !== 'goal') return;
             var go = function () {
                 if (S.sid !== sidNow || S.hold !== 'goal') return;
-                if (S.replayOn && startReplay()) return;      // gol tekrarı açıksa tekrar oynar, bitince maç devam eder
+                if (S.replayOn && !(V8B.gt && S.goalInfo && S.goalInfo.syn) && startReplay()) return;      // gol tekrarı açıksa tekrar oynar, bitince maç devam eder · [v188] defterden üretilen golün kaydı yok (kayıttaki an başka bir pozisyon): tekrar oynatılmaz
                 S.hold = null; S.last = performance.now();
             };
             /* [v186] TV akışı: GOL bandı kalkınca kamera sevinçteki golcü ve arkadaşlarında kalır (sevinç → tekrar → santra); eskiden bant kalkar kalkmaz tekrar başlıyordu, sevinç görünmüyordu */
@@ -44733,6 +45160,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
                     var dlw = dlWant(); if (dlw && !DL.on) { DL.on = 1; DL.q.length = 0; DL.fz = 0; DL.dT = sim.t - (1 - Math.max(0, Math.min(1, S.acc / DT))) * DT; } else if (!dlw && DL.on) dlOff();      // [v135]
                     if (DL.on) {      // [v135] goruntu saati gercek hizla akar; sim onu DL.D onde tutar (yetisme en cok ~12 adim)
                         DL.fz = !!(S.vs || S.goalPend) || DL.q.some(function (e) { return e.type === 'GOAL' || e.type === 'CARD' || e.type === 'VAR'; });      // [v139] gol/kart/VAR goruntude bitene dek sim bekler (VAR sonrasi gol: son kare golun karesi kalir)
+                        DL.D = V8B.ld ? .45 : .32;      // [v188] daha uzun ön görü: vuruş / müdahale / blok hareketi topun çıkışından ~.3 sn önce başlayabilir (eskiden en çok ~.18 sn: temas anı okunmuyordu)
                         DL.dT += dt * rate; var nD = 0, tgD = DL.dT + DL.D;
                         while (!DL.fz && sim.t < tgD - 1e-9 && nD < 12 && !S.hold && !sim.finished && !S.halfPending) { var tq = sim.t; stepOnce(); nD++; if (sim.t === tq) break; }
                         if (DL.dT > sim.t) DL.dT = sim.t; if (DL.dT < sim.t - DL.D - .25) DL.dT = sim.t - DL.D - .25;
@@ -45992,15 +46420,29 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         }
         return nf;
     }
+    /* [v188] gol beklemesinde topu ağa götüren yol yoksa (son canlı kare çizgiden uzak, kayıt kesik) ya da gol defterinden üretilmiş (v177 "synth")
+       bir golse: top, golcünün tarafından ceza sahası içinden (çizgiye ~12,5 m; görünen top kaleye 30 m'den yakın ve öndeyse oradan) 23 m/sn'lik
+       bir vuruşla kalenin içine (direklerin ~1,2–2,6 m içi, .6–1,5 m yükseklik) gider; ağa çarpar, gtStep'in file fiziğiyle düşer. Uzaktan
+       başlıyorsa görüntü kesilir (top ışınlanıp kayarak gelmez). */
+    function gtSyn(v, gi) {
+        if (!gi || gi.gx == null) return null;
+        var dirG = gi.gx > PW / 2 ? 1 : -1, gl = dirG > 0 ? PW : 0, bx = v.bx, by = v.by, dg = (gl - bx) * dirG, sx, sy, cut = 0;
+        if (!gi.syn && dg > .3 && dg < 30 && Math.abs(by - PH / 2) < 22) { sx = bx; sy = by; }
+        else { sx = gl - dirG * 12.5; sy = PH / 2 + Math.max(-7, Math.min(7, (by - PH / 2) * .3)); cut = Math.hypot(bx - sx, by - sy) > 3 ? 1 : 0; }
+        var hs = ((gi.min * 7 + (gi.scorer + 3) * 13) % 10) / 10, side = sy >= PH / 2 ? -1 : 1, ty = gi.syn ? PH / 2 + side * (1.2 + 1.4 * hs) : PH / 2 + Math.max(-2.9, Math.min(2.9, (gi.gy || PH / 2) - PH / 2));
+        var tz = .6 + .9 * ((hs * 3.7) % 1), z0 = .12, dx = gl - sx, dy = ty - sy, d = Math.hypot(dx, dy) || 1, T = Math.max(.25, d / 23);
+        return { x: sx, y: sy, z: z0, vx: dx / T, vy: dy / T, vz: (tz - z0 + 4.905 * T * T) / T, dirG: dirG, gl: gl, inN: false, syn: 1, cut: cut };
+    }
     /* canlı: 'goal' beklemesinde top son canlı karede donmasın; aynı fizikle ağa girer (yalnızca görüntü) */
     function gtLive(v, dt) {
         var gi = S.goalInfo; if (!gi) return;
         if (S.gb === undefined || S.gbSid !== S.sid || S.gbGi !== gi) {
-            S.gbSid = S.sid; S.gbGi = gi; S.gb = null;
+            S.gbSid = S.sid; S.gbGi = gi; S.gb = null; S.gb8 = 0;
             var R = S.ring, b = R.buf, k = R.n - 1, lim = Math.max(2, R.n - 14);      // [v139] golun son canli karesi daha geride de aranir
             while (k > lim && b[(k % RING) * FS + 5] === 1) k--;
             if (k >= 2 && b[(k % RING) * FS + 5] !== 1 && R.n - 1 - k <= 12) S.gb = gtInit(b, (k % RING) * FS, ((k - 1) % RING) * FS, gi);
         }
+        if (V8B.gt && S.gbGi === gi && !S.gb8) { S.gb8 = 1; if (!S.gb || gi.syn) { S.gb = gtSyn(v, gi); if (S.gb && S.gb.cut) try { if (S.r3 && S.r3.cutBall) S.r3.cutBall(); if (S.r3 && S.r3.cutActors) S.r3.cutActors(); } catch (e) { } } }      // kurgu kesmesi: kamera kale ağzına atlar      // [v188] çizgiye varan son kare yoksa / üretilen gol: top ağa canlandırılır
         var g2 = S.gb; if (!g2) return;
         var h = Math.min(.05, dt || .016); g2.acc = (g2.acc || 0) + h; if (g2.acc < 4) {      // [v186] file fiziği gerçek zamanlı (eskiden bilerek .8 hızla)
                  var st = Math.ceil(h / .01); for (var j = 0; j < st; j++) gtStep(g2, h / st); }
@@ -46957,7 +47399,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
     function v7Cnt(k) { V7.cnt[k] = (V7.cnt[k] || 0) + 1; sqLog('v7:' + k); }
     function v7Free(id, t) { return !(V7.busy[id] > t) && !(OA.fall[id] > t) && !(OA.gnd[id] > t); }
     function v7Act(id, k, t0, tc, d, until) { gkIssue(1, id, k, tc, t0, d); V7.busy[id] = Math.max(V7.busy[id], until != null ? until : tc + 1); }
-    function v7Gest(id, md, t0, dur, tx, ty, h, pow) { if (id < 0 || !S.sim || !S.sim.players[id] || S.sim.players[id].off) return; v7Act(id, 20, t0, t0, oaD(OA.tmp, tx || 0, ty || 0, md, dur, pow || 0, h || 1, 0, 0, 0, 0, 0), t0 + dur); }
+    function v7Gest(id, md, t0, dur, tx, ty, h, pow) { if (id < 0 || !S.sim || !S.sim.players[id] || S.sim.players[id].off) return; if (md >= 30) { V8B.gN = (V8B.gN || 0) + 1; V8B.gL = [id, md, t0]; }      /* [v188] ölçüm: son yeni jest */ v7Act(id, 20, t0, t0, oaD(OA.tmp, tx || 0, ty || 0, md, dur, pow || 0, h || 1, 0, 0, 0, 0, 0), t0 + dur); }
     /* --- görünüm hedefi: oyuncunun GÖRÜNEN konumu hedefe yürür (ışınlanma yok), bırakılınca motor konumuna yürüyerek döner --- */
     function v7Go(id, tx, ty, vmax, dur, o) { var g = V7.gv[id] || (V7.gv[id] = { x: NaN, y: NaN }); g.tx = tx; g.ty = ty; g.v = vmax; g.until = v7Now() + dur * 1000 / v7Ls(); g.fol = o && o.fol || 0; g.stop = o && o.stop || 0; g.fcx = o && o.fcx != null ? o.fcx : NaN; g.fcy = o && o.fcy != null ? o.fcy : NaN; g.hide = 0; return g; }
     function v7GvApply(v, dt) {
@@ -47219,7 +47661,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
         var tN = sim.t, i, j;
         if (d.kind === 'freekick' && d.wall && V7.fkGk !== d && d.timer > .5) {
             V7.fkGk = d; var gk = (1 - d.team) * 11, gp = sim.players[gk];
-            if (gp && gp.role === 'GK' && !gp.off) { v7Gest(gk, 20, tN + .1, Math.max(1.2, Math.min(4.5, (d.wait - d.timer) - 1.2)), d.x, d.y); v7Cnt('kaleci_baraj'); }
+            if (gp && gp.role === 'GK' && !gp.off) { var wx8 = d.x, wy8 = d.y; if (V8B.an && d.wall.slots && d.wall.slots.length) { wx8 = 0; wy8 = 0; for (j = 0; j < d.wall.slots.length; j++) { wx8 += d.wall.slots[j].x; wy8 += d.wall.slots[j].y; } wx8 /= d.wall.slots.length; wy8 /= d.wall.slots.length; } v7Gest(gk, 20, tN + .1, Math.max(1.2, Math.min(4.5, (d.wait - d.timer) - 1.2)), wx8, wy8); v7Cnt('kaleci_baraj'); }      // [v188] kaleci barajı (kapattığı tarafa, dead.wall.ns) kolla yönetir
         }
         if (d.kind === 'corner' && V7.corJ !== d && d.timer > 1.2) {
             V7.corJ = d; var at = d.team, gx = sim.atkGoalX(at), n = 0;
@@ -47438,6 +47880,7 @@ try{parent.adoSesYama&&parent.adoSesYama(window);}catch(e){}
     G.ado2d = {
         setMode: setMode, mode: function () { return mode; }, active: function () { return mode === '2d'; }, running: function () { return mode === '2d' && S.running; },
         sim: function () { return S.sim; }, state: S, _cr: function () { return CRD; },      // [carry] test kancası: görünen top durumu
+        _v188: function (o) { if (o) for (var k in o) if (k in V8B) V8B[k] = o[k]; return V8B; },      // [v188] A/B ölçümü
         // test/hata ayıklama: çizim beklemeden maçı belirtilen hızla oynat
         setSpeedFactor: function (v) { S.speed = v; S.raw = true; }, _tlog: function () { return S.tlog || []; }, _rp: function () { return S.rp; }, _rpFreeze: function (v) { S.rpFreeze = !!v; }, _gb: function () { return S.gb; },
         setReplay: setReplay, replayCount: function () { return S.rpCount; }, skipReplay: function () { endReplay(); }, replaying: function () { return S.hold === 'replay'; },
