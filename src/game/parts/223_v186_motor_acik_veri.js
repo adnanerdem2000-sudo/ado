@@ -183,9 +183,9 @@ function v187Kurgu(sim,q,tm){if(!q||sim.forceGoal!==tm)return false;const P=sim.
         return true;}
       prog(gx-dir*17,34+(o.y>34?4:-4),gp,0);return true;}
     case 'ara':{
-      if(A.thru&&sim.t-A.thru<6)safe(gp);
+      if(A.thru&&sim.t-A.thru<8)safe(gp);
       if(!mine)return true;
-      if(o===gp){if(A.thru&&sim.t-A.thru<6){carry(gp,.3);if(dG(gp)<=16||sim.t-(gp.gainT||sim.t)>1.8){okFor(.6,null,22);shoot(gp);}}else prog(gp.x-dir*18,gp.y*.5+17,null,0);return true;}
+      if(o===gp){if(A.thru&&sim.t-A.thru<8){carry(gp,.3);gp.keepT=sim.t+.3;okFor(1,null,22);if(dG(gp)<=16||(sim.t-(gp.gainT||sim.t)>1.8&&dG(gp)<=20)){okFor(.6,null,22);shoot(gp);}}else prog(gp.x-dir*18,gp.y*.5+17,null,0);return true;}
       const od=offD(),dq=gl(gp),ah=(gp.x-o.x)*dir;
       if(ah<6||hy(gp.x-o.x,gp.y-o.y)>38){prog(gp.x-dir*16,(gp.y+o.y)/2,gp,0);return true;}
       if(!(gp.run&&gp.run.v186&&gp.run.until>sim.t)&&dq>=od-.5&&dq<od+12&&dq>14&&sim.t-(A.rt||-9)>3){A.rt=sim.t;gp.run={v186:1,until:sim.t+2.8,x:gx-dir*Math.max(9,od-11),y:34+(gp.y>34?3:-3)};}
