@@ -946,6 +946,7 @@
                 var sw = 0; if (BR_ON) { if (d > 24 && Math.abs(ly - p.y) > 18) sw += BR_LONG * .004 * p.br.vz; if (q.run && q.run.until > S.t && prog > 8) sw += BR_LONG * .003 * p.br.vz; }     // vizyon: oyun değiştirme ve koşucuya ara pas
                 var ev = pr * vq - (1 - pr) * lossCost(p.x + (lx - p.x) * .7, p.y + (ly - p.y) * .7, p.team, bk.loss) + PROG_W * bk.prog * pr * clamp(prog, -12, 40) + sw + (noNoise ? 0 : gauss() * nz);
                 if (AV_PASS && cross) ev += avp('AV_XV', AV_AIR ? .2 : .1);
+                if (AV_SHAPE && AV_CLK && !cross && inBox(lx, ly, p.team)) ev += avp('AV_BPV', .03) * pr;      // [av2] AV_CLK: ceza sahasına pas değeri (kompakt bloğa karşı; gerçekte şutların ~%60'ı ceza sahası içinden)
                 if (AV_AIR && !cross && pr > .5 && Math.abs(ly - CY) >= 14 && Math.abs(gx - lx) <= 34 && Math.abs(gx - lx) >= 4) ev += avp('AV_WV', .04) * pr;      // [av2] AV_AIR: son 34 m'de kanattaki arkadaşa pas (orta öncesi; gerçekte atakların ~%40'ı kanattan)      // [av] ortanın değeri: dönen top / korner / kafa şansı (gerçekte takım başına ~12 orta, %28 tamamlanır)
                 var s = ev * 100;
                 if (wantProg && prog < wantProg) s -= 4;
@@ -1332,7 +1333,7 @@
                 if (AV_SHAPE && has === p.team && /^(LW|RW|LB|RB)$/.test(p.role)) hy = clamp(CY + (hy - CY) * avp('AV_HW', 1.05), 2.5, PH - 2.5);      // [av2] AV_SHAPE: hücumda kanatlar çizgiye (Metrica: hücum eden takımın genişliği 45–52 m)
             }
             var tx = hx + d * push + d * lsh;
-            if (has === p.team && (p.role === 'ST' || p.role === 'LW' || p.role === 'RW' || p.role === 'AM')) { var gxo = atkGoalX(p.team), lineD = offDist(p.team) - (CURVE ? clamp(1.4 - (p.a.posi - 60) * .03, .15, 2.2) : .6); if (Math.abs(gxo - tx) < lineD && p.role !== 'AM') tx = gxo - d * lineD; }
+            if (has === p.team && (p.role === 'ST' || p.role === 'LW' || p.role === 'RW' || p.role === 'AM')) { var gxo = atkGoalX(p.team), lineD = offDist(p.team) - (CURVE ? clamp(1.4 - (p.a.posi - 60) * .03, .15, 2.2) : .6); if (AV_CLK) lineD -= avp('AV_OFX', .6); if (Math.abs(gxo - tx) < lineD && p.role !== 'AM') tx = gxo - d * lineD; }      // [av2] AV_CLK: uzayan canlı oyunda forvetler çizginin biraz gerisinde bekler (ofsayt 1,6–2,4)
             var ty = hy + (BY - hy) * (p.role === 'LW' || p.role === 'RW' || p.role === 'LB' || p.role === 'RB' ? .12 : .24);
             // rakip topla tehlikeli bölgedeyse: kale önünde kompakt blok
             if (has !== p.team && has !== -1 && p.role !== 'GK') {
