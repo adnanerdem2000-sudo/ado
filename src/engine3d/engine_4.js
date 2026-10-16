@@ -4697,7 +4697,7 @@
             }
             OLC7.cut = 0;
         }
-        R.bbBib = function () { try { v7Pal(); } catch (e) { } return S.bbBib ? { c: S.bbBib.c.slice(), d: +S.bbBib.d.toFixed(3) } : null; };      // [v187] sınama: seçilen yelek rengi ve formalara en yakın uzaklık
+        R.bbBib = function () { try { v7Pal(); } catch (e) { } if (!S.bbBib) return null; var ks = {}; (S.pal || []).forEach(function (q) { if (q) ks[[q[0], q[1], q[2]].map(function (x) { return +x.toFixed(2); }).join(',')] = 1; }); return { c: S.bbBib.c.slice(), d: +S.bbBib.d.toFixed(3), formalar: Object.keys(ks), hakem: S.refPal ? [S.refPal[0], S.refPal[1], S.refPal[2]].map(function (x) { return +x.toFixed(2); }) : null }; };      // [v187] sınama: seçilen yelek rengi ve formalara en yakın uzaklık
         R.olc7 = function (on) { if (on === 'get') return JSON.parse(JSON.stringify(OLC7)); OLC7.on = on ? 1 : 0; OLC7.n = OLC7.tp = OLC7.mv = OLC7.ok = OLC7.lo = OLC7.hi = OLC7.idle = OLC7.idleW = OLC7.mvA = 0; OLC7.tpS = []; return true; };
         function drawActor(a, pal, x, z, yaw, sc, mods, t, hairStyle, layer, beard) {
             var root = stk[0]; mtrs(root, x, a.rY || 0, z, 0, yaw, 0, sc, a.wScale);   // sc: boy ölçeği (yerel Y) · a.wScale: yapı/genişlik ölçeği (yerel X/Z) - bkz mtrs · a.rY: [gk] kök yüksekliği (plonjon/sıçrama)
