@@ -1123,7 +1123,7 @@
             if (S.forceCorner != null && p.team === S.forceGoal) { var fcq = S.players[S.forceCorner]; if (fcq && !fcq.off && fcq.team === p.team && fcq !== p) { q = fcq; S.forceAir = fcq.id; } S.forceCorner = null; }      // [v186] zorla gol kurgusu: korner golcüye (kafa)
             if (S.forceAir != null && q && q.id === S.forceAir && p.team === S.forceGoal) {      // [v187] zorla gol kurgusu: korner ceza sahası içindeki kafa noktasına (kale çizgisine 6,9 m), golcü o noktaya koşar
                 var gxk = atkGoalX(p.team), sxk = gxk - S.teams[p.team].dir * 6.9, syk = CY + (p.y < CY ? 2.2 : -2.2), dk = hyp(q.x - p.x, q.y - p.y), Lk = Math.min(.7 + dk / 24, 1.4) * .8, vxk = q.vx, vyk = q.vy, mk = hyp(sxk - q.x, syk - q.y);
-                if (mk > 10) { sxk = q.x + (sxk - q.x) * 10 / mk; syk = q.y + (syk - q.y) * 10 / mk; }
+                if (mk > 14) { sxk = q.x + (sxk - q.x) * 14 / mk; syk = q.y + (syk - q.y) * 14 / mk; }
                 q.vx = (sxk - q.x) / Lk; q.vy = (syk - q.y) / Lk; doPass(p, q, true, 'CORNER'); q.vx = vxk; q.vy = vyk; q.run = { until: S.t + 3, x: sxk, y: syk }; return;
             }
             doPass(p, q, true, 'CORNER');
@@ -2159,6 +2159,7 @@
             for (var i2 = 0; i2 < 22; i2++) {
                 var q = S.players[i2]; if (q.cd > 0 || q.off) continue;
                 if (S.forceSafe != null && S.pass && S.pass.active && S.pass.to && S.pass.to.id === S.forceSafe && q.team !== S.pass.team && S.pass.team === S.forceGoal) continue;      // [v187] zorla gol kurgusu: golcüye giden pas kesilmez
+                if (S.fpoT != null && S.t - S.fpoT < 1.2) continue;      // [v187] kornere çelinen top çizgiye yetişir
                 if (S.forceGoal != null && q.team !== S.forceGoal && ((S.frbT != null && S.t - S.frbT < 1.6) || (S.forceSafe != null && S.shot && S.shot.shooter && S.shot.shooter.id === S.forceSafe && S.shot.team === S.forceGoal && q.role !== 'GK'))) continue;      // [v187] kurgunun hazırlık şutu ve kalecinin golcüye çeldiği top rakipçe kesilmez
                 var d = hyp(q.x - B.x, q.y - B.y), R0 = v > 16 ? .8 : 1.0; if (q.role === 'GK') R0 += .5;
                 if (S.pass && S.pass.active && S.pass.to === q && v < 14) R0 = REC_R;   // pasın asıl alıcısı topa uzanabilir (ayağını uzatır, vücudunu çevirir)
@@ -2395,14 +2396,14 @@
                                 if (catchP) { B.owner = gk; B.vx = B.vy = 0; B.z = 0; B.vz = 0; B.shotFlag = false; S.shot = null; S.pass = null; S.lastTeam = gk.team; B.last = gk; gk.think = .6; gk.dribble = false; return; }
                                 // çelme: top kaleciden seker - çoğu kenara/dışarı (korner), bir kısmı öne (dönen top)
                                 var outP = R() < .55, ra2, rs2 = 6 + 7 * R(); if (AV_OUT && !outP && RA() < avp('AV_GKO', AV_OUT2 ? .85 : .7)) outP = true; if (frb) outP = false;
-                                if (S.forceParryOut != null && S.forceParryOut === sh.team) { outP = true; rs2 = 7 + 3 * R(); S.forceParryOut = null; }      // [v187] zorla gol kurgusu: kaleci kornere çeler (duran top golü)      // [av] AV_OUT: kaleci çoğunlukla kornere çeler
+                                var fpo = false; if (S.forceParryOut != null && S.forceParryOut === sh.team) { outP = true; rs2 = 10 + 3 * R(); S.forceParryOut = null; fpo = true; }      // [v187] zorla gol kurgusu: kaleci kornere çeler (duran top golü)      // [av] AV_OUT: kaleci çoğunlukla kornere çeler
                                 if (outP) { var sgn = dyb >= 0 ? 1 : -1, glx2 = dir === 1 ? PW : 0, tyo = CY + sgn * (GW / 2 + 1 + 4 * R()); ra2 = Math.atan2(tyo - yb, glx2 - gk.x); }      // kenara çelme: direğin dışına (korner)
                                 else ra2 = Math.atan2(gauss() * .9, -dir);
                                 if (frb) { var fbx = frb.x + frb.vx * .35, fby = frb.y + frb.vy * .35; ra2 = Math.atan2(fby - (crossed ? yb : B.y), fbx - gk.x) + gauss() * .06; rs2 = clamp(hyp(fbx - gk.x, fby - (crossed ? yb : B.y)) * 1.6, 4, 9); S.forceQuick = frb.id; S.forceRebound = null; S.frbT = S.t; }      // [v186] çelme golcünün koşu yoluna
                                 if (!GK_CPA) { B.x = gk.x - dir * .3; B.y = clamp(yb, .5, PH - .5); B.z = Math.max(.2, zb); }
                                 else if (crossed) { B.x = px + (B.x - px) * tc; B.y = clamp(yb, .5, PH - .5); B.z = Math.max(.2, zb); }      // [gk] çelme temas noktasında (kaleci düzlemi)
                                 else B.z = Math.max(.2, B.z);      // [gk] erişime girdiği yerde
-                                B.vx = Math.cos(ra2) * rs2; B.vy = Math.sin(ra2) * rs2; B.vz = outP && zb > 1.2 ? 4 + 2 * R() : 1 + 3 * R(); B.shotFlag = false; S.shot = null; S.pass = null; S.lastTeam = gk.team; B.last = gk; gk.cd = .5; return;
+                                B.vx = Math.cos(ra2) * rs2; B.vy = Math.sin(ra2) * rs2; B.vz = outP && zb > 1.2 ? 4 + 2 * R() : 1 + 3 * R(); if (fpo) { B.vz = Math.max(B.vz, 4); S.frbT = null; S.fpoT = S.t; } B.shotFlag = false; S.shot = null; S.pass = null; S.lastTeam = gk.team; B.last = gk; gk.cd = .5; return;
                             }
                         }
                     }
@@ -2432,6 +2433,7 @@
             for (var i2 = 0; i2 < 22; i2++) {
                 var q = S.players[i2]; if (q.cd > 0 || q.off) continue;
                 if (S.forceSafe != null && S.pass && S.pass.active && S.pass.to && S.pass.to.id === S.forceSafe && q.team !== S.pass.team && S.pass.team === S.forceGoal) continue;      // [v187] zorla gol kurgusu: golcüye giden pas kesilmez
+                if (S.fpoT != null && S.t - S.fpoT < 1.2) continue;      // [v187] kornere çelinen top çizgiye yetişir
                 if (S.forceGoal != null && q.team !== S.forceGoal && ((S.frbT != null && S.t - S.frbT < 1.6) || (S.forceSafe != null && S.shot && S.shot.shooter && S.shot.shooter.id === S.forceSafe && S.shot.team === S.forceGoal && q.role !== 'GK'))) continue;      // [v187] kurgunun hazırlık şutu ve kalecinin golcüye çeldiği top rakipçe kesilmez
                 if (AV_OUT && B.avo != null && S.t - B.avo < avp('AV_OCD', .45)) continue;      // [av] AV_OUT: seken top
                 var gkHands = q.role === 'GK' && B.z < 2.5 && inBox(q.x, q.y, 1 - q.team);

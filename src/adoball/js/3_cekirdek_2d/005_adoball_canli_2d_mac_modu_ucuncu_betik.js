@@ -4203,9 +4203,9 @@
         var rdx = tx - 2 - Hh.rx, rdy = ty - Hh.ry, rdl = Math.hypot(rdx, rdy), rst = 1.7 * h; if (rdl > rst) { Hh.rx += rdx / rdl * rst; Hh.ry += rdy / rdl * rst; v.rfx = rdx / rdl; v.rfy = rdy / rdl; } v.rx = Hh.rx; v.ry = Hh.ry;
         var gcx = 0, gcy = 0, gn = 0; (Hh.grp || []).forEach(function (j) { if (!sim.players[j].off) { gcx += Hh.x[j]; gcy += Hh.y[j]; gn++; } }); if (gn) { gcx /= gn; gcy /= gn; } else { gcx = Hh.rx; gcy = Hh.ry; }
         if (!(Hh.cx === Hh.cx)) { Hh.cx = gcx; Hh.cy = gcy; } else { var kk = Math.min(1, h * 2.5); Hh.cx += (gcx - Hh.cx) * kk; Hh.cy += (gcy - Hh.cy) * kk; }
-        var ex = tx - 3.5, ey = PH + 5.5, cd = Math.hypot(Hh.cx - ex, Hh.cy - ey), fv = Math.max(16, Math.min(50, 2 * Math.atan(7.5 / Math.max(1, cd)) * 180 / Math.PI));
+        var ex = tx - 7, ey = PH + 8, cd = Math.hypot(Hh.cx - ex, Hh.cy - ey), fv = Math.max(16, Math.min(50, 2 * Math.atan(7.5 / Math.max(1, cd)) * 180 / Math.PI));
         if (!(Hh.fv > 0)) Hh.fv = fv; else Hh.fv += (fv - Hh.fv) * Math.min(1, h * 1.5);
-        V7.scam = { eye: [ex, 2.7, ey], at: [Hh.cx, 1.0, Hh.cy], fov: Hh.fv };      // tünel ağzındaki sabit kamera: yürüyen grup yaklaştıkça büyür (devre / maç sonu)
+        V7.scam = { eye: [ex, 4.2, ey], at: [Hh.cx, 1.0, Hh.cy], fov: Hh.fv };      // tünel ağzındaki sabit kamera: yürüyen grup yaklaştıkça büyür (devre / maç sonu)
         if (Hh.t > Hh.dur) { V7.half = null; if (S.r3) { S.r3.cutCam = null; S.r3.v7Cut = 0; } if (S.hold === 'v7ht') S.hold = null; Hh.done = 1; V7.htDone = S.sid + ':' + sim.half + ':' + (sim.finished ? 1 : 0); afterSteps(); }
     }
     /* --- gol: sevinç çeşitleri (uçak koşusu, diz kayması, köşe bayrağında sıçrama, yumruk, kucaklaşma), yenilen tarafta hayal kırıklığı --- */
