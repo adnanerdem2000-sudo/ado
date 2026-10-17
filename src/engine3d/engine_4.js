@@ -3594,7 +3594,7 @@
             fkLeg(lf ? 0 : 1, iL, iS, iF, fkR(_bw[0]), fkW2M(root, [CT_A[0] + dx * k, CT_A[1], CT_A[2] + dz * k]), fkR(mF));
         }
         /* [v191] kafa teması: görünen top kafa penceresinde (tc -.16 … +.18 sn) başa göre geç/erken geldiğinde gövde eğimi (öne-geri) ve yan eğimi
-           küçük adımlarla (≤ .35 rad) topa doğru ayarlanır; hedef baş merkezi - top merkezi ≈ .2 m. Sayısal Jacobi (2 değişken, 2 yineleme). Kök/top oynamaz. */
+           küçük adımlarla (öne-geri ≤ .45-.5, yana ≤ .42 rad) topa doğru ayarlanır; hedef baş merkezi - top merkezi ≈ .2 m. Sayısal Jacobi (2 değişken, 3 yineleme). Kök/top oynamaz. */
         /* [v191] görünen topun bu karedeki yeri: pozlar topun adımından ÖNCE kurulur (GB bir önceki karede), IK hedefi son iki karenin hızıyla
            bu karenin saatine taşınır (elde / hızı > 15 m/sn ise taşınmaz). Top 11 m/sn ile gelirken bir karelik gecikme ~.4 m'ydi. */
         var GB9 = { x: 0, y: 0, z: 0, t: -9, vx: 0, vy: 0, vz: 0, ok: 0 }, GBE = new Float32Array(3);
@@ -3608,14 +3608,14 @@
             if (!CT_DQ) CT_DQ = new Float32Array(BODY_BONES.length * 8);
             var ge = gb9E(), tx = ge[0], ty = ballY(ge[1]), tz = ge[2], p3 = pose[3], p5 = pose[5], d0, d1, d2, h, j1x, j1y, j1z, j2x, j2y, j2z, ex, ey, ez, el, it;
             h = hk9Head(root); if (Math.hypot(tx - h[0], ty - h[1], tz - h[2]) > 1.6) return;
-            for (it = 0; it < 2; it++) {
+            for (it = 0; it < 3; it++) {
                 h = hk9Head(root); ex = tx - h[0]; ey = ty - h[1]; ez = tz - h[2]; el = Math.hypot(ex, ey, ez); if (el < .22) break;
                 var k = (el - .2) / el; ex *= k; ey *= k; ez *= k; var hx = h[0], hy = h[1], hz = h[2];
                 pose[3] += .05; h = hk9Head(root); j1x = (h[0] - hx) / .05; j1y = (h[1] - hy) / .05; j1z = (h[2] - hz) / .05; pose[3] -= .05;
                 pose[5] += .05; h = hk9Head(root); j2x = (h[0] - hx) / .05; j2y = (h[1] - hy) / .05; j2z = (h[2] - hz) / .05; pose[5] -= .05;
                 var a11 = j1x * j1x + j1y * j1y + j1z * j1z + .02, a22 = j2x * j2x + j2y * j2y + j2z * j2z + .02, a12 = j1x * j2x + j1y * j2y + j1z * j2z, b1 = j1x * ex + j1y * ey + j1z * ez, b2 = j2x * ex + j2y * ey + j2z * ez, det = a11 * a22 - a12 * a12;
                 if (!(Math.abs(det) > 1e-6)) break;
-                pose[3] = clamp(pose[3] + (a22 * b1 - a12 * b2) / det, p3 - .35, p3 + .35); pose[5] = clamp(pose[5] + (a11 * b2 - a12 * b1) / det, p5 - .3, p5 + .3);
+                pose[3] = clamp(pose[3] + (a22 * b1 - a12 * b2) / det, p3 - .5, p3 + .45); pose[5] = clamp(pose[5] + (a11 * b2 - a12 * b1) / det, p5 - .42, p5 + .42);
             }
             pose[3] = p3 + (pose[3] - p3) * w; pose[5] = p5 + (pose[5] - p5) * w;
         }
