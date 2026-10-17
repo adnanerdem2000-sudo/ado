@@ -1341,7 +1341,7 @@
             if (opts && opts.mip) { gl.generateMipmap(gl.TEXTURE_2D); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); }
             else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            var wrap = opts && opts.repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE; gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            var wrap = opts && opts.repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE; gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, opts && opts.repeatT ? gl.REPEAT : gl.CLAMP_TO_EDGE);   // [v191] file iki yönde tekrar eder (T kenara sabitlenince tüm yüz kenar çizgisini okuyup düz beyaz perde oluyordu)
             return t;
         }
         function mkCanvas(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d', { willReadFrequently: true }); return c; }   // [opt] CPU bellekli: dokuya yükleme GPU geri okuması beklemez
@@ -1403,7 +1403,10 @@
             return c;
         }
         function netCanvas() {
-            var c = mkCanvas(64, 64), g = c.getContext('2d'); g.strokeStyle = 'rgba(240,244,250,.62)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 61, 61); return c;
+            var c = mkCanvas(128, 128), g = c.getContext('2d');      // [v191] ince ip: hücre içi tam saydam, ipler kenarda (tekrarda komşu hücreyle birleşir), düğümler biraz kalın
+            g.strokeStyle = 'rgba(236,240,246,.9)'; g.lineWidth = 3.4; g.strokeRect(0, 0, 128, 128); g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 128); g.moveTo(0, 64); g.lineTo(128, 64); g.stroke();   // doku başına 2×2 göz (~12 cm)
+            g.fillStyle = 'rgba(244,247,252,.95)'; [[0, 0], [128, 0], [0, 128], [128, 128], [64, 0], [0, 64], [64, 64], [128, 64], [64, 128]].forEach(function (q) { g.beginPath(); g.arc(q[0], q[1], 3.4, 0, Math.PI * 2); g.fill(); });
+            return c;
         }
         function blobCanvas() {
             var c = mkCanvas(64, 64), g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 2, 32, 32, 31); gr.addColorStop(0, 'rgba(0,0,0,.62)'); gr.addColorStop(.55, 'rgba(0,0,0,.38)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return c;
@@ -1454,7 +1457,7 @@
             return c;
         }
         function labelCanvas(text, w, h, fg, bg) { var c = mkCanvas(w, h), g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = fg; g.font = '800 ' + Math.round(h * .5) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + 1); return c; }
-        var T = { pitch: tex(pitchCanvas(), { mip: true }), board: tex(boardCanvas(), { mip: true, repeat: true }), net: tex(netCanvas(), { mip: true, repeat: true }), blob: tex(blobCanvas()), streak: tex(streakCanvas(), { mip: true }), ring: tex(ringCanvas(), { mip: true }), glare: tex(glareCanvas()), ground: null, varTxt: tex(labelCanvas('VAR', 128, 48, '#dff2ff', '#0b1d31')) };
+        var T = { pitch: tex(pitchCanvas(), { mip: true }), board: tex(boardCanvas(), { mip: true, repeat: true }), net: tex(netCanvas(), { mip: true, repeat: true, repeatT: true }), blob: tex(blobCanvas()), streak: tex(streakCanvas(), { mip: true }), ring: tex(ringCanvas(), { mip: true }), glare: tex(glareCanvas()), ground: null, varTxt: tex(labelCanvas('VAR', 128, 48, '#dff2ff', '#0b1d31')) };
         /* projektör direkleri: köşe tribünlerinin ARKASINDA, lamba yüzü saha merkezine dönük. Parlama noktası modelin GERÇEK lamba
            kafasında (y ≈ 34 m, yüz ofseti 0.8 m) - eskiden direğin ortasında (19.5 m) asılı duruyordu. */
         var FLOOD_POS = [[-26, -25], [PW + 26, -25], [-22, PH + 23], [PW + 22, PH + 23]].map(function (p) { return [p[0], p[1], Math.atan2(PW / 2 - p[0], PH / 2 - p[1])]; });
