@@ -12,7 +12,8 @@
      Çok maç için arka planda: setsid nohup node tools/mac_test.js --mac 100 --sure 0 --rapor r.json > r.log 2>&1 &
    --det K: ilk K maçı tanılama kapalıyken de oynatıp olay akışı + durum özetini karşılaştırır (determinizm: AYNI olmalı).
    --oturum M: her M maçta bir yeni kariyer (sıradaki kulüp) — takım çeşitliliği.
-   Son satır: MACTEST_OK (kritik tanılama kaydı, sayfa hatası, determinizm farkı yok) ya da MACTEST_HATA. */
+   Son satır: MACTEST_OK (kritik tanılama kaydı, sayfa hatası, determinizm farkı yok) ya da MACTEST_HATA; süre bütçesi dolup maçlar
+   bitmediyse (o ana dek hata yoksa) MACTEST_DEVAM (çıkış kodu 3). */
 'use strict';
 const path = require('path'), fs = require('fs');
 function loadPlaywright() {
@@ -96,7 +97,7 @@ function summarize(R) {
 async function newPage(browser, errs) {
   const ctx = await browser.newContext({ viewport: { width: 960, height: 600 } });
   await ctx.route(u => !/^(file|data|blob|about):/.test(u.protocol), r => r.abort());
-  if (TANI || true) await ctx.addInitScript(() => { try { localStorage.setItem('adoTani', '1'); } catch (e) { } });      // seçenekleri almak için tanılama her zaman yüklenir; --tani 0'da maçlar sarmalanmamış create ile kurulur
+  await ctx.addInitScript(() => { try { localStorage.setItem('adoTani', '1'); } catch (e) { } });      // seçenekleri almak için tanılama her zaman yüklenir; --tani 0'da maçlar sarmalanmamış create ile kurulur
   const page = await ctx.newPage();
   page.on('pageerror', e => errs.push('sayfa: ' + (e.stack || e.message).split('\n').slice(0, 2).join(' | ').slice(0, 300)));
   page.on('console', m => { const t = m.text(); if (m.type() === 'error' && !/ERR_FAILED|net::|Failed to load resource|permissions policy|AudioContext|WebGL|GPU|swiftshader/i.test(t)) errs.push('konsol: ' + t.slice(0, 240)); });
@@ -212,8 +213,8 @@ async function runBatch() {
   } finally { try { if (sess) await sess.ctx.close(); } catch (e) { } await browser.close(); }
   R.bitis = new Date().toISOString(); write();
   const S = summarize(R); console.log(S.text);
-  if (R.maclar.length < NMAC) { console.log(`MACTEST_DEVAM ${R.maclar.length}/${NMAC} (node tools/mac_test.js --mac ${NMAC} --rapor ${RAPOR || 'x.json'} --devam)`); }
-  console.log(S.ok && R.maclar.length >= NMAC ? 'MACTEST_OK' : 'MACTEST_HATA');
+  if (R.maclar.length < NMAC && S.ok) { console.log(`MACTEST_DEVAM ${R.maclar.length}/${NMAC} — sürdürmek için: node tools/mac_test.js --mac ${NMAC} --rapor ${RAPOR || 'x.json'} --devam`); process.exit(3); }      // bütçe doldu, şimdiye dek hata yok
+  console.log(S.ok ? 'MACTEST_OK' : 'MACTEST_HATA');
   process.exit(S.ok ? 0 : 1);
 }
 

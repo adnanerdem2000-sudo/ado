@@ -622,7 +622,7 @@
         else {
             if (d) spSpot(d, dd); else { dd[0] = B.x - B.vx / vl2 * .75; dd[1] = B.y - B.vy / vl2 * .75; }
             dd[2] = B.vx / vl2; dd[3] = B.vy / vl2; dd[4] = pl && pl.ft === 'L' ? -1 : 1; dd[5] = prof; dd[6] = pw; dd[7] = 0; dd[8] = 0; dd[9] = 4 | (tag === 'PEN' ? 16 : 0); dd[10] = 1;
-            gkIssue(1, id, 8, ev.t + .13, ev.t, dd);
+            var dl9 = V8B.ld && DL.on ? 1 : 0; gkIssue(1, id, 8, ev.t + (dl9 ? .03 : .13), ev.t - (dl9 ? .3 : 0), dd);      /* [v192] hazırlıksız duran top vuruşu: görüntü motorun gerisinde (DL) olduğundan vuruş anı topun kalktığı ana, son adım .3 sn önceden (eskiden temas .13 sn geç, kök hizasına vakit yoktu) */
         }
         if (V8B.an && ty === 'SHOT' && m.fkKind === 'sut' && m.wallIds && d && d.wall) for (i = 0; i < m.wallIds.length; i++) { var wi8 = m.wallIds[i]; if (wi8 >= 0 && wi8 < 22 && !SP.w[wi8]) SP.w[wi8] = ev.t; }      /* [v188] motorun baraj listesi: şutta hepsi sıçrar (yerine oturmamış olan da) */
         if (d && d.wall) { var d2 = SP.tmp2; for (i = 0; i < 22; i++) if (SP.w[i]) { d2[0] = d.x; d2[1] = d.y; d2[2] = ty === 'SHOT' ? 1 : 0; for (k = 3; k < 11; k++) d2[k] = 0; gkIssue(5, i, 10, ev.t, ev.t, d2); } }   // baraj: şutta sıçrar, pasta sıçramaz

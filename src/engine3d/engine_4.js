@@ -5129,7 +5129,7 @@
             return { sp: sp, D: +P[0][0].toFixed(3), r: m ? +(sR / m).toFixed(3) : null, rl: m ? +(sL / m).toFixed(3) : null, n: m };
         };
         R._actPos = function (i) { var a = S.st[i]; return a && a.px > -1e9 ? [a.px, 0, a.pz] : null; };      // ölçüm: oyuncunun görünen kökü
-        R.olcT = function (on) { if (on === 'get') { var o = { kd8: OT.kd8, f: OT.f, k: OT.k, fs: OT.fs, dbg: OT.dbg, nan: OT.nan || null, nan2: OT.nan2 || null, nan3: OT.nan3 || null, nan4: OT.nan4 || null }; OT.f = []; OT.k = []; OT.fs = {}; OT.dbg = []; OT.kd8 = []; return o; } OT.on = on ? 1 : 0; OT.f = []; OT.k = []; OT.fs = {}; return true; };
+        R.olcT = function (on) { if (on === 'get') { var o = { kd8: OT.kd8, f: OT.f, k: OT.k, fs: OT.fs, dbg: OT.dbg, nan: OT.nan || null, nan2: OT.nan2 || null, nan3: OT.nan3 || null, nan4: OT.nan4 || null, nan5: OT.nan5 || null }; OT.f = []; OT.k = []; OT.fs = {}; OT.dbg = []; OT.kd8 = []; return o; } OT.on = on ? 1 : 0; OT.f = []; OT.k = []; OT.fs = {}; return true; };
         function drawActor(a, pal, x, z, yaw, sc, mods, t, hairStyle, layer, beard) {
             var root = stk[0]; mtrs(root, x, a.rY || 0, z, 0, yaw, 0, sc, a.wScale);   // sc: boy ölçeği (yerel Y) · a.wScale: yapı/genişlik ölçeği (yerel X/Z) - bkz mtrs · a.rY: [gk] kök yüksekliği (plonjon/sıçrama)
             poseFor(a, a.spd, t, mods);
@@ -5316,13 +5316,14 @@
         /* [v188] görünen topun bu karedeki konumu. Eskiden gölge geçişinden (gölge haritası + temas gölgesi) SONRA hesaplanıyordu: topun gölgesi
            bir kare geride kalıyordu (25 m/sn şutta ~0,8 m). Şimdi aktörlerden sonra, gölgelerden önce (V8.sh). */
         function ballStep8(v, bx, bz) {
-            gkBall(v);                                                       // [gk] görsel top: kalecinin elinde / kestirilen yolda / bırakış sonrası
-            spBall(v);                                                       // [sp] duran top: temasa dek noktada, taçta ellerde, bırakışta motor topuna sönen ofset / yay
-            carryHand(v);                                                    // [carry] sahiplik bitti: görünen top motor topuna süzülür
-            oaBall(bx, bz, v.owner);                                         // [oa] vuruş/kafa/kontrol/müdahale: temasa dek temas noktasında, sonra motor topuna (motor topu ışınlanırsa süzülür)
-            carryContact(v);                                                 // [fiz] dokunus aninda top ayagin ucunda
-            if (CT2_ON) { ctRecv(); ctPush(v); ctGkPost(); }                 // [temas] karsilama temasi, top - govde ic ice gecmesi
-            ballJump(S.ball);
+            var gn9 = OT.on && !OT.nan5 ? function (w) { if (!OT.nan5 && !(isFinite(GB.x) && isFinite(GB.y) && isFinite(GB.z))) OT.nan5 = [w, +CLK.toFixed(3), v.owner, OAB.on ? 1 : 0, OAB.hc ? OAB.hc.k : -1, OAB.hc ? OAB.hc.out : -1, OAB.rt, OAB.tau, OAB.h0, OAB.vz, OAB.ox, OAB.oy, OAB.oz, SPB.on ? 1 : 0, GHB.on ? 1 : 0, GB.held ? 1 : 0, v.bx, v.by, v.bz]; } : null;      // [v192] ölçüm: NaN'ı üreten top adımı
+            gkBall(v); if (gn9) gn9('gk');                                   // [gk] görsel top: kalecinin elinde / kestirilen yolda / bırakış sonrası
+            spBall(v); if (gn9) gn9('sp');                                   // [sp] duran top: temasa dek noktada, taçta ellerde, bırakışta motor topuna sönen ofset / yay
+            carryHand(v); if (gn9) gn9('carryHand');                         // [carry] sahiplik bitti: görünen top motor topuna süzülür
+            oaBall(bx, bz, v.owner); if (gn9) gn9('oa');                     // [oa] vuruş/kafa/kontrol/müdahale: temasa dek temas noktasında, sonra motor topuna (motor topu ışınlanırsa süzülür)
+            carryContact(v); if (gn9) gn9('carryContact');                   // [fiz] dokunus aninda top ayagin ucunda
+            if (CT2_ON) { ctRecv(); if (gn9) gn9('ctRecv'); ctPush(v); if (gn9) gn9('ctPush'); ctGkPost(); if (gn9) gn9('ctGkPost'); }                 // [temas] karsilama temasi, top - govde ic ice gecmesi
+            ballJump(S.ball); if (gn9) gn9('jump');
             if (!(isFinite(GB.x) && isFinite(GB.y) && isFinite(GB.z))) { if (OT.on && !OT.nan) OT.nan = ['gb', v.owner, CC.ox, CC.oz, CC8.vx, CC8.ex]; GB.x = v.bx; GB.z = v.by; GB.y = ballY(v.bz || 0); CC8.vx = CC8.vz = CC8.ex = CC8.ez = 0; }      // [v188] NaN koruması: görünen top motor topuna döner
         }
         R.render = function (st) {
