@@ -294,7 +294,7 @@ async function runRegresyon() {
     else ok('gol sonrası santra', 'TEST EDİLMEDİ', 'bu maçta gol olmadı');
     /* kaydet-yükle */
     const sv = await page.evaluate(() => { save(); try { if (typeof svFlushSync === 'function') svFlushSync(); } catch (e) { } return { ham: (localStorage.getItem(SLOT_PRE + G.sid) || '').length, sid: G.sid, day: G.s.day, res: G.s.results.length, club: G.club, ad: G.p && G.p.name }; });
-    await page.reload({ waitUntil: 'domcontentloaded' }); await page.waitForTimeout(3000);
+    await page.reload({ waitUntil: 'load' }); await page.waitForFunction(() => typeof slotLoad === 'function' && typeof render === 'function' && document.readyState === 'complete', null, { timeout: 60000 }).catch(() => { }); await page.waitForTimeout(1500);   /* yük altında sabit 3 sn yetmiyordu: betik bitmeden okunan kayıt null görünüyordu */
     const ld = await page.evaluate(sid => { const g = slotLoad(sid); if (!g) { const o = { yuklenemedi: true }; try { const raw = localStorage.getItem(SLOT_PRE + sid); o.ham = raw ? raw.length : 0; const pg = raw ? svParse(raw) : null; o.cozuldu = !!pg; if (pg && typeof kvGecerli === 'function') o.gecersiz = kvGecerli(pg) || null; } catch (e) { o.hata = e.message; } return o; } const r = { day: g.s.day, res: g.s.results.length, club: g.club, ad: g.p && g.p.name }; try { G = g; TAB = 'hub'; render(); r.render = true; } catch (e) { r.render = 'HATA ' + e.message; } return r; }, sv.sid);
     ok('kaydet-yükle', ld && ld.day === sv.day && ld.res === sv.res && ld.club === sv.club && ld.render === true ? 'TAMAM' : 'HATA', `kayıt ${JSON.stringify(sv)} → yeniden yükleme sonrası ${JSON.stringify(ld)}`);
     /* menüler (sekmeler) */
