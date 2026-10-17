@@ -239,6 +239,7 @@ game/parts/220_v183_gol_fizigi.js
 game/parts/222_v185_oda_tum_dunya.js
 game/parts/223_v186_motor_acik_veri.js
 game/parts/225_v189_gazete.js
+game/parts/226_v190_hakem_izleme.js
 game/parts/150_takvim_ligin_gercek_takim_sayisina_gore.js
 game/parts/151_yonetim_tesis_stadyum_talepler.js
 game/parts/152_kiralik.js

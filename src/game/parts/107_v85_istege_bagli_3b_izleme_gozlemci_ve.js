@@ -37,7 +37,7 @@ refNext=(old=>function(){const R=REF;if(!(R&&R.f3))return old.apply(this,argumen
   const S=FX;if(S&&S.ref3){S.phase=S.ref3ph==='end'?'end':'play';fxUI();}})(refNext);
 /* hub: maç günü "3B" düğmeleri (ana düğmenin yanında, DEVAM'a karışmaz) */
 viewHub=(old=>function(){let h=old.apply(this,arguments);try{if(!G||!G.s||G.phase!=='season')return h;
-  if(isRef()&&h.indexOf('data-act="refGo"')>=0&&h.indexOf('data-act="ref3"')<0){h=h.replace(/(<button[^>]*data-act="refGo"[\s\S]*?<\/button>)/,`$1<button class="btn w3b" data-act="ref3">🎥 Maçı 3B yönet <small>kararlar maç içinde</small></button>`);}
+  if(isRef()&&dayType(G.s.day)==='mac'&&(()=>{try{const F=refFx();return !!(F&&CLUBS[F.h]&&CLUBS[F.a]);}catch(e){return false;}})()&&h.indexOf('data-act="refGo"')>=0&&h.indexOf('data-act="ref3"')<0){h=h.replace(/<button[^>]*data-act="refGo"[\s\S]*?<\/button>/,m=>`<button class="cta big" data-act="ref3"><span>Maçı izle ve yönet</span><small>3B yayın · kararları maçın içinde ver</small></button>`+m.replace(/class="cta big"/,'class="btn ghost v190-hizli"').replace(/<span>[^<]*<\/span>/,'<span>Hızlı yönet</span>').replace(/<small>[^<]*<\/small>/,'<small>maçı izlemeden yalnız kararlar</small>'));}
   else if(isStaff()&&!isRef()&&G.staff!=='yrd'&&h.indexOf('data-act="stMatch"')>=0&&h.indexOf('data-act="stWatch"')<0){h=h.replace(/(<button[^>]*data-act="stMatch"[\s\S]*?<\/button>)/,`$1<button class="btn w3b" data-act="stWatch">🎥 Maçı 3B izle <small>tribünden canlı</small></button>`);}}catch(e){}return h;})(viewHub);
 /* yeni kariyere geçerken yarım kalan hakem/maç durumları temizlensin */
 wizGo=(old=>function(){try{REF=null;}catch(e){}try{if(PL3)PL3.on=false;}catch(e){}return old.apply(this,arguments);})(wizGo);
