@@ -1,6 +1,6 @@
 /* Futbol Kariyeri — çevrimdışı önbellek (GitHub Pages). Sayfa ve yazı tipleri önbellekten açılır,
    arka planda yeni sürüm indirilir; yeni sürüm bir sonraki açılışta görünür. SURUM yayın sırasında değiştirilir. */
-const SURUM='fk-8ec522c9bb62';
+const SURUM='fk-92b77295a7bf';
 const TEMEL=['./','./index.html','./manifest.webmanifest','./icon-180.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SURUM).then(c=>c.addAll(TEMEL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==SURUM&&k.startsWith('fk-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
