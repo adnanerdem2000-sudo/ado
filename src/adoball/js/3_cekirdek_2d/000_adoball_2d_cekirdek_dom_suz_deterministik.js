@@ -274,6 +274,11 @@
         // AV_KAL: v190 maç istatistiği kalibrasyonu (StatsBomb hedefleri). Kafa vuruşu yan sapması ×AV_HSD (StatsBomb kafa: %31 isabet, %10,4 gol; motor %50 / %19 → gol/xG 1,27),
         //   pasçının ofsaytı yanlış görmesi AV_OFM .03 → .045 (v188 öncesi düzey; ofsayt 1,56 → 1,6–2,4; StatsBomb 2,08)
         AV_KAL: 1,
+        // AV_TKR: müdahale erişimi (v190). Çekişme (kapma / faul / aşılma) yalnız savunmacının ayağı topa yetişince çözülür: ayakta bacak boyu + hamle (.53·boy + .05 m; 180 cm → 1,0 m),
+        //   kayarak .53·boy + .65 m (180 cm → 1,6 m; kalça kayarak öne gelir, bacak uzanır). Bacak boyu ≈ .53·boy (Winter, Biomechanics and Motor Control of Human Movement, antropometri tablosu).
+        //   Eskiden baskı anında 1,8 m'den, kayarak 2,2 m'den, adam eksiltmede topçuya 2,4 m'den kapma çözülüyordu (3B'de ayak topa yetişmiyordu). Menzil dışındaki savunmacı yaklaşmayı sürdürür.
+        //   Karar → yaklaşma (en çok AV_TKT .6 sn, topa koşar) → temas; yetişemezse hamle iptal, topçunun bacağına yetişiyorsa geç kalmış müdahale (yalnız faul ya da ıska). Görüntü: p.tkGo {t, o}.
+        AV_TKR: 1,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
     // [av] gerçek şut verisinden lojistik xG (IRLS; test log-kayıp .2412, AUC .804 — StatsBomb'un kendi xG'si .2400 / .806)
@@ -436,7 +441,7 @@
         var FKD = !!PRM.FKD, FKD_A = PRM.FKD_A, FKD_SK = PRM.FKD_SK, FKD_W = PRM.FKD_W, FKD_MAX = PRM.FKD_MAX;
         // [av] açık veri bayrakları (DEFAULTS [av]); RA: yeni rastgelelik akışı (yalnız bayrak açıkken tüketilir)
         var AV_XG = !!PRM.AV_XG, AV_SHOT = !!PRM.AV_SHOT, AV_DRAG = !!PRM.AV_DRAG && BALL3D, AV_PASS = !!PRM.AV_PASS, AV_GK = !!PRM.AV_GK, AV_MOVE = !!PRM.AV_MOVE && MOVE, AV_OUT = !!PRM.AV_OUT, AV_ATTR = !!PRM.AV_ATTR, AV_TRIG5 = !!PRM.AV_TRIG5, AV_LATE = !!PRM.AV_LATE, AV_ADV = !!PRM.AV_ADV;
-        var AV_DEC = !!PRM.AV_DEC, AV_FGR = !!PRM.AV_FGR, AV_MRK = !!PRM.AV_MRK, AV_PHY = !!PRM.AV_PHY, AV_KAL = !!PRM.AV_KAL;      // [v189] AV_MRK: duran topta markaj      // [v188] karar kalitesi · zorla gol gerçekçiliği
+        var AV_DEC = !!PRM.AV_DEC, AV_FGR = !!PRM.AV_FGR, AV_MRK = !!PRM.AV_MRK, AV_PHY = !!PRM.AV_PHY, AV_KAL = !!PRM.AV_KAL, AV_TKR = !!PRM.AV_TKR;      // [v189] AV_MRK: duran topta markaj      // [v188] karar kalitesi · zorla gol gerçekçiliği
         var AV_SHAPE = !!PRM.AV_SHAPE, AV_OUT2 = !!PRM.AV_OUT2 && AV_OUT, AV_BLK = !!PRM.AV_BLK, AV_AIR = !!PRM.AV_AIR && BALL3D, AV_LIVE = !!PRM.AV_LIVE, AV_CAL = !!PRM.AV_CAL;      // [av2]
         var RB = mulberry(((opts.seed || 1) ^ 0x5be0cd19) >>> 0);      // [av2] Faz B bayraklarının rastgelelik akışı (yalnız bayrak açıkken tüketilir)
         var RA = mulberry(((opts.seed || 1) ^ 0x3c6ef372) >>> 0);
@@ -1790,6 +1795,7 @@
                     else { var shk = 1 - Math.exp(-DT / SH_TAU); p.shX += (sh[0] - p.shX) * shk; p.shY += (sh[1] - p.shY) * shk; }
                     p.shT = S.t; sh = [p.shX, p.shY];
                 }
+                if (AV_TKR && B.owner && B.owner.team !== p.team && tkGoing(p, B.owner) && S.mode === 'live') { p.tx = clamp(gbx(), 1, PW - 1); p.ty = clamp(gby(), 1, PH - 1); p.sf = 1; continue; }      // [v190] AV_TKR: müdahale hamlesi: topa uzanır
                 var dr = D && D[p.id];
                 if (dr && dr.kind !== 'mark') { p.tx = clamp(dr.tx, 1, PW - 1); p.ty = clamp(dr.ty, 1, PH - 1); p.sf = dr.sf; continue; }
                 var tx = sh[0], ty = sh[1], sf = .6;
@@ -2762,6 +2768,9 @@
 
         // ---------- top sahibi mücadelesi ----------
         // savunmacı d, top sürücü o: topu kapma olasılığı (elit eğri: savunma özelliği − sürücü özelliği farkına üstel)
+        function tkReach(d, slide) { var h = (d.a && d.a.h) || 180; return .0053 * h + (slide ? avp('AV_TRS', .65) : avp('AV_TRA', .05)); }      // [v190] AV_TKR: ayakla erişim (m)
+        function tkGoing(d, o) { return AV_TKR && TACKLE && d.tkGo != null && d.tkGo.o === o.id && S.t - d.tkGo.t < avp('AV_TKT', .6); }      // [v190] AV_TKR: müdahale hamlesi sürüyor mu (zaman aşımı AV_TKT sn)
+        function tkTakeOn(d, o) { d.stunT = S.t + TAKEON_STUN; d.tcd = Math.max(d.tcd || 0, 1.1); o.takeOns = (o.takeOns || 0) + 1; S.teams[o.team].st.takeOns = (S.teams[o.team].st.takeOns || 0) + 1; }      // [v190] AV_TKR: başarılı adam eksiltme (eski take-on 'beaten' kaydıyla aynı)
         function tackleP(d, o, base) {
             return CURVE ? clamp(base * Math.exp(.045 * ((d.a.tac * .6 + d.a.mar * .25 + d.a.str * .15) - (o.a.dri * .55 + o.a.bal * .2 + o.a.pac * .1 + o.a.str * .15))), .05, .8) : clamp(base + .0065 * (d.a.tac - o.a.dri), .08, .5);
         }
@@ -2802,12 +2811,13 @@
         // kaçan müdahale: önden dalıp geçilen savunmacı dönmek zorunda (uzun), arkadan yetişmeye çalışan zaten aynı yöne koşuyor (kısa); hızla dalan daha uzun dengesiz kalır
         function tkStun(g) { return TK_STUN0 + (TK_STUN1 - TK_STUN0) * clamp(.35 * (g.ca + 1) / 2 + .65 * Math.min(1, g.vr / 5), 0, 1); }
         function tkLog(g, res) { var c = S.dbg.tk || (S.dbg.tk = {}), k = (g.ca > .4 ? 'on' : g.ca < -.4 ? 'ark' : 'yan') + '_' + res; c[k] = (c[k] || 0) + 1; }
-        function resolveContest(d, o, base, g) {
+        function resolveContest(d, o, base, g, late) {
             var pw = tackleP(d, o, base), pf = (.032 + .0003 * (60 - d.a.tac + 30)) * FOUL_K * (inBox(o.x, o.y, o.team) ? .15 : 1), r = R(), ffl = S.forceFoul != null && S.forceFoul.by === o.id && o.team === S.forceGoal && S.mode === 'live';      // [v187] zorla gol kurgusu: golcüye faul (penaltı / serbest vuruş)
             if (TACKLE) {      // [tackle] açı, gövde yönü, göreli hız, topun açıklığı; ceza sahasında savunmacı ayakta kalır (daha az faul, biraz daha az kapma)
-                tkG = g || tkGeo(d, o); pw = clamp(pw * tkG.w, .02, .8); pf *= TK_FOUL * tkG.f * (AV_MOVE ? avp('AV_FOUL', AV_CAL ? (AV_CLK ? 1.05 : 2) : 1.55) : 1);      // [av] AV_MOVE: yavaşlayan çekişmelerde faul oranı korunur (faul 11–15 / takım)
+                tkG = g || tkGeo(d, o); pw = clamp(pw * tkG.w, .02, .8); pf *= TK_FOUL * tkG.f * (AV_MOVE ? avp('AV_FOUL', AV_CAL ? (AV_CLK ? 1.05 : 2) : 1.55) : 1) * (AV_TKR ? avp('AV_TKF', 1.8) : 1);      // [av] AV_MOVE: yavaşlayan çekişmelerde faul oranı korunur (faul 11–15 / takım)      // [v190] AV_TKR: çekişme başına faul olasılığı eski (1,8 m'ye dek uzanan) çekişme sıklığına göre kurulmuştu; ayağın yetiştiği temasta çekişme ~%45 azaldı → ×AV_TKF
                 if (inBox(o.x, o.y, o.team)) { pf *= .65; pw *= .9; }
             }
+            if (late) pw = 0;      // [v190] AV_TKR: geç kalan hamle topa yetişmez: ya faul (bacağa temas) ya ıska
             if (ffl) { r = pw + pf * .5; S.forceFoul = null; }
             else if (AV_FGR && S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal && S.mode === 'live') r = 2;      // [v188] AV_FGR: kurgunun topçusu müdahaleden sıyrılır (savunmacı dener, aşılır)
             if (r < pw) {
@@ -2855,12 +2865,21 @@
             var o = B.owner; if (!o || o.role === 'GK') return;      // kaleci topu ayağında/elindeyken müdahale edilmez
             if (S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal && !AV_FGR) return;      // [v187] zorla gol kurgusu: zincirin son evresinde topçu müdahale almaz (savunmacı izler) · [v188] AV_FGR: savunmacı müdahaleye girer, topçu sıyrılır (resolveContest)
             for (var i = 0; i < 22; i++) {
-                var d = S.players[i]; if (d.team === o.team || d.role === 'GK' || d.tcd > 0 || d.off) continue;
+                var d = S.players[i]; if (d.team === o.team || d.role === 'GK' || d.off) continue;
+                if (AV_TKR && d.tkGo != null && !tkGoing(d, o)) {      // [v190] AV_TKR: hamle zaman aşımı (AV_TKT sn) ya da topçu değişti → kontrollü iptal; topçunun bacağına yetişiyorsa geç kalmış müdahale (faul ya da ıska)
+                    var tkO = d.tkGo.o === o.id && S.mode === 'live'; d.tkGoTo = d.tkGo.to; d.tkGo = null;
+                    var tkTo = d.tkGoTo; d.tkGoTo = 0;
+                    if (tkO && TACKLE && hyp(d.x - o.x, d.y - o.y) <= tkReach(d, false) + avp('AV_TKL', .3)) { var gL = tkGeo(d, o), resL = resolveContest(d, o, tkTo ? TAKEON_P : .24 * TK_WIN, gL, true); S.dbg.tkL = (S.dbg.tkL || 0) + 1; tkLog(gL, 'g' + resL); if (resL !== 'beaten') return; if (tkTo) tkTakeOn(d, o); else d.stunT = S.t + tkStun(gL); continue; }
+                    if (tkO && tkTo && ((d.x - o.x) * o.vx + (d.y - o.y) * o.vy) <= .3 * hyp(d.x - o.x, d.y - o.y) * (hyp(o.vx, o.vy) || 1)) { tkTakeOn(d, o); continue; }      // adam eksiltme: topçu uzanan savunmacının yanından geçti
+                }
+                if (d.tcd > 0 && !tkGoing(d, o)) continue;
                 var dd = hyp(d.x - gbx(), d.y - gby());      // [carry] sanal top
                 // top sürme: önünde 2.4 m içinde savunmacı → tek seferlik adam eksiltme (take-on) çekişmesi
                 if (o.dribble && o.dribType === 'takeon' && d.stunT < S.t) {
                     var od = hyp(d.x - o.x, d.y - o.y), sp = hyp(o.vx, o.vy) || 1;
                     if (od < TAKEON_R && ((d.x - o.x) * o.vx + (d.y - o.y) * o.vy) / (od * sp || 1) > .3) {
+                        if (AV_TKR && TACKLE && dd > tkReach(d, false)) { if (!tkGoing(d, o)) { d.tkGo = { t: S.t, o: o.id, to: 1 }; S.dbg.tkA = (S.dbg.tkA || 0) + 1; } continue; }      // [v190] AV_TKR: adam eksiltmede savunmacı topa uzanır; çekişme ayak topa yetişince
+                        if (AV_TKR) d.tkGo = null;
                         d.tcd = 1.1;
                         var res = resolveContest(d, o, TAKEON_P); S.dbg.take[res] = (S.dbg.take[res] || 0) + 1;
                         if (TACKLE) tkLog(tkG, 't' + res);
@@ -2869,7 +2888,7 @@
                         continue;
                     }
                 }
-                if (SL_ON && dd > 1.05 && dd < SL_R && d.stunT < S.t && !(d.slT > S.t)) {      /* [sav] kayarak mudahale */
+                if (SL_ON && dd > (AV_TKR ? tkReach(d, false) : 1.05) && dd < (AV_TKR ? tkReach(d, true) : SL_R) && d.stunT < S.t && !(d.slT > S.t)) {      /* [sav] kayarak mudahale */
                     var dq5 = d.a.tac * .6 + d.a.mar * .25 + d.a.str * .15, dsp5 = hyp(d.vx, d.vy);
                     if (dq5 >= 68 && hyp(o.vx, o.vy) > 2.5 && dsp5 > 2.2 && (d.vx * (gbx() - d.x) + d.vy * (gby() - d.y)) / (dsp5 * dd) > .5) {
                         d.slT = S.t + .4;
@@ -2877,7 +2896,7 @@
                         var want5 = SL_P * clamp((dq5 - 68) / 20, .15, 1) * (g5.ca > .5 ? .35 : g5.ca < -.3 ? .1 : 1) * (d.yc ? .3 : 1) * (inBox(o.x, o.y, o.team) ? .25 : 1) * (1 + .8 * clamp((40 - dg5) / 25, 0, 1));
                         if (R() < want5) {
                             d.tcd = TACKLE_CD; d.slT = S.t + 5;
-                            g5.w *= 1.3 * (1 - .35 * clamp((dd - 1.05) / (SL_R - 1.05), 0, 1)) * (g5.ca < -.3 ? .75 : 1); g5.f *= SL_F; g5.sev = clamp(g5.sev + .1, 0, 1);
+                            g5.w *= 1.3 * (1 - .35 * (AV_TKR ? clamp((dd - tkReach(d, false)) / (tkReach(d, true) - tkReach(d, false)), 0, 1) : clamp((dd - 1.05) / (SL_R - 1.05), 0, 1))) * (g5.ca < -.3 ? .75 : 1); g5.f *= SL_F; g5.sev = clamp(g5.sev + .1, 0, 1);
                             slNow = true; var res5 = resolveContest(d, o, SL_W, g5); slNow = false;
                             S.dbg.slide = S.dbg.slide || {}; S.dbg.slide[res5] = (S.dbg.slide[res5] || 0) + 1; if (TACKLE) tkLog(g5, 's' + res5);
                             if (res5 === 'tackle') { d.stunT = S.t + 1; d.slideT = S.t; return; }
@@ -2887,12 +2906,17 @@
                         }
                     }
                 }
-                if (dd > (S.t - (d.pressT || -9) < .15 ? 1.05 + PRESS_REACH * (1 + PR_R * tacOf(d.team).press) : 1.05)) continue;
+                var rOld = S.t - (d.pressT || -9) < .15 ? 1.05 + PRESS_REACH * (1 + PR_R * tacOf(d.team).press) : 1.05, tkGo = tkGoing(d, o);
+                var tkTo2 = tkGo && d.tkGo.to;
+                if (tkGo) { if (dd > tkReach(d, false)) continue; d.tkGo = null; S.dbg.tkC = (S.dbg.tkC || 0) + 1; }      // [v190] AV_TKR: hamle sürüyor; temas ancak ayak topa yetişince
+                else if (dd > (AV_TKR && !TACKLE ? tkReach(d, false) : rOld)) continue;
                 d.tcd = TACKLE_CD;
                 if (TACKLE) {      // [tackle] girme isteği konuma/gövde yönüne bağlı; kaçan müdahalede savunmacı açı ve hıza göre bir an dengesiz kalır (topçu kurtulur)
                     var g2 = tkGeo(d, o);
-                    if (!(S.forceFoul != null && S.forceFoul.by === o.id) && R() > ENGAGE * (1 + PR_E * tacOf(d.team).press) * tkEng(d, o, g2)) continue;      // [v187] zorla faul: temas kaçmaz
-                    var res3 = resolveContest(d, o, .24 * TK_WIN, g2); S.dbg.press[res3] = (S.dbg.press[res3] || 0) + 1; tkLog(g2, res3);
+                    if (!tkGo && AV_TKR && dd > tkReach(d, false)) { if ((S.forceFoul != null && S.forceFoul.by === o.id) || R() <= ENGAGE * (1 + PR_E * tacOf(d.team).press) * tkEng(d, o, g2)) { d.tkGo = { t: S.t, o: o.id }; S.dbg.tkA = (S.dbg.tkA || 0) + 1; } continue; }      // [v190] AV_TKR: müdahale kararı (karar → yaklaşma → temas): önce topa uzanır, en çok AV_TKT sn (yetişemezse hamle düşer)
+                    if (!tkGo && !(S.forceFoul != null && S.forceFoul.by === o.id) && R() > ENGAGE * (1 + PR_E * tacOf(d.team).press) * tkEng(d, o, g2)) continue;      // [v187] zorla faul: temas kaçmaz
+                    var res3 = resolveContest(d, o, tkTo2 ? TAKEON_P : .24 * TK_WIN, g2); S.dbg.press[res3] = (S.dbg.press[res3] || 0) + 1; tkLog(g2, res3);
+                    if (tkTo2 && res3 === 'beaten') { tkTakeOn(d, o); continue; }      // [v190] AV_TKR: adam eksiltmenin teması yandan geldi
                     if (res3 === 'beaten' && AV_OUT && B.owner === o && !(AV_FGR && S.forceSafe != null && o.id === S.forceSafe && o.team === S.forceGoal)) { var dyo = Math.min(o.y, PH - o.y); if (dyo < 6 && RA() < avp('AV_DUO', AV_OUT2 ? (AV_CLK ? 1 : 1.5) : .6) * (1 - dyo / 6)) { var lt = RA() < .5 ? d : o; B.owner = null; B.vx = (RA() - .5) * 4; B.vy = (o.y < CY ? -1 : 1) * (5 + 3 * RA()); B.avo = S.t; B.last = lt; S.lastTeam = lt.team; o.cd = .4; d.cd = .4; o.dribble = false; S.pass = null; return; } }      // [av] AV_OUT: çizgi kenarındaki ikili mücadelede top çoğu kez taça (son dokunan rastgele)
                     if (res3 !== 'beaten') return;
                     d.stunT = S.t + Math.max(tkStun(g2), tacOf(d.team).press > 0 ? PR_STUN : 0);
