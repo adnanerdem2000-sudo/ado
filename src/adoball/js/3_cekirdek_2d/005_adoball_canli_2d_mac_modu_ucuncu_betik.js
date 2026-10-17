@@ -48,7 +48,7 @@
     /* [v188] görüntü saatine düşen halka karesi kayıtlı sim zamanından bulunur. Eskiden kare = n1 - (sim.t - görüntü saati) / DT idi; top ölüyken sim saati
        adım başına 3·DT ilerlediği için (AV_CLKD) canlıdan ölüye geçişte (top dışarı, faul, gol) görüntü her ölü adımda 2 kare GERİ sıçrıyordu: top ileri-geri
        titriyor (testere), gol vuruşunun son ~.3 sn'si çizgiye varmadan donuyordu. */
-    var V8B = { dl: 1, gt: 1, ld: 1, an: 1, ln: 1 };      // [v191] ln: sürme dokunuşu ileri bakış
+    var V8B = { dl: 1, gt: 1, ld: 1, an: 1, ln: 1, tk: 1, ph: 1 };      // [v191] ln: sürme dokunuşu ileri bakış · [v193] tk: müdahale motorun temas kaydıyla (p.tkHit / p.slStart), ph: omuz düellosu / sıçrama motor alanlarından (p.duel, p.stagT, p.jump)
     function dlFa(R, lo, n1, t) {
         var b = R.buf, tl = b[(lo % RING) * FS], th = b[(n1 % RING) * FS];
         if (!(th >= tl)) return -1; if (t >= th) return n1; if (t <= tl) return lo;
@@ -642,7 +642,7 @@
        OA_ON = 0: eski davranış (olay anında gerçek zamanlı bacak vuruşu, diğer aksiyonlar yok).
        ===================================================================== */
     var OA_ON = 1;
-    var OA = { hdrK: 11, jk: new Int8Array(22), hiT: -1, jump: new Int8Array(22), cand: new Int8Array(3), cd: new Float32Array(3), own: -1, stun: new Float64Array(22), fall: new Float64Array(22), gnd: new Float64Array(22), react: new Float64Array(22), hdr: -1, hdrT: -9, tmp: new Float32Array(11), trj: new Float64Array(160), fpx: new Float32Array(22), fpy: new Float32Array(22) };
+    var OA = { tkb: [0, 0], hdrK: 11, jk: new Int8Array(22), hiT: -1, jump: new Int8Array(22), cand: new Int8Array(3), cd: new Float32Array(3), own: -1, stun: new Float64Array(22), fall: new Float64Array(22), gnd: new Float64Array(22), react: new Float64Array(22), hdr: -1, hdrT: -9, tmp: new Float32Array(11), trj: new Float64Array(160), fpx: new Float32Array(22), fpy: new Float32Array(22) };
     function oaReset(sim) { OA.hiT = -1; OA.jump.fill(0); OA.jk.fill(0); OA.hdrK = 11; OA.own = -1; OA.fall.fill(-9); OA.gnd.fill(-9); OA.react.fill(-9); OA.hdr = -1; OA.hdrT = -9; for (var i = 0; i < 22; i++) OA.stun[i] = sim ? sim.players[i].stunT : -9; }
     function oaH(a, b) { var x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); }      // deterministik seçim (RNG tüketmez, tekrar aynı)
     function oaD(d, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) { d[0] = a0; d[1] = a1; d[2] = a2; d[3] = a3; d[4] = a4; d[5] = a5; d[6] = a6; d[7] = a7; d[8] = a8; d[9] = a9; d[10] = a10; return d; }
@@ -718,6 +718,11 @@
         return true;
     }
     var SI_ON = 1;      // [sav] p_sav_02 araya girme
+    /* [v193] motorun müdahale teması (AV_TKR): p.tkHit {t, kind 'press'|'take'|'slide', res, d} temasın olduğu adımda yazılır. Gecikmeli görüntüde (DL) temas karesi
+       tkHit.t (gkIssue bunu adım başına, topun sonucu almadan önceki son karesine çeker), hedef o karedeki görünen top; kayma p.slStart'ta başlar. */
+    function oaTkHit(p, t) { var h = p && V8B.tk && DL.on ? p.tkHit : null; return h && t - h.t > -1e-6 && t - h.t < DT + 1e-6 ? h : null; }
+    function oaTkBall(op) { var tco = (CRD.on || CRD.pon) && op && Math.hypot(CRD.x - op.x, CRD.y - op.y) < 2.2; OA.tkb[0] = tco ? (CRD.px != null ? CRD.px : CRD.x) : S.prevB.x; OA.tkb[1] = tco ? (CRD.py != null ? CRD.py : CRD.y) : S.prevB.y; return OA.tkb; }
+    function oaTkT0(p, h, tc) { return h.kind === 'slide' && p.slStart != null && tc - p.slStart < .62 && tc - p.slStart > .05 ? p.slStart + DT : tc - .3; }      // kayma: motorun kayma başlangıcı (gkIssue adım kaydırmasını telafi eder) · ayakta: hamle adımı ~.3 sn
     function oaTackleEv(sim, ev) {
         var dp = sim.players[ev.p], op = sim.players[ev.p2], B = sim.ball, d = OA.tmp; if (!dp || !op) return;
         var dl = Math.hypot(B.x - dp.x, B.y - dp.y), dsp = Math.hypot(dp.vx, dp.vy), vr = Math.hypot(dp.vx - op.vx, dp.vy - op.vy), yw = oaYaw(dp);
@@ -729,13 +734,15 @@
             var osp4 = Math.hypot(op.vx, op.vy), ux4 = osp4 > 1 ? op.vx / osp4 : op.fx, uy4 = osp4 > 1 ? op.vy / osp4 : op.fy, rx4 = dp.x - op.x, ry4 = dp.y - op.y, rl4 = Math.hypot(rx4, ry4) || 1, ca4 = (rx4 * ux4 + ry4 * uy4) / rl4;
             if (osp4 > .9 && ca4 > -.55 && ca4 < .85 && Math.min(dl, Math.hypot(tbx - dp.x, tby - dp.y)) < 2.2) mode = 4;      /* dl: motor topu */
         }
-        if (V8B.ld && !air) { var tco8 = mode === 3 ? .12 : mode === 4 ? .14 : .06, bv8x = tco ? (CRD.vx || op.vx) : (B.vx || op.vx), bv8y = tco ? (CRD.vy || op.vy) : (B.vy || op.vy); tbx += bv8x * tco8; tby += bv8y * tco8; }      /* [v188] müdahale hedefi: topun temas anındaki yeri (top sürülürken ~.1 sn'de .3-.5 m ilerliyor) */
-        gkIssue(1, ev.p, 12, ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));      // [v188] müdahale hareketi temastan önce başlar
+        var hT = oaTkHit(dp, ev.t);      // [v193] motorun temas kaydı: tür (kayma yalnız motor kaydıysa), zaman ve hedef ondan
+        if (hT) { mode = hT.kind === 'slide' ? 3 : mode === 3 ? (lat > .55 * Math.max(dl, .3) ? 2 : 1) : mode; if (!air) { var kb3 = oaTkBall(op); tbx = kb3[0]; tby = kb3[1]; } V8B.tkN = (V8B.tkN || 0) + 1; }
+        else if (V8B.ld && !air) { var tco8 = mode === 3 ? .12 : mode === 4 ? .14 : .06, bv8x = tco ? (CRD.vx || op.vx) : (B.vx || op.vx), bv8y = tco ? (CRD.vy || op.vy) : (B.vy || op.vy); tbx += bv8x * tco8; tby += bv8y * tco8; }      /* [v188] müdahale hedefi: topun temas anındaki yeri (top sürülürken ~.1 sn'de .3-.5 m ilerliyor) */
+        gkIssue(1, ev.p, 12, hT ? ev.t : ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), hT ? oaTkT0(dp, hT, ev.t) : ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));      // [v188] müdahale hareketi temastan önce başlar
         if (mode === 3) OA.gnd[ev.p] = ev.t + .95;                             // kayan oyuncu yerde: motor topu hemen oynatsa da bacak vuruşu kurulmaz
         // topu kaptıran sendeler: savunmacıdan uzağa, kendi koşu yönüyle karışık
         var px = op.x - dp.x, py = op.y - dp.y, pl = Math.hypot(px, py) || 1, osp = Math.hypot(op.vx, op.vy), mx = osp > .5 ? op.vx / osp : 0, my = osp > .5 ? op.vy / osp : 0;
         px = px / pl * .6 + mx * .4; py = py / pl * .6 + my * .4; pl = Math.hypot(px, py) || 1;
-        var tS = ev.t + (mode === 3 ? .1 : mode === 4 ? .13 : .05);      // [sav] araya girmede sendeleme temasla
+        var tS = hT ? ev.t - DT + .03 : ev.t + (mode === 3 ? .1 : mode === 4 ? .13 : .05);      // [sav] araya girmede sendeleme temasla · [v193] motorun temas karesinde
         gkIssue(1, ev.p2, 13, tS, tS, oaD(d, px / pl, py / pl, Math.max(.35, Math.min(1, vr / 5)), .5, 0, 0, 0, 0, 0, 0, 0));
     }
     function oaFoulEv(sim, ev, m) {
@@ -931,7 +938,8 @@
             if (s === OA.stun[i]) continue;
             OA.stun[i] = s;
             if (s > sim.t + .05 && sim.mode === 'live' && o && o.team !== p.team && !p.off)      // motor savunmacıyı "geçildi" saydı: boşa uzanma + denge kaybı
-                { var slm = p.slideMiss != null && sim.t - p.slideMiss < .1; gkIssue(1, i, 12, sim.t + (slm ? .12 : .04), sim.t - .03, oaD(OA.tmp, B.x, B.y, o.x, o.y, Math.hypot(p.vx - o.vx, p.vy - o.vy), slm ? 3 : 1, oaSideY(oaYaw(p), p.x, p.y, B.x, B.y), 3, s - sim.t, p.vx, p.vy)); if (slm) OA.gnd[i] = sim.t + 1.1; }      /* [sav] kacan kayma: kayarak */
+                { var hB = oaTkHit(p, sim.t); if (hB && hB.res === 'beaten') { var kbB = oaTkBall(o), slB = hB.kind === 'slide'; gkIssue(1, i, 12, hB.t - DT, oaTkT0(p, hB, hB.t) - DT, oaD(OA.tmp, kbB[0], kbB[1], o.x, o.y, Math.hypot(p.vx - o.vx, p.vy - o.vy), slB ? 3 : 1, oaSideY(oaYaw(p), p.x, p.y, kbB[0], kbB[1]), 3, s - sim.t, p.vx, p.vy)); if (slB) OA.gnd[i] = sim.t + 1.1; continue; }      /* [v193] motorun aşılma teması: hamle temas karesinde topa uzanır, top geçer */
+                  var slm = p.slideMiss != null && sim.t - p.slideMiss < .1; gkIssue(1, i, 12, sim.t + (slm ? .12 : .04), sim.t - .03, oaD(OA.tmp, B.x, B.y, o.x, o.y, Math.hypot(p.vx - o.vx, p.vy - o.vy), slm ? 3 : 1, oaSideY(oaYaw(p), p.x, p.y, B.x, B.y), 3, s - sim.t, p.vx, p.vy)); if (slm) OA.gnd[i] = sim.t + 1.1; }      /* [sav] kacan kayma: kayarak */
         }
     }
 
@@ -4113,9 +4121,10 @@
         var rk5 = .55, side = oaSideY(oaYaw(dp), dp.x, dp.y, op.x, op.y);
         if (k >= 8) {      /* kayarak: arkadan rakibin ayağına (top ileride), önden topa / ayağa, yandan çapraz */
             var sx = op.x + ux * (k === 8 ? .45 : .15), sy = op.y + uy * (k === 8 ? .45 : .15);
-            gkIssue(1, ev.p, 12, ev.t + .1, ev.t - .03, oaD(d, sx, sy, op.x, op.y, Math.hypot(dp.vx - op.vx, dp.vy - op.vy), 3, side, 0, 0, dp.vx, dp.vy)); OA.gnd[ev.p] = ev.t + 1.1; rk5 = 1.25;
+            var hS = oaTkHit(dp, ev.t); gkIssue(1, ev.p, 12, hS ? ev.t : ev.t + .1, hS ? oaTkT0(dp, hS, ev.t) : ev.t - .03, oaD(d, sx, sy, op.x, op.y, Math.hypot(dp.vx - op.vx, dp.vy - op.vy), 3, side, 0, 0, dp.vx, dp.vy)); OA.gnd[ev.p] = ev.t + 1.1; rk5 = 1.25;      // [v193] kayma motorun kayma başlangıcı / temas karesiyle
         } else {
-            gkIssue(1, ev.p, 19, ev.t + (k === 7 ? .05 : .06), ev.t - (k === 4 || k === 6 ? .32 : k === 7 ? .4 : .26), oaD(d, op.x + ux * Math.min(osp, 5) * .06, op.y + uy * Math.min(osp, 5) * .06, k, side, Math.hypot(dp.vx - op.vx, dp.vy - op.vy), op.vx, op.vy, 0, 0, dp.vx, dp.vy));
+            var tF = oaTkHit(dp, ev.t) ? ev.t - DT : ev.t + (k === 7 ? .05 : .06);      // [v193] faul teması motorun temas karesinde (k19 adım kaydırmasız)
+            gkIssue(1, ev.p, 19, tF, tF - (k === 4 || k === 6 ? .38 : k === 7 ? .45 : .32), oaD(d, op.x + ux * Math.min(osp, 5) * .06, op.y + uy * Math.min(osp, 5) * .06, k, side, Math.hypot(dp.vx - op.vx, dp.vy - op.vy), op.vx, op.vy, 0, 0, dp.vx, dp.vy));
             rk5 = [0, 1.0, .75, .7, .7, .75, .85, 1.0][k];
             if (k === 7 && !m.adv) { gkIssue(1, ev.p, 14, ev.t + .55 + .35, ev.t + .7, oaD(OA.tmp, rx, ry, 3, .6 + .6 * h, 1, 6, 0, 0, 0, 0, 0)); rk5 = 2.4; }      // kafa çarpışmasında faul yapan da düşer
         }
