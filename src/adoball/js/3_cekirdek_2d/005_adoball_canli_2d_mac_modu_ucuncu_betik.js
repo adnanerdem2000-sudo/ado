@@ -48,7 +48,7 @@
     /* [v188] görüntü saatine düşen halka karesi kayıtlı sim zamanından bulunur. Eskiden kare = n1 - (sim.t - görüntü saati) / DT idi; top ölüyken sim saati
        adım başına 3·DT ilerlediği için (AV_CLKD) canlıdan ölüye geçişte (top dışarı, faul, gol) görüntü her ölü adımda 2 kare GERİ sıçrıyordu: top ileri-geri
        titriyor (testere), gol vuruşunun son ~.3 sn'si çizgiye varmadan donuyordu. */
-    var V8B = { dl: 1, gt: 1, ld: 1, an: 1 };
+    var V8B = { dl: 1, gt: 1, ld: 1, an: 1, ln: 1 };      // [v191] ln: sürme dokunuşu ileri bakış
     function dlFa(R, lo, n1, t) {
         var b = R.buf, tl = b[(lo % RING) * FS], th = b[(n1 % RING) * FS];
         if (!(th >= tl)) return -1; if (t >= th) return n1; if (t <= tl) return lo;
@@ -60,6 +60,11 @@
         if (!DLV) DLV = newView();
         var v = ringView(fa, n1, DLV), fo = S.clkOff || 0, i0 = Math.floor(fa); if (fo) { v.dtl += fo; v.dtp += fo; if (v.dtn > 0) v.dtn += fo; }
         v.dead = S.ring.buf[(Math.min(n1, i0 + (fa - i0 > .5 ? 1 : 0)) % RING) * FS + 5] === 1 ? 1 : 0; S.viewT = DL.dT;
+        if (V8B.ln && v.dOn && !(v.dtn > 0)) {      /* [v191] motorun fiziksel sürmesinde sıradaki dokunuş bilinmiyordu (dtn yok): görüntü kayıt tamponunda geride kaldığından
+                                                      sonraki karelerde (~.3 sn) aynı sahibin yeni dokunuşu aranır; sürme IK'sı ayağı dokunuştan ÖNCE topa getirebilsin */
+            var bL = S.ring.buf, oc = (i0 % RING) * FS, cur = bL[oc + RO + 4], ow0 = bL[oc + 4];
+            for (var jL = i0 + 1; jL <= Math.min(n1, i0 + 14); jL++) { var oL = (jL % RING) * FS; if (bL[oL + 4] !== ow0 || !(bL[oL + RO + 9] > .5)) break; var tL = bL[oL + RO + 4]; if (tL > cur + 1e-4) { v.dtn = tL + fo; v.dfn = -1; break; } }
+        }
         try { dlCushion(v, fa, lo, n1); } catch (e) { }
         return v;
     }
