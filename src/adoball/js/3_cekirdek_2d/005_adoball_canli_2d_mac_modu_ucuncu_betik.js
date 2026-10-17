@@ -63,7 +63,7 @@
         if (V8B.ln && v.dOn && !(v.dtn > 0)) {      /* [v191] motorun fiziksel sürmesinde sıradaki dokunuş bilinmiyordu (dtn yok): görüntü kayıt tamponunda geride kaldığından
                                                       sonraki karelerde (~.3 sn) aynı sahibin yeni dokunuşu aranır; sürme IK'sı ayağı dokunuştan ÖNCE topa getirebilsin */
             var bL = S.ring.buf, oc = (i0 % RING) * FS, cur = bL[oc + RO + 4], ow0 = bL[oc + 4];
-            for (var jL = i0 + 1; jL <= Math.min(n1, i0 + 14); jL++) { var oL = (jL % RING) * FS; if (bL[oL + 4] !== ow0 || !(bL[oL + RO + 9] > .5)) break; var tL = bL[oL + RO + 4]; if (tL > cur + 1e-4) { v.dtn = tL + fo; v.dfn = -1; break; } }
+            for (var jL = i0 + 1; jL <= Math.min(n1, i0 + 14); jL++) { var oL = (jL % RING) * FS; if (bL[oL + 4] !== ow0 || !(bL[oL + RO + 9] > .5)) break; var tL = bL[oL + RO + 4]; if (tL > cur + 1e-4) { v.dtn = tL + fo; v.dfn = 0; break; }      /* dfn 0: ayak bilinmiyor (görünen top ayağa çekilmez; IK yakın ayağı seçer) */ }
         }
         try { dlCushion(v, fa, lo, n1); } catch (e) { }
         return v;

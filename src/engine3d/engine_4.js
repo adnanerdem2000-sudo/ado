@@ -4264,7 +4264,7 @@
         }
         function carryContact(v) {
             var dt = CLKOK && CC.lt > -1e8 ? Math.max(0, Math.min(.2, CLK - CC.lt)) : 0, tx = 0, tz = 0, a = v.owner >= 0 && S.st ? S.st[v.owner] : null; CC.lt = CLKOK ? CLK : -1e9;
-            if (a && CLKOK && v.dOn) { a.tch8s = CLK; a.tch8n = v.dtn > 0 ? v.dtn : -9; a.tch8l = v.dtl > 0 ? v.dtl : -9; a.tch8f = v.dfn > 0 ? 0 : 1; a.tch8u = v.dfn < 0 ? 1 : 0; }      // [v188] dokunuş bilgisi: ayak kilidi / dokunuş IK'sı için
+            if (a && CLKOK && v.dOn) { a.tch8s = CLK; a.tch8n = v.dtn > 0 ? v.dtn : -9; a.tch8l = v.dtl > 0 ? v.dtl : -9; a.tch8f = v.dfn > 0 ? 0 : 1; a.tch8u = v.dfn ? 0 : 1; }      // [v188] dokunuş bilgisi: ayak kilidi / dokunuş IK'sı için
             if (CLKOK) { var dc8 = CLK - CC8.t; if (dc8 > 1e-4 && dc8 < .2) { var k8 = 1 - Math.exp(-dc8 / .05), ivx = (v.bx - CC8.bx) / dc8, ivz = (v.by - CC8.bz) / dc8; if (ivx * ivx + ivz * ivz < 900 && isFinite(ivx + ivz)) { CC8.vx += (ivx - CC8.vx) * k8; CC8.vz += (ivz - CC8.vz) * k8; } } else if (dc8 < -1e-4 || dc8 >= .2) { CC8.vx = 0; CC8.vz = 0; } CC8.bx = v.bx; CC8.bz = v.by; CC8.t = CLK; }      // [v188] görünen sürme topunun hızı
             if (CLKOK && v.dOn && a && a.ok && a.rM && a.dqc && !GB.held && !OAB.hc && !(a.ac && a.ac.init && a.ac.k >= 11 && CLK < (a.ac.h1t > 0 ? a.ac.h1t : a.ac.tc) + .05)) {      // aksiyonun tutusu bitince (geri donus) temas surer
                 var wIn = 0, wOut = 0, u;
