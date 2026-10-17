@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /* Toplu maç testi (Adoball motoru, görüntüsüz) + tanılama sayımları + regresyon denetimi.
    Derlenmiş oyunu headless Chromium'da açar, teknik direktör kariyeri başlatır, ilk lig maçını oyunun kendi yoluyla (fxStart → abSetup)
-   Adoball çerçevesinde kurar. Bu maçın gerçek kurulum seçenekleri (kadro, taktik, duran top kullanıcıları, beyin tabanı) tanılama katmanının
-   (006_adoball_tanilama.js, AdoTani) Sim2D.create sarmalamasından alınır; her test maçı bu seçeneklerle, farklı tohumla (tek sayılı maçlarda
-   ev/deplasman yer değiştirerek) Sim2D.create ile kurulup sonuna dek adım adım oynatılır (oyunun "Sonuna simüle et" yolu gibi: görüntü adımları yok).
+   Adoball çerçevesinde kurar; sonra her test maçı için oyunun TD fxStart'ıyla lig rakibine karşı (sırayla ev/deplasman) yeni maç kurulur. Maçın gerçek kurulum seçenekleri (kadro, taktik, duran top kullanıcıları, beyin tabanı) tanılama katmanının
+   (006_adoball_tanilama.js, AdoTani) Sim2D.create sarmalamasından alınır; maç bu seçeneklerle, kendi tohumuyla Sim2D.create ile kurulup sonuna dek adım adım oynatılır (oyunun "Sonuna simüle et" yolu gibi: görüntü adımları yok).
    Kullanım:
      node tools/mac_test.js --mac N [--file dist/futbol-kariyeri.html] [--rapor x.json] [--devam] [--sure 100] [--tohum 1]
                            [--kulup galatasaray,fenerbahce,...] [--lig sl] [--oturum 6] [--det K] [--tani 0] [--veri parametreler.json]
@@ -124,6 +123,22 @@ async function openCareerMatch(page, club) {
   const info = await fr.evaluate(() => { const o = AdoTani.lastOpts(); window.__mtBase = JSON.stringify(o); return { names: o.names, seed: o.seed }; });
   return { fr, info };
 }
+/* lig rakibiyle yeni maç kur (oyunun TD fxStart'ı → abSetup → 005 prepare); ilk açılan maç çoğunlukla hazırlık maçıdır (alt lig rakibi) */
+async function setupLeagueMatch(page, fr, j) {
+  const r = await page.evaluate(j => {
+    const lg = [...new Set((G.s.fixtures || []).flat(2))].filter(c => c !== G.club && CLUBS[c]); if (!lg.length) return { yok: true };
+    const opp = lg[Math.floor(j / 2) % lg.length], usHome = j % 2 === 0;
+    try { cancelAnimationFrame(ABM.raf); ABM.raf = 0; ABM.win.ado2d.state.running = false; } catch (e) { }
+    ABM.fx = null; FX = null; try { ABM.win.AdoTani.state.lastOpts = null; } catch (e) { }
+    fxStart({ opp: CLUBS[opp], usHome, neutral: false, onEnd: () => { } });
+    return { opp, usHome, n: lg.length };
+  }, j);
+  if (r.yok) throw new Error('lig fikstürü yok');
+  await page.waitForFunction(() => { try { const o = ABM.win.AdoTani.lastOpts(); return ABM.fx && FX === ABM.fx && ABM.win.ado2d.sim() && !!o; } catch (e) { return false; } }, null, { timeout: 30000 });
+  const info = await fr.evaluate(() => { const o = AdoTani.lastOpts(); window.__mtBase = JSON.stringify(o); return { names: o.names }; });
+  await page.evaluate(() => { try { cancelAnimationFrame(ABM.raf); ABM.raf = 0; } catch (e) { } });
+  return Object.assign(r, info);
+}
 /* sayfa içi: bir maçı kur (tohum, yer değiştirme, tanılama) ve parça parça oynat */
 const PAGE_RUN = ({ seed, swap, tani, ms }) => {
   const H = window.__mt;
@@ -178,7 +193,8 @@ async function runBatch() {
         try { const m = await openCareerMatch(pg.page, club); sess = Object.assign(pg, m, { errs, club }); sessIdx = want; log(`oturum ${want}: ${club} · ${m.info.names.join(' – ')} · kurulum ${((Date.now() - t) / 1000).toFixed(1)} sn`); }
         catch (e) { R.hatalar.push('kurulum (' + club + '): ' + e.message.split('\n')[0]); write(); await pg.ctx.close(); sess = null; sessIdx = want; R.maclar.push({ no: i + 1, hata: 'kurulum' }); continue; }
       }
-      const seed = (TOH0 * 7919 + i * 104729) >>> 0, swap = i % 2 === 1;
+      const seed = (TOH0 * 7919 + i * 104729) >>> 0, swap = false;
+      try { await setupLeagueMatch(sess.page, sess.fr, i - want * OTURUM + TOH0 * 3); } catch (e) { R.hatalar.push('lig maçı kurulumu ' + (i + 1) + ': ' + e.message.split('\n')[0]); R.maclar.push({ no: i + 1, hata: 'kurulum' }); write(); sess = null; continue; }
       if (left() < 15) break;
       let r;
       let pre = null;
@@ -214,6 +230,8 @@ async function runRegresyon() {
   try {
     const t = Date.now(); const m = await openCareerMatch(page, KULUP[0]); fr = m.fr;
     ok('maç ekranı açılışı', 'TAMAM', `${m.info.names.join(' – ')} · ${((Date.now() - t) / 1000).toFixed(1)} sn`);
+    const ov = await W(() => { const d = document.getElementById('ado-tani'); return { on: !!(window.AdoTani && AdoTani.state.on), ov: !!d, txt: d ? d.innerText.slice(0, 60) : '', bagli: AdoTani.state.list.length }; });
+    ok('tanılama kaplaması (localStorage.adoTani=1)', ov.on && ov.ov && /Tanılama/.test(ov.txt) ? 'TAMAM' : 'HATA', `açık ${ov.on}, kaplama ${ov.ov ? JSON.stringify(ov.txt) : 'YOK'}, izlenen maç ${ov.bagli}`);
     const simT = () => W(() => { const s = ado2d.sim(); return { t: s.t, half: s.half, fin: s.finished, hold: ado2d.state.hold, run: ado2d.state.running, sc: [s.teams[0].score, s.teams[1].score], ev: s.events.length }; });
     /* başlat */
     let a = await simT(); await W(() => startMatch()); await page.waitForTimeout(2500); let b = await simT();
@@ -247,16 +265,17 @@ async function runRegresyon() {
       ok('devre arası → ikinci yarı', h2.half === 2 && h2.t > h0.t ? 'TAMAM' : 'HATA', `devre arası: hold ${h0.hold}, t ${h0.t.toFixed(1)}; ikinci yarı düğmesinden 3 sn sonra yarı ${h2.half}, t ${h2.t.toFixed(1)}, akış ${h2.run ? 'açık' : 'kapalı'}`);
     } else ok('devre arası → ikinci yarı', 'HATA', `devre arası ekranına geçilmedi (t ${h && h.t.toFixed(1)}, hold ${h && h.hold})`);
     /* maç sonu: oyunun "sonuna simüle et" yolu (ABM.syncRun) → abFullTime → fxClose → G.s.results */
-    const n0 = await page.evaluate(() => G.s.results.length);
+    const n0 = await page.evaluate(() => { try { const o = FX.o, f0 = o.onEnd; o.onEnd = function (gu, go) { window.__mtEnd = [gu, go]; return f0 && f0.apply(this, arguments); }; } catch (e) { } return G.s.results.length; });
     let fin = null; const tf = Date.now();
     while (Date.now() - tf < 50000) { fin = await page.evaluate(() => { try { if (!document.querySelector('#modal').hidden) closeModal(); } catch (e) { } return ABM.syncRun ? ABM.syncRun(3000) : 'yok'; }); if (fin !== 'abrun' && fin !== 'abpause' && fin !== 'abwait') break; if (fin === 'abpause') await page.evaluate(() => { try { if (FX && FX.phase === 'pause') { FX.phase = 'play'; } } catch (e) { } }); }
     await page.waitForTimeout(800);
     const end = await page.evaluate(n0 => { const sim = ABM.sim || (ABM.win && ABM.win.ado2d.sim()); const ev = sim ? sim.events : [];
       const rd = G.s.results[n0]; const f = rd && rd.find(r => r[0] === G.club || r[1] === G.club);
       const goals = ev.filter(e => e.type === 'GOAL'); const ko = goals.map(g => { const n = ev.find(e => e.id > g.id && (e.type === 'PASS' || e.type === 'CLEAR')); return n ? { tag: n.meta && n.meta.tag, x: +n.x.toFixed(1), y: +n.y.toFixed(1), takim: n.team, golcuTakim: g.team } : null; });
-      return { sk: sim ? [sim.teams[0].score, sim.teams[1].score] : null, fin: sim && sim.finished, res: f || null, fx: typeof FX !== 'undefined' && !!FX, ko }; }, n0);
-    const resOk = end.res && end.sk && end.res[2] === end.sk[0] && end.res[3] === end.sk[1];
-    ok('maç sonu (sonuna simüle et → sonuç kaydı)', end.fin && resOk ? 'TAMAM' : 'HATA', `syncRun: ${fin}; motor ${end.sk && end.sk.join('-')} · G.s.results ${end.res ? end.res.slice(0, 4).join(' ') : 'YOK'}`);
+      const us = sim ? [sim.teams[abS2E(0)].score, sim.teams[abS2E(1)].score] : null;
+      return { sk: sim ? [sim.teams[0].score, sim.teams[1].score] : null, us, onEnd: window.__mtEnd || null, fin: sim && sim.finished, res: f || null, fx: typeof FX !== 'undefined' && !!FX, ko }; }, n0);
+    const endOk = end.onEnd && end.us && end.onEnd[0] === end.us[0] && end.onEnd[1] === end.us[1], resOk = !end.res || (end.res[2] === end.sk[0] && end.res[3] === end.sk[1]);
+    ok('maç sonu (sonuna simüle et → oyuna sonuç)', end.fin && endOk && resOk && !end.fx ? 'TAMAM' : 'HATA', `syncRun: ${fin}; motor (biz-rakip) ${end.us && end.us.join('-')} · oyunun onEnd sonucu ${end.onEnd ? end.onEnd.join('-') : 'YOK'} · FX ${end.fx ? 'açık kaldı' : 'kapandı'} · lig sonuç kaydı ${end.res ? end.res.slice(0, 4).join(' ') : '(lig maçı değil: hazırlık maçı)'}`);
     if (end.ko.length) { const bad = end.ko.filter(k => !k || k.tag !== 'KICKOFF' || Math.abs(k.x - 52.5) > 3 || Math.abs(k.y - 34) > 3 || k.takim === k.golcuTakim);
       ok('gol sonrası santra', bad.length ? 'HATA' : 'TAMAM', `${end.ko.length} gol: gol sonrası ilk vuruş ${end.ko.map(k => k ? k.tag + '@' + k.x + ',' + k.y : '?').join(' · ')}`); }
     else ok('gol sonrası santra', 'TEST EDİLMEDİ', 'bu maçta gol olmadı');
