@@ -3215,7 +3215,7 @@
              arkasına, gövde geriye esner (uzun taçta daha çok), atışta gövde öne kamçılanır, kollar baş üstünden öne; top elden ~2 m'de çıkar, motorun
              yer pasına doğal bir yayla iner (görsel yükseklik; motor yolu değişmez).
            10 baraj: eller kasık önünde, ayaklar bitişik, topa dönük; serbest vuruş şutunda vuruşla birlikte sıçrama (~.3 m), dizlerle iniş. */
-        var SP_DEAD = null, SP_CA = .6, SP_PROF = ['pass', 'pass_high', 'shot', 'clear'], SP_PL2 = 1;
+        var SP_DEAD = null, SP_CA = 0, SP_PROF = ['pass', 'pass_high', 'shot', 'clear'], SP_PL2 = 1;
         /* [sp] topu yere koyma pozu (çerçevede gövde vuruş yönüne dönük): derin çömelme - uyluk ~75°, diz ~115°, topuklar yerde (ayak bileği
            bükük), leğen ~.4 m iner; gövde öne (~75°), baş topa bakar; iki kol aşağı-öne, avuçlar topun iki yanında yarı yükseklikte */
         function spPlace() {
@@ -3302,7 +3302,8 @@
         function spKick(a, ac, c, P) {
             var L, F, yd, e, W0;
             if (ac.ext) {                                                    // dış kök: yalnızca vuruş yönü ve pozu
-                RT.lk = 0; RT.hy = 1; RT.ya = ac.yaw + spKyAt(ac, c) * sm(rmp(c, ac.tc - .05, ac.tc + .2)); RT.yw = sm(rmp(c, ac.tc - .4, ac.tc - .2));
+                var lkE = V8.sc ? sm(rmp(c, ac.tc - .32, ac.tc - .08)) * (1 - sm(rmp(c, ac.tc + .25, ac.tc + .55))) : 0;      /* [v192] hazırlıksız duran top vuruşunda (motor vurucuyu topa ~1 m uzakta tutar) kök son adımda temas noktasına (topun gerçek yeri) yürür; top oynamaz */
+                RT.lk = lkE; RT.L = (ac.pL || 0) * lkE; RT.F = (ac.pF || 0) * lkE; RT.gait = lkE > .01 ? 1 : 0; RT.hy = 1; RT.ya = ac.yaw + spKyAt(ac, c) * sm(rmp(c, ac.tc - .05, ac.tc + .2)); RT.yw = sm(rmp(c, ac.tc - .4, ac.tc - .2));
                 if (P) { W0 = PW_; PA(kHe, .2, 0, null); spStrike(a, ac, c); PW_ = W0; }
                 return;
             }
@@ -4254,7 +4255,7 @@
         }
         var CS_ON = 1;      // [temas] surme dokunusu (p_temas_03)
         /* [v188] görüntü düzeltmeleri (A/B ölçümü için tek tek kapatılabilir: R._v188({cc:0}) ) */
-        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1, bd: 1, lk: 1, gx: 1, cl: 1, kt: 1, hd: 1, tk: 1, ge: 1, yr: 1 }, FK8 = [9, 9], ST9 = null, END9 = 0, SH9 = [-1e9, -1e9]; /* [v191] bd gövde dinamiği/yorgunluk/eller dizde, lk baş-top, gx kaleci set, cl omuz teması, kt sürme dokunuş ayağı */ R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
+        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1, bd: 1, lk: 1, gx: 1, cl: 1, kt: 1, hd: 1, tk: 1, ge: 1, yr: 1, sc: 1 }, FK8 = [9, 9], ST9 = null, END9 = 0, SH9 = [-1e9, -1e9]; /* [v191] bd gövde dinamiği/yorgunluk/eller dizde, lk baş-top, gx kaleci set, cl omuz teması, kt sürme dokunuş ayağı */ R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
         var CC8 = { bx: 0, bz: 0, t: -1e9, vx: 0, vz: 0, ex: 0, ez: 0 };
         var CC = { ox: 0, oz: 0, lt: -1e9 }, CC_DQ = null, CC_M = null, CC_Q = new Float32Array(3), CC_W = new Float32Array(3), CC_T = new Float32Array(5), CC_T2 = new Float32Array(5);
         function ccToe(dq, root, left, out) {      // [fiz] ayak ucu (dunya) ve ayak yonu (orta -> uc)

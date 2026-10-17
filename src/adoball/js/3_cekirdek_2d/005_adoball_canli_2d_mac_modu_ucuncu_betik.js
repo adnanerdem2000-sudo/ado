@@ -481,7 +481,7 @@
        Günlük (gkLog) tür 5 = güncelleme, 6 = iptal; tekrar aynı aksiyonları aynı karede kurar. Tempo: 3B'de geniş özet ileri sarması yürütmeden
        ~1,8 sn önce 1x'e iner (hazırlık ve vuruş görünsün; 2B ve kritik anlar değişmez). SP_ON = 0: eski davranış (olay anında bacak vuruşu).
        ===================================================================== */
-    var SP_ON = 1, SP_CA = .6, SP_SLOW = 1.8, SP_CSPOT = 1;
+    var SP_ON = 1, SP_CA = 0, SP_SLOW = 1.8, SP_CSPOT = 1;      // [v192] SP_CA .6 → 0: kornerde top motorun köşe noktasında gösterilir, vurucu ona hizalanır (eskiden top yayın .6 m içinde, motor topu köşede: temas karesinde ayak topa ~.9 m)
     var SP = { cpd: null, cpk: -1, cpa: new Float32Array(2), d: null, tk: -1, iss: 0, tc: null, tcP: null, tu: 0, ty: 0, ex: 0, w: new Float64Array(22), tmp: new Float32Array(11), tmp2: new Float32Array(11), o: { x: 0, y: 0, d: 0, high: false }, ld: new Float32Array(22 * 11), lt: new Float64Array(22), lk: new Int8Array(22), off: 0 };
     function spReset() { SP.d = null; SP.tk = -1; SP.iss = 0; SP.tc = null; SP.tcP = null; SP.ex = 0; SP.w.fill(0); SP.lk.fill(0); SP.off = S.clkOff || 0; }
     // aksiyon kur/güncelle ve son veriyi sakla (duraklamadan sonra motorun anına yeniden hizalamak için)
@@ -510,7 +510,7 @@
     function spCornerPlan(d, tx, ty, ft, D, dd) {
         var ix = d.x < PW / 2 ? 1 : -1, iy = d.y < PH / 2 ? 1 : -1, i, k, bs = -9, th = .6;
         for (i = 0; i < 7; i++) {
-            var ph = (10 + i * 11.7) * Math.PI / 180, bx = d.x + ix * .95 * Math.cos(ph), by = d.y + iy * .95 * Math.sin(ph), ux = tx - bx, uy = ty - by, ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+            var ph = (10 + i * 11.7) * Math.PI / 180, bx = d.x + ix * .95 * Math.cos(ph) * SP_CA, by = d.y + iy * .95 * Math.sin(ph) * SP_CA, ux = tx - bx, uy = ty - by, ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
             for (k = 0; k < 8; k++) {
                 var t = .25 + k * .12, cs = Math.cos(t) * D, sn = Math.sin(t) * D * ft, Sx = bx - ux * cs + uy * sn, Sy = by - uy * cs - ux * sn;
                 var Px = bx - ux * .32 + uy * ft * .14, Py = by - uy * .32 - ux * ft * .14, out = Sx < -.2 || Sx > PW + .2 || Sy < -.2 || Sy > PH + .2;
