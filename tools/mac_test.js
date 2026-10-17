@@ -294,8 +294,10 @@ async function runRegresyon() {
     const ld = await page.evaluate(sid => { const g = slotLoad(sid); if (!g) return null; const r = { day: g.s.day, res: g.s.results.length, club: g.club, ad: g.p && g.p.name }; try { G = g; TAB = 'hub'; render(); r.render = true; } catch (e) { r.render = 'HATA ' + e.message; } return r; }, sv.sid);
     ok('kaydet-yükle', ld && ld.day === sv.day && ld.res === sv.res && ld.club === sv.club && ld.render === true ? 'TAMAM' : 'HATA', `kayıt ${JSON.stringify(sv)} → yeniden yükleme sonrası ${JSON.stringify(ld)}`);
     /* menüler (sekmeler) */
-    const tabs = await page.evaluate(() => { const out = []; const ts = [...new Set([...document.querySelectorAll('[data-act="tab"][data-tab]')].map(b => b.dataset.tab))];
-      for (const t of ts) { try { TAB = t; render(); out.push([t, (document.querySelector('#app') || document.body).innerText.length]); } catch (e) { out.push([t, 'HATA ' + e.message]); } } TAB = 'hub'; render(); return out; });
+    const tabs = await page.evaluate(() => { const out = []; let ts = [...new Set([...document.querySelectorAll('#tabsIn [data-act="tab"][data-tab]')].map(b => b.dataset.tab))];
+      if (!ts.length) ts = G && G.mode === 'mgr' ? ['hub', 'squad', 'league', 'board', 'inbox', 'career', 'life'] : ['hub', 'league', 'inbox', 'career'];      // sekme çubuğu çizilmemişse 013 render'ın TD sekmeleri
+      for (const t of ts) { try { const b = document.querySelector('#tabsIn [data-tab="' + t + '"]'); if (b) b.click(); else { TAB = t; render(); } const v = document.querySelector('#view'); out.push([t, v ? v.innerText.length : -1]); } catch (e) { out.push([t, 'HATA ' + e.message]); } }
+      try { TAB = 'hub'; render(); } catch (e) { } return out; });
     const tb = tabs.filter(x => typeof x[1] !== 'number' || x[1] < 20);
     ok('menüler (sekmeler)', tabs.length && !tb.length ? 'TAMAM' : tabs.length ? 'HATA' : 'TEST EDİLMEDİ', `${tabs.length} sekme: ${tabs.map(x => x[0]).join(', ')}${tb.length ? ' · sorunlu ' + JSON.stringify(tb) : ''}`);
   } catch (e) { ok('regresyon akışı', 'HATA', e.message.split('\n')[0]); }
