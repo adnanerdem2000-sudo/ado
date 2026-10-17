@@ -30,6 +30,7 @@
         temassiz_top: ['uyari', 'Temassız top yön/hız değişimi (olay ve yakın oyuncu yok)'],
         imkansiz_sahiplik: ['kritik', 'Top, sahibinden çok uzakta'],
         uzak_kazanim: ['kritik', 'Top uzaktan kazanıldı'],
+        vurus_kazanim: ['uyari', 'Pas/şut aynı adımda uzaktaki oyuncuca alındı (vuruş sıçramasıyla birlikte)'],
         sahipsiz_sahip: ['kritik', 'Sahadan çıkmış oyuncu topa sahip'],
         olu_topta_sahip: ['kritik', 'Ölü topta top sahibi var'],
         cakisan_aksiyon: ['uyari', 'Çakışan aksiyonlar'],
@@ -249,7 +250,7 @@
             var o = sim.players[b.own], od = hyp(o.x - B.x, o.y - B.y);
             if (o.off) { if (epi(D, 'offown', true)) rec(D, 'sahipsiz_sahip', { p: b.own }); } else D.ep.offown = 0;
             if (epi(D, 'own' + b.own, od > E.OWN_FAR)) rec(D, 'imkansiz_sahiplik', { p: b.own, m: r2(od), once: [r2(o.x), r2(o.y)], sonra: [r2(B.x), r2(B.y)], neden: 'top sahibinden ' + r2(od) + ' m uzakta (sınır ' + E.OWN_FAR + ')' });
-            if (ownCh) { var gd = hyp(o.x - a.bx, o.y - a.by), lim = o.role === 'GK' ? E.GAIN_FAR_GK : E.GAIN_FAR; if (gd > lim && a.mode === 'live' && b.mode === 'live') rec(D, 'uzak_kazanim', { p: b.own, m: r2(gd), once: { sahip: a.own, top: [r2(a.bx), r2(a.by)] }, sonra: { sahip: b.own, oyuncu: [r2(o.x), r2(o.y)] }, olaylar: Object.keys(ty).join(',') || '-', neden: 'yeni sahip topa ' + r2(gd) + ' m uzaktan kazandı (sınır ' + lim + ')' }); }
+            if (ownCh) { var gd = hyp(o.x - a.bx, o.y - a.by), lim = o.role === 'GK' ? E.GAIN_FAR_GK : E.GAIN_FAR; if (gd > lim && a.mode === 'live' && b.mode === 'live') rec(D, kickEv ? 'vurus_kazanim' : 'uzak_kazanim', { p: b.own, m: r2(gd), once: { sahip: a.own, top: [r2(a.bx), r2(a.by)] }, sonra: { sahip: b.own, oyuncu: [r2(o.x), r2(o.y)] }, olaylar: Object.keys(ty).join(',') || '-', neden: 'yeni sahip topa ' + r2(gd) + ' m uzaktan kazandı (sınır ' + lim + ')' }); }
             if (b.mode === 'dead' && epi(D, 'deadown', true)) rec(D, 'olu_topta_sahip', { p: b.own, aks: 'ölü:' + (sim.dead && sim.dead.kind) });
             if (b.mode !== 'dead') D.ep.deadown = 0;
             if (B.high && epi(D, 'ownhigh', true)) rec(D, 'cakisan_aksiyon', { p: b.own, neden: 'top hem sahipli hem havada (B.high)' }); else if (!B.high) D.ep.ownhigh = 0;
@@ -261,7 +262,11 @@
         /* takılı aksiyonlar */
         var dd = sim.dead;
         if (b.mode === 'dead' && dd) { if (dd.timer > (dd.wait || 0) + E.DEAD_X && D.deadRef !== dd) { D.deadRef = dd; var tk = dd.taker; rec(D, 'takili_olu_top', { p: tk ? tk.id : -1, m: r2(dd.timer), aks: 'ölü:' + dd.kind, neden: dd.kind + ' ' + r2(dd.timer) + ' sn bekledi (bekleme ' + r2(dd.wait) + ' sn)' + (tk ? '; vuruşçu topa ' + r2(hyp(tk.x - dd.x, tk.y - dd.y)) + ' m' : '') }); } }
-        if (sim.pass && sim.pass.active) { if (D.passRef !== sim.pass) { D.passRef = sim.pass; D.passT0 = b.t; D.passDone = false; } else if (!D.passDone && b.t - D.passT0 > E.PASS_T) { D.passDone = true; rec(D, 'takili_pas', { p: sim.pass.from ? sim.pass.from.id : -1, m: r2(b.t - D.passT0), aks: 'pas:' + (sim.pass.tag || ''), sonra: { sahip: b.own, v: r2(vPost), z: r2(B.z || 0), havada: !!B.high, mod: b.mode, alici: sim.pass.to ? sim.pass.to.id : -1, top: [r2(B.x), r2(B.y)] }, neden: 'pas ' + r2(b.t - D.passT0) + ' sn etkin kaldı (top ' + (b.own >= 0 ? 'sahipli' : 'sahipsiz') + ', hız ' + r2(vPost) + ' m/sn' + (B.high ? ', havada kaydı' : '') + ')' }); } } else D.passRef = null;
+        if (sim.pass && sim.pass.active) {
+            if (D.passRef !== sim.pass) { D.passRef = sim.pass; D.passT0 = b.t; D.passDone = false; D.pv = [1e9, 0, 0]; }
+            else if (b.own < 0) { D.pv[0] = Math.min(D.pv[0], vPost); D.pv[1] = Math.max(D.pv[1], vPost); D.pv[2]++; }
+            if (!D.passDone && b.t - D.passT0 > E.PASS_T) { D.passDone = true; rec(D, 'takili_pas', { p: sim.pass.from ? sim.pass.from.id : -1, m: r2(b.t - D.passT0), aks: 'pas:' + (sim.pass.tag || ''), sonra: { sahip: b.own, v: r2(vPost), vmin: r2(D.pv[0]), vmax: r2(D.pv[1]), z: r2(B.z || 0), havada: !!B.high, mod: b.mode, alici: sim.pass.to ? sim.pass.to.id : -1, top: [r2(B.x), r2(B.y)] }, neden: 'pas ' + r2(b.t - D.passT0) + ' sn etkin kaldı (top ' + (b.own >= 0 ? 'sahipli' : 'sahipsiz') + ', hız şimdi ' + r2(vPost) + ', en az ' + r2(D.pv[0]) + ', en çok ' + r2(D.pv[1]) + ' m/sn' + (B.high ? ', havada kaydı' : '') + ')' }); }
+        } else D.passRef = null;
         if (sim.shot) { if (D.shotRef !== sim.shot) { D.shotRef = sim.shot; D.shotT0 = b.t; D.shotDone = false; } else if (!D.shotDone && b.t - D.shotT0 > E.SHOT_T) { D.shotDone = true; rec(D, 'takili_sut', { p: sim.shot.shooter ? sim.shot.shooter.id : -1, m: r2(b.t - D.shotT0) }); } } else D.shotRef = null;
         if (B.high && B.high.tLand != null && b.t > B.high.tLand + E.HIGH_T && D.highDone !== B.high) { D.highDone = B.high; rec(D, 'takili_hava', { p: b.own, m: r2(b.t - B.high.tLand), neden: 'iniş zamanından ' + r2(b.t - B.high.tLand) + ' sn sonra hâlâ havada kaydı' }); }
         if (b.mode === 'live' && b.own < 0 && vPost < .3 && !(sim.pass && sim.pass.active) && !sim.shot && !B.high) { if (!D.looseOn) { D.looseOn = true; D.looseT = b.t; D.looseDone = false; } else if (!D.looseDone && b.t - D.looseT > E.LOOSE_T) { D.looseDone = true; var nr2 = nearest(sim, B.x, B.y); rec(D, 'sahipsiz_top', { p: nr2.i, m: r2(b.t - D.looseT), sonra: [r2(B.x), r2(B.y)], neden: r2(b.t - D.looseT) + ' sn duran sahipsiz top; en yakın oyuncu ' + r2(nr2.d) + ' m' }); } } else D.looseOn = false;
