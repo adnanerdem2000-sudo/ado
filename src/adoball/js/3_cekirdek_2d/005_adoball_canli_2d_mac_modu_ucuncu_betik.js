@@ -1470,11 +1470,12 @@
         var o = sim.ball.owner, k = 1 - Math.exp(-DT / .18), i, p, q, dx, dy, d, bk, tg;
         for (i = 0; i < 22; i++) {
             p = sim.players[i]; q = S.prev[i]; GPHP[i] = GPH[i]; if (!q) continue;
-            if (p.gph != null) { GPHP[i] = p.pgph; GPH[i] = p.gph; GCK[i] = p.gq ? p.gq.ck : 0; continue; }      // [motor] evre motordan
+            if (p.gph != null && isFinite(p.gph)) { GPHP[i] = isFinite(p.pgph) ? p.pgph : p.gph; GPH[i] = p.gph; GCK[i] = p.gq ? p.gq.ck : 0; continue; }      // [motor] evre motordan · [v192] NaN evre görüntüye geçmez (yerel kestirime düşer)
             dx = p.x - q.x; dy = p.y - q.y; d = Math.hypot(dx, dy); if (d > 5) d = 0;
             tg = o === p && p.role !== 'GK' && sim.mode === 'live' ? 1 : 0; GCK[i] += (tg - GCK[i]) * k;
             bk = d > 1e-4 && (dx * p.fx + dy * p.fy) < -.35 * d ? -1 : 1;
             GSP[i] += (Math.min(10.5, d / DT) - GSP[i]) * (1 - Math.exp(-DT / .12)); GPH[i] += bk * d * crGaitK(GSP[i], GCK[i]);      // [fiz] kadans
+            if (!isFinite(GPH[i])) GPH[i] = 0; if (!isFinite(GPHP[i])) GPHP[i] = GPH[i]; if (!isFinite(GSP[i])) GSP[i] = 0;      // [v192] NaN koruması
         }
     }
     function crRoll(st, dt) {      // kayma -> yuvarlanma (PhysX ile aynı: kaymada mu*g yavaşlatır ve döndürür; yuvarlanmada çim direnci + hava)
