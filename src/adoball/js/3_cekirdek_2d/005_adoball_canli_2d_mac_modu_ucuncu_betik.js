@@ -642,7 +642,7 @@
        OA_ON = 0: eski davranış (olay anında gerçek zamanlı bacak vuruşu, diğer aksiyonlar yok).
        ===================================================================== */
     var OA_ON = 1;
-    var OA = { tkb: [0, 0], hdrK: 11, jk: new Int8Array(22), hiT: -1, jump: new Int8Array(22), cand: new Int8Array(3), cd: new Float32Array(3), own: -1, stun: new Float64Array(22), fall: new Float64Array(22), gnd: new Float64Array(22), react: new Float64Array(22), hdr: -1, hdrT: -9, tmp: new Float32Array(11), trj: new Float64Array(160), fpx: new Float32Array(22), fpy: new Float32Array(22) };
+    var OA = { tkb: [0, 0], tkv: [0, 0], tr0: [0, 0, 0, 0], tr1: [0, 0, 0, 0], hdrK: 11, jk: new Int8Array(22), hiT: -1, jump: new Int8Array(22), cand: new Int8Array(3), cd: new Float32Array(3), own: -1, stun: new Float64Array(22), fall: new Float64Array(22), gnd: new Float64Array(22), react: new Float64Array(22), hdr: -1, hdrT: -9, tmp: new Float32Array(11), trj: new Float64Array(160), fpx: new Float32Array(22), fpy: new Float32Array(22) };
     function oaReset(sim) { OA.hiT = -1; OA.jump.fill(0); OA.jk.fill(0); OA.hdrK = 11; OA.own = -1; OA.fall.fill(-9); OA.gnd.fill(-9); OA.react.fill(-9); OA.hdr = -1; OA.hdrT = -9; for (var i = 0; i < 22; i++) OA.stun[i] = sim ? sim.players[i].stunT : -9; }
     function oaH(a, b) { var x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); }      // deterministik seçim (RNG tüketmez, tekrar aynı)
     function oaD(d, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) { d[0] = a0; d[1] = a1; d[2] = a2; d[3] = a3; d[4] = a4; d[5] = a5; d[6] = a6; d[7] = a7; d[8] = a8; d[9] = a9; d[10] = a10; return d; }
@@ -685,7 +685,8 @@
         var vl = Math.hypot(B.vx, B.vy) || 1, ix = B.vx / vl, iy = B.vy / vl, yw = Math.atan2(-ix, -iy), gx = sim.atkGoalX(p.team), nearG = Math.hypot(gx - p.x, PH / 2 - p.y) < 20;
         OA.jump[p.id] = 1; OA.jk[p.id] = 11;
         if (!cont && !nearG && T[e + 3] + .17 < 1.62) { OA.jk[p.id] = 16; gkIssue(1, p.id, 16, T[e], Math.max(sim.t, T[e] - .32), oaD(d, T[e + 1], T[e + 2], T[e + 3], ix, iy, T[e + 3] + .17 < 1.08 ? 1 : 2, p.vx, p.vy, 1, 0, 0)); return; }      // bel altı: uyluk, üstü: göğüs
-        var hD = cont ? Math.max(.22, Math.min(.55, .28 + .3 * (hea - 55) / 40)) : .14, tgt = 1.67 + hD, k = -1, tc, cx, cy, H;
+        var JK = V8B.ph && p.phK && p.phK.jmp > 0 ? p.phK : null;      // [v193] motorun sıçrama / kafa yüksekliği (AV_PHY phyK: boy, kafa, güç, hız)
+        var hD = cont ? (JK ? Math.max(.2, Math.min(.65, JK.jmp)) : Math.max(.22, Math.min(.55, .28 + .3 * (hea - 55) / 40))) : .14, tgt = (JK && JK.head > 1.4 && JK.head < 2.1 ? JK.head : 1.67) + hD, k = -1, tc, cx, cy, H;
         for (i = 0; i < n; i++) if (T[i * 4 + 3] + .17 <= tgt) { k = i; break; }
         if (k > 0 && T[k * 4] - sim.t > .3) { var o0 = (k - 1) * 4, o1 = k * 4, z0 = T[o0 + 3] + .17, u = (z0 - tgt) / Math.max(1e-6, z0 - T[o1 + 3] - .17); tc = T[o0] + u * DT; cx = T[o0 + 1] + (T[o1 + 1] - T[o0 + 1]) * u; cy = T[o0 + 2] + (T[o1 + 2] - T[o0 + 2]) * u; H = tgt; }
         else { var j = k < 0 ? n - 1 : Math.min(n - 1, Math.max(k, Math.ceil(.3 / DT) - 1)), o2 = j * 4; tc = T[o2]; cx = T[o2 + 1]; cy = T[o2 + 2]; H = T[o2 + 3] + .17; }
@@ -721,7 +722,20 @@
     /* [v193] motorun müdahale teması (AV_TKR): p.tkHit {t, kind 'press'|'take'|'slide', res, d} temasın olduğu adımda yazılır. Gecikmeli görüntüde (DL) temas karesi
        tkHit.t (gkIssue bunu adım başına, topun sonucu almadan önceki son karesine çeker), hedef o karedeki görünen top; kayma p.slStart'ta başlar. */
     function oaTkHit(p, t) { var h = p && V8B.tk && DL.on ? p.tkHit : null; return h && t - h.t > -1e-6 && t - h.t < DT + 1e-6 ? h : null; }
-    function oaTkBall(op) { var tco = (CRD.on || CRD.pon) && op && Math.hypot(CRD.x - op.x, CRD.y - op.y) < 2.2; OA.tkb[0] = tco ? (CRD.px != null ? CRD.px : CRD.x) : S.prevB.x; OA.tkb[1] = tco ? (CRD.py != null ? CRD.py : CRD.y) : S.prevB.y; return OA.tkb; }
+    function oaTkBall(op, tc) { var r = tc != null ? oaRing(tc, 0, OA.tr1) : null; if (r) { OA.tkb[0] = r[0]; OA.tkb[1] = r[1]; return OA.tkb; } var tco = (CRD.on || CRD.pon) && op && Math.hypot(CRD.x - op.x, CRD.y - op.y) < 2.2; OA.tkb[0] = tco ? (CRD.px != null ? CRD.px : CRD.x) : S.prevB.x; OA.tkb[1] = tco ? (CRD.py != null ? CRD.py : CRD.y) : S.prevB.y; return OA.tkb; }      // temas karesinde görünen top (halka kaydı)
+    function oaRing(t, id, out) {      // halka kaydından (görüntünün göreceği kareler) t anında görünen top ve oyuncu konumu: [top x, top y, oyuncu x, oyuncu y]
+        var R = S.ring; if (!R || R.n < 3) return null; var n1 = R.n - 1, lo = Math.max(0, R.n - RING + 3), fa = dlFa(R, lo, n1, t); if (fa < 0) return null;
+        var b = R.buf, i0 = Math.floor(fa), a = fa - i0, o0 = (i0 % RING) * FS, o1 = a > 0 && i0 < n1 ? ((i0 + 1) % RING) * FS : o0, q = 6 + id * 4;
+        out[0] = b[o0 + 1] + (b[o1 + 1] - b[o0 + 1]) * a; out[1] = b[o0 + 2] + (b[o1 + 2] - b[o0 + 2]) * a; out[2] = b[o0 + q] + (b[o1 + q] - b[o0 + q]) * a; out[3] = b[o0 + q + 1] + (b[o1 + q + 1] - b[o0 + q + 1]) * a;
+        return isFinite(out[0] + out[1] + out[2] + out[3]) ? out : null;
+    }
+    /* hamle hizası: 3B aksiyon kökü kurulduğu kareden (t0) temasa (tc) hızla doğrusal kestirir (x + v·.85·min(tc - t0, .35)); motorun bilinen konumları (halka kaydı) için
+       eşdeğer hız: kök temas karesinde motorun o anki konumuna gelir, ayak hedefe hamle adımıyla uzanır. Sonuç OA.tkv [vx, vy] (yoksa oyuncunun hızı). */
+    function oaTkVel(p, t0, tc) {
+        var r0 = oaRing(t0, p.id, OA.tr0), r1 = r0 && oaRing(tc, p.id, OA.tr1), dt = Math.min(.35, Math.max(.05, tc - t0)); OA.tkv[0] = p.vx; OA.tkv[1] = p.vy;
+        if (r0 && r1) { OA.tkv[0] = (r1[2] - r0[2]) / (.85 * dt); OA.tkv[1] = (r1[3] - r0[3]) / (.85 * dt); }
+        return OA.tkv;
+    }
     function oaTkT0(p, h, tc) { return h.kind === 'slide' && p.slStart != null && tc - p.slStart < .62 && tc - p.slStart > .05 ? p.slStart + DT : tc - .3; }      // kayma: motorun kayma başlangıcı (gkIssue adım kaydırmasını telafi eder) · ayakta: hamle adımı ~.3 sn
     function oaTackleEv(sim, ev) {
         var dp = sim.players[ev.p], op = sim.players[ev.p2], B = sim.ball, d = OA.tmp; if (!dp || !op) return;
@@ -735,9 +749,10 @@
             if (osp4 > .9 && ca4 > -.55 && ca4 < .85 && Math.min(dl, Math.hypot(tbx - dp.x, tby - dp.y)) < 2.2) mode = 4;      /* dl: motor topu */
         }
         var hT = oaTkHit(dp, ev.t);      // [v193] motorun temas kaydı: tür (kayma yalnız motor kaydıysa), zaman ve hedef ondan
-        if (hT) { mode = hT.kind === 'slide' ? 3 : mode === 3 ? (lat > .55 * Math.max(dl, .3) ? 2 : 1) : mode; if (!air) { var kb3 = oaTkBall(op); tbx = kb3[0]; tby = kb3[1]; } V8B.tkN = (V8B.tkN || 0) + 1; }
+        var tkvx = dp.vx, tkvy = dp.vy;
+        if (hT) { mode = hT.kind === 'slide' ? 3 : mode === 3 ? (lat > .55 * Math.max(dl, .3) ? 2 : 1) : mode; if (!air) { var kb3 = oaTkBall(op, ev.t - DT); tbx = kb3[0]; tby = kb3[1]; } var kv3 = oaTkVel(dp, oaTkT0(dp, hT, ev.t) - DT, ev.t - DT); tkvx = kv3[0]; tkvy = kv3[1]; V8B.tkN = (V8B.tkN || 0) + 1; }
         else if (V8B.ld && !air) { var tco8 = mode === 3 ? .12 : mode === 4 ? .14 : .06, bv8x = tco ? (CRD.vx || op.vx) : (B.vx || op.vx), bv8y = tco ? (CRD.vy || op.vy) : (B.vy || op.vy); tbx += bv8x * tco8; tby += bv8y * tco8; }      /* [v188] müdahale hedefi: topun temas anındaki yeri (top sürülürken ~.1 sn'de .3-.5 m ilerliyor) */
-        gkIssue(1, ev.p, 12, hT ? ev.t : ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), hT ? oaTkT0(dp, hT, ev.t) : ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, dp.vx, dp.vy));      // [v188] müdahale hareketi temastan önce başlar
+        gkIssue(1, ev.p, 12, hT ? ev.t : ev.t + (mode === 3 ? .12 : mode === 4 ? .14 : .06), hT ? oaTkT0(dp, hT, ev.t) : ev.t - (V8B.ld && DL.on ? (mode === 3 ? .3 : .22) : .03), oaD(d, tbx, tby, op.x, op.y, vr, mode, oaSideY(yw, dp.x, dp.y, tbx, tby), air ? 0 : 1, 0, tkvx, tkvy));      // [v188] müdahale hareketi temastan önce başlar
         if (mode === 3) OA.gnd[ev.p] = ev.t + .95;                             // kayan oyuncu yerde: motor topu hemen oynatsa da bacak vuruşu kurulmaz
         // topu kaptıran sendeler: savunmacıdan uzağa, kendi koşu yönüyle karışık
         var px = op.x - dp.x, py = op.y - dp.y, pl = Math.hypot(px, py) || 1, osp = Math.hypot(op.vx, op.vy), mx = osp > .5 ? op.vx / osp : 0, my = osp > .5 ? op.vy / osp : 0;
@@ -886,6 +901,29 @@
     /* [v188] omuz omuza mücadele: top sahibi ve ≤1,05 m yanındaki rakip (ikisi de ≥2,2 m/sn, yan yana: aradaki doğrultu koşu yönüne dik) birlikte
        gövdelerini birbirine yaslar (jest 30, ~1 sn, oyuncu başına 2,5 sn'de bir) - görüntü */
     var OSH = new Float64Array(22);
+    /* [v193] motorun omuz düellosu (AV_PHY: p.duel {t, kind 'omuz', won, op}, kaybeden p.stagT'ye dek yavaşlar): görüntüdeki tahmin yerine motorun kaydı.
+       Temastan ~.3 sn önce iki oyuncu gövdelerini yaslar (jest 30; gecikmeli görüntü bunu önceden oynatabilir), temas karesinde kaybeden kazanandan uzağa sendeler
+       (gövde darbesi, şiddet yaklaşma hızı ve sendeleme süresiyle), kazanan az savrulur. Motor alanı yoksa (eski motor) false: oaShoulder tahmini sürer. */
+    function oaDuel8(sim) {
+        if (!V8B.ph) return false; var P = sim.players, R3 = S.r3, i, p, u, w; if (!P[0] || typeof P[0].planted !== 'boolean') return false;
+        if (R3 && R3.mphy && !OA.mph) { OA.mph = 1; R3.mphy(1); }
+        if (!OA.du) OA.du = new Array(22);
+        for (i = 0; i < 22; i++) {
+            p = P[i]; u = p.duel; if (!u || u === OA.du[i]) continue; OA.du[i] = u;
+            if (u.kind !== 'omuz' || u.won || sim.mode !== 'live' || sim.t - u.t > DT + 1e-6 || p.off) continue;
+            w = P[u.op]; if (!w || w.off) continue;
+            var nx = p.x - w.x, ny = p.y - w.y, nl = Math.hypot(nx, ny) || 1, cv = Math.hypot(p.vx - w.vx, p.vy - w.vy), sg = p.stagT > u.t ? p.stagT - u.t : .35, m = Math.max(.45, Math.min(1, .35 + .15 * cv + .6 * sg));
+            nx /= nl; ny /= nl; V8B.duN = (V8B.duN || 0) + 1;
+            if (R3 && R3.bump) { var tb = u.t - DT + (S.clkOff || 0); R3.bump(p.id, tb, nx, ny, m); R3.bump(w.id, tb, -nx, -ny, m * .3); }
+            if (V8B.an && OSH[p.id] <= sim.t && OSH[w.id] <= sim.t && v7Free(p.id, u.t - .3) && v7Free(w.id, u.t - .3)) {
+                var ws = Math.hypot(w.vx, w.vy) || 1, ux = w.vx / ws, uy = w.vy / ws, sd = (p.x - w.x) * uy - (p.y - w.y) * ux;
+                v7Gest(w.id, 30, u.t - .3, 1.0, 0, 0, sd > 0 ? -1 : 1); v7Gest(p.id, 30, u.t - .3, .8, 0, 0, sd > 0 ? 1 : -1); OSH[p.id] = OSH[w.id] = sim.t + 2.5;
+            }
+        }
+        if (!OA.pl8) OA.pl8 = new Int8Array(22);
+        if (R3 && R3.plant) for (i = 0; i < 22; i++) { p = P[i]; var pn = p.planted && !p.off && sim.mode === 'live' ? 1 : 0; if (pn && !OA.pl8[i] && p.plantT != null) R3.plant(i, p.plantT - DT + (S.clkOff || 0)); OA.pl8[i] = pn; }      // basma başlangıcı (sert fren / keskin dönüş)
+        return true;
+    }
     function oaShoulder(sim) {
         if (sim.mode !== 'live') return; var B = sim.ball, o = B.owner; if (!o || o.role === 'GK' || o.off) return;
         var osp = Math.hypot(o.vx, o.vy); if (osp < 2.2 || OSH[o.id] > sim.t) return;
@@ -920,7 +958,7 @@
     function oaStep(sim) {
         if (!OA_ON) return;
         oaAerial(sim);
-        if (V8B.an) try { oaShoulder(sim); } catch (e) { }
+        if (V8B.an) try { if (!oaDuel8(sim)) oaShoulder(sim); } catch (e) { }      // [v193] motorun düello kaydı varsa o
         var B = sim.ball, o = B.owner, oid = o ? o.id : -1, i;
         if (oid !== OA.own) {
             OA.own = oid;
@@ -938,7 +976,7 @@
             if (s === OA.stun[i]) continue;
             OA.stun[i] = s;
             if (s > sim.t + .05 && sim.mode === 'live' && o && o.team !== p.team && !p.off)      // motor savunmacıyı "geçildi" saydı: boşa uzanma + denge kaybı
-                { var hB = oaTkHit(p, sim.t); if (hB && hB.res === 'beaten') { var kbB = oaTkBall(o), slB = hB.kind === 'slide'; gkIssue(1, i, 12, hB.t - DT, oaTkT0(p, hB, hB.t) - DT, oaD(OA.tmp, kbB[0], kbB[1], o.x, o.y, Math.hypot(p.vx - o.vx, p.vy - o.vy), slB ? 3 : 1, oaSideY(oaYaw(p), p.x, p.y, kbB[0], kbB[1]), 3, s - sim.t, p.vx, p.vy)); if (slB) OA.gnd[i] = sim.t + 1.1; continue; }      /* [v193] motorun aşılma teması: hamle temas karesinde topa uzanır, top geçer */
+                { var hB = oaTkHit(p, sim.t); if (hB && hB.res === 'beaten') { var kbB = oaTkBall(o, hB.t - DT), bxB = kbB[0], byB = kbB[1], slB = hB.kind === 'slide', t0B = oaTkT0(p, hB, hB.t) - DT, kvB = oaTkVel(p, t0B, hB.t - DT); gkIssue(1, i, 12, hB.t - DT, t0B, oaD(OA.tmp, bxB, byB, o.x, o.y, Math.hypot(p.vx - o.vx, p.vy - o.vy), slB ? 3 : 1, oaSideY(oaYaw(p), p.x, p.y, bxB, byB), 3, s - sim.t, kvB[0], kvB[1])); if (slB) OA.gnd[i] = sim.t + 1.1; continue; }      /* [v193] motorun aşılma teması: hamle temas karesinde topa uzanır, top geçer */
                   var slm = p.slideMiss != null && sim.t - p.slideMiss < .1; gkIssue(1, i, 12, sim.t + (slm ? .12 : .04), sim.t - .03, oaD(OA.tmp, B.x, B.y, o.x, o.y, Math.hypot(p.vx - o.vx, p.vy - o.vy), slm ? 3 : 1, oaSideY(oaYaw(p), p.x, p.y, B.x, B.y), 3, s - sim.t, p.vx, p.vy)); if (slm) OA.gnd[i] = sim.t + 1.1; }      /* [sav] kacan kayma: kayarak */
         }
     }

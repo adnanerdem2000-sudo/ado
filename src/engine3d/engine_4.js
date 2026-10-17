@@ -2602,6 +2602,7 @@
             pose[3] += leanT * .5 * wg * nA;                                         // ivme eğilmesi (GASP gövdenin yarısını ezer)
             pose[2] += roll * (1 - (1 - .6 * wg) * (1 - wl)) * rn9;                 // viraj yatışı
             var ac9 = a.accS || 0, pk = clamp((Math.abs(ac9) - 2) / 5, 0, 1) * rn9 * (1 - sideK);
+            if (S.mphy) { var pl9 = a.plT9 != null && CLKOK ? sm(rmp(CLK, a.plT9 - .05, a.plT9 + .03)) * (1 - sm(rmp(CLK, a.plT9 + .2, a.plT9 + .42))) : 0; pk = pl9 * clamp((Math.abs(ac9) - 1) / 3, .35, 1) * rn9 * (1 - sideK); }      // [v193] basma anı motorun p.planted başlangıcından (sert fren / keskin dönüş); süzgeçli görüntü ivmesi yalnız şiddet ve yön
             if (pk > .001) { pose[1] -= .045 * pk; if (ac9 < 0) { pose[3] -= .07 * pk; pose[6] += .08 * pk; } else pose[3] += .05 * pk; }
             var f = (a.fat9 || 0) * nA;
             if (f > .01) {
@@ -5365,7 +5366,7 @@
                     for (spj = spi + 1; spj < spN; spj++) {
                         var aj0 = S.st[spj]; if (v.x[spj] < -20 || !(aj0.uX > -1e9) || !aj0.uOk) continue; var ac1 = aj0.ac && aj0.ac.init ? aj0.ac : null; if (ac1 && ac1.k === 10) continue;
                         var dxs = aj0.uX - ai0.uX, dzs = aj0.uZ - ai0.uZ, ds = Math.sqrt(dxs * dxs + dzs * dzs);
-                        if (V8.cl && V8.bd && CLKOK && ds < .66 && ds > 1e-3) {      /* [v191] omuz teması: yaklaşma hızı > 1,6 m/sn ise iki oyuncu da darbe yönünde sendeler (soğuma .7 sn) */
+                        if (V8.cl && V8.bd && CLKOK && !S.mphy && ds < .66 && ds > 1e-3) {      /* [v193] motor düello verisi varsa (S.mphy) darbe yalnız motordan (R.bump) */      /* [v191] omuz teması: yaklaşma hızı > 1,6 m/sn ise iki oyuncu da darbe yönünde sendeler (soğuma .7 sn) */
                             var nx9 = dxs / ds, nz9 = dzs / ds, cv9 = ((ai0.vX9 || 0) - (aj0.vX9 || 0)) * nx9 + ((ai0.vZ9 || 0) - (aj0.vZ9 || 0)) * nz9;
                             if (cv9 > 1.6 && !(CLK < (ai0.bmT9 || -9) + .7) && !(CLK < (aj0.bmT9 || -9) + .7)) {
                                 var m9 = clamp((cv9 - 1.6) / 3.5, .25, 1) * (1 - .5 * ds / .66);
@@ -5418,6 +5419,7 @@
                     var dts9 = dt * ts, st9 = ST9 ? ST9[i] : 1, fat9 = V8.fatT != null ? V8.fatT : clamp((.8 - (st9 >= 0 ? st9 : 1)) / .5, 0, 1); a.fat9 = (a.fat9 || 0) + (fat9 - (a.fat9 || 0)) * (1 - Math.exp(-dts9 / 2));
                     var hkT9 = a.spd < .4 && (END9 || (SP_DEAD && (st9 < .4)) ) && a.idleT > .8 ? 1 : 0; a.hk9 = (a.hk9 || 0) + (hkT9 - (a.hk9 || 0)) * (1 - Math.exp(-dts9 / (hkT9 ? .45 : .25)));
                     a.vX9 = (a.vX9 || 0) + ((d > 1e-5 && dts9 > 1e-4 ? ddx / dts9 : 0) - (a.vX9 || 0)) * (1 - Math.exp(-dts9 / .12)); a.vZ9 = (a.vZ9 || 0) + ((d > 1e-5 && dts9 > 1e-4 ? ddz / dts9 : 0) - (a.vZ9 || 0)) * (1 - Math.exp(-dts9 / .12));
+                    if (a.bpT9 != null && CLKOK && CLK >= a.bpT9) { if (CLK < a.bpT9 + .25) { a.bmX9 = a.bpX9; a.bmZ9 = a.bpZ9; a.bmT9 = CLK; if (OT.on) { var qp9 = OT.fs.vB || (OT.fs.vB = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); qp9[2]++; } } a.bpT9 = null; }      /* [v193] motorun omuz düellosu (p.duel): darbe motorun temas karesinde */
                     var bk9 = Math.exp(-dts9 / .3); a.bmX9 = (a.bmX9 || 0) * bk9; a.bmZ9 = (a.bmZ9 || 0) * bk9; var bq9 = 1 - Math.exp(-dts9 / .07); a.bsX9 = (a.bsX9 || 0) + (a.bmX9 - (a.bsX9 || 0)) * bq9; a.bsZ9 = (a.bsZ9 || 0) + (a.bmZ9 - (a.bsZ9 || 0)) * bq9; a.bsW9 = Math.hypot(a.bsX9, a.bsZ9);
                     var stT9 = 0; if (V8.gx && st.gkIds && st.gkIds.indexOf(i) >= 0) { var tc9 = SH9[i < 11 ? 1 : 0]; if (tc9 > -1e8) stT9 = sm(rmp(CLK, tc9 - .5, tc9 - .2)) * (1 - sm(rmp(CLK, tc9 + .06, tc9 + .3))); }
                     a.set9 = (a.set9 || 0) + (stT9 - (a.set9 || 0)) * (1 - Math.exp(-dts9 / .06));
@@ -5748,6 +5750,10 @@
              1 kurtarış: [şut anı, top x, y, z, vx, vy, vz, bakış x, bakış y, penaltı, doğrudan nokta (1: x,y,z temas noktası)]
              2 havadan alma: [iniş x, iniş y, yükseklik, -, -, -, -, bakış x, bakış y]   3/7: -   4/5/6: [hedef x, hedef y, mesafe, el (1 sağ/-1 sol), ayak]
            Önceki aksiyon sürüyorsa yenisine kısa karışımla geçilir (kaleci yerdeyken gelen atış vb.). Saat: st.clock ile aynı birim. */
+        /* [v193] motorun omuz düellosu: (nx, nz) itilme yönü, m şiddet (0-1); t görüntü saati. mphy: motor hareket fiziği alanları var (görüntüden çarpışma darbesi çıkarılmaz) */
+        R.bump = function (id, t, nx, nz, m) { var a = S.st && S.st[id]; if (!a || !isFinite(t + nx + nz + m)) return; a.bpT9 = t; a.bpX9 = nx * m; a.bpZ9 = nz * m; };
+        R.mphy = function (on) { S.mphy = on ? 1 : 0; };
+        R.plant = function (id, t) { var a = S.st && S.st[id]; if (a && isFinite(t)) a.plT9 = t; };      // [v193] motorun ayak basma (p.planted) başlangıcı, görüntü saati
         R.gkAct = function (id, k, t0, tc, d) {
             var a = S.st && S.st[id]; if (!a) return null;
             var o = a.ac;
