@@ -2522,6 +2522,8 @@
         ST3.trail = RG.trail; ST3.trailLive = RG.trailLive; ST3.trailW = RG.trailW;
         ST3.clock = G3 ? (live ? S.viewT + (S.clkOff || 0) : S.viewT + (fmr && fmr.off || 0)) : null; ST3.ready = G3 ? G3.ready : null; ST3.voff = G3 ? G3.voff : null; ST3.hand = gkHand; ST3.noAct = noAct;
         R3._dl = DL.on ? 1 : 0;      // [v135]
+        if (!RG.stam) RG.stam = new Float32Array(22); for (var st9 = 0; st9 < 22; st9++) { var sp9 = sim.players[st9]; RG.stam[st9] = sp9 && sp9.stam != null ? sp9.stam : 1; }      // [v191] görüntü: yorgunluk (koşu/kol salınımı), maç sonunda eller dizde
+        ST3.stam = RG.stam; ST3.endK = live && (sim.finished || S.halfPending || S.hold === 'half') ? 1 : 0; ST3.gkIds = G3 ? G3.ids : null;
         ST3.xa = live && V7.on ? V7.xa : null; ST3.xb = live && V7.on ? V7.xb : null; ST3.v7dlv = live && V7.on && V7.dlv ? 1 : 0; ST3.v7board = live && V7.on && V7.sub && V7.sub.t < 6 ? 1 : 0;      // [v187]
         var ok = R3.render(ST3);
         if (!ok) return false;
@@ -2530,11 +2532,11 @@
             if (v.x[i] < -20) continue; p = sim.players[i];
             var isF = foc.indexOf(p.id) >= 0, hov = live && S.hover === i, own = v.owner === i, ringCol = null;
             if (o.rings) for (j = 0; j < o.rings.length; j++) if (o.rings[j].id === i) ringCol = o.rings[j].col;
-            if (isF || hov || ringCol || own || S.ov.names) { var ac3 = R3.actor ? R3.actor(i) : null, t = R3.projectTo ? R3.projectTo(RG.pj, ac3 && ac3.dX != null ? ac3.dX : v.x[i], 2.05 + (ac3 && ac3.rY ? Math.min(0, ac3.rY) : 0), ac3 && ac3.dZ != null ? ac3.dZ : v.y[i]) : R3.project(ac3 && ac3.dX != null ? ac3.dX : v.x[i], 2.05 + (ac3 && ac3.rY ? Math.min(0, ac3.rY) : 0), ac3 && ac3.dZ != null ? ac3.dZ : v.y[i]); if (t) label3(p.short || p.name, null, t.x, t.y - 25, ringCol || (isF ? '#ffc93c' : '#f2f6fb'), S.cols ? S.cols[p.team] : null); }      // [gk] görünen konum
+            if (own && i !== gkHand && !v.dead && !(live && !DL.on && sim.mode === 'dead')) { var ac3 = R3.actor ? R3.actor(i) : null, t = R3.projectTo ? R3.projectTo(RG.pj, ac3 && ac3.dX != null ? ac3.dX : v.x[i], 2.05 + (ac3 && ac3.rY ? Math.min(0, ac3.rY) : 0), ac3 && ac3.dZ != null ? ac3.dZ : v.y[i]) : R3.project(ac3 && ac3.dX != null ? ac3.dX : v.x[i], 2.05 + (ac3 && ac3.rY ? Math.min(0, ac3.rY) : 0), ac3 && ac3.dZ != null ? ac3.dZ : v.y[i]); if (t) label3(p.short || p.name, null, t.x, t.y - 25, '#f2f6fb', S.cols ? S.cols[p.team] : null); }      // [gk] görünen konum      /* [v191] 3B yayın / taktik kamerası: ad etiketi YALNIZ top ayağında olan oyuncuda (canlı oyunda topa sahipken; pas havada, ölü top, kaleci elinde değil), beyaz yazı koyu yarı saydam zemin. Odak (sarı), üzerine gelme, halka (olay/pres/markaj) ve 'tüm adlar' etiketleri 3B'de yok; 2B rozetler değişmedi */
         }
         if (v.rx != null) {
             var tr = R3.projectTo ? R3.projectTo(RG.pj, v.rx, 2.1, v.ry) : R3.project(v.rx, 2.1, v.ry);
-            if (tr) { if (S.ov.names) label('Hakem', tr.x, tr.y - 22, '#c9f23d'); if (vs) refBubble(tr.x, tr.y - 24, vs, now); }
+            if (tr) { if (vs) refBubble(tr.x, tr.y - 24, vs, now); }      // [v191] 3B'de hakem ad etiketi yok (yalnız VAR balonu)
         }
         if (dd) decLabels(dd);
         overlayCommon(o);
