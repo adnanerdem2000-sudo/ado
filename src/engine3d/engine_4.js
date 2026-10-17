@@ -4254,7 +4254,7 @@
         }
         var CS_ON = 1;      // [temas] surme dokunusu (p_temas_03)
         /* [v188] görüntü düzeltmeleri (A/B ölçümü için tek tek kapatılabilir: R._v188({cc:0}) ) */
-        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1, bd: 1, lk: 1, gx: 1, cl: 1, kt: 1, hd: 1, tk: 1, ge: 1 }, FK8 = [9, 9], ST9 = null, END9 = 0, SH9 = [-1e9, -1e9]; /* [v191] bd gövde dinamiği/yorgunluk/eller dizde, lk baş-top, gx kaleci set, cl omuz teması, kt sürme dokunuş ayağı */ R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
+        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1, bd: 1, lk: 1, gx: 1, cl: 1, kt: 1, hd: 1, tk: 1, ge: 1, yr: 1 }, FK8 = [9, 9], ST9 = null, END9 = 0, SH9 = [-1e9, -1e9]; /* [v191] bd gövde dinamiği/yorgunluk/eller dizde, lk baş-top, gx kaleci set, cl omuz teması, kt sürme dokunuş ayağı */ R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
         var CC8 = { bx: 0, bz: 0, t: -1e9, vx: 0, vz: 0, ex: 0, ez: 0 };
         var CC = { ox: 0, oz: 0, lt: -1e9 }, CC_DQ = null, CC_M = null, CC_Q = new Float32Array(3), CC_W = new Float32Array(3), CC_T = new Float32Array(5), CC_T2 = new Float32Array(5);
         function ccToe(dq, root, left, out) {      // [fiz] ayak ucu (dunya) ve ayak yonu (orta -> uc)
@@ -5394,9 +5394,9 @@
                     if (bkD > bkL || bkD < -bkL) { var bkC1 = bkH - bkL, bkC2 = bkH + bkL, bkE1 = bkC1 - a.yaw, bkE2 = bkC2 - a.yaw; bkE1 = Math.atan2(Math.sin(bkE1), Math.cos(bkE1)); bkE2 = Math.atan2(Math.sin(bkE2), Math.cos(bkE2)); ty = Math.abs(bkE1) <= Math.abs(bkE2) ? bkC1 : bkC2; }      /* mevcut yone yakin taraf (geri kosuda salinim yok) */
                     dy = ty - a.yaw;
                 }
-                dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.yaw += dy * kyw;      // [fiz] sim saatiyle (kopru YAW ile es)
-                if (V8.ts && GA_ON && (a.gaW || 0) > .5 && a.spd < 1.2 && !cTarget && !(a.ac && a.ac.init && CLKOK && CLK >= a.ac.t0 && CLK < a.ac.te)) { var tw8 = Math.abs(dy * kyw); if (tw8 > 1e-3 && tw8 < .5) { a.gaP = (a.gaP || 0) + tw8 * .42 * (1 - a.spd / 1.2); if (a.gaP >= 1) { a.gaP -= 1; a.gaC = (a.gaC || 0) + 1; } } }      // [v188] yerinde dönüş: ayaklar adım atar (90°'de ~1,3 adım; eskiden kilitli ayak üstünde kayarak dönüyordu)
-                a.yawR = (a.yawR || 0) + (Math.max(-8, Math.min(8, dy * kyw / (dt * ts))) - (a.yawR || 0)) * (1 - Math.exp(-dt * ts / .15));   // [oa] dönüş hızı (rad/sn): viraj yatışı
+                dy = Math.atan2(Math.sin(dy), Math.cos(dy)); var stY9 = dy * kyw; if (V8.yr && !(a.cutN > 0)) { var mxY9 = (a.spd > 1 ? 11 : 14) * dt * ts; stY9 = clamp(stY9, -mxY9, mxY9); } a.yaw += stY9;      // [fiz] sim saatiyle (kopru YAW ile es) · [v191] gövde dönüş hızı sınırı (11-14 rad/sn: 180° en az ~.25 sn; motorun yön değişimi tek karede 1 rad'dan fazla döndürüyordu)
+                if (V8.ts && GA_ON && (a.gaW || 0) > .5 && a.spd < 1.2 && !cTarget && !(a.ac && a.ac.init && CLKOK && CLK >= a.ac.t0 && CLK < a.ac.te)) { var tw8 = Math.abs(stY9); if (tw8 > 1e-3 && tw8 < .5) { a.gaP = (a.gaP || 0) + tw8 * .42 * (1 - a.spd / 1.2); if (a.gaP >= 1) { a.gaP -= 1; a.gaC = (a.gaC || 0) + 1; } } }      // [v188] yerinde dönüş: ayaklar adım atar (90°'de ~1,3 adım; eskiden kilitli ayak üstünde kayarak dönüyordu)
+                a.yawR = (a.yawR || 0) + (Math.max(-8, Math.min(8, stY9 / (dt * ts))) - (a.yawR || 0)) * (1 - Math.exp(-dt * ts / .15));   // [oa] dönüş hızı (rad/sn): viraj yatışı
                 idleState(a, true);                                          // [opt] konum a.px/a.pz, kare değerleri FRM
                 if (V8.bd) {      // [v191] yorgunluk / eller dizde / omuz teması darbesi / kaleci set (sim saatiyle süzülür)
                     var dts9 = dt * ts, st9 = ST9 ? ST9[i] : 1, fat9 = V8.fatT != null ? V8.fatT : clamp((.8 - (st9 >= 0 ? st9 : 1)) / .5, 0, 1); a.fat9 = (a.fat9 || 0) + (fat9 - (a.fat9 || 0)) * (1 - Math.exp(-dts9 / 2));
