@@ -856,10 +856,11 @@ function drawOverlay(c){const S=MG.S,b=S.ball,ce=S.hero,W=MG.W;if(S.phase==='rep
     c.fillStyle=t.kit.shirt;c.strokeStyle='#ffffff';c.lineWidth=1.5;c.beginPath();c.moveTo(x+d*7,y);c.lineTo(x-d*5,y-8);c.lineTo(x-d*5,y+8);c.closePath();c.fill();c.stroke();}
   if(S.mode==='atk'&&S.phase==='play'&&b.owner===ce){const t=passPick();if(t){const P=proj(t.x,t.y,2.35);if(P){const s=Math.max(5,P.s*0.32);c.fillStyle='rgba(255,255,255,.95)';c.strokeStyle='rgba(0,0,0,.4)';c.lineWidth=1;c.beginPath();c.moveTo(P.x,P.y+s);c.lineTo(P.x-s,P.y-s*0.5);c.lineTo(P.x+s,P.y-s*0.5);c.closePath();c.fill();c.stroke();}}}
   if(S.mode==='air'&&S.kicked&&S.drop&&b.kind==='cross')ring(c,S.drop.x,S.drop.y,0.9,'rgba(255,179,32,.9)',2.2);
-  if(S.phase==='play'&&!S.kicked){if(S.ck==='def'&&S.myMan)bubble(c,S.myMan,'ADAMIN');if(S.ck==='box'){const m=S.opps.find(o=>o.mk===ce);if(m)bubble(c,m,'MARKÖRÜN');}}
-  if(S.mode==='cp'&&S.phase==='play'&&b.owner&&b.owner.side==='opp')bubble(c,b.owner,'PRES!');
+  /* v191: ADAMIN / MARKÖRÜN / PRES! etiketleri kaldırıldı (sahada yalnız top sahibinin adı) */
   const P=proj(ce.x,ce.y,2.3+(ce.z||0));
-  if(P){c.font='800 12px "Barlow Semi Condensed",sans-serif';c.textAlign='center';c.textBaseline='alphabetic';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.6)';const CNM=trUp(PF());c.strokeText(CNM,P.x,P.y-2);c.fillStyle='#ffb320';c.fillText(CNM,P.x,P.y-2);
+  {const ow=b.owner&&!b.held?b.owner:null,onm=ow?(ow===ce?PF():ow.pname?String(ow.pname).split(' ').slice(-1)[0]:''):'',Q=onm?proj(ow.x,ow.y,2.3+(ow.z||0)):null;      /* v191: ad etiketi yalnız top ayağındaki oyuncuda (sarı oyuncu adı yok), beyaz yazı koyu yarı saydam zemin */
+    if(Q){c.font='700 12px "Barlow Semi Condensed",sans-serif';c.textAlign='center';c.textBaseline='alphabetic';const ON=trUp(onm).slice(0,14),w=c.measureText(ON).width+14;c.fillStyle='rgba(8,13,23,.68)';rr(c,Q.x-w/2,Q.y-15,w,17,8.5);c.fill();c.fillStyle='#f2f6fb';c.fillText(ON,Q.x,Q.y-2);}}
+  if(P){c.font='800 12px "Barlow Semi Condensed",sans-serif';c.textAlign='center';c.textBaseline='alphabetic';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.6)';
     if(S.cond<25){c.font='800 10px "Barlow Semi Condensed",sans-serif';c.strokeText('YORGUN',P.x,P.y+10);c.fillStyle='#ff8a84';c.fillText('YORGUN',P.x,P.y+10);}
     if(S.C.knock){c.font='800 10px "Barlow Semi Condensed",sans-serif';const yy=P.y+(S.cond<25?21:10);c.strokeText('AĞRILI',P.x,yy);c.fillStyle='#ff8a84';c.fillText('AĞRILI',P.x,yy);}
     if(S.charge>=0&&S.mode==='atk'){const w=46,h=6,x=P.x-w/2,y=P.y-22;c.fillStyle='rgba(0,0,0,.65)';c.fillRect(x-1,y-1,w+2,h+2);const cap=condPow(S.cond);if(cap<1){c.fillStyle='rgba(120,30,30,.8)';c.fillRect(x+w*cap,y,w*(1-cap),h);}const g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,'#4ad27f');g.addColorStop(0.65,'#ffb320');g.addColorStop(1,'#ef3b36');c.fillStyle=g;c.fillRect(x,y,w*S.charge,h);}}
