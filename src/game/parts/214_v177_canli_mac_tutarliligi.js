@@ -50,7 +50,7 @@ function v177Near(side){try{const S=FX,sim=ABM.sim,te=abS2E(side),gx=sim.teams[t
     return c.sort((a,b)=>Math.abs(gx-sim.players[a.ei].x)-Math.abs(gx-sim.players[b.ei].x))[0]||null;}catch(e){return null;}}
 function v177Replan(q,near){const L=q&&q.v177;const p=(near?v177Near(q.side):null)||v177PickSc(q.side);if(p){q.k=p.k;if(L&&!L.done&&!L.me){L.k=p.k;v177FeedSet(L);}}return p;}
 /* planlanmamış motor golü: MR'ye eklenir (MR bittiyse null → olay yok sayılır) */
-function v177Adopt(side,e){if(!MR||MR.fin||PL3.end)return null;const S=FX,m=e.meta||{};let p=abFxP(e.p);if(!p||m.own||p.T!==S.T[side]||p.k==='ME')p=v177PickSc(side);
+function v177Adopt(side,e){if(!MR||MR.fin||PL3.end)return null;const S=FX,m=e.meta||{};let p=abFxP(e.p);if(!p||m.own||p.T!==S.T[side]||p.k==='ME'||p.spos==='KL'||p.pos==='KL')p=v177PickSc(side);   /* kaleciye gol yazılmaz: çerçeve yeniden kurulunca yuva eşlemesi kayabiliyor */
   if(side===0){MR.gu++;PL3.gu=MR.gu;}else{MR.go++;PL3.go=MR.go;}
   const nm=esc(p?p.name:'');try{feed(Math.min(MR.min,MR.end),side===0?`GOL! ${esc(MR.us.name)} — ${nm} ağları buldu.`:`Gol. ${esc(MR.opp.name)} — ${nm} skoru değiştirdi.`,side===0?'us':'opp');}catch(x){}
   const L={s:side,m:MR.min,k:p?p.k:null,ak:null,me:false,as:false,done:false,adopt:1,li:V177.fd.q[side].shift()||null};V177.led.push(L);V177.log.push('adopt '+side);
@@ -62,7 +62,7 @@ function v177Pre(e){if(!e||e.__v177p||e.type!=='GOAL')return;e.__v177p=1;if(!v17
   if(!L){L=v177Adopt(side,e);if(!L){e.__v177drop=1;try{sim.teams[e.team].score=Math.max(0,sim.teams[e.team].score-1);}catch(x){}V177.log.push('drop '+side);return;}}
   L.done=true;e.__v177e=L;
   let sp=L.k?abFxPk(L.k):null;
-  if(!sp&&L.k!=='ME'){const mp=abFxP(e.p);sp=mp&&mp.T===S.T[side]&&mp.k!=='ME'&&!m.own?mp:v177PickSc(side);if(sp)L.k=sp.k;}
+  if(!sp&&L.k!=='ME'){const mp=abFxP(e.p);sp=mp&&mp.T===S.T[side]&&mp.k!=='ME'&&!m.own&&mp.spos!=='KL'&&mp.pos!=='KL'?mp:v177PickSc(side);if(sp)L.k=sp.k;}
   if(sp&&sp.ei!=null){e.p=sp.ei;}
   m.own=false;
   if(L.as){const me=pl3Me();m.assist=me&&me.ei!=null&&me.ei!==e.p?me.ei:-1;}

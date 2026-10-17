@@ -155,7 +155,8 @@ ftTeam=(old=>function(club,gf,ga,win,draw,r,goals,side){const rows=old.apply(thi
     if(G&&G.s&&!MR.national&&/Hafta/.test(MR.comp||'')){const w=(G.s.results||[]).length,F=G.s.v154ft&&G.s.v154ft.w===w?G.s.v154ft:(G.s.v154ft={w,cl:{}});
       const R={};for(const x of rows)if(x.k&&x.rt!=null)R[x.k]=x.rt;F.cl[club.id]={R,goals:goals.filter(g=>g.s===side).map(g=>({k:g.k||null,ak:g.ak||null,me:!!g.mine,as:!!g.as}))};}}catch(e){console.warn('v154 maç sonu',e);}return rows;})(ftTeam);
 creditGoals=(old=>function(cid,n,me){try{const S=G.s,F=S&&S.v154ft;if(F&&F.w===S.results.length-1&&F.cl[cid]&&F.cl[cid].goals.length===n){const ps=S.ps||{};
-      for(const g of F.cl[cid].goals){if(!g.me&&g.k&&ps[g.k])ps[g.k].g++;if(!g.as&&g.ak&&ps[g.ak])ps[g.ak].a++;}return;}}catch(e){}return old.apply(this,arguments);})(creditGoals);
+      const psE=k=>{if(!ps[k]){const p=squadOf(cid).find(x=>x.k===k);if(p)ps[k]={n:p.name,c:cid,gw:0,aw:0,g:0,a:0};}return ps[k];};   /* sezon başında listede olmayan (kaleci, sonradan gelen) oyuncunun golü de lige yazılır */
+      for(const g of F.cl[cid].goals){if(!g.me&&g.k&&psE(g.k))ps[g.k].g++;if(!g.as&&g.ak&&psE(g.ak))ps[g.ak].a++;}return;}}catch(e){}return old.apply(this,arguments);})(creditGoals);
 /* haftanın 11'i: bizim maçımızdaki iki kulüpten yalnız sahaya çıkanlar, notları maç sonu ekranındakiyle aynı (173'teki twBuild'in aynısı, tek fark not kaynağı) */
 twBuild=(old=>function(w){const S=G.s,F=S&&S.v154ft;if(!F||F.w!==w)return old.apply(this,arguments);
   try{const rd=S.results[w];if(!rd||!rd.length)return null;const snap=S.twSnap||{},ps=S.ps||{},cand=[];

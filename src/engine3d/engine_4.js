@@ -4423,7 +4423,7 @@
                     continue;
                 }
                 if (!ac.hold) continue;
-                if (CLK >= ac.h0t && CLK < ac.h1t) { if (!best || ac.t0 > best.t0) best = ac; }
+                if (CLK >= ac.h0t && CLK < ac.h1t) { var tk9a = V8.tk && ac.k === 12 && CLK > ac.tc - .12, tk9b = best && V8.tk && best.k === 12 && CLK > best.tc - .12; if (!best || (tk9a && !tk9b) || (tk9a === tk9b && ac.t0 > best.t0)) best = ac; }      // [v193] müdahalenin temas penceresinde (tc'den .12 sn önce) top müdahale edenin ayağında: sürenin / kontrolün tutuşunu ezer
                 else if (CLK >= ac.h1t && !ac.rel) { ac.rel = true; if (CLK - ac.h1t < .2) { if (ac.k === 18) oaTS(ac); else oaRelE(ac, ac.h1t, ac.tau, ac.drop, ac.vz0); } else if (OAB.hc === ac) OAB.hc = null; }
             }
             if (!best && pv) { best = pv; pv.prov = 1; }
