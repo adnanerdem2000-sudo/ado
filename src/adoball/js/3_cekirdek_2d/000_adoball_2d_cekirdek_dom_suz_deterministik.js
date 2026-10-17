@@ -274,10 +274,11 @@
         // AV_KAL: v190 maç istatistiği kalibrasyonu (StatsBomb hedefleri). Kafa vuruşu yan sapması ×AV_HSD (StatsBomb kafa: %31 isabet, %10,4 gol; motor %50 / %19 → gol/xG 1,27),
         //   pasçının ofsaytı yanlış görmesi AV_OFM .03 → .045 (v188 öncesi düzey; ofsayt 1,56 → 1,6–2,4; StatsBomb 2,08)
         AV_KAL: 1,
-        // AV_TKR: müdahale erişimi (v190). Çekişme (kapma / faul / aşılma) yalnız savunmacının ayağı topa yetişince çözülür: ayakta bacak boyu + hamle (.53·boy + .05 m; 180 cm → 1,0 m),
-        //   kayarak .53·boy + .65 m (180 cm → 1,6 m; kalça kayarak öne gelir, bacak uzanır). Bacak boyu ≈ .53·boy (Winter, Biomechanics and Motor Control of Human Movement, antropometri tablosu).
-        //   Eskiden baskı anında 1,8 m'den, kayarak 2,2 m'den, adam eksiltmede topçuya 2,4 m'den kapma çözülüyordu (3B'de ayak topa yetişmiyordu). Menzil dışındaki savunmacı yaklaşmayı sürdürür.
-        //   Karar → yaklaşma (en çok AV_TKT .6 sn, topa koşar) → temas; yetişemezse hamle iptal, topçunun bacağına yetişiyorsa geç kalmış müdahale (yalnız faul ya da ıska). Görüntü: p.tkGo {t, o}.
+        // AV_TKR: müdahale erişimi ve yaşam döngüsü (v190). Karar anı eski kuralla (menzil, girme isteği, sonuç olasılığı) → savunmacı topa koşar (en çok AV_TKT .6 sn) → temas → sonuç.
+        //   Kapma ancak ayak topa yetişince: ayakta bacak boyu + öne hamle adımı (.53·boy + AV_TRA .35 m; 180 cm → 1,3 m), kayarak .53·boy + AV_TRS .65 m (180 cm → 1,6 m).
+        //   Bacak boyu ≈ .53·boy (Winter, Biomechanics and Motor Control of Human Movement, antropometri). Faul topa ya da topçunun bacağına (gövde arası erişim + AV_TKL .3 m) yetişince.
+        //   Yetişemeyen hamle süre dolunca düşer (savunmacı aşılır; adam eksiltmede başarılı çalım). Eskiden kapma 1,8 m'den (baskı), kayarak 2,2 m'den çözülüyordu (3B'de ayak topa yetişmiyordu).
+        //   Erişim 1,0 m'ye indirilirse (AV_TRA .05) 6 takım-maçta faul 11,7 → 9,0, müdahale 16,7 → 10,5 (bant dışı); 1,3 m'de 11,3 / 14,7. Görüntü: p.tkGo {t, o, res, kind, sl}, p.slStart, p.tkHit {t, kind, res, d}.
         AV_TKR: 1,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
@@ -2768,7 +2769,7 @@
 
         // ---------- top sahibi mücadelesi ----------
         // savunmacı d, top sürücü o: topu kapma olasılığı (elit eğri: savunma özelliği − sürücü özelliği farkına üstel)
-        function tkReach(d, slide) { var h = (d.a && d.a.h) || 180; return .0053 * h + (slide ? avp('AV_TRS', .65) : avp('AV_TRA', .05)); }      // [v190] AV_TKR: ayakla erişim (m)
+        function tkReach(d, slide) { var h = (d.a && d.a.h) || 180; return .0053 * h + (slide ? avp('AV_TRS', .65) : avp('AV_TRA', .35)); }      // [v190] AV_TKR: ayakla erişim (m)
         function tkGoing(d, o) { return AV_TKR && TACKLE && d.tkGo != null && d.tkGo.o === o.id && S.t - d.tkGo.t < avp('AV_TKT', .6); }      // [v190] AV_TKR: müdahale hamlesi sürüyor mu (zaman aşımı AV_TKT sn)
         function tkTakeOn(d, o) { d.stunT = S.t + TAKEON_STUN; d.tcd = Math.max(d.tcd || 0, 1.1); o.takeOns = (o.takeOns || 0) + 1; S.teams[o.team].st.takeOns = (S.teams[o.team].st.takeOns || 0) + 1; }      // [v190] AV_TKR: başarılı adam eksiltme (eski take-on 'beaten' kaydıyla aynı)
         function tackleP(d, o, base) {
@@ -2917,7 +2918,7 @@
         }
 
         // [v190] AV_TKR: çekişmenin yaşam döngüsü — karar (eski menzil kuralı ve olasılıklarla sonuç belirlenir) → yaklaşma (en çok AV_TKT sn, topa koşar) → temas → sonuç uygulanır.
-        //   Kapma ancak ayak topa yetişince (ayakta .53·boy + .05 m, kayarak + .65 m); faul topa ya da topçunun bacağına (gövde arası erişim + AV_TKL m) yetişince; aşılma temas istemez (hemen).
+        //   Kapma ancak ayak topa yetişince (ayakta .53·boy + .35 m hamle adımı, kayarak + .65 m); faul topa ya da topçunun bacağına (gövde arası erişim + AV_TKL m) yetişince; aşılma temas istemez (hemen).
         //   Süre dolarsa hamle kontrollü düşer: savunmacı aşılmış sayılır (adam eksiltmede başarılı çalım). Görüntü: p.tkGo {t, o, res, kind}, p.slStart (kaymanın başladığı an).
         function tkRoll(d, o, base, g) {
             var pw = tackleP(d, o, base), pf = (.032 + .0003 * (60 - d.a.tac + 30)) * FOUL_K * (inBox(o.x, o.y, o.team) ? .15 : 1), r = R();
@@ -2936,6 +2937,7 @@
         }
         function tkApply(d, o, pg, res) {
             var g = tkGeo(d, o); if (pg.kind === 'slide') { g.f *= SL_F; g.sev = clamp(g.sev + .1, 0, 1); slNow = true; }
+            d.tkHit = { t: S.t, kind: pg.kind, res: res, d: Math.round(hyp(d.x - gbx(), d.y - gby()) * 100) / 100 };      // görüntü: temas anı ve topa uzaklık
             var r2 = resolveContest(d, o, pg.base, g, res); slNow = false;
             if (pg.kind === 'take') { S.dbg.take[r2] = (S.dbg.take[r2] || 0) + 1; tkLog(g, 't' + r2); if (r2 !== 'beaten') return true; tkTakeOn(d, o); return false; }
             if (pg.kind === 'slide') { S.dbg.slide = S.dbg.slide || {}; S.dbg.slide[r2] = (S.dbg.slide[r2] || 0) + 1; tkLog(g, 's' + r2); d.slideT = S.t; if (r2 === 'tackle') { d.stunT = S.t + 1; return true; } if (r2 !== 'beaten') return true; d.slideMiss = S.t; d.stunT = S.t + SL_STUN; return false; }

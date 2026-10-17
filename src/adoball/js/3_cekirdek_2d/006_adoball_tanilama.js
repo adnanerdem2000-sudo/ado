@@ -387,7 +387,7 @@
         if (T.on) {
             wrapCreate(); var s = curSim(); if (s) attach(s, null);
             if (root.document && !T.iv && root.setInterval) {
-                T.iv = root.setInterval(function () { try { monitor(); } catch (e) { } try { ovDraw(); } catch (e) { } }, 500);
+                T.iv = root.setInterval(function () { try { monitor(); } catch (e) { } if (++T.ovT % 2 === 0) T.dirty = true; try { ovDraw(); } catch (e) { } }, 500);
                 var go = function () { overlay(true); }; if (root.document.body) go(); else root.document.addEventListener('DOMContentLoaded', go);
                 T.k3on = !!(root.ado2d || root.Ado3D); if (T.k3on && root.requestAnimationFrame) root.requestAnimationFrame(k3Frame);
             }

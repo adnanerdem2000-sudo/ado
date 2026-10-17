@@ -230,6 +230,7 @@ async function runRegresyon() {
   try {
     const t = Date.now(); const m = await openCareerMatch(page, KULUP[0]); fr = m.fr;
     ok('maç ekranı açılışı', 'TAMAM', `${m.info.names.join(' – ')} · ${((Date.now() - t) / 1000).toFixed(1)} sn`);
+    await fr.waitForFunction(() => { const d = document.getElementById('ado-tani'); return d && /Tanılama/.test(d.innerText); }, null, { timeout: 5000 }).catch(() => { });
     const ov = await W(() => { const d = document.getElementById('ado-tani'); return { on: !!(window.AdoTani && AdoTani.state.on), ov: !!d, txt: d ? d.innerText.slice(0, 60) : '', bagli: AdoTani.state.list.length }; });
     ok('tanılama kaplaması (localStorage.adoTani=1)', ov.on && ov.ov && /Tanılama/.test(ov.txt) ? 'TAMAM' : 'HATA', `açık ${ov.on}, kaplama ${ov.ov ? JSON.stringify(ov.txt) : 'YOK'}, izlenen maç ${ov.bagli}`);
     const simT = () => W(() => { const s = ado2d.sim(); return { t: s.t, half: s.half, fin: s.finished, hold: ado2d.state.hold, run: ado2d.state.running, sc: [s.teams[0].score, s.teams[1].score], ev: s.events.length }; });
@@ -243,9 +244,9 @@ async function runRegresyon() {
     ok('sürdür', c.t > b.t ? 'TAMAM' : 'HATA', `Δt ${(c.t - b.t).toFixed(2)} (2 sn)`);
     /* hızlar: düğme durumu (preset/speed) kesin denetim; gerçek zamanlı akış hızı bilgi amaçlı (yük altında ve akıllı tempoyla oynar) */
     const rates = {}, sp = {};
-    for (const s of [1, 2, 4]) { await W(v => setMatchSpeed(v), s); await page.waitForTimeout(500); const x = await simT(), tt = Date.now(); await page.waitForTimeout(2000); const y = await simT(); rates[s] = (y.t - x.t) / ((Date.now() - tt) / 1000); sp[s] = await W(() => ({ preset: ado2d.state.preset, speed: ado2d.state.speed })); }
+    for (const s of [1, 2, 4]) { await W(v => setMatchSpeed(v), s); await page.waitForTimeout(500); const x = await simT(), tt = Date.now(); await page.waitForTimeout(2000); const y = await simT(); rates[s] = (y.t - x.t) / ((Date.now() - tt) / 1000); sp[s] = await W(() => ({ preset: ado2d.state.preset, speed: ado2d.state.speed })); sp[s].hold = y.hold || '-'; }
     const spOk = [1, 2, 4].every(s => +sp[s].preset === s) && sp[2].speed > sp[1].speed && sp[4].speed > sp[2].speed;
-    ok('hızlar (1x/2x/4x)', spOk ? 'TAMAM' : 'HATA', `hız çarpanı ${sp[1].speed}/${sp[2].speed}/${sp[4].speed}; ölçülen sim sn / gerçek sn (bilgi; yük ve akıllı tempoya bağlı): 1x ${rates[1].toFixed(2)} · 2x ${rates[2].toFixed(2)} · 4x ${rates[4].toFixed(2)}`);
+    ok('hızlar (1x/2x/4x)', spOk ? 'TAMAM' : 'HATA', `hız çarpanı ${sp[1].speed}/${sp[2].speed}/${sp[4].speed}; ölçülen sim sn / gerçek sn (bilgi; yük ve akıllı tempoya bağlı): 1x ${rates[1].toFixed(2)} · 2x ${rates[2].toFixed(2)} · 4x ${rates[4].toFixed(2)} (bekleme: ${sp[1].hold}/${sp[2].hold}/${sp[4].hold})`);
     await W(() => setMatchSpeed(1));
     /* taktik değişikliği (kullanıcının takımı: motor takımı ABM.s0'a göre) */
     const tac = await page.evaluate(() => { const W = ABM.win, sim = ABM.sim, e = abS2E(0); const t0 = sim.tactics(e).ment; W.ado2d.tac.set(e, 'ment', t0 === 1 ? -1 : 1); const t1 = sim.tactics(e).ment; W.ado2d.tac.set(e, 'ment', t0); return { e, t0, t1, t2: sim.tactics(e).ment }; });
@@ -271,6 +272,8 @@ async function runRegresyon() {
         if (h2.half === 2 && h2.t > h0.t + 1) break; await page.waitForTimeout(500); }
       ok('devre arası → ikinci yarı', h2.half === 2 && h2.t > h0.t + 1 ? 'TAMAM' : 'HATA', `devre arası: hold ${h0.hold}, t ${h0.t.toFixed(1)}; ${pressed ? 'ikinci yarı düğmesi' : 'otomatik geçiş'} → yarı ${h2.half}, t ${h2.t.toFixed(1)}, hold ${h2.hold}`);
     } else ok('devre arası → ikinci yarı', 'HATA', `devre arası ekranına geçilmedi (t ${h && h.t.toFixed(1)}, hold ${h && h.hold})`);
+    const tr = await W(() => { const D = AdoTani.cur(); return D ? D.count : null; });
+    ok('canlı maçta tanılama sayımı (bilgi)', 'TAMAM', JSON.stringify(tr));
     /* maç sonu: oyunun "sonuna simüle et" yolu (ABM.syncRun) → abFullTime → fxClose → G.s.results */
     const n0 = await page.evaluate(() => { try { const o = FX.o, f0 = o.onEnd; o.onEnd = function (gu, go) { window.__mtEnd = [gu, go]; return f0 && f0.apply(this, arguments); }; } catch (e) { } return G.s.results.length; });
     let fin = null; const tf = Date.now();
@@ -289,9 +292,9 @@ async function runRegresyon() {
       ok('gol sonrası santra', bad.length ? 'HATA' : 'TAMAM', `${end.ko.length} gol: gol sonrası ilk vuruş ${end.ko.map(k => k ? k.tag + '@' + k.x + ',' + k.y : '?').join(' · ')}`); }
     else ok('gol sonrası santra', 'TEST EDİLMEDİ', 'bu maçta gol olmadı');
     /* kaydet-yükle */
-    const sv = await page.evaluate(() => { save(); try { if (typeof svFlushSync === 'function') svFlushSync(); } catch (e) { } return { sid: G.sid, day: G.s.day, res: G.s.results.length, club: G.club, ad: G.p && G.p.name }; });
+    const sv = await page.evaluate(() => { save(); try { if (typeof svFlushSync === 'function') svFlushSync(); } catch (e) { } return { ham: (localStorage.getItem(SLOT_PRE + G.sid) || '').length, sid: G.sid, day: G.s.day, res: G.s.results.length, club: G.club, ad: G.p && G.p.name }; });
     await page.reload({ waitUntil: 'domcontentloaded' }); await page.waitForTimeout(3000);
-    const ld = await page.evaluate(sid => { const g = slotLoad(sid); if (!g) return null; const r = { day: g.s.day, res: g.s.results.length, club: g.club, ad: g.p && g.p.name }; try { G = g; TAB = 'hub'; render(); r.render = true; } catch (e) { r.render = 'HATA ' + e.message; } return r; }, sv.sid);
+    const ld = await page.evaluate(sid => { const g = slotLoad(sid); if (!g) { const o = { yuklenemedi: true }; try { const raw = localStorage.getItem(SLOT_PRE + sid); o.ham = raw ? raw.length : 0; const pg = raw ? svParse(raw) : null; o.cozuldu = !!pg; if (pg && typeof kvGecerli === 'function') o.gecersiz = kvGecerli(pg) || null; } catch (e) { o.hata = e.message; } return o; } const r = { day: g.s.day, res: g.s.results.length, club: g.club, ad: g.p && g.p.name }; try { G = g; TAB = 'hub'; render(); r.render = true; } catch (e) { r.render = 'HATA ' + e.message; } return r; }, sv.sid);
     ok('kaydet-yükle', ld && ld.day === sv.day && ld.res === sv.res && ld.club === sv.club && ld.render === true ? 'TAMAM' : 'HATA', `kayıt ${JSON.stringify(sv)} → yeniden yükleme sonrası ${JSON.stringify(ld)}`);
     /* menüler (sekmeler) */
     const tabs = await page.evaluate(() => { const out = []; let ts = [...new Set([...document.querySelectorAll('#tabsIn [data-act="tab"][data-tab]')].map(b => b.dataset.tab))];
