@@ -4227,7 +4227,7 @@
         }
         var CS_ON = 1;      // [temas] surme dokunusu (p_temas_03)
         /* [v188] görüntü düzeltmeleri (A/B ölçümü için tek tek kapatılabilir: R._v188({cc:0}) ) */
-        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1, bd: 1, lk: 1, gx: 1, cl: 1, kt: 1 }, FK8 = [9, 9], ST9 = null, END9 = 0, SH9 = [-1e9, -1e9];      // [v191] bd gövde dinamiği/yorgunluk/eller dizde, lk baş-top, gx kaleci set, cl omuz teması, kt vuruş zamanlaması R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
+        var V8 = { cc: 1, sh: 1, kk: 1, gs: 1, fl: 1, ts: 1, mc: 1, bd: 1, lk: 1, gx: 1, cl: 1, kt: 1 }, FK8 = [9, 9], ST9 = null, END9 = 0, SH9 = [-1e9, -1e9]; /* [v191] bd gövde dinamiği/yorgunluk/eller dizde, lk baş-top, gx kaleci set, cl omuz teması, kt sürme dokunuş ayağı */ R._v188 = function (o) { if (o) for (var k in o) V8[k] = o[k]; return V8; };
         var CC8 = { bx: 0, bz: 0, t: -1e9, vx: 0, vz: 0, ex: 0, ez: 0 };
         var CC = { ox: 0, oz: 0, lt: -1e9 }, CC_DQ = null, CC_M = null, CC_Q = new Float32Array(3), CC_W = new Float32Array(3), CC_T = new Float32Array(5), CC_T2 = new Float32Array(5);
         function ccToe(dq, root, left, out) {      // [fiz] ayak ucu (dunya) ve ayak yonu (orta -> uc)
@@ -4972,6 +4972,7 @@
         function otFrame(v, st) {
             if (OT.f.length > 60000) return;
             var cx = GB.ok ? GB.x : v.bx, cy = ballY(GB.ok ? GB.y : .17 + clamp(v.bz || 0, 0, 30)), cz = GB.ok ? GB.z : v.by, i, a;
+            if (OT.cut || (st.cam && st.cam.replay)) OT.cut9 = 1;
             var fl = (GB.held ? 1 : 0) | (BJ.sc < .999 || BJ.hide ? 2 : 0) | (GHB.on ? 4 : 0) | (OT.cut ? 8 : 0) | (SP_DEAD ? 16 : 0) | (NETS.c[0] || NETS.c[1] ? 32 : 0) | (V7_DLV ? 64 : 0) | (st.cam && st.cam.replay ? 128 : 0);
             OT.cut = 0;
             if (v.dOn && v.dtl > 0 && v.dtl !== OT.ldt) { OT.ldt = v.dtl; OT.k.push([+CLK.toFixed(3), v.owner, 'D', +v.dtl.toFixed(3), v.dk || 0]); }      // sürme dokunuşu (görüntü saati)
@@ -5029,10 +5030,19 @@
         var OT9_A = new Float32Array(3), OT9_B = new Float32Array(3);
         function otBody9(v, st, cx, cy, cz) {
             var i, j, a, b, L = otQ9('vL'), Rr = otQ9('vR'), H = otQ9('vH'), I = otQ9('vI'), Gq = otQ9('vG'), F = otQ9('vF'), gk = st.gkIds || [];
-            I[3]++; var any = 0;
+            I[3]++; var any = 0, Yq = otQ9('vY'), Sq = otQ9('vS'), Cq = otQ9('vC'), dtc9 = CLK - (OT.lc9 || -9); OT.lc9 = CLK;
+            {      // kamera: bakış yönünün açısal hızı / ivmesi (sarsıntı), kesmede sıfırlanır
+                var vx9 = CAM_AX - eye[0], vz9 = CAM_AZ - eye[2], cy9 = Math.atan2(vx9, vz9), cp9 = Math.atan2(eye[1], Math.hypot(vx9, vz9));
+                if (OT.cy9 != null && dtc9 > 1e-3 && dtc9 < .2 && !OT.cut9) { var dy9 = cy9 - OT.cy9; dy9 = Math.atan2(Math.sin(dy9), Math.cos(dy9)); var w9 = Math.hypot(dy9, cp9 - OT.cp9) / dtc9, sw9 = dy9 / dtc9;
+                    if (OT.cw9 != null) { var al9 = Math.abs(w9 - OT.cw9) / dtc9; Cq[0]++; Cq[1] += al9; if (al9 > 2) Cq[2]++; if (al9 > 6) Cq[3]++; if (OT.sw9 != null && Math.abs(sw9) > .05 && Math.abs(OT.sw9) > .05 && sw9 * OT.sw9 < 0) Cq[4]++; Cq[5] += w9; if (Math.abs(eye[0] - OT.ex9) + Math.abs(eye[2] - OT.ez9) > 3) Cq[6]++; }
+                    OT.cw9 = w9; OT.sw9 = sw9; } else { OT.cw9 = null; OT.sw9 = null; }
+                OT.cy9 = cy9; OT.cp9 = cp9; OT.ex9 = eye[0]; OT.ez9 = eye[2]; OT.cut9 = 0;
+            }
             for (i = 0; i < S.n; i++) {
                 a = S.st[i]; if (!a.ok || !a.rM || !a.dqc || !a.vM || v.x[i] < -20) continue; var isG = gk.indexOf(i) >= 0, inAc = a.ac && a.ac.init && CLK >= a.ac.t0 && CLK < a.ac.te;
                 if (!isG) { I[0]++; for (j = i + 1; j < S.n; j++) { b = S.st[j]; if (!b.ok || !b.vM || v.x[j] < -20 || gk.indexOf(j) >= 0) continue; var dd = Math.hypot(a.dX - b.dX, a.dZ - b.dZ); if (dd < .5) { I[1]++; any = 1; if (dd < .4) I[2]++; if (dd < .3) I[5]++; } } }
+                if (a.otY9 != null && dtc9 > 1e-3 && dtc9 < .2) { var dyw9 = a.dYaw - a.otY9; dyw9 = Math.abs(Math.atan2(Math.sin(dyw9), Math.cos(dyw9))) / dtc9; Yq[0]++; if (dyw9 > 8) Yq[1]++; if (dyw9 > 15) Yq[2]++; if (dyw9 > Yq[3]) Yq[3] = dyw9; } a.otY9 = a.dYaw;      // gövde dönüş hızı (rad/sn; 180° anlık dönüş yok mu)
+                Sq[0]++; if (a.ac && a.ac.init && CLK >= a.ac.t0 && CLK < a.ac.te && CLK - a.ac.t0 > 4) Sq[1]++;      // takılı kalan aksiyon (> 4 sn)
                 if (isG || inAc || a.bdL9 == null) {
                     if (isG && a.ac && a.ac.k === 18) { }
                     continue;
@@ -5175,7 +5185,7 @@
             if (!a.rM) { a.rM = new Float32Array(16); a.dqc = new Float32Array(BODY_BONES.length * 8); }
             var root = a.rM, cyw = Math.cos(a.dYaw), syw = Math.sin(a.dYaw);      // [opt] kök matrisi satır içi: mtrs(root, x, ry, z, 0, yaw, 0, sc, ws) ile aynı
             root[0] = cyw * ws; root[1] = 0; root[2] = -syw * ws; root[3] = 0; root[4] = 0; root[5] = sc; root[6] = 0; root[7] = 0; root[8] = syw * ws; root[9] = 0; root[10] = cyw * ws; root[11] = 0; root[12] = x; root[13] = ry; root[14] = z; root[15] = 1;
-            a.gaRT = -1; poseFor(a, a.spd, t, mods); if (a.gaRT === t && (a.gaRX || a.gaRZ)) { root[12] += a.gaRX; root[14] += a.gaRZ; } if (FK_ON) footIK(a, root); if (NC_ON && BK_ON) legNoCross(a); if (GD_ON) ctGround(a, root); if (CT_ON && a.ac && a.ac.k === 18) ctKickIK(a, root); if (V8.kk && a.ac && a.ac.k === 16) ctRecvIK(a, root); if (V8.kk && a.ac && a.ac.k === 12) ctTackleIK(a, root); if (V8.kk && (a.carryK || 0) > .3 && !(a.ac && a.ac.init && CLKOK && CLK >= a.ac.t0 && CLK < a.ac.te)) ctDribIK(a, root); if (CT3_ON && a.needHand && (a.holdK || 0) > .05 && !(a.ac && a.ac.init && CLK >= a.ac.t0 && a.ac.k >= 4 && a.ac.k <= 9)) ctGkHoldIK(a, root); else a.hik = 0; if (GKIK_ON && CLKOK && a.ac && a.ac.init && (a.ac.k === 1 || a.ac.k === 2) && !(a.hik > .05)) ctGkSaveIK(a, root); if (V8.fl && FK_ON) fkPin(a, root); if (V8.bd && (a.hk9 || 0) > .05) hk9IK(a, root); { a.bdL9 = pose[0] + pose[3]; a.bdR9 = pose[2]; a.bdK9 = (pose[24] + pose[33]) * .5; a.bdA9 = Math.abs(pose[9] - pose[15]); } if (V8.fl && poseBad8()) { if (OT.on && !OT.nan3) OT.nan3 = 'poz NaN: ' + (a.ac && a.ac.init ? 'k' + a.ac.k + ' m' + a.ac.mode : 'aksiyonsuz') + ' fk ' + JSON.stringify(a.fk && a.fk.map(function (q) { return [q.lk, q.sw > 0 ? 1 : 0, q.pp]; })); a.gaRT = -1; poseFor(a, a.spd, t, mods); } bodyDQ(pose, a.dqc);      // [v188] NaN koruması: IK bozduysa IK'sız poz      // [gasp] kalca salinimi kokte
+            a.gaRT = -1; poseFor(a, a.spd, t, mods); if (a.gaRT === t && (a.gaRX || a.gaRZ)) { root[12] += a.gaRX; root[14] += a.gaRZ; } if (FK_ON) footIK(a, root); if (NC_ON && BK_ON) legNoCross(a); if (GD_ON) ctGround(a, root); if (CT_ON && a.ac && a.ac.k === 18) ctKickIK(a, root); if (V8.kk && a.ac && a.ac.k === 16) ctRecvIK(a, root); if (V8.kk && a.ac && a.ac.k === 12) ctTackleIK(a, root); if (V8.kk && (a.carryK || 0) > .3 && !(a.ac && a.ac.init && CLKOK && CLK >= a.ac.t0 && CLK < a.ac.te)) ctDribIK(a, root); if (CT3_ON && a.needHand && (a.holdK || 0) > .05 && !(a.ac && a.ac.init && CLK >= a.ac.t0 && a.ac.k >= 4 && a.ac.k <= 9)) ctGkHoldIK(a, root); else a.hik = 0; if (GKIK_ON && CLKOK && a.ac && a.ac.init && (a.ac.k === 1 || a.ac.k === 2) && !(a.hik > .05)) ctGkSaveIK(a, root); if (V8.fl && FK_ON) fkPin(a, root); if (V8.bd && (a.hk9 || 0) > .05) hk9IK(a, root); { a.bdL9 = pose[0] + pose[3]; a.bdR9 = pose[2]; a.bdK9 = (pose[24] + pose[33]) * .5; a.bdA9 = Math.abs(pose[9] - pose[15]); } if (V8.fl && poseBad8()) { if (OT.on) otQ9('vS')[2]++; if (OT.on && !OT.nan3) OT.nan3 = 'poz NaN: ' + (a.ac && a.ac.init ? 'k' + a.ac.k + ' m' + a.ac.mode : 'aksiyonsuz') + ' fk ' + JSON.stringify(a.fk && a.fk.map(function (q) { return [q.lk, q.sw > 0 ? 1 : 0, q.pp]; })); a.gaRT = -1; poseFor(a, a.spd, t, mods); } bodyDQ(pose, a.dqc);      // [v188] NaN koruması: IK bozduysa IK'sız poz      // [gasp] kalca salinimi kokte
             if (a.needHand) { if (!a.hR) { a.hR = new Float32Array(3); a.hL = new Float32Array(3); } handsModel(a.dqc); xform(root, gkQ, a.hR); xform(root, gkQ2, a.hL); }   // [gk] avuç noktaları (top elde)
             if (VQ.sh) {                                                     // [vq] temas gölgesi için göğüs + ayak ortası (dünya)
                 if (!a.cP) a.cP = new Float32Array(6);

@@ -23,6 +23,7 @@ js/3_cekirdek_2d/002_adoball_gercek_oyuncu_verisi_186_oyuncu.js
 js/3_cekirdek_2d/003_adoball_2d_veritabani_bagdastiricisi.js
 js/3_cekirdek_2d/004_adoball_2d_mac_reytingi_rating2d.js
 js/3_cekirdek_2d/005_adoball_canli_2d_mac_modu_ucuncu_betik.js
+js/3_cekirdek_2d/006_adoball_tanilama.js
 | </script>
 | <script>
 js/4_kariyer_koprusu.js

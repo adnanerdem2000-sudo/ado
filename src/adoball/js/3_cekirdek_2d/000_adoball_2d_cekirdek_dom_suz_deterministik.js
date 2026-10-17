@@ -272,7 +272,7 @@
         //   Görüntü: p.turnR, p.lean, p.planted / p.plantT, p.aLat, p.duel {t, kind 'omuz'|'hava', won, op}, p.jump {t, z, h, ball}, p.stagT
         AV_PHY: 1,
         // AV_KAL: v190 maç istatistiği kalibrasyonu (StatsBomb hedefleri). Kafa vuruşu yan sapması ×AV_HSD (StatsBomb kafa: %31 isabet, %10,4 gol; motor %50 / %19 → gol/xG 1,27),
-        //   ceza sahası içi şut değeri AV_BXV ve açık yolda baskısız şut AV_OLV (şut 10,8 → 11,5–13,5; xG 1,15–1,35), pasçının ofsaytı yanlış görmesi AV_OFM (ofsayt 1,56 → 1,6–2,4)
+        //   pasçının ofsaytı yanlış görmesi AV_OFM .03 → .045 (v188 öncesi düzey; ofsayt 1,56 → 1,6–2,4; StatsBomb 2,08)
         AV_KAL: 1,
         AV_HL: 1      // canlı mod (005) önemli anlar: gerçek xG ile net fırsat eşiği .15, korner ve 28 m içi serbest vuruş da an (motoru etkilemez)
     };
@@ -1156,9 +1156,9 @@
                 var belief = KY_ON ? xgDec(xgFeat(p.x, p.y, p.team, pd, null), null) * clamp(1 + .012 * (p.a.fin - 70), .6, 1.4) : xg * clamp(1 + .012 * (p.a.fin - 70), .6, 1.4) * (laneS > 2.2 ? 1 : laneS > 1.3 ? .7 : .35);      /* [ky] ogrenilmis xG */
                 var shMin = KY_ON ? KY_MIN * (1 - clamp((p.a.lon - 70) * .012, -.3, .4)) : SHOT_MIN;      /* [ky] iyi uzaktan sutcu daha dusuk olasilikla da dener */
                 var evS = (belief + SPILL) * (KY_ON ? KY_SW : SHOT_W) * bk.shot * (1 + .25 * fwd + (p.a.lon - 66) * (KY_ON ? KY_LON : .003)) - (1 - belief) * lossCost(p.x, p.y, p.team, bk.loss) * SHOT_LOSS + (p.a.agg - 40) * .00006 + gauss() * DEC_ACT * decK(p);
-                if (AV_SHOT) { shMin *= 1 + avp('AV_SDK', .05) * Math.max(0, dGoal - avp('AV_SD0', 16)); if (inBox(p.x, p.y, p.team)) { shMin *= avp('AV_BXM', .3); evS += avp('AV_BXV', AV_KAL ? .04 : .015) * belief / Math.max(.02, belief + .02) * 2; } }      // [av] ceza sahasında fırsat kaçırılmaz (gerçekte şutların %60'ı ceza sahası içinden)      // [av] AV_SHOT: uzaklaştıkça eşik yükselir (gerçek xG ile şutların %60'ı ceza sahası içinden; StatsBomb)
+                if (AV_SHOT) { shMin *= 1 + avp('AV_SDK', .05) * Math.max(0, dGoal - avp('AV_SD0', 16)); if (inBox(p.x, p.y, p.team)) { shMin *= avp('AV_BXM', .3); evS += avp('AV_BXV', .015) * belief / Math.max(.02, belief + .02) * 2; } }      // [av] ceza sahasında fırsat kaçırılmaz (gerçekte şutların %60'ı ceza sahası içinden)      // [av] AV_SHOT: uzaklaştıkça eşik yükselir (gerçek xG ile şutların %60'ı ceza sahası içinden; StatsBomb)
                 if (AV_CLK && !inBox(p.x, p.y, p.team)) evS -= avp('AV_SOP', .015);      // [av2] AV_CLK: ceza sahası dışından şutun değeri pasa göre düşük (gerçekte şutların ~%40'ı dışarıdan; uzayan canlı oyunda motor dışarıdan fazla vuruyordu)
-                if (AV_DEC && laneS >= 2 && pd >= 2.5 && inBox(p.x, p.y, p.team)) evS += avp('AV_OLV', AV_KAL ? .03 : .012);      // [v188] AV_DEC: ceza sahasında şut yolu açık ve baskısız topçu vurmayı pasa tercih eder (eskiden açık yolda şut payı kapalı yoldakinden düşüktü; ceza sahası dışına uygulanınca ceza sahası içi şut payı %57 → %50'ye düşüyordu)
+                if (AV_DEC && laneS >= 2 && pd >= 2.5 && inBox(p.x, p.y, p.team)) evS += avp('AV_OLV', .012);      // [v188] AV_DEC: ceza sahasında şut yolu açık ve baskısız topçu vurmayı pasa tercih eder (eskiden açık yolda şut payı kapalı yoldakinden düşüktü; ceza sahası dışına uygulanınca ceza sahası içi şut payı %57 → %50'ye düşüyordu)
                 if (AV_LATE && S.t > FULL_S * .78 && T.score < opp(p.team).score) shMin *= .8;      // [av] AV_LATE: son 20 dk geride olan takım daha düşük olasılıkla da vurur (gol dakikası 76–90+ %22,5)
                 alt.shot = belief >= shMin * bk.shotMin ? evS : null;
                 if (evS > ev && belief >= shMin * bk.shotMin) { ev = evS; act = 'shot'; }

@@ -95,7 +95,7 @@
             post: null, pre: null, evIdx: 0,
             ep: {}, ovl: new Int16Array(n * n), deadRef: null, passRef: null, passT0: 0, shotRef: null, shotT0: 0, highRef: null, highDone: null,
             looseT: 0, looseOn: false, ownRef: null, ownT0: 0, holdDone: false, lastGoal: [-99, -99], lastShot: {}, ids: {}, ftN: 0, htN: 0,
-            k3: [], k3n: 0, k3sum: 0, k3max: 0, k3bad: 0
+            sup: {}, k3: [], k3n: 0, k3sum: 0, k3max: 0, k3bad: 0
         };
         D.post = snap(sim, null); D.evIdx = sim.events ? sim.events.length : 0;
         var s0 = sim.step;
@@ -166,7 +166,10 @@
             if (ge[0] + ge[1] !== (b.sc[0] - a.sc[0]) + (b.sc[1] - a.sc[1])) rec(D, 'dis_skor', { once: a.sc.slice(), sonra: b.sc.slice(), neden: 'skor adımlar arasında GOL olayı olmadan değişti' });
         }
         if (b.evN > a.evN) eventsIn(D, a.evN, b.evN, 'dış');
+        supDead(D, a, b);
     }
+    /* kullanılmadan yerine başka duran top geçen duran top (devre sonu, avantaj dönüşü, hakem kararı): istatistik yürütmede sayılır, olay verilişte */
+    function supDead(D, a, b) { if (a.mode === 'dead' && a.dead && b.dead !== a.dead) { var exe = b.mode === 'live' && !b.dead; if (!exe && b.dead) { var k = a.dead.kind + a.dead.team; D.sup[k] = (D.sup[k] || 0) + 1; } } }
     function scanEvents(D, i0, i1) { var ev = D.sim.events, g = [0, 0], ty = {}; for (var i = i0; i < i1; i++) { var e = ev[i]; ty[e.type] = 1; if (e.type === 'GOAL' && e.team >= 0) g[e.team]++; } return { goals: g, ty: ty }; }
 
     /* olay kaydı: sayımlar + yinelenen olay */
@@ -195,6 +198,7 @@
         var es = scanEvents(D, a.evN, b.evN), ty = es.ty, nEv = b.evN - a.evN, kickEv = !!(ty.PASS || ty.SHOT || ty.CLEAR || ty.HEADER), anyBallEv = nEv > 0;
         if (nEv > 0) eventsIn(D, a.evN, b.evN, 'adım');
         var modeCh = a.mode !== b.mode || a.dead !== b.dead, reset = !!(ty.HALFTIME || ty.KICKOFF);
+        supDead(D, a, b);
         /* saat */
         if (!a.fin && !a.hold && !b.hold && b.t <= a.t && !b.fin) rec(D, 'saat_durdu', { once: r2(a.t), sonra: r2(b.t), aks: 'mod ' + b.mode });
         if (b.t < a.t - 1e-9) rec(D, 'saat_geri', { once: r2(a.t), sonra: r2(b.t) });
@@ -223,7 +227,7 @@
             var gkNow = b.own >= 0 && sim.players[b.own].role === 'GK';
             if (kickEv) { if (bd - vPost * dt > E.B_KICK) rec(D, 'vurus_sicramasi', { p: kicker(sim, a.evN, b.evN), once: [r2(a.bx), r2(a.by)], sonra: [r2(b.bx), r2(b.by)], m: r2(bd - vPost * dt), olaylar: Object.keys(ty).join(','), neden: 'vuruşta top ' + r2(bd) + ' m sıçradı' }); }
             else if (ownCh && bd <= (gkNow ? E.B_GAIN : E.B_GAIN * .7)) { /* sahiplik değişimi: top ayağa/ele alındı */ }
-            else if (!ownCh && a.own >= 0 && bd <= E.B_GAIN) rec(D, 'sahipli_top_sicrama', { p: a.own, once: { top: [r2(a.bx), r2(a.by)], bakis: [r2(a.ofx), r2(a.ofy)] }, sonra: { top: [r2(b.bx), r2(b.by)], bakis: [r2(b.ofx), r2(b.ofy)] }, m: r2(bd), olaylar: Object.keys(ty).join(',') || '-', neden: 'sahipli top bir adımda ' + r2(bd) + ' m; bakış ' + r2(Math.acos(Math.max(-1, Math.min(1, a.ofx * b.ofx + a.ofy * b.ofy))) * 57.3) + '° döndü' });
+            else if (!ownCh && a.own >= 0 && bd <= E.B_GAIN) rec(D, 'sahipli_top_sicrama', { p: a.own, once: { top: [r2(a.bx), r2(a.by)], bakis: [r2(a.ofx), r2(a.ofy)] }, sonra: { top: [r2(b.bx), r2(b.by)], bakis: [r2(b.ofx), r2(b.ofy)] }, m: r2(bd), olaylar: Object.keys(ty).join(',') || '-', sahiplik_sn: r2(b.t - D.ownT0), neden: 'sahipli top bir adımda ' + r2(bd) + ' m (sahiplikten ' + r2(b.t - D.ownT0) + ' sn sonra); bakış ' + r2(Math.acos(Math.max(-1, Math.min(1, a.ofx * b.ofx + a.ofy * b.ofy))) * 57.3) + '° döndü' });
             else if (!anyBallEv || bd > E.B_GAIN) rec(D, 'isinlanma_top', { p: b.own >= 0 ? b.own : a.own, once: [r2(a.bx), r2(a.by)], sonra: [r2(b.bx), r2(b.by)], m: r2(bd), olaylar: Object.keys(ty).join(',') || '-', sahip: [a.own, b.own], neden: 'top bir adımda ' + r2(bd) + ' m (beklenen ≤ ' + r2(expect) + ')' });
         }
         /* temassız yön/hız değişimi: sahipsiz canlı top, olay yok, yakında oyuncu yok, kale çerçevesinden uzak */
@@ -280,9 +284,10 @@
             ];
             for (var r = 0; r < rows.length; r++) {
                 var w = rows[r]; if (w[1] === w[2]) continue;
-                var pend = (w[0] === 'korner' && dead === 'corner' && sim.dead.team === tm && w[2] - w[1] === 1) || (w[0] === 'tac' && dead === 'throw' && sim.dead.team === tm && w[2] - w[1] === 1);
+                var dk0 = w[0] === 'korner' ? 'corner' : w[0] === 'tac' ? 'throw' : null, al = dk0 ? (D.sup[dk0 + tm] || 0) + (dead === dk0 && sim.dead.team === tm ? 1 : 0) : 0;
+                var pend = !!dk0 && w[2] - w[1] > 0 && w[2] - w[1] <= al;
                 out.push({ takim: tm, alan: w[0], ist: w[1], olay: w[2], kurallı: !!pend });
-                rec(D, pend ? 'ist_bilgi' : 'ist_olay', { aks: 'takım ' + tm, alan: w[0], once: { istatistik: w[1] }, sonra: { olay: w[2] }, neden: 'takım ' + tm + ' ' + w[0] + ': istatistik ' + w[1] + ' ≠ olay ' + w[2] + (pend ? ' (maç sonunda bekleyen ' + dead + ')' : '') });
+                rec(D, pend ? 'ist_bilgi' : 'ist_olay', { aks: 'takım ' + tm, alan: w[0], once: { istatistik: w[1] }, sonra: { olay: w[2] }, neden: 'takım ' + tm + ' ' + w[0] + ': istatistik ' + w[1] + ' ≠ olay ' + w[2] + (pend ? ' (kullanılmadan kalan/yerine geçen ' + dk0 + ': ' + al + ')' : '') });
             }
             var onT = st.sot, gl = 0; for (var i = 0; i < sim.events.length; i++) { var ev = sim.events[i]; if (ev.type === 'GOAL' && ev.team === tm && !(ev.meta && (ev.meta.own || ev.meta.awarded)) && ev.meta && ev.meta.shot) gl++; }
             if (onT < gl) { out.push({ takim: tm, alan: 'isabetli_sut<gol', ist: onT, olay: gl }); rec(D, 'ist_olay', { aks: 'takım ' + tm, alan: 'isabetli_sut', once: { isabetli: onT }, sonra: { sut_golu: gl }, neden: 'takım ' + tm + ': isabetli şut (' + onT + ') şut golünden (' + gl + ') az' }); }
